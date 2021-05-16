@@ -1,0 +1,59 @@
+﻿@page "/Login"
+@inject NavigationManager _navigationManager
+@inject ILocalStorageService _localStorage
+@inject NexusModsAPIClient _nexusModsAPIKeyValidator
+
+<div class="card">
+    <h4 class="card-header">Login</h4>
+    <div class="card-body">
+        <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Nexus Mods API Key</label>
+                <InputText @bind-Value="_model.NexusModsAPIKey" class="form-control" />
+                <ValidationMessage For="@(() => _model.NexusModsAPIKey)" />
+            </div>
+            <button disabled="@_isLoading" class="btn btn-primary">
+                @if (_isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Login
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private readonly LoginModel _model = new();
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (await _localStorage.ContainKeyAsync("user"))
+        {
+            var result = await _nexusModsAPIKeyValidator.ValidateAPIKey(_model.NexusModsAPIKey);
+            if (result is not null)
+            {
+                _navigationManager.NavigateTo("CrashReportsViewer", true);
+            }
+        }
+    }
+
+    private async void OnValidSubmit()
+    {
+        _isLoading = true;
+
+        var result = await _nexusModsAPIKeyValidator.ValidateAPIKey(_model.NexusModsAPIKey);
+        if (result is null)
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+        else
+        {
+            await _localStorage.SetItemAsync("user", result);
+            _navigationManager.NavigateTo("CrashReportsViewer", true);
+        }
+    }
+}

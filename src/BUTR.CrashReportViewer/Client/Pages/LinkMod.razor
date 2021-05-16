@@ -1,0 +1,95 @@
+﻿@page "/LinkMod"
+@inject NavigationManager _navigationManager
+@inject ILocalStorageService _localStorage
+@inject IHttpClientFactory _clientFactory
+@inject NexusModsAPIClient _nexusModsAPIKeyValidator
+
+<div class="card">
+    <h4 class="card-header">Link Mod</h4>
+    <div class="card-body">
+        <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label>Mod Url</label>
+                <InputText @bind-Value="_model.ModUrl" class="form-control" />
+                <ValidationMessage For="@(() => _model.ModUrl)" />
+            </div>
+            <button disabled="@_isLoading" class="btn btn-primary">
+                @if (_isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Link
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LinkModModel _model = new();
+    private NexusModsValidateResponse _user = default!;
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await _localStorage.ContainKeyAsync("user"))
+        {
+            _navigationManager.NavigateTo("Login", true);
+        }
+
+        _user = await _localStorage.GetItemAsync<NexusModsValidateResponse>("user");
+        var validationResult = await _nexusModsAPIKeyValidator.ValidateAPIKey(_user.Key);
+        if (validationResult is null)
+        {
+            _navigationManager.NavigateTo("Login", true);
+        }
+    }
+
+
+    private async void OnValidSubmit()
+    {
+        _isLoading = true;
+
+        if (await DoLinkMod(_model))
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+        else
+        {
+            _model = new LinkModModel();
+            StateHasChanged();
+        }
+    }
+
+    private async Task<bool> DoLinkMod(LinkModModel model)
+    {
+        try
+        {
+            if (!model.ModUrl.Contains("nexusmods.com/"))
+                return false;
+
+            var str1 = model.ModUrl.Split("nexusmods.com/");
+            if (str1.Length != 2)
+                return false;
+
+            var split = str1[1].Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (split.Length != 3)
+                return false;
+
+            var gameDomain = split[0];
+            var modId = split[2];
+
+            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/LinkMod?gameDomain={gameDomain}&modId={modId}");
+            request.Headers.Add("apikey", _user.Key);
+            request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            var httpClient = _clientFactory.CreateClient("Backend");
+            var response = await httpClient.SendAsync(request);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+}

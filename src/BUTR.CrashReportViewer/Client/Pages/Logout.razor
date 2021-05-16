@@ -1,0 +1,12 @@
+﻿@page "/Logout"
+@layout MainLayout
+@inject NavigationManager _navigationManager
+@inject ILocalStorageService _localStorage
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await _localStorage.RemoveItemAsync("user");
+        _navigationManager.NavigateTo("/", true);
+    }
+}

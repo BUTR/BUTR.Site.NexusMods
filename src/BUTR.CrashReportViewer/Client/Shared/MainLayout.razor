@@ -1,0 +1,26 @@
+﻿@inherits LayoutComponentBase
+@inject ILocalStorageService _localStorage
+
+@if (LoggedIn)
+{
+    <nav class="navbar navbar-expand navbar-dark bg-dark">
+        <div class="navbar-nav">
+            <NavLink href="LinkMod" class="nav-item nav-link">Link Mod</NavLink>
+            <NavLink href="CrashReportsViewer" class="nav-item nav-link">Crash Reports</NavLink>
+            <NavLink href="Logout" class="nav-item nav-link">Logout</NavLink>
+        </div>
+    </nav>
+}
+
+<div class="app-container @(LoggedIn ? "bg-light" : "")">
+    @Body
+</div>
+
+@code {
+    public bool LoggedIn { get; private set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoggedIn = await _localStorage.ContainKeyAsync("user");
+    }
+}
