@@ -39,8 +39,7 @@ namespace BUTR.CrashReportViewer.Server
 
             services.AddProxies();
 
-            services.AddControllersWithViews();
-            services.AddRazorPages();
+            services.AddControllers();
 
             services.AddCors(options =>
             {
@@ -73,27 +72,20 @@ namespace BUTR.CrashReportViewer.Server
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                //app.UseWebAssemblyDebugging();
                 app.UseCors("DevCorsPolicy");
             }
             else
             {
-                app.UseExceptionHandler("/Error");
+                //app.UseExceptionHandler("/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 //app.UseHsts();
                 app.UseCors("GitHubPages");
             }
 
-            //app.UseBlazorFrameworkFiles();
-            app.UseStaticFiles();
-
             app.UseRouting();
-
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapRazorPages();
                 endpoints.MapControllers();
-                endpoints.MapFallbackToFile("index.html");
             });
 
             app.UseProxies(proxies =>
