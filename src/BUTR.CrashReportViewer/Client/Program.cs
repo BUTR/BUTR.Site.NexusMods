@@ -20,7 +20,7 @@ namespace BUTR.CrashReportViewer.Client
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            const string azureEndpoint = "https://butr-crashreportviewer.azurewebsites.net";
+            const string azureEndpoint = "https://crashreportviewer.azurewebsites.net";
             builder.Services.AddScoped(sp => new HttpClient
             {
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
