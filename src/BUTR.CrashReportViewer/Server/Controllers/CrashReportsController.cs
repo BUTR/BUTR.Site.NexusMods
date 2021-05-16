@@ -19,19 +19,16 @@ namespace BUTR.CrashReportViewer.Server.Controllers
     {
         private readonly ILogger<CrashReportsController> _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
-        private readonly ModsDbContext _modsDbContext;
-        private readonly CrashReportsDbContext _crashReportsDbContext;
+        private readonly MainDbContext _mainDbContext;
 
         public CrashReportsController(
             ILogger<CrashReportsController> logger,
             NexusModsAPIClient nexusModsAPIClient,
-            ModsDbContext modsDbContext,
-            CrashReportsDbContext crashReportsDbContext)
+            MainDbContext mainDbContext)
         {
             _logger = logger ?? throw  new ArgumentNullException(nameof(logger));
             _nexusModsAPIClient = nexusModsAPIClient ?? throw  new ArgumentNullException(nameof(nexusModsAPIClient));
-            _modsDbContext = modsDbContext ?? throw  new ArgumentNullException(nameof(modsDbContext));
-            _crashReportsDbContext = crashReportsDbContext ?? throw  new ArgumentNullException(nameof(crashReportsDbContext));
+            _mainDbContext = mainDbContext ?? throw  new ArgumentNullException(nameof(mainDbContext));
         }
 
         [HttpGet]
@@ -50,13 +47,13 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             if (validateResponse == null)
                 yield break;
 
-            var allowedMods = _modsDbContext.Mods
+            var allowedMods = _mainDbContext.Mods
                 .AsNoTracking()
                 .AsEnumerable()
                 .Where(m => m.UserIds.Contains(validateResponse.UserId))
                 .ToList();
 
-            var crashReports = _crashReportsDbContext.CrashReports
+            var crashReports = _mainDbContext.CrashReports
                 .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == validateResponse.UserId))
                 .AsNoTracking()
                 .AsEnumerable()

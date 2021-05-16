@@ -34,8 +34,7 @@ namespace BUTR.CrashReportViewer.Server
 
             services.AddScoped<NexusModsAPIClient>();
 
-            services.AddDbContext<ModsDbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Mods")));
-            services.AddDbContext<CrashReportsDbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("CrashReports")));
+            services.AddDbContext<MainDbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
 
             services.AddProxies();
 
@@ -65,8 +64,7 @@ namespace BUTR.CrashReportViewer.Server
         {
             using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
-                serviceScope.ServiceProvider.GetRequiredService<ModsDbContext>().Database.EnsureCreated();
-                serviceScope.ServiceProvider.GetRequiredService<CrashReportsDbContext>().Database.EnsureCreated();
+                serviceScope.ServiceProvider.GetRequiredService<MainDbContext>().Database.EnsureCreated();
             }
 
             if (env.IsDevelopment())

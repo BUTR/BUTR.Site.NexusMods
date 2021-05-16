@@ -21,16 +21,16 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 
         private readonly ILogger<ModsController> _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
-        private readonly ModsDbContext _modsDbContext;
+        private readonly MainDbContext _mainDbContext;
 
         public ModsController(
             ILogger<ModsController> logger,
             NexusModsAPIClient nexusModsAPIClient,
-            ModsDbContext modsDbContext)
+            MainDbContext mainDbContext)
         {
             _logger = logger ?? throw  new ArgumentNullException(nameof(logger));
             _nexusModsAPIClient = nexusModsAPIClient ?? throw  new ArgumentNullException(nameof(nexusModsAPIClient));
-            _modsDbContext = modsDbContext ?? throw  new ArgumentNullException(nameof(modsDbContext));
+            _mainDbContext = mainDbContext ?? throw  new ArgumentNullException(nameof(mainDbContext));
         }
 
         [HttpGet("LinkMod")]
@@ -48,7 +48,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 return Unauthorized("Invalid API Key!");
 
 
-            var mod = await _modsDbContext.Mods
+            var mod = await _mainDbContext.Mods
                 .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.GameDomain == query.GameDomain && m.ModId == query.ModId);
 
@@ -58,13 +58,13 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 if (modInfo is null)
                     return NotFound("Mod not found!");
 
-                await _modsDbContext.Mods.AddAsync(new ModTable
+                await _mainDbContext.Mods.AddAsync(new ModTable
                 {
                     GameDomain = modInfo.DomainName,
                     ModId = modInfo.ModId,
                     UserIds = new[] { modInfo.User.MemberId }
                 });
-                await _modsDbContext.SaveChangesAsync();
+                await _mainDbContext.SaveChangesAsync();
             }
             else
             {
