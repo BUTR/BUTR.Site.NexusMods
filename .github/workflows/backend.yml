@@ -34,9 +34,6 @@ jobs:
         env:
           NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
-
       - name: dotnet publish
         run: dotnet publish src/BUTR.CrashReportViewer/Server -c Release -o \${{env.DOTNET_ROOT}}/myapp
 
