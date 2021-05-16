@@ -35,13 +35,13 @@ jobs:
           NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: dotnet publish
-        run: dotnet publish src/BUTR.CrashReportViewer/Server -c Release -o \${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish src/BUTR.CrashReportViewer/Server -c Release -o build
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
           name: .net-app
-          path: \${{env.DOTNET_ROOT}}/myapp
+          path: build
 
   deploy:
     runs-on: ubuntu-latest
