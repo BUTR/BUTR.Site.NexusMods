@@ -34,8 +34,8 @@ namespace BUTR.CrashReportViewer.Server
 
             services.AddScoped<NexusModsAPIClient>();
 
-            services.AddDbContext<ModsDbContext>(o => o.UseSqlite(Configuration.GetConnectionString("Mods")));
-            services.AddDbContext<CrashReportsDbContext>(o => o.UseSqlite(Configuration.GetConnectionString("CrashReports")));
+            services.AddDbContext<ModsDbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Mods")));
+            services.AddDbContext<CrashReportsDbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("CrashReports")));
 
             services.AddProxies();
 
