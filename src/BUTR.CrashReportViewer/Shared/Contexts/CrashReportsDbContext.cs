@@ -9,14 +9,7 @@ namespace BUTR.CrashReportViewer.Shared.Contexts
         public DbSet<CrashReportTable> CrashReports { get; set; } = default!;
         public DbSet<UserCrashReportTable> UserCrashReport { get; set; } = default!;
 
-        public CrashReportsDbContext(DbContextOptions<CrashReportsDbContext> options) : base(options)
-        {
-            var connection = Database.GetDbConnection();
-            connection.Open();
-            using var command = connection.CreateCommand();
-            command.CommandText = "PRAGMA journal_mode=WAL;";
-            command.ExecuteNonQuery();
-        }
+        public CrashReportsDbContext(DbContextOptions<CrashReportsDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

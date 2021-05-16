@@ -8,14 +8,7 @@ namespace BUTR.CrashReportViewer.Shared.Contexts
     {
         public DbSet<ModTable> Mods { get; set; } = default!;
 
-        public ModsDbContext(DbContextOptions<ModsDbContext> options) : base(options)
-        {
-            var connection = Database.GetDbConnection();
-            connection.Open();
-            using var command = connection.CreateCommand();
-            command.CommandText = "PRAGMA journal_mode=WAL;";
-            command.ExecuteNonQuery();
-        }
+        public ModsDbContext(DbContextOptions<ModsDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
