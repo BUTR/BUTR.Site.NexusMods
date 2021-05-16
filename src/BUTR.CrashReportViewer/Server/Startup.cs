@@ -89,9 +89,11 @@ namespace BUTR.CrashReportViewer.Server
             app.UseProxies(proxies =>
             {
                 proxies.Map("NexusModsAPIProxy/v1/users/validate.json",
-                    proxy => proxy.UseHttp("https://api.nexusmods.com/v1/users/validate.json"));
+                    //proxy => proxy.UseHttp("https://api.nexusmods.com/v1/users/validate.json"));
+                    proxy => proxy.UseHttp("https://thingproxy.freeboard.io/fetch/https://api.nexusmods.com/v1/users/validate.json"));
                 proxies.Map("NexusModsAPIProxy/v1/games/{game_domain_name}/mods/{id}.json",
-                    proxy => proxy.UseHttp((_, args) => $"https://api.nexusmods.com/v1/games/{args["game_domain_name"]}/mods/{args["id"]}.json"));
+                    //proxy => proxy.UseHttp((_, args) => $"https://api.nexusmods.com/v1/games/{args["game_domain_name"]}/mods/{args["id"]}.json"));
+                    proxy => proxy.UseHttp((_, args) => $"https://thingproxy.freeboard.io/fetch/https://api.nexusmods.com/v1/games/{args["game_domain_name"]}/mods/{args["id"]}.json"));
             });
         }
     }
