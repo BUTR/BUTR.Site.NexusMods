@@ -27,7 +27,8 @@ namespace BUTR.CrashReportViewer.Client
             });
             builder.Services.AddHttpClient("NexusModsAPI", client =>
             {
-                client.BaseAddress = new Uri(Url.Combine($"{azureEndpoint}", "/NexusModsAPIProxy/"));
+                client.BaseAddress = new Uri("https://thingproxy.freeboard.io/fetch/https://api.nexusmods.com/"));
+                //client.BaseAddress = new Uri(Url.Combine($"{azureEndpoint}", "/NexusModsAPIProxy/"));
                 //client.BaseAddress = new Uri(Url.Combine($"{builder.HostEnvironment.BaseAddress}", "/NexusModsAPIProxy/"));
             });
             builder.Services.AddHttpClient("Backend", client =>
