@@ -6,14 +6,12 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.Proxy" Version="4.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="5.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.6" />
     <PackageReference Include="SQLite" Version="3.13.0" />
     <PackageReference Include="System.Linq.Async" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Client\BUTR.CrashReportViewer.Client.csproj" />
     <ProjectReference Include="..\Shared\BUTR.CrashReportViewer.Shared.csproj" />
   </ItemGroup>
 

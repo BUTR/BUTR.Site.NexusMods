@@ -73,7 +73,7 @@ namespace BUTR.CrashReportViewer.Server
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseWebAssemblyDebugging();
+                //app.UseWebAssemblyDebugging();
                 app.UseCors("DevCorsPolicy");
             }
             else
@@ -84,7 +84,7 @@ namespace BUTR.CrashReportViewer.Server
                 app.UseCors("GitHubPages");
             }
 
-            app.UseBlazorFrameworkFiles();
+            //app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
 
             app.UseRouting();
