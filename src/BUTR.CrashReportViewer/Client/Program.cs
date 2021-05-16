@@ -20,17 +20,20 @@ namespace BUTR.CrashReportViewer.Client
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
+            const string azureEndpoint = "https://butr-crashreportviewer.azurewebsites.net";
             builder.Services.AddScoped(sp => new HttpClient
             {
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
             });
             builder.Services.AddHttpClient("NexusModsAPI", client =>
             {
-                client.BaseAddress = new Uri(Url.Combine($"{builder.HostEnvironment.BaseAddress}", "/NexusModsAPIProxy/"));
+                client.BaseAddress = new Uri(Url.Combine($"{azureEndpoint}", "/NexusModsAPIProxy/"));
+                //client.BaseAddress = new Uri(Url.Combine($"{builder.HostEnvironment.BaseAddress}", "/NexusModsAPIProxy/"));
             });
             builder.Services.AddHttpClient("Backend", client =>
             {
-                client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+                client.BaseAddress = new Uri(azureEndpoint);
+                //client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
             });
 
             builder.Services.AddScoped<NexusModsAPIClient>();
