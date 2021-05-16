@@ -33,8 +33,8 @@ jobs:
     - name: Publish with dotnet
       run: dotnet publish src/BUTR.CrashReportViewer/Client/BUTR.CrashReportViewer.Client.csproj --configuration Release --output build
     
-    # changes the base-tag in index.html from '/' to 'BlazorGitHubPagesDemo' to match GitHub Pages repository subdirectory
-    - name: Change base-tag in index.html from / to BlazorGitHubPagesDemo
+    # changes the base-tag in index.html from '/' to 'BUTR.CrashReportViewer' to match GitHub Pages repository subdirectory
+    - name: Change base-tag in index.html from / to BUTR.CrashReportViewer
       run: sed -i 's/<base href="\/" \/>/<base href="\/BUTR.CrashReportViewer\/" \/>/g' build/wwwroot/index.html
     
     # copy index.html to 404.html to serve the same file when a file is not found
