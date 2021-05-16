@@ -1,7 +1,14 @@
 name: Publish Frontend
 
 on:
-  push
+  push:
+    branches:
+      - dev
+    paths:
+      - '.github/workflows/frontend.yml'
+      - 'src/**'
+      - '!src/BUTR.CrashReportViewer/Server/**'
+      - 'build/**'
 
 env:
   # Disable the .NET logo in the console output.
