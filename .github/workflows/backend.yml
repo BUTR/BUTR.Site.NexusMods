@@ -1,4 +1,4 @@
-name: Build and deploy ASP.Net Core app to Azure
+name: Publish Backend
 
 on:
   push:
