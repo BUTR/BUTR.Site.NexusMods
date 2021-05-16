@@ -3,7 +3,7 @@ name: Publish Frontend
 on:
   push:
     branches:
-      - dev
+      - master
     paths:
       - '.github/workflows/frontend.yml'
       - 'src/**'
