@@ -1,4 +1,4 @@
-name: Publish Backend
+name: Publish Backend Docker Image
 
 on:
   push:
