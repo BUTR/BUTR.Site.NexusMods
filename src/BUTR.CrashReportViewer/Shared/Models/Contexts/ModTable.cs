@@ -2,6 +2,8 @@
 {
     public class ModTable
     {
+        public string Name { get; set; }
+
         public string GameDomain { get; set; }
 
         public int ModId { get; set; }

@@ -1,4 +1,4 @@
-﻿@page "/LinkMod"
+﻿@page "/Mods"
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
 @inject IHttpClientFactory _clientFactory
@@ -25,8 +25,37 @@
     </div>
 </div>
 
+<h1>Crash Reports</h1>
+@if (_mods == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Game</th>
+                <th>Id</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var mod in _mods)
+            {
+                <tr>
+                    <td>@mod.Name</td>
+                    <td>@mod.GameDomain</td>
+                    <td>@mod.ModId</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 @code {
     private LinkModModel _model = new();
+    private ModModel[]? _mods;
     private NexusModsValidateResponse _user = default!;
     private bool _isLoading;
 
@@ -42,6 +71,32 @@
         if (validationResult is null)
         {
             _navigationManager.NavigateTo("Login", true);
+        }
+
+        _mods = await GetMods();
+    }
+
+    private async Task<ModModel[]?> GetMods()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "Mods");
+            request.Headers.Add("apikey", _user.Key);
+            request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            var httpClient = _clientFactory.CreateClient("Backend");
+            var response = await httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+            else
+            {
+                return await response.Content.ReadFromJsonAsync<ModModel[]>();
+            }
+        }
+        catch (Exception)
+        {
+            return null;
         }
     }
 

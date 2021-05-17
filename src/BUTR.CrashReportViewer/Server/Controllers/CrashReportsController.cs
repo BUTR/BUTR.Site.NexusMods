@@ -46,7 +46,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             if (validateResponse == null)
                 return StatusCode((int) HttpStatusCode.Unauthorized, "Invalid API Key!");
 
-            var allowedMods = _mainDbContext.Mods
+            var userMods = _mainDbContext.Mods
                 .AsNoTracking()
                 .AsEnumerable()
                 .Where(m => m.UserIds.Contains(validateResponse.UserId))
@@ -56,7 +56,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == validateResponse.UserId))
                 .AsNoTracking()
                 .AsEnumerable()
-                .Where(cr => cr.ModIds.Intersect(allowedMods.Select(m => m.ModId)).Any());
+                .Where(cr => cr.ModIds.Intersect(userMods.Select(m => m.ModId)).Any());
 
             var crashReportModels = crashReports.Select(cr =>
             {

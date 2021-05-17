@@ -25,6 +25,7 @@ namespace BUTR.CrashReportViewer.Shared.Contexts
             builder.ToTable("mod_entity").HasKey(p => new { p.GameDomain, p.ModId });
             builder.Property(p => p.GameDomain).HasColumnName("game_domain").IsRequired();
             builder.Property(p => p.ModId).HasColumnName("mod_id").IsRequired();
+            builder.Property(p => p.Name).HasColumnName("name").IsRequired();
             builder.Property(p => p.UserIds).HasColumnName("user_ids").HasConversion(converter).IsRequired().Metadata.SetValueComparer(valueComparer);
         }
     }

@@ -1,5 +1,6 @@
 ﻿using BUTR.CrashReportViewer.Shared.Contexts;
 using BUTR.CrashReportViewer.Shared.Helpers;
+using BUTR.CrashReportViewer.Shared.Models;
 using BUTR.CrashReportViewer.Shared.Models.Contexts;
 
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +33,34 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             _logger = logger ?? throw  new ArgumentNullException(nameof(logger));
             _nexusModsAPIClient = nexusModsAPIClient ?? throw  new ArgumentNullException(nameof(nexusModsAPIClient));
             _mainDbContext = mainDbContext ?? throw  new ArgumentNullException(nameof(mainDbContext));
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> Get()
+        {
+            // We need the NexusMods API Key to confirm we are dealing with a legit User
+            // and get his Id which we use to find his mods
+            var apiKeyValues = Request.Headers.TryGetValue("apikey", out var val) ? val : StringValues.Empty;
+            if (!apiKeyValues.Any())
+                return StatusCode((int) HttpStatusCode.BadRequest, "API Key not found!");
+
+            var apiKey = apiKeyValues.First();
+            var validateResponse = await _nexusModsAPIClient.ValidateAPIKey(apiKey);
+            if (validateResponse == null)
+                return StatusCode((int) HttpStatusCode.Unauthorized, "Invalid API Key!");
+
+            var userMods = _mainDbContext.Mods
+                .AsNoTracking()
+                .AsEnumerable()
+                .Where(m => m.UserIds.Contains(validateResponse.UserId));
+
+            var modModels = userMods.Select(m => new ModModel
+            {
+                Name = m.Name,
+                GameDomain = m.GameDomain,
+                ModId = m.ModId,
+            });
+            return StatusCode((int) HttpStatusCode.OK, modModels);
         }
 
         [HttpGet("LinkMod")]
@@ -68,6 +97,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 
                 await _mainDbContext.Mods.AddAsync(new ModTable
                 {
+                    Name = modInfo.Name,
                     GameDomain = modInfo.DomainName,
                     ModId = modInfo.ModId,
                     UserIds = new[] { modInfo.User.MemberId }

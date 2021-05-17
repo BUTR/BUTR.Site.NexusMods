@@ -39,24 +39,6 @@ namespace BUTR.CrashReportViewer.Server
             services.AddProxies();
 
             services.AddControllers();
-
-            services.AddCors(options =>
-            {
-                options.AddPolicy("DevCorsPolicy", builder =>
-                {
-                    builder
-                        .AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
-                });
-                options.AddPolicy("GitHubPages", builder =>
-                {
-                    builder
-                        .WithOrigins("https://crashreports.bannerlord.aragas.org")
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
-                });
-            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -70,14 +52,12 @@ namespace BUTR.CrashReportViewer.Server
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseCors("DevCorsPolicy");
             }
             else
             {
                 //app.UseExceptionHandler("/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 //app.UseHsts();
-                app.UseCors("GitHubPages");
             }
 
             app.UseRouting();
