@@ -39,7 +39,7 @@ jobs:
       uses: docker/login-action@v1
       with:
         registry: ghcr.io
-        username: Aragas
+        username: BUTR
         password: ${{ secrets.TOKEN_GPR }}
 
     - name: Build and push
@@ -51,7 +51,7 @@ jobs:
         file: ./src/BUTR.CrashReportViewer/Server/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
-        tags: ghcr.io/${{ github.repository_owner }}/crashreportviewer:latest
+        tags: ghcr.io/butr/crashreportviewer:latest
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
 
