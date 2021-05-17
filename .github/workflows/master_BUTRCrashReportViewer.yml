@@ -27,7 +27,6 @@ jobs:
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
-        if: github.event_name != 'repository_dispatch'
         with:
           app-name: 'BUTRCrashReportViewer'
           slot-name: 'production'
