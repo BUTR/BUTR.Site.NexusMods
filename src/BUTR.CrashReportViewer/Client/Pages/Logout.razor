@@ -7,6 +7,6 @@
     protected override async Task OnInitializedAsync()
     {
         await _localStorage.RemoveItemAsync("user");
-        _navigationManager.NavigateTo("/", true);
+        _navigationManager.NavigateTo("/Index", true);
     }
 }

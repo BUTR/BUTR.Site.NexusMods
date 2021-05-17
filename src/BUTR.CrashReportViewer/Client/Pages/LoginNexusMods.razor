@@ -10,7 +10,7 @@
             <DataAnnotationsValidator />
             <div class="form-group">
                 <label>Nexus Mods API Key</label>
-                <InputText @bind-Value="_model.NexusModsAPIKey" class="form-control" />
+                <InputText @bind-Value="_model.NexusModsAPIKey" class="form-control" type="password" />
                 <ValidationMessage For="@(() => _model.NexusModsAPIKey)" />
             </div>
             <button disabled="@_isLoading" class="btn btn-primary">
