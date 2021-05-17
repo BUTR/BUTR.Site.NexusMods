@@ -1,4 +1,4 @@
-LABEL org.opencontainers.image.source https://github.com/BUTR/BUTR.CrashReportViewer
+LABEL org.opencontainers.image.source="https://github.com/BUTR/BUTR.CrashReportViewer"
 
 
 FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
