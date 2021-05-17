@@ -61,7 +61,7 @@ jobs:
     - name: Trigger Aragas.QServer.Hosting
       uses: peter-evans/repository-dispatch@v1
       with:
-        token: ${{s ecrets.TOKEN_GPR }}
+        token: ${{ secrets.TOKEN_GPR }}
         repository: BUTR/BUTR.CrashReportViewer 
         event-type: deploy-docker-image
         
