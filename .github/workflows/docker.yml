@@ -51,7 +51,7 @@ jobs:
         file: ./src/BUTR.CrashReportViewer/Server/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
-        tags: ghcr.io/butr/crashreportviewer:latest
+        tags: ghcr.io/butr/butr.crashreportbiewer/crashreportviewer:latest
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
 
