@@ -29,6 +29,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
           running-workflow-name: 'backend-docker'
+          trigger_workflow: true
           allowed-conclusions: success
     
       - name: Deploy to Azure Web App
