@@ -8,7 +8,7 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/docker.yml'
+      - '.github/workflows/master_BUTRCrashReportViewer.yml'
       - 'src/**'
       - '!src/BUTR.CrashReportViewer/Client/**'
       - 'build/**'
