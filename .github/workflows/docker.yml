@@ -40,7 +40,7 @@ jobs:
       with:
         registry: ghcr.io
         username: Aragas
-        password: ${{ secrets.GITHUB_TOKEN_GPR }}
+        password: ${{ secrets.TOKEN_GPR }}
 
     - name: Build and push
       id: docker_build
