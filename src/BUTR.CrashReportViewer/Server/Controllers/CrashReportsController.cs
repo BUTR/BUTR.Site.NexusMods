@@ -8,8 +8,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace BUTR.CrashReportViewer.Server.Controllers
 {
@@ -17,7 +18,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
     [Route("[controller]")]
     public class CrashReportsController : ControllerBase
     {
-        private readonly ILogger<CrashReportsController> _logger;
+        private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
         private readonly MainDbContext _mainDbContext;
 
@@ -32,20 +33,18 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         }
 
         [HttpGet]
-        public async IAsyncEnumerable<CrashReportModel> Get()
+        public async Task<ActionResult> Get()
         {
             // We need the NexusMods API Key to confirm we are dealing with a legit User
             // and get his Id which we use to find his mods
             var apiKeyValues = Request.Headers.TryGetValue("apikey", out var val) ? val : StringValues.Empty;
             if (!apiKeyValues.Any())
-            {
-                yield break;
-            }
+                return StatusCode((int) HttpStatusCode.BadRequest, "API Key not found!");
 
             var apiKey = apiKeyValues.First();
             var validateResponse = await _nexusModsAPIClient.ValidateAPIKey(apiKey);
             if (validateResponse == null)
-                yield break;
+                return StatusCode((int) HttpStatusCode.Unauthorized, "Invalid API Key!");
 
             var allowedMods = _mainDbContext.Mods
                 .AsNoTracking()
@@ -57,8 +56,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == validateResponse.UserId))
                 .AsNoTracking()
                 .AsEnumerable()
-                .Where(cr => cr.ModIds.Intersect(allowedMods.Select(m => m.ModId)).Any())
-                .ToList();
+                .Where(cr => cr.ModIds.Intersect(allowedMods.Select(m => m.ModId)).Any());
 
             var crashReportModels = crashReports.Select(cr =>
             {
@@ -71,10 +69,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                     Status = userData?.Status ?? CrashReportStatus.New
                 };
             });
-            foreach (var crashReportModel in crashReportModels)
-            {
-                yield return crashReportModel;
-            }
+            return StatusCode((int) HttpStatusCode.OK, crashReportModels);
         }
     }
 }

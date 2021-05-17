@@ -9,6 +9,7 @@ using Microsoft.Extensions.Primitives;
 
 using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace BUTR.CrashReportViewer.Server.Controllers
@@ -19,7 +20,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
     {
         public record LinkModQuery(string GameDomain, int ModId);
 
-        private readonly ILogger<ModsController> _logger;
+        private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
         private readonly MainDbContext _mainDbContext;
 
@@ -40,12 +41,16 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             // and get his Id which we use to find his mods
             var apiKeyValues = Request.Headers.TryGetValue("apikey", out var val) ? val : StringValues.Empty;
             if (!apiKeyValues.Any())
-                return BadRequest("API Key not found!");
+                return StatusCode((int) HttpStatusCode.BadRequest, "API Key not found!");
 
             var apiKey = apiKeyValues.First();
             var validateResponse = await _nexusModsAPIClient.ValidateAPIKey(apiKey);
             if (validateResponse == null)
-                return Unauthorized("Invalid API Key!");
+                return StatusCode((int) HttpStatusCode.Unauthorized, "Invalid API Key!");
+
+            var modInfoResponse = await _nexusModsAPIClient.GetMod(query.GameDomain, query.ModId, apiKey);
+            if (modInfoResponse == null)
+                return StatusCode((int) HttpStatusCode.BadRequest, "Mod not found!");
 
 
             var mod = await _mainDbContext.Mods
@@ -56,7 +61,10 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             {
                 var modInfo = await _nexusModsAPIClient.GetMod(query.GameDomain, query.ModId, apiKey);
                 if (modInfo is null)
-                    return NotFound("Mod not found!");
+                    return StatusCode((int) HttpStatusCode.NotFound, "Mod not found!");
+
+                if (validateResponse.UserId != modInfoResponse.User.MemberId)
+                    return StatusCode((int) HttpStatusCode.Forbidden, "User does not have access to the mod!");
 
                 await _mainDbContext.Mods.AddAsync(new ModTable
                 {
@@ -69,12 +77,12 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             else
             {
                 if (!mod.UserIds.Contains(validateResponse.UserId))
-                    return Forbid("User does not have access to the mod!");
+                    return StatusCode((int) HttpStatusCode.Forbidden, "User does not have access to the mod!");
 
-                return Ok("Already linked!");
+                return StatusCode((int) HttpStatusCode.OK, "Already linked!");
             }
 
-            return Ok("Linked successful");
+            return StatusCode((int) HttpStatusCode.OK, "Linked successful!");
         }
     }
 }

@@ -1,11 +1,13 @@
 using Blazored.LocalStorage;
 
+using BUTR.CrashReportViewer.Client.Options;
 using BUTR.CrashReportViewer.Shared.Helpers;
 
 using Flurl;
 
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 using System;
 using System.Net.Http;
@@ -20,21 +22,21 @@ namespace BUTR.CrashReportViewer.Client
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            const string azureEndpoint = "https://crashreportviewer.azurewebsites.net";
+            builder.Services.Configure<BackendOptions>(builder.Configuration.GetSection("Backend"));
+
             builder.Services.AddScoped(sp => new HttpClient
             {
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
             });
-            builder.Services.AddHttpClient("NexusModsAPI", client =>
+            builder.Services.AddHttpClient("NexusModsAPI", (sp, client) =>
             {
-                //client.BaseAddress = new Uri("https://thingproxy.freeboard.io/fetch/https://api.nexusmods.com/");
-                client.BaseAddress = new Uri(Url.Combine($"{azureEndpoint}", "/NexusModsAPIProxy/"));
-                //client.BaseAddress = new Uri(Url.Combine($"{builder.HostEnvironment.BaseAddress}", "/NexusModsAPIProxy/"));
+                var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
+                client.BaseAddress = new Uri(Url.Combine($"{backendOptions.Endpoint}", "/NexusModsAPIProxy/"));
             });
-            builder.Services.AddHttpClient("Backend", client =>
+            builder.Services.AddHttpClient("Backend", (sp, client) =>
             {
-                client.BaseAddress = new Uri(azureEndpoint);
-                //client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+                var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
+                client.BaseAddress = new Uri(backendOptions.Endpoint);
             });
 
             builder.Services.AddScoped<NexusModsAPIClient>();
