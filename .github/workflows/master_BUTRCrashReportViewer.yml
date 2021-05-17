@@ -48,7 +48,7 @@ jobs:
       uses: azure/webapps-deploy@v2
       id: deploy-to-webapp
       with:
-        app-name: CrashReportViewer-BUTR
+        app-name: BUTRCrashReportViewer
         slot-name: Production
         publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
         package: ${{env.DOTNET_ROOT}}/build
