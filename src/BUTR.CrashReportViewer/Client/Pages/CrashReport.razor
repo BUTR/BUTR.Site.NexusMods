@@ -4,45 +4,49 @@
 @inject IHttpClientFactory _clientFactory
 @inject NexusModsAPIClient _nexusModsAPIKeyValidator
 
-<h1>Crash Reports</h1>
-@if (_reports == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Id</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Comment</th>
-            <th></th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var report in _reports)
+<div class="card">
+    <h4 class="card-header">Crash Reports</h4>
+    <div class="card-body">
+        @if (_reports == null)
         {
-            <tr>
-                <td>@report.Id</td>
-                <td>@report.Date.ToString("yy-MM-dd HH:mm:ss")</td>
-                <td>@report.Status</td>
-                <td>
-                    <EditForm Model="@report">
-                        <InputText id="name" @bind-Value="report.Comment" @onfocusout="() => OnFocusOut(report)"/>
-                    </EditForm>
-                </td>
-                <td>
-                    <button @onclick="OnSelected">
-                        Open
-                    </button>
-                </td>
-            </tr>
+            <p><em>Loading...</em></p>
         }
-        </tbody>
-    </table>
-}
+        else
+        {
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Comment</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var report in _reports)
+                {
+                    <tr>
+                        <td>@report.Id</td>
+                        <td>@report.Date.ToString("yy-MM-dd HH:mm:ss")</td>
+                        <td>@report.Status</td>
+                        <td>
+                            <EditForm Model="@report">
+                                <InputText id="name" @bind-Value="report.Comment" @onfocusout="() => OnFocusOut(report)"/>
+                            </EditForm>
+                        </td>
+                        <td>
+                            <button @onclick="OnSelected">
+                                Open
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
 
 @code {
     private CrashReportModel[]? _reports;

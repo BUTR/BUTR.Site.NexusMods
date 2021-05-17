@@ -25,33 +25,37 @@
     </div>
 </div>
 
-<h1>Crash Reports</h1>
-@if (_mods == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Game</th>
-                <th>Id</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var mod in _mods)
-            {
+<div class="card">
+    <h4 class="card-header">Linked Mods</h4>
+    <div class="card-body">
+        @if (_mods == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
                 <tr>
-                    <td>@mod.Name</td>
-                    <td>@mod.GameDomain</td>
-                    <td>@mod.ModId</td>
+                    <th>Name</th>
+                    <th>Game</th>
+                    <th>Id</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-}
+                </thead>
+                <tbody>
+                @foreach (var mod in _mods)
+                {
+                    <tr>
+                        <td>@mod.Name</td>
+                        <td>@mod.GameDomain</td>
+                        <td>@mod.ModId</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
 
 @code {
     private LinkModModel _model = new();
@@ -107,14 +111,15 @@ else
 
         if (await DoLinkMod(_model))
         {
-            _isLoading = false;
-            StateHasChanged();
+            _mods = await GetMods();
         }
         else
         {
             _model = new LinkModModel();
-            StateHasChanged();
         }
+
+        _isLoading = false;
+        StateHasChanged();
     }
 
     private async Task<bool> DoLinkMod(LinkModModel model)
