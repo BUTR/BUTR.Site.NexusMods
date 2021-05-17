@@ -57,3 +57,11 @@ jobs:
 
     - name: Image digest
       run: echo ${{ steps.docker_build.outputs.digest }}
+
+    - name: Trigger Aragas.QServer.Hosting
+      uses: peter-evans/repository-dispatch@v1
+      with:
+        token: ${{s ecrets.TOKEN_GPR }}
+        repository: BUTR/BUTR.CrashReportViewer 
+        event-type: deploy-docker-image
+        
