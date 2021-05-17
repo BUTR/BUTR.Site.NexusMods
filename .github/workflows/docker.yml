@@ -45,7 +45,7 @@ jobs:
         builder: ${{ steps.buildx.outputs.name }}
         context: ./src
         file: ./src/BUTR.CrashReportViewer/Server/Dockerfile
-        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: butr/crashreportviewer:latest
         cache-from: type=local,src=/tmp/.buildx-cache
