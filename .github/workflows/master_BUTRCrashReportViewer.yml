@@ -8,6 +8,7 @@ on:
       - '.github/workflows/master_BUTRCrashReportViewer.yml'
       - 'src/**'
       - '!src/BUTR.CrashReportViewer/Client/**'
+      - '!src/BUTR.CrashReportViewer/Server/Dockerfile'
       - 'build/**'
   workflow_dispatch:
 
