@@ -25,5 +25,5 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-EXPOSE 8080\tcp
+EXPOSE 8080/tcp
 ENTRYPOINT ["dotnet", "BUTR.CrashReportViewer.Server.dll"]
