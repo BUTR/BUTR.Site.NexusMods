@@ -4,15 +4,17 @@
 name: Build and deploy container app to Azure Web App - BUTRCrashReportViewer
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/backend-docker.yml'
-      - '.github/workflows/master_BUTRCrashReportViewer.yml'
-      - 'src/**'
-      - '!src/BUTR.CrashReportViewer/Client/**'
-      - 'build/**'
+  #push:
+  #  branches:
+  #    - master
+  #  paths:
+  #    - '.github/workflows/backend-docker.yml'
+  #    - '.github/workflows/master_BUTRCrashReportViewer.yml'
+  #    - 'src/**'
+  #    - '!src/BUTR.CrashReportViewer/Client/**'
+  #    - 'build/**'
+  repository_dispatch:
+    types: [deploy-docker-image]
   workflow_dispatch:
 
 jobs:
@@ -22,19 +24,10 @@ jobs:
       name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     steps:
-      - name: Wait on tests
-        uses: lewagon/wait-on-check-action@master
-        with:
-          ref: ${{ github.ref }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
-          running-workflow-name: 'backend-docker'
-          trigger_workflow: true
-          allowed-conclusions: success
-    
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
+        if: github.event_name != 'repository_dispatch'
         with:
           app-name: 'BUTRCrashReportViewer'
           slot-name: 'production'
