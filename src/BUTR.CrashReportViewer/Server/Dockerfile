@@ -1,9 +1,5 @@
-LABEL org.opencontainers.image.source="https://github.com/BUTR/BUTR.CrashReportViewer"
-
-
 FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
 WORKDIR /app
-
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
@@ -28,5 +24,6 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
+LABEL org.opencontainers.image.source="https://github.com/BUTR/BUTR.CrashReportViewer"
 EXPOSE 8080/tcp
 ENTRYPOINT ["dotnet", "BUTR.CrashReportViewer.Server.dll"]
