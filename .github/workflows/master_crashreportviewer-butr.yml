@@ -22,6 +22,9 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: 'backend'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
     - name: Checkout Repository
@@ -43,6 +46,7 @@ jobs:
 
     - name: Run Azure webapp deploy action using publish profile credentials
       uses: azure/webapps-deploy@v2
+      id: deploy-to-webapp
       with:
         app-name: CrashReportViewer-BUTR
         slot-name: Production
