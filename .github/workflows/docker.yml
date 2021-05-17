@@ -1,0 +1,32 @@
+name: Publish Backend
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/docker.yml'
+      - 'src/**'
+      - '!src/BUTR.CrashReportViewer/Client/**'
+      - 'build/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-publish-docker:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Log into registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+    - name: Build and push
+      id: docker_build
+      uses: docker/build-push-action@v2
+      with:
+        context: ./src
+        file: ./src/BUTR.CrashReportViewer/Server/Dockerfile
+        platforms: linux/amd64,linux/arm64,linux/arm/v7
+        push: true
+        tags: butr/crashreportviewer:latest
