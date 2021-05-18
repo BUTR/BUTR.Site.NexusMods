@@ -1,10 +1,12 @@
 using Blazored.LocalStorage;
 
+using BUTR.CrashReportViewer.Client.Extensions;
 using BUTR.CrashReportViewer.Client.Options;
 using BUTR.CrashReportViewer.Shared.Helpers;
 
 using Flurl;
 
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -17,33 +19,39 @@ namespace BUTR.CrashReportViewer.Client
 {
     public class Program
     {
-        public static async Task Main(string[] args)
-        {
-            var builder = WebAssemblyHostBuilder.CreateDefault(args);
-            builder.RootComponents.Add<App>("#app");
+        public static Task Main(string[] args) => CreateHostBuilder(args).Build().RunAsync();
 
-            builder.Services.Configure<BackendOptions>(builder.Configuration.GetSection("Backend"));
-
-            builder.Services.AddScoped(sp => new HttpClient
+        public static WebAssemblyHostBuilder CreateHostBuilder(string[] args) => WebAssemblyHostBuilder
+            .CreateDefault(args)
+            .AddRootComponent<App>("#app")
+            .ConfigureServices((builder, services) =>
             {
-                BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
-            });
-            builder.Services.AddHttpClient("NexusModsAPI", (sp, client) =>
-            {
-                var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
-                client.BaseAddress = new Uri(Url.Combine($"{backendOptions.Endpoint}", "/NexusModsAPIProxy/"));
-            });
-            builder.Services.AddHttpClient("Backend", (sp, client) =>
-            {
-                var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
-                client.BaseAddress = new Uri(backendOptions.Endpoint);
-            });
+                services.Configure<BackendOptions>(builder.Configuration.GetSection("Backend"));
 
-            builder.Services.AddScoped<NexusModsAPIClient>();
+                services.AddScoped(sp => new HttpClient
+                {
+                    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+                });
+                services.AddHttpClient("NexusModsAPI", (sp, client) =>
+                {
+                    var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
+                    client.BaseAddress = new Uri(Url.Combine($"{backendOptions.Endpoint}", "/NexusModsAPIProxy/"));
+                });
+                services.AddHttpClient("Backend", (sp, client) =>
+                {
+                    var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
+                    client.BaseAddress = new Uri(backendOptions.Endpoint);
+                });
 
-            builder.Services.AddBlazoredLocalStorage();
+                services.AddScoped<NexusModsAPIClient>();
+                services.AddScoped<AuthenticationStateProvider, NexusModsAuthenticationStateProvider>();
 
-            await builder.Build().RunAsync();
-        }
+                services.AddBlazoredLocalStorage();
+
+                services.AddAuthorizationCore(options =>
+                {
+
+                });
+            });
     }
 }

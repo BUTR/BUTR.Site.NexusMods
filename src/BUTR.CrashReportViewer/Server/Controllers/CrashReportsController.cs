@@ -31,8 +31,6 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         [HttpGet]
         public async Task<ActionResult> Get([FromHeader] string? apiKey)
         {
-            throw new Exception();
-
             if (apiKey is null)
                 return StatusCode((int) HttpStatusCode.BadRequest, "API Key not found!");
 

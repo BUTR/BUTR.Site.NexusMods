@@ -1,26 +1,32 @@
-﻿@page "/Login"
+﻿@page "/login-nexusmods"
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
 @inject NexusModsAPIClient _nexusModsApiClient
 
-<div class="card">
-    <h4 class="card-header">Login</h4>
-    <div class="card-body">
-        <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
-            <DataAnnotationsValidator />
-            <div class="form-group">
-                <label>Nexus Mods API Key</label>
-                <InputText @bind-Value="_model.NexusModsAPIKey" class="form-control" type="password" />
-                <ValidationMessage For="@(() => _model.NexusModsAPIKey)" />
+<!--https://jsfiddle.net/bootstrapious/j80aheo9/-->
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 col-xl-7 mx-auto">
+            <div class="card">
+                <h4 class="card-header text-center">NexusMods</h4>
+                <div class="card-body">
+                    <p class="text-muted mb-4">Login via NexusMod's API Key.</p>
+                    <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
+                        <DataAnnotationsValidator />
+                        <div class="form-group mb-3">
+                            <InputText @bind-Value="_model.NexusModsAPIKey" type="password" placeholder="Nexus Mods API Key" required="" class="form-control border-0 shadow-sm px-4 text-primary" />
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block text-uppercase mb-2">
+                            @if (_isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm mr-1"></span>
+                            }
+                            Login
+                        </button>
+                    </EditForm>
+                </div>
             </div>
-            <button disabled="@_isLoading" class="btn btn-primary">
-                @if (_isLoading)
-                {
-                    <span class="spinner-border spinner-border-sm mr-1"></span>
-                }
-                Login
-            </button>
-        </EditForm>
+        </div>
     </div>
 </div>
 
@@ -28,17 +34,7 @@
     private readonly LoginModel _model = new();
     private bool _isLoading;
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (await _localStorage.ContainKeyAsync("user"))
-        {
-            var result = await _nexusModsApiClient.ValidateAPIKey(_model.NexusModsAPIKey);
-            if (result is not null)
-            {
-                _navigationManager.NavigateTo("CrashReportsViewer", true);
-            }
-        }
-    }
+    public string? GetReturnUrl() => QueryStringHelper.GetParameter(new Uri(_navigationManager.Uri).Query, "returnUrl");
 
     private async void OnValidSubmit()
     {
@@ -53,7 +49,7 @@
         else
         {
             await _localStorage.SetItemAsync("user", result);
-            _navigationManager.NavigateTo("CrashReportsViewer", true);
+            _navigationManager.NavigateTo(GetReturnUrl() ?? "crash-reports-viewer", true);
         }
     }
 }

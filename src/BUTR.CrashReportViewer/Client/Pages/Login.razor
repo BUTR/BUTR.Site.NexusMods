@@ -1,0 +1,21 @@
+﻿@page "/login"
+@inject NavigationManager _navigationManager
+
+<!--https://jsfiddle.net/StartBootstrap/amxr8n19/-->
+<div class="row">
+    <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+        <div class="card card-signin my-5">
+            <div class="card-body">
+                <h5 class="card-title text-center">Sign In</h5>
+                <form class="form-signin">
+                    <hr class="my-4">
+                    <a class="btn btn-lg btn-nexusmods btn-block text-uppercase" href="@NexusModsUrl" role="button">Log In via NexusMods</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public string NexusModsUrl => $"login-nexusmods{new Uri(_navigationManager.Uri).Query}";
+}

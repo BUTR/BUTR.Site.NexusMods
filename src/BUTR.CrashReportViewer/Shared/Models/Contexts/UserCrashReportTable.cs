@@ -2,14 +2,14 @@
 {
     public class UserCrashReportTable
     {
-        public int Id { get; set; }
+        public int Id { get; set; } = default!;
 
-        public int UserId { get; set; }
+        public int UserId { get; set; } = default!;
 
-        public CrashReportTable CrashReport { get; set; }
+        public CrashReportTable CrashReport { get; set; } = default!;
 
-        public CrashReportStatus Status { get; set; }
+        public CrashReportStatus Status { get; set; } = default!;
 
-        public string Comment { get; set; }
+        public string Comment { get; set; } = default!;
     }
 }

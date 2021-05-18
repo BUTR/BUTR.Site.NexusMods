@@ -5,12 +5,12 @@ namespace BUTR.CrashReportViewer.Shared.Models.Contexts
 {
     public class CrashReportTable
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = default!;
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = default!;
 
-        public int[] ModIds { get; set; }
+        public int[] ModIds { get; set; } = default!;
 
-        public List<UserCrashReportTable> UserCrashReports { get; set; }
+        public List<UserCrashReportTable> UserCrashReports { get; set; } = default!;
     }
 }

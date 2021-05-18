@@ -1,4 +1,6 @@
-﻿@page "/CrashReportsViewer"
+﻿@page "/crash-reports-viewer"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
 @inject IHttpClientFactory _clientFactory
@@ -9,39 +11,39 @@
     <div class="card-body">
         @if (_reports == null)
         {
-            <p><em>Loading...</em></p>
+            <span class="spinner-border"></span>
         }
         else
         {
             <table class="table">
                 <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Comment</th>
-                    <th></th>
-                </tr>
+                    <tr>
+                        <th>Id</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Comment</th>
+                        <th></th>
+                    </tr>
                 </thead>
                 <tbody>
-                @foreach (var report in _reports)
-                {
-                    <tr>
-                        <td>@report.Id</td>
-                        <td>@report.Date.ToString("yy-MM-dd HH:mm:ss")</td>
-                        <td>@report.Status</td>
-                        <td>
-                            <EditForm Model="@report">
-                                <InputText id="name" @bind-Value="report.Comment" @onfocusout="() => OnFocusOut(report)"/>
-                            </EditForm>
-                        </td>
-                        <td>
-                            <button @onclick="OnSelected">
-                                Open
-                            </button>
-                        </td>
-                    </tr>
-                }
+                    @foreach (var report in _reports)
+                    {
+                        <tr>
+                            <td>@report.Id</td>
+                            <td>@report.Date.ToString("yy-MM-dd HH:mm:ss")</td>
+                            <td>@report.Status</td>
+                            <td>
+                                <EditForm Model="@report">
+                                    <InputText id="name" @bind-Value="report.Comment" @onfocusout="() => OnFocusOut(report)" />
+                                </EditForm>
+                            </td>
+                            <td>
+                                <button @onclick="OnSelected">
+                                    Open
+                                </button>
+                            </td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         }
@@ -54,18 +56,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!await _localStorage.ContainKeyAsync("user"))
-        {
-            _navigationManager.NavigateTo("Login", true);
-        }
-
         _user = await _localStorage.GetItemAsync<NexusModsValidateResponse>("user");
-        var validationResult = await _nexusModsApiClient.ValidateAPIKey(_user.Key);
-        if (validationResult is null)
-        {
-            _navigationManager.NavigateTo("Login", true);
-        }
-
         _reports = await GetCrashReports();
     }
 

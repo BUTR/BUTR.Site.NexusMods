@@ -1,4 +1,9 @@
 ﻿@page "/"
-@inject ILocalStorageService _localStorage
+@inject NavigationManager _navigationManager
 
-<NavLink href="Login" class="nav-item nav-link">Log In via NexusMods</NavLink>
+@code {
+    protected override void OnInitialized()
+    {
+        _navigationManager.NavigateTo("crash-reports-viewer");
+    }
+}

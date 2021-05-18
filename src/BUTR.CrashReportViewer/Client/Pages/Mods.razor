@@ -1,4 +1,6 @@
-﻿@page "/Mods"
+﻿@page "/mods"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
 @inject IHttpClientFactory _clientFactory
@@ -24,33 +26,33 @@
         </EditForm>
     </div>
 </div>
-
+<hr />
 <div class="card">
     <h4 class="card-header">Linked Mods</h4>
     <div class="card-body">
         @if (_mods == null)
         {
-            <p><em>Loading...</em></p>
+            <span class="spinner-border"></span>
         }
         else
         {
             <table class="table">
                 <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Game</th>
-                    <th>Id</th>
-                </tr>
+                    <tr>
+                        <th>Name</th>
+                        <th>Game</th>
+                        <th>Id</th>
+                    </tr>
                 </thead>
                 <tbody>
-                @foreach (var mod in _mods)
-                {
-                    <tr>
-                        <td><a href="@mod.Url">@mod.Name</a></td>
-                        <td>@mod.GameDomain</td>
-                        <td>@mod.ModId</td>
-                    </tr>
-                }
+                    @foreach (var mod in _mods)
+                    {
+                        <tr>
+                            <td><a href="@mod.Url">@mod.Name</a></td>
+                            <td>@mod.GameDomain</td>
+                            <td>@mod.ModId</td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         }
@@ -65,18 +67,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!await _localStorage.ContainKeyAsync("user"))
-        {
-            _navigationManager.NavigateTo("Login", true);
-        }
-
         _user = await _localStorage.GetItemAsync<NexusModsValidateResponse>("user");
-        var validationResult = await _nexusModsApiClient.ValidateAPIKey(_user.Key);
-        if (validationResult is null)
-        {
-            _navigationManager.NavigateTo("Login", true);
-        }
-
         _mods = await GetMods();
     }
 
