@@ -2,7 +2,7 @@
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
 @inject IHttpClientFactory _clientFactory
-@inject NexusModsAPIClient _nexusModsAPIKeyValidator
+@inject NexusModsAPIClient _nexusModsApiClient
 
 <div class="card">
     <h4 class="card-header">Link Mod</h4>
@@ -11,7 +11,7 @@
             <DataAnnotationsValidator />
             <div class="form-group">
                 <label>Mod Url</label>
-                <InputText @bind-Value="_model.ModUrl" class="form-control" />
+                <InputText @bind-Value="_model.ModUrl" placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1" class="form-control" />
                 <ValidationMessage For="@(() => _model.ModUrl)" />
             </div>
             <button disabled="@_isLoading" class="btn btn-primary">
@@ -46,7 +46,7 @@
                 @foreach (var mod in _mods)
                 {
                     <tr>
-                        <td>@mod.Name</td>
+                        <td><a href="@mod.Url">@mod.Name</a></td>
                         <td>@mod.GameDomain</td>
                         <td>@mod.ModId</td>
                     </tr>
@@ -71,7 +71,7 @@
         }
 
         _user = await _localStorage.GetItemAsync<NexusModsValidateResponse>("user");
-        var validationResult = await _nexusModsAPIKeyValidator.ValidateAPIKey(_user.Key);
+        var validationResult = await _nexusModsApiClient.ValidateAPIKey(_user.Key);
         if (validationResult is null)
         {
             _navigationManager.NavigateTo("Login", true);

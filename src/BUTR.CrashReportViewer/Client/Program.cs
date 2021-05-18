@@ -41,7 +41,6 @@ namespace BUTR.CrashReportViewer.Client
 
             builder.Services.AddScoped<NexusModsAPIClient>();
 
-
             builder.Services.AddBlazoredLocalStorage();
 
             await builder.Build().RunAsync();

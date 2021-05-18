@@ -30,5 +30,8 @@ namespace BUTR.CrashReportViewer.Shared.Models.NexusModsAPI
 
         [JsonPropertyName("is_premium")]
         public bool IsPremium { get; set; }
+
+        [JsonIgnore]
+        public string Url => $"https://www.nexusmods.com/users/{UserId}";
     }
 }

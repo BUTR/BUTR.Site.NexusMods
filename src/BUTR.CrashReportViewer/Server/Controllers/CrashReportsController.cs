@@ -5,7 +5,6 @@ using BUTR.CrashReportViewer.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
 
 using System;
 using System.Linq;
@@ -22,10 +21,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         private readonly NexusModsAPIClient _nexusModsAPIClient;
         private readonly MainDbContext _mainDbContext;
 
-        public CrashReportsController(
-            ILogger<CrashReportsController> logger,
-            NexusModsAPIClient nexusModsAPIClient,
-            MainDbContext mainDbContext)
+        public CrashReportsController(ILogger<CrashReportsController> logger, NexusModsAPIClient nexusModsAPIClient, MainDbContext mainDbContext)
         {
             _logger = logger ?? throw  new ArgumentNullException(nameof(logger));
             _nexusModsAPIClient = nexusModsAPIClient ?? throw  new ArgumentNullException(nameof(nexusModsAPIClient));
@@ -33,15 +29,13 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> Get()
+        public async Task<ActionResult> Get([FromHeader] string? apiKey)
         {
-            // We need the NexusMods API Key to confirm we are dealing with a legit User
-            // and get his Id which we use to find his mods
-            var apiKeyValues = Request.Headers.TryGetValue("apikey", out var val) ? val : StringValues.Empty;
-            if (!apiKeyValues.Any())
+            throw new Exception();
+
+            if (apiKey is null)
                 return StatusCode((int) HttpStatusCode.BadRequest, "API Key not found!");
 
-            var apiKey = apiKeyValues.First();
             var validateResponse = await _nexusModsAPIClient.ValidateAPIKey(apiKey);
             if (validateResponse == null)
                 return StatusCode((int) HttpStatusCode.Unauthorized, "Invalid API Key!");
@@ -50,7 +44,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 .AsNoTracking()
                 .AsEnumerable()
                 .Where(m => m.UserIds.Contains(validateResponse.UserId))
-                .ToList();
+                .ToArray();
 
             var crashReports = _mainDbContext.CrashReports
                 .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == validateResponse.UserId))
@@ -58,17 +52,19 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 .AsEnumerable()
                 .Where(cr => cr.ModIds.Intersect(userMods.Select(m => m.ModId)).Any());
 
-            var crashReportModels = crashReports.Select(cr =>
-            {
-                var userData = cr.UserCrashReports.FirstOrDefault();
-                return new CrashReportModel
+            var crashReportModels = crashReports
+                .Select(cr =>
                 {
-                    Id = cr.Id,
-                    Date = cr.CreatedAt,
-                    Comment = userData?.Comment ?? string.Empty,
-                    Status = userData?.Status ?? CrashReportStatus.New
-                };
-            });
+                    var userData = cr.UserCrashReports.FirstOrDefault();
+                    return new CrashReportModel
+                    {
+                        Id = cr.Id,
+                        Date = cr.CreatedAt,
+                        Comment = userData?.Comment ?? string.Empty,
+                        Status = userData?.Status ?? CrashReportStatus.New
+                    };
+                })
+                .OrderBy(cr => cr.Date);
             return StatusCode((int) HttpStatusCode.OK, crashReportModels);
         }
     }
