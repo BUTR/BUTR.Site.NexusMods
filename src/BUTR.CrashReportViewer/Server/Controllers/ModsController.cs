@@ -55,6 +55,24 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             return StatusCode((int) HttpStatusCode.OK, modModels);
         }
 
+        [HttpGet("GetMod")]
+        public async Task<ActionResult> GetMod([FromQuery] LinkModQuery query)
+        {
+            if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
+                return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
+
+            if (await _nexusModsAPIClient.ValidateAPIKey(apiKeyClaim.Value) is not { } validateResponse)
+                return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
+
+            if (await _nexusModsAPIClient.GetMod(query.GameDomain, query.ModId, apiKeyClaim.Value) is not { } modInfo)
+                return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Mod not found!"));
+
+            if (validateResponse.UserId != modInfo.User.MemberId)
+                return StatusCode((int) HttpStatusCode.Forbidden, new StandardResponse("User does not have access to the mod!"));
+
+            return StatusCode((int) HttpStatusCode.OK, new ModModel(modInfo.Name, modInfo.DomainName, modInfo.ModId));
+        }
+
         [HttpGet("LinkMod")]
         public async Task<ActionResult> LinkMod([FromQuery] LinkModQuery query)
         {
@@ -113,6 +131,30 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             await _mainDbContext.SaveChangesAsync();
 
             return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Unlinked successful!"));
+        }
+
+        [HttpGet("RefreshMod")]
+        public async Task<ActionResult> RefreshMod([FromQuery] LinkModQuery query)
+        {
+            if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
+                return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
+
+            if (await _nexusModsAPIClient.ValidateAPIKey(apiKeyClaim.Value) is not { } validateResponse)
+                return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
+
+            if (await _nexusModsAPIClient.GetMod(query.GameDomain, query.ModId, apiKeyClaim.Value) is not { } modInfo)
+                return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Mod not found!"));
+
+            if (validateResponse.UserId != modInfo.User.MemberId)
+                return StatusCode((int) HttpStatusCode.Forbidden, new StandardResponse("User does not have access to the mod!"));
+
+            if (await _mainDbContext.Mods.FindAsync(query.GameDomain, query.ModId) is { } mod)
+            {
+                mod.Name = modInfo.Name;
+                await _mainDbContext.SaveChangesAsync();
+                return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Updated successful!"));
+            }
+            return StatusCode((int) HttpStatusCode.NotFound, new StandardResponse("Mod is not linked!"));
         }
     }
 }

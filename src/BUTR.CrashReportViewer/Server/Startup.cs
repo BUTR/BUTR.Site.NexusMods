@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -44,6 +46,10 @@ namespace BUTR.CrashReportViewer.Server
             services.AddScoped<NexusModsAPIClient>();
 
             services.AddDbContext<MainDbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
+            services.AddDbContext<Dummy1DbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
+            services.AddDbContext<Dummy2DbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
+            services.AddDbContext<Dummy3DbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
+            services.AddDbContext<Dummy4DbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
 
             services.AddProxies();
 
@@ -80,13 +86,29 @@ namespace BUTR.CrashReportViewer.Server
                     .AllowAnyMethod()
                 );
             });
+
+            services.AddDistributedSqlServerCache(options =>
+            {
+                options.ConnectionString = Configuration.GetConnectionString("Main");
+                options.SchemaName = "dbo";
+                options.TableName = "nexusmods_cache_entry";
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
-                serviceScope.ServiceProvider.GetRequiredService<MainDbContext>().Database.EnsureCreated();
+                foreach (var type in new [] { typeof(Dummy1DbContext), typeof(Dummy2DbContext), typeof(Dummy3DbContext), typeof(Dummy4DbContext) })
+                {
+                    var dbContext = (DbContext) serviceScope.ServiceProvider.GetRequiredService(type);
+                    dbContext.Database.EnsureCreated();
+                    try
+                    {
+                        (dbContext.Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator)?.CreateTables();
+                    }
+                    catch { }
+                }
             }
 
             if (env.IsDevelopment())

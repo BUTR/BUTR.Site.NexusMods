@@ -70,6 +70,16 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ModModel[]>(JsonSerializerOptions) : null;
         }
 
+        public async Task<bool> RefreshMod(string token, string gameDomain, string modId)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/RefreshMod?gameDomain={gameDomain}&modId={modId}");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var httpClient = _httpClientFactory.CreateClient("Backend");
+            var response = await httpClient.SendAsync(request);
+            return response.IsSuccessStatusCode;
+        }
+
         public async Task<bool> LinkMod(string token, string gameDomain, string modId)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/LinkMod?gameDomain={gameDomain}&modId={modId}");
