@@ -1,10 +1,10 @@
 ﻿@page "/mods"
-@using Microsoft.AspNetCore.Authorization
+@using System.Diagnostics.CodeAnalysis
 @attribute [Authorize]
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
 @inject IHttpClientFactory _clientFactory
-@inject NexusModsAPIClient _nexusModsApiClient
+@inject BackendAPIClient _backendApiClient
 
 <div class="card">
     <h4 class="card-header">Link Mod</h4>
@@ -42,15 +42,30 @@
                         <th>Name</th>
                         <th>Game</th>
                         <th>Id</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var mod in _mods)
                     {
                         <tr>
-                            <td><a href="@mod.Url">@mod.Name</a></td>
-                            <td>@mod.GameDomain</td>
-                            <td>@mod.ModId</td>
+                            <td>
+                                <a href="@mod.Url">@mod.Name</a>
+                            </td>
+                            <td>
+                                @mod.GameDomain
+                            </td>
+                            <td>
+                                @mod.ModId
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-secondary" @onclick="() => OnDeleteMod(mod)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"></path>
+                                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"></path>
+                                    </svg>
+                                </button>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -62,39 +77,14 @@
 @code {
     private LinkModModel _model = new();
     private ModModel[]? _mods;
-    private NexusModsValidateResponse _user = default!;
+    private string _token = default!;
     private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
     {
-        _user = await _localStorage.GetItemAsync<NexusModsValidateResponse>("user");
-        _mods = await GetMods();
+        _token = await _localStorage.GetItemAsStringAsync("token");
+        _mods = await _backendApiClient.GetMods(_token);
     }
-
-    private async Task<ModModel[]?> GetMods()
-    {
-        try
-        {
-            var request = new HttpRequestMessage(HttpMethod.Get, "Mods");
-            request.Headers.Add("apikey", _user.Key);
-            request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _clientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-            {
-                return null;
-            }
-            else
-            {
-                return await response.Content.ReadFromJsonAsync<ModModel[]>();
-            }
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
-
 
     private async void OnValidSubmit()
     {
@@ -102,11 +92,8 @@
 
         if (await DoLinkMod(_model))
         {
-            _mods = await GetMods();
-        }
-        else
-        {
             _model = new LinkModModel();
+            _mods = await _backendApiClient.GetMods(_token);
         }
 
         _isLoading = false;
@@ -117,30 +104,56 @@
     {
         try
         {
-            if (!model.ModUrl.Contains("nexusmods.com/"))
+            if (!TryParse(model, out var gameDomain, out var modId))
                 return false;
 
-            var str1 = model.ModUrl.Split("nexusmods.com/");
-            if (str1.Length != 2)
-                return false;
-
-            var split = str1[1].Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (split.Length != 3)
-                return false;
-
-            var gameDomain = split[0];
-            var modId = split[2];
-
-            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/LinkMod?gameDomain={gameDomain}&modId={modId}");
-            request.Headers.Add("apikey", _user.Key);
-            request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _clientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode;
+            return await _backendApiClient.LinkMod(_token, gameDomain, modId);
         }
         catch (Exception)
         {
             return false;
         }
+    }
+
+    private async void OnDeleteMod(ModModel mod)
+    {
+        if (await DoUnlinkMod(mod))
+        {
+            _mods = await _backendApiClient.GetMods(_token);
+            StateHasChanged();
+        }
+    }
+
+    private async Task<bool> DoUnlinkMod(ModModel model)
+    {
+        try
+        {
+            return await _backendApiClient.UnlinkMod(_token, model.GameDomain, model.ModId.ToString());
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private bool TryParse(LinkModModel modModel, [NotNullWhen(true)] out string? gameDomain, [NotNullWhen(true)] out string? modId)
+    {
+        gameDomain = null;
+        modId = null;
+
+        if (!modModel.ModUrl.Contains("nexusmods.com/"))
+            return false;
+
+        var str1 = modModel.ModUrl.Split("nexusmods.com/");
+        if (str1.Length != 2)
+            return false;
+
+        var split = str1[1].Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (split.Length != 3)
+            return false;
+
+        gameDomain = split[0];
+        modId = split[2];
+        return true;
     }
 }

@@ -15,8 +15,12 @@
     </NotAuthorized>
 </AuthorizeView>
 
-<div class="app-container container">
-    <div class="main-body">
-        @Body
-    </div>
-</div>
+<CascadingValue Value="@this">
+    <CascadingValue Value="true" Name="IsDevice">
+        <div class="app-container container">
+            <div class="main-body">
+                @Body
+            </div>
+        </div>
+    </CascadingValue>
+</CascadingValue>

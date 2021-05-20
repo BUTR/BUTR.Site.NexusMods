@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace BUTR.CrashReportViewer.Shared.Models.NexusModsAPI
+namespace BUTR.CrashReportViewer.Server.Models.NexusModsAPI
 {
     public class NexusModsValidateResponse
     {
@@ -30,8 +30,5 @@ namespace BUTR.CrashReportViewer.Shared.Models.NexusModsAPI
 
         [JsonPropertyName("is_premium")]
         public bool IsPremium { get; set; } = default!;
-
-        [JsonIgnore]
-        public string Url => $"https://www.nexusmods.com/users/{UserId}";
     }
 }

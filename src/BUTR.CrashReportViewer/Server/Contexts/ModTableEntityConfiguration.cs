@@ -1,4 +1,4 @@
-﻿using BUTR.CrashReportViewer.Shared.Models.Contexts;
+﻿using BUTR.CrashReportViewer.Server.Models.Contexts;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System;
 using System.Linq;
 
-namespace BUTR.CrashReportViewer.Shared.Contexts
+namespace BUTR.CrashReportViewer.Server.Contexts
 {
     public sealed class ModTableEntityConfiguration : IEntityTypeConfiguration<ModTable>
     {

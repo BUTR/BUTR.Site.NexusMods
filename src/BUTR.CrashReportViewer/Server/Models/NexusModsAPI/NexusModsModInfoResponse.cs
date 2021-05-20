@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace BUTR.CrashReportViewer.Shared.Models.NexusModsAPI
+namespace BUTR.CrashReportViewer.Server.Models.NexusModsAPI
 {
     public class NexusModsModInfoResponse
     {

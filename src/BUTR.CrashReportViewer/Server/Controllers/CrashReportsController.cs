@@ -1,7 +1,10 @@
-﻿using BUTR.CrashReportViewer.Shared.Contexts;
-using BUTR.CrashReportViewer.Shared.Helpers;
+﻿using BUTR.CrashReportViewer.Server.Contexts;
+using BUTR.CrashReportViewer.Server.Helpers;
 using BUTR.CrashReportViewer.Shared.Models;
+using BUTR.CrashReportViewer.Shared.Models.API;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -15,6 +18,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class CrashReportsController : ControllerBase
     {
         private readonly ILogger _logger;
@@ -23,20 +27,19 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 
         public CrashReportsController(ILogger<CrashReportsController> logger, NexusModsAPIClient nexusModsAPIClient, MainDbContext mainDbContext)
         {
-            _logger = logger ?? throw  new ArgumentNullException(nameof(logger));
-            _nexusModsAPIClient = nexusModsAPIClient ?? throw  new ArgumentNullException(nameof(nexusModsAPIClient));
-            _mainDbContext = mainDbContext ?? throw  new ArgumentNullException(nameof(mainDbContext));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _nexusModsAPIClient = nexusModsAPIClient ?? throw new ArgumentNullException(nameof(nexusModsAPIClient));
+            _mainDbContext = mainDbContext ?? throw new ArgumentNullException(nameof(mainDbContext));
         }
 
         [HttpGet]
-        public async Task<ActionResult> Get([FromHeader] string? apiKey)
+        public async Task<ActionResult> Get()
         {
-            if (apiKey is null)
-                return StatusCode((int) HttpStatusCode.BadRequest, "API Key not found!");
+            if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
+                return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
 
-            var validateResponse = await _nexusModsAPIClient.ValidateAPIKey(apiKey);
-            if (validateResponse == null)
-                return StatusCode((int) HttpStatusCode.Unauthorized, "Invalid API Key!");
+            if (await _nexusModsAPIClient.ValidateAPIKey(apiKeyClaim.Value) is not { } validateResponse)
+                return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
 
             var userMods = _mainDbContext.Mods
                 .AsNoTracking()
@@ -54,12 +57,9 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 .Select(cr =>
                 {
                     var userData = cr.UserCrashReports.FirstOrDefault();
-                    return new CrashReportModel
+                    return new CrashReportModel(cr.Id, cr.CreatedAt, userData?.Status ?? CrashReportStatus.New)
                     {
-                        Id = cr.Id,
-                        Date = cr.CreatedAt,
-                        Comment = userData?.Comment ?? string.Empty,
-                        Status = userData?.Status ?? CrashReportStatus.New
+                        Comment = userData?.Comment ?? string.Empty
                     };
                 })
                 .OrderBy(cr => cr.Date);

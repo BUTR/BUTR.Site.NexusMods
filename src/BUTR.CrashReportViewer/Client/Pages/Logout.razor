@@ -1,5 +1,4 @@
 ﻿@page "/logout"
-@using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
@@ -7,7 +6,7 @@
 @code {
     protected override async Task OnInitializedAsync()
     {
-        await _localStorage.RemoveItemAsync("user");
+        await _localStorage.RemoveItemAsync("token");
         _navigationManager.NavigateTo("", true);
     }
 }

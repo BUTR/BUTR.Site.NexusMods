@@ -1,8 +1,8 @@
-﻿using BUTR.CrashReportViewer.Shared.Models.Contexts;
+﻿using BUTR.CrashReportViewer.Server.Models.Contexts;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace BUTR.CrashReportViewer.Shared.Contexts
+namespace BUTR.CrashReportViewer.Server.Contexts
 {
     public class MainDbContext : DbContext
     {

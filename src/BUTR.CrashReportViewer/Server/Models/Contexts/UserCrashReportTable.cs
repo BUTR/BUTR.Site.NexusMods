@@ -1,4 +1,6 @@
-﻿namespace BUTR.CrashReportViewer.Shared.Models.Contexts
+﻿using BUTR.CrashReportViewer.Shared.Models;
+
+namespace BUTR.CrashReportViewer.Server.Models.Contexts
 {
     public class UserCrashReportTable
     {

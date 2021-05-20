@@ -1,10 +1,8 @@
 using Blazored.LocalStorage;
 
 using BUTR.CrashReportViewer.Client.Extensions;
+using BUTR.CrashReportViewer.Client.Helpers;
 using BUTR.CrashReportViewer.Client.Options;
-using BUTR.CrashReportViewer.Shared.Helpers;
-
-using Flurl;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -32,26 +30,18 @@ namespace BUTR.CrashReportViewer.Client
                 {
                     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
                 });
-                services.AddHttpClient("NexusModsAPI", (sp, client) =>
-                {
-                    var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
-                    client.BaseAddress = new Uri(Url.Combine($"{backendOptions.Endpoint}", "/NexusModsAPIProxy/"));
-                });
                 services.AddHttpClient("Backend", (sp, client) =>
                 {
                     var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
                     client.BaseAddress = new Uri(backendOptions.Endpoint);
                 });
 
-                services.AddScoped<NexusModsAPIClient>();
-                services.AddScoped<AuthenticationStateProvider, NexusModsAuthenticationStateProvider>();
+                services.AddScoped<BackendAPIClient>();
 
                 services.AddBlazoredLocalStorage();
 
-                services.AddAuthorizationCore(options =>
-                {
-
-                });
+                services.AddAuthorizationCore();
+                services.AddScoped<AuthenticationStateProvider, SimpleAuthenticationStateProvider>();
             });
     }
 }

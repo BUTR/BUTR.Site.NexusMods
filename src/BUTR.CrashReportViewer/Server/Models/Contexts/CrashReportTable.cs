@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BUTR.CrashReportViewer.Shared.Models.Contexts
+namespace BUTR.CrashReportViewer.Server.Models.Contexts
 {
     public class CrashReportTable
     {

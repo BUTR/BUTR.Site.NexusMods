@@ -1,4 +1,4 @@
-﻿namespace BUTR.CrashReportViewer.Shared.Models
+﻿namespace BUTR.CrashReportViewer.Client.Models
 {
     public class LoginModel
     {

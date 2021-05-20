@@ -1,12 +1,12 @@
 ﻿@page "/profile"
-@using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
+@inject BackendAPIClient _backendApiClient
 
 @if (_user == null)
 {
-    <p><em>Loading...</em></p>
+    <span class="spinner-border"></span>
 }
 else
 {
@@ -72,10 +72,12 @@ else
 }
 
 @code {
-    private NexusModsValidateResponse? _user;
+    private string? _token;
+    private ProfileModel? _user;
 
     protected override async Task OnInitializedAsync()
     {
-        _user = await _localStorage.GetItemAsync<NexusModsValidateResponse>("user");
+        _token = await _localStorage.GetItemAsStringAsync("token");
+        _user = await _backendApiClient.GetProfile(_token);
     }
 }

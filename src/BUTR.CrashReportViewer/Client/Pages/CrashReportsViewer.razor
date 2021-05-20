@@ -1,10 +1,8 @@
 ﻿@page "/crash-reports-viewer"
-@using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
-@inject IHttpClientFactory _clientFactory
-@inject NexusModsAPIClient _nexusModsApiClient
+@inject BackendAPIClient _backendApiClient
 
 <div class="card">
     <h4 class="card-header">Crash Reports</h4>
@@ -17,33 +15,33 @@
         {
             <table class="table">
                 <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Comment</th>
-                        <th></th>
-                    </tr>
+                <tr>
+                    <th>Id</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Comment</th>
+                    <th></th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var report in _reports)
-                    {
-                        <tr>
-                            <td>@report.Id</td>
-                            <td>@report.Date.ToString("yy-MM-dd HH:mm:ss")</td>
-                            <td>@report.Status</td>
-                            <td>
-                                <EditForm Model="@report">
-                                    <InputText id="name" @bind-Value="report.Comment" @onfocusout="() => OnFocusOut(report)" />
-                                </EditForm>
-                            </td>
-                            <td>
-                                <button @onclick="OnSelected">
-                                    Open
-                                </button>
-                            </td>
-                        </tr>
-                    }
+                @foreach (var report in _reports)
+                {
+                    <tr>
+                        <td>@report.Id</td>
+                        <td>@report.Date.ToString("yy-MM-dd HH:mm:ss")</td>
+                        <td>@report.Status</td>
+                        <td>
+                            <EditForm Model="@report">
+                                <InputText id="name" @bind-Value="report.Comment" @onfocusout="() => OnFocusOut(report)" />
+                            </EditForm>
+                        </td>
+                        <td>
+                            <button @onclick="OnSelected">
+                                Open
+                            </button>
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         }
@@ -52,38 +50,14 @@
 
 @code {
     private CrashReportModel[]? _reports;
-    private NexusModsValidateResponse _user = default!;
+    private string _token = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        _user = await _localStorage.GetItemAsync<NexusModsValidateResponse>("user");
-        _reports = await GetCrashReports();
+        _token = await _localStorage.GetItemAsStringAsync("token");
+        _reports = await _backendApiClient.GetCrashReports(_token);
     }
 
-
-    private async Task<CrashReportModel[]?> GetCrashReports()
-    {
-        try
-        {
-            var request = new HttpRequestMessage(HttpMethod.Get, "CrashReports");
-            request.Headers.Add("apikey", _user.Key);
-            request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _clientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-            {
-                return null;
-            }
-            else
-            {
-                return await response.Content.ReadFromJsonAsync<CrashReportModel[]>();
-            }
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
 
     private void OnFocusOut(CrashReportModel report)
     {

@@ -1,15 +1,27 @@
-﻿using BUTR.CrashReportViewer.Shared.Models.NexusModsAPI;
+﻿using BUTR.CrashReportViewer.Server.Models.NexusModsAPI;
 
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Unicode;
 using System.Threading.Tasks;
 
-namespace BUTR.CrashReportViewer.Shared.Helpers
+namespace BUTR.CrashReportViewer.Server.Helpers
 {
     public class NexusModsAPIClient
     {
+        private static JsonSerializerOptions JsonSerializerOptions { get; } = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true,
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+        };
+
         private readonly IHttpClientFactory _httpClientFactory;
 
         public NexusModsAPIClient(IHttpClientFactory httpClientFactory)
@@ -45,14 +57,7 @@ namespace BUTR.CrashReportViewer.Shared.Helpers
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var httpClient = _httpClientFactory.CreateClient("NexusModsAPI");
             var response = await httpClient.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-            {
-                return null;
-            }
-            else
-            {
-                return await response.Content.ReadFromJsonAsync<NexusModsModInfoResponse>();
-            }
+            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<NexusModsModInfoResponse>(JsonSerializerOptions) : null;
         }
     }
 }

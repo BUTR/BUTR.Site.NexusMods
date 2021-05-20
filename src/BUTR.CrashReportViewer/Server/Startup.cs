@@ -1,21 +1,29 @@
 using AspNetCore.Proxy;
 
-using BUTR.CrashReportViewer.Shared.Contexts;
-using BUTR.CrashReportViewer.Shared.Helpers;
+using BUTR.CrashReportViewer.Server.Contexts;
+using BUTR.CrashReportViewer.Server.Helpers;
+using BUTR.CrashReportViewer.Server.Options;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 
 using System;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BUTR.CrashReportViewer.Server
 {
     public class Startup
     {
+        private const string JwtSectionName = "Jwt";
+
         public IConfiguration Configuration { get; }
 
         public Startup(IConfiguration configuration)
@@ -25,6 +33,9 @@ namespace BUTR.CrashReportViewer.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<JwtOptions>(Configuration.GetSection(JwtSectionName));
+
+
             services.AddHttpClient("NexusModsAPI", client =>
             {
                 client.BaseAddress = new Uri("https://api.nexusmods.com/");
@@ -36,7 +47,29 @@ namespace BUTR.CrashReportViewer.Server
 
             services.AddProxies();
 
-            services.AddControllers();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    var jwtOptions = Configuration.GetSection(JwtSectionName).Get<JwtOptions>();
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = false,
+                        ValidateActor = false,
+                        ValidateTokenReplay = false,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SignKey)),
+                        TokenDecryptionKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.EncryptionKey)),
+                        ClockSkew = TimeSpan.FromMinutes(5),
+                    };
+                });
+
+            services.AddControllers().AddJsonOptions(opts => {
+                opts.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                opts.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            });
             services.AddRazorPages();
 
             services.AddCors(options =>
@@ -64,12 +97,10 @@ namespace BUTR.CrashReportViewer.Server
             else
             {
                 app.UseExceptionHandler("/Error");
-                // CORS on Production is handled externally
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                //app.UseHsts();
             }
 
             app.UseRouting();
+            app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
