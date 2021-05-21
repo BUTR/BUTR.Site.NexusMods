@@ -15,6 +15,8 @@ namespace BUTR.CrashReportViewer.Shared.Models
         [Description("Duplicate")]
         Duplicate,
         [Description("Needs More Info")]
-        NeedsMoreInfo
+        NeedsMoreInfo,
+        [Description("Fixed")]
+        Fixed
     }
 }

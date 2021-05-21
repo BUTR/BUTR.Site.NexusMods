@@ -13,32 +13,52 @@
         }
         else
         {
-            <table class="table table-striped table-responsive-md">
+            <table class="table table-responsive-md table-sm align-middle" style="text-align: center;">
                 <thead>
-                <tr>
-                    <th scope="col">Id</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Comment</th>
-                    <th scope="col"></th>
-                </tr>
+                    <tr>
+                        <th scope="col">Type</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Comment</th>
+                        <th scope="col"></th>
+                    </tr>
                 </thead>
                 <tbody>
                 @foreach (var report in _reports)
                 {
                     <tr>
-                        <td>@report.Id</td>
-                        <td>@report.Date.ToString("yy-MM-dd HH:mm:ss")</td>
-                        <td>@report.Status</td>
+                        <td style="text-align: left;" data-bs-toggle="collapse" data-bs-target="#guid_@report.Id" aria-expanded="false" aria-controls="guid_@report.Id">
+                            <p style="white-space: pre-line">@report.Exception.Split(Environment.NewLine).FirstOrDefault()?.Split("Type:").Skip(1).FirstOrDefault()</p>
+                        </td>
+                        <td>
+                            @report.Date.ToString("yy-MM-dd HH:mm:ss")
+                        </td>
+                        <td>
+                            <EditForm Model="@report">
+                                <InputSelect @bind-Value="report.Status" class="@ButtonColorType(report.Status)">
+                                    @foreach (var e in Enum.GetValues<CrashReportStatus>())
+                                    {
+                                        <option value="@e" class="@ButtonColorType(e)">@e</option>
+                                    }
+                                </InputSelect>
+                            </EditForm>
+                        </td>
                         <td>
                             <EditForm Model="@report">
                                 <InputText id="name" @bind-Value="report.Comment" @onfocusout="() => OnFocusOut(report)" />
                             </EditForm>
                         </td>
                         <td>
-                            <button @onclick="OnSelected">
-                                Open
+                            <button type="button" class="btn btn-outline-secondary">
+                                Open Report
                             </button>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="guid_@report.Id">
+                        <td colspan="5" style="text-align: left;">
+                            <div>
+                                <p style="white-space: pre-line">@report.Exception.Split(Environment.NewLine).FirstOrDefault()?.Split("Type:").Skip(1).FirstOrDefault()</p>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -68,4 +88,20 @@
     {
 
     }
+
+    private string IsSelected(CrashReportStatus crs1, CrashReportStatus crs2)
+        => crs1 == crs2 ? "selected" : string.Empty;
+
+    private string ButtonColorType(CrashReportStatus crashReportStatus) => crashReportStatus switch
+    {
+        CrashReportStatus.New => "text-secondary",
+        CrashReportStatus.BeingLookedAt => "text-info",
+        CrashReportStatus.NotMyFault => "text-success",
+        CrashReportStatus.Known => "text-secondary",
+        CrashReportStatus.Duplicate => "text-info",
+        CrashReportStatus.NeedsMoreInfo => "text-info",
+        CrashReportStatus.Fixed => "text-success",
+        _ => "text-secondary"
+    };
+
 }

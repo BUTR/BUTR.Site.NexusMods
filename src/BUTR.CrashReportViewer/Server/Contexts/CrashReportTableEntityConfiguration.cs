@@ -24,6 +24,7 @@ namespace BUTR.CrashReportViewer.Server.Contexts
 
             builder.ToTable("crash_report_entity").HasKey(p => p.Id);
             builder.Property(p => p.Id).HasColumnName("id");
+            builder.Property(p => p.Exception).HasColumnName("exception").IsRequired();
             builder.Property(p => p.CreatedAt).HasColumnName("created_at").IsRequired();
             builder.Property(p => p.ModIds).HasColumnName("mod_ids").HasConversion(converter).IsRequired();
             builder.Property(p => p.ModIds).Metadata.SetValueComparer(valueComparer);

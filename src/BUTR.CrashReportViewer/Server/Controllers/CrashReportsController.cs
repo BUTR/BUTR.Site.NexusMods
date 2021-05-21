@@ -57,8 +57,9 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 .Select(cr =>
                 {
                     var userData = cr.UserCrashReports.FirstOrDefault();
-                    return new CrashReportModel(cr.Id, cr.CreatedAt, userData?.Status ?? CrashReportStatus.New)
+                    return new CrashReportModel(cr.Id, cr.Exception, cr.CreatedAt)
                     {
+                        Status = userData?.Status ?? CrashReportStatus.New,
                         Comment = userData?.Comment ?? string.Empty
                     };
                 })

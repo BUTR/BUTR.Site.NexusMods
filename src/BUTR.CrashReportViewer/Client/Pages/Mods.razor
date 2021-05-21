@@ -35,21 +35,21 @@
         }
         else
         {
-            <table class="table table-striped table-responsive-md">
+            <table class="table table-responsive-md table-sm align-middle">
                 <thead>
-                <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Game</th>
-                    <th scope="col">Id</th>
-                    <th scope="col"></th>
-                </tr>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Game</th>
+                        <th scope="col">Id</th>
+                        <th scope="col"></th>
+                    </tr>
                 </thead>
                 <tbody>
                 @foreach (var mod in _mods)
                 {
-                    <tr>
+                    <tr data-toggle="collapse">
                         <td>
-                            <a href="@mod.Url">@mod.Name</a>
+
                         </td>
                         <td>
                             @mod.GameDomain
