@@ -114,7 +114,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             {
                 if (_demoUser.Mods.Find(m => m.GameDomain == gameDomain && m.ModId.ToString() == modId) is not { } mod && int.TryParse(modId, out var id))
                 {
-                    _demoUser.Mods.Add(new($"Demo Mod {id}", gameDomain, id));
+                    _demoUser.Mods.Add(new($"Demo Mod {gameDomain} {id}", gameDomain, id));
                     return true;
                 }
 

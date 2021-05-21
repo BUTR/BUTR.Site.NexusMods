@@ -36,6 +36,9 @@
 
     private async void OnValidSubmit()
     {
+        if (string.Equals(_model.NexusModsAPIKey, "demo", StringComparison.OrdinalIgnoreCase))
+            return;
+
         _isLoading = true;
 
         var result = await _backendApiClient.Authenticate(_model.NexusModsAPIKey);

@@ -1,5 +1,7 @@
 ﻿@page "/login"
 @inject NavigationManager _navigationManager
+@inject ILocalStorageService _localStorage
+@inject BackendAPIClient _backendApiClient
 
 <!--https://jsfiddle.net/StartBootstrap/amxr8n19/-->
 <div class="row">
@@ -9,6 +11,7 @@
                 <h5 class="card-title text-center">Sign In</h5>
                 <form class="form-signin">
                     <hr class="my-4">
+                    <a class="btn btn-lg btn-primary btn-block text-uppercase" @onclick="OnDemoLogin" role="button">Demo</a>
                     <a class="btn btn-lg btn-nexusmods btn-block text-uppercase" href="@NexusModsUrl" role="button">Log In via NexusMods</a>
                 </form>
             </div>
@@ -18,4 +21,14 @@
 
 @code {
     public string NexusModsUrl => $"login-nexusmods{new Uri(_navigationManager.Uri).Query}";
+
+    private async void OnDemoLogin()
+    {
+        var result = await _backendApiClient.Authenticate("demo");
+        if (result is not null)
+        {
+            await _localStorage.SetItemAsStringAsync("token", result);
+            _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "crash-reports-viewer", true);
+        }
+    }
 }
