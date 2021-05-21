@@ -4,6 +4,8 @@
     <TargetFramework>net5.0</TargetFramework>
     <LangVersion>9.0</LangVersion>
     <Nullable>enable</Nullable>
+    <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,10 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Shared\BUTR.CrashReportViewer.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\svg\" />
   </ItemGroup>
 
 </Project>
