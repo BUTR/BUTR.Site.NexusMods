@@ -37,6 +37,7 @@ namespace BUTR.CrashReportViewer.Client
                 });
 
                 services.AddScoped<BackendAPIClient>();
+                services.AddSingleton<DemoUser>();
 
                 services.AddBlazoredLocalStorage();
 
