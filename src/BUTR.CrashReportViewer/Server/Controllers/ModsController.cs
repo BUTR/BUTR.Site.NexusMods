@@ -50,8 +50,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 
             var userModCount = _mainDbContext.Mods
                 .AsNoTracking()
-                .Where(m => m.UserIds.Contains(validateResponse.UserId))
-                .Count();
+                .Count(m => m.UserIds.Contains(validateResponse.UserId));
 
             var userMods = _mainDbContext.Mods
                 .AsNoTracking()

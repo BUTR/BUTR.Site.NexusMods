@@ -40,7 +40,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         public async Task<ActionResult> Get([FromQuery] CrashReportsQuery query)
         {
             var page = query.Page;
-            var pageSize = Math.Max(Math.Min(query.PageSize, 20), 5);
+            var pageSize = Math.Max(Math.Min(query.PageSize, 50), 10);
 
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
@@ -55,7 +55,6 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 .ToArray();
 
             var crashReportCount = _mainDbContext.CrashReports
-                .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == validateResponse.UserId))
                 .AsNoTracking()
                 .Count(cr => cr.ModIds.Any(crmi => userModIds.Contains(crmi)));
 
@@ -64,13 +63,13 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 .AsNoTracking()
                 .OrderBy(cr => cr.CreatedAt)
                 .Where(cr => cr.ModIds.Any(crmi => userModIds.Contains(crmi)))
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(cr => new CrashReportModel(cr.Id, cr.Exception, cr.CreatedAt)
                 {
                     Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
                     Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
                 })
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
                 .ToList();
 
             var metadata = new PagingMetadata
