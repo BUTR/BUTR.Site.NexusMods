@@ -57,13 +57,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             var crashReportCount = _mainDbContext.CrashReports
                 .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == validateResponse.UserId))
                 .AsNoTracking()
-                .Where(cr => cr.ModIds.Any(crmi => userModIds.Contains(crmi)))
-                .Select(cr => new CrashReportModel(cr.Id, cr.Exception, cr.CreatedAt)
-                {
-                    Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
-                    Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
-                })
-                .Count();
+                .Count(cr => cr.ModIds.Any(crmi => userModIds.Contains(crmi)));
 
             var crashReports = _mainDbContext.CrashReports
                 .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == validateResponse.UserId))
