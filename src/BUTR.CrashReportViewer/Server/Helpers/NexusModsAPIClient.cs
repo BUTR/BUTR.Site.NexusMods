@@ -33,15 +33,15 @@ namespace BUTR.CrashReportViewer.Server.Helpers
         };
 
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IMemoryCache _cache;
-        private readonly MemoryCacheEntryOptions _expiration = new()
+        private readonly IDistributedCache _cache;
+        private readonly DistributedCacheEntryOptions _expiration = new()
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
         };
         private readonly SemaphoreSlim _lock = new(1, 1);
         private TimeLimiter _timeLimiter = TimeLimiter.GetFromMaxCountByInterval(30, TimeSpan.FromSeconds(1));
 
-        public NexusModsAPIClient(IHttpClientFactory httpClientFactory, IMemoryCache cache)
+        public NexusModsAPIClient(IHttpClientFactory httpClientFactory, IDistributedCache cache)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
@@ -71,7 +71,7 @@ namespace BUTR.CrashReportViewer.Server.Helpers
         public async Task<NexusModsModInfoResponse?> GetMod(string gameDomain, int modId, string apiKey)
         {
             var key = $"{gameDomain}:{modId}";
-            if (_cache.Get<string>(key) is { } modJson)
+            if (await _cache.GetStringAsync(key) is { } modJson)
             {
                 return JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
             }
@@ -91,7 +91,7 @@ namespace BUTR.CrashReportViewer.Server.Helpers
                     var mod = JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
 
                     _timeLimiter = ParseResponseLimits(response);
-                    _cache.Set(key, Encoding.UTF8.GetBytes(modJson), _expiration);
+                    await _cache.SetStringAsync(key, modJson, _expiration);
                     return response.IsSuccessStatusCode ? mod : null;
                 }
                 finally

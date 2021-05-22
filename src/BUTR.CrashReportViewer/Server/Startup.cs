@@ -19,6 +19,7 @@ using System;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 namespace BUTR.CrashReportViewer.Server
 {
@@ -87,7 +88,12 @@ namespace BUTR.CrashReportViewer.Server
                 );
             });
 
-            services.AddMemoryCache();
+            services.AddDistributedPostgreSqlCache(options =>
+            {
+                options.ConnectionString = Configuration.GetConnectionString("Main");
+                options.SchemaName = "public";
+                options.TableName = "nexusmods_cache_entry";
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
