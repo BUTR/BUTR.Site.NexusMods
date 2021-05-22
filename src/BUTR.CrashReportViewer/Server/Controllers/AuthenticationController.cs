@@ -38,7 +38,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             _jwtOptions = jwtOptions.Value ?? throw new ArgumentNullException(nameof(jwtOptions));
         }
 
-        [HttpGet("authenticate")]
+        [HttpGet("Authenticate")]
         [AllowAnonymous]
         public async Task<ActionResult> Authenticate([FromHeader] string? apiKey)
         {
@@ -51,7 +51,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             return Ok(new JwtTokenResponse(GenerateJsonWebToken(validateResponse)));
         }
 
-        [HttpGet("validate")]
+        [HttpGet("Validate")]
         public async Task<ActionResult> Validate()
         {
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
@@ -63,7 +63,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             return Ok();
         }
 
-        [HttpGet("profile")]
+        [HttpGet("Profile")]
         public async Task<ActionResult> Profile()
         {
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)

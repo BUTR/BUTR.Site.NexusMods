@@ -36,7 +36,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         }
 
         [HttpGet("")]
-        public async Task<ActionResult> Get([FromQuery] CrashReportsQuery query)
+        public async Task<ActionResult> GetAll([FromQuery] CrashReportsQuery query)
         {
             var page = query.Page;
             var pageSize = Math.Max(Math.Min(query.PageSize, 50), 10);

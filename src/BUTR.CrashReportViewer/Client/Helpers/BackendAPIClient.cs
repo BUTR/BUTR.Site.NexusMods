@@ -41,7 +41,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return "demo";
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/authenticate");
+            var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/Authenticate");
             request.Headers.Add("apikey", apiKey);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var httpClient = _httpClientFactory.CreateClient("Backend");
@@ -56,7 +56,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return true;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/validate");
+            var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/Validate");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var httpClient = _httpClientFactory.CreateClient("Backend");
@@ -71,7 +71,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return _demoUser.Profile;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/profile");
+            var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/Profile");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var httpClient = _httpClientFactory.CreateClient("Backend");
@@ -111,7 +111,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return true;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/RefreshMod?gameDomain={gameDomain}&modId={modId}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/Refresh?gameDomain={gameDomain}&modId={modId}");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var httpClient = _httpClientFactory.CreateClient("Backend");
@@ -132,7 +132,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return false;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/LinkMod?gameDomain={gameDomain}&modId={modId}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/Link?gameDomain={gameDomain}&modId={modId}");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var httpClient = _httpClientFactory.CreateClient("Backend");
@@ -150,7 +150,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return false;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/UnlinkMod?gameDomain={gameDomain}&modId={modId}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/Unlink?gameDomain={gameDomain}&modId={modId}");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var httpClient = _httpClientFactory.CreateClient("Backend");

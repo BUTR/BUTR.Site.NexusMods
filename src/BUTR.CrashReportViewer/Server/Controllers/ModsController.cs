@@ -37,7 +37,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         }
 
         [HttpGet("")]
-        public async Task<ActionResult> Get([FromQuery] ModsQuery query)
+        public async Task<ActionResult> GetAll([FromQuery] ModsQuery query)
         {
             var page = query.Page;
             var pageSize = Math.Max(Math.Min(query.PageSize, 20), 5);
