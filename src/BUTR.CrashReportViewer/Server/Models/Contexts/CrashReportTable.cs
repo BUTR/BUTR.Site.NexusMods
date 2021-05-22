@@ -13,6 +13,8 @@ namespace BUTR.CrashReportViewer.Server.Models.Contexts
 
         public int[] ModIds { get; set; } = default!;
 
+        public string Url { get; set; } = default!;
+
         public List<UserCrashReportTable> UserCrashReports { get; set; } = default!;
     }
 }

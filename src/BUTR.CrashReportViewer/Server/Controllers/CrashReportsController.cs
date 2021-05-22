@@ -64,7 +64,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 .Where(cr => cr.ModIds.Any(crmi => userModIds.Contains(crmi)))
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(cr => new CrashReportModel(cr.Id, cr.Exception, cr.CreatedAt)
+                .Select(cr => new CrashReportModel(cr.Id, cr.Exception, cr.CreatedAt, cr.Url)
                 {
                     Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
                     Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty

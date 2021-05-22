@@ -14,6 +14,7 @@ namespace BUTR.CrashReportViewer.Server.Contexts
             builder.Property(p => p.Exception).HasColumnName("exception").IsRequired();
             builder.Property(p => p.CreatedAt).HasColumnName("created_at").IsRequired();
             builder.Property(p => p.ModIds).HasColumnName("mod_ids").IsRequired();
+            builder.Property(p => p.Url).HasColumnName("url").IsRequired();
         }
     }
 }

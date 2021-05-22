@@ -41,10 +41,10 @@ at Bannerlord.BUTR.Shared.Helpers.TextObjectUtils.Create(String value)";
                 },
                 new()
                 {
-                    new CrashReportModel(Guid.NewGuid(), StacktraceExample1, DateTime.UtcNow),
-                    new CrashReportModel(Guid.NewGuid(), StacktraceExample2, DateTime.UtcNow),
-                    new CrashReportModel(Guid.NewGuid(), StacktraceExample3, DateTime.UtcNow),
-                    new CrashReportModel(Guid.NewGuid(), StacktraceExample4, DateTime.UtcNow),
+                    new CrashReportModel(Guid.NewGuid(), StacktraceExample1, DateTime.UtcNow, "https://crash.butr.dev/report/FC58E239.html"),
+                    new CrashReportModel(Guid.NewGuid(), StacktraceExample2, DateTime.UtcNow, "https://crash.butr.dev/report/7AA28856.html"),
+                    new CrashReportModel(Guid.NewGuid(), StacktraceExample3, DateTime.UtcNow, "https://crash.butr.dev/report/4EFF0B0A.html"),
+                    new CrashReportModel(Guid.NewGuid(), StacktraceExample4, DateTime.UtcNow, "https://crash.butr.dev/report/3DF57593.html"),
                 });
 
 

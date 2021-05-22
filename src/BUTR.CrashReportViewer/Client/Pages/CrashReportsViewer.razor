@@ -3,6 +3,7 @@
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
 @inject BackendAPIClient _backendApiClient
+@inject IJSRuntime _jsRuntime;
 
 <div class="card">
     <h4 class="card-header">Crash Reports</h4>
@@ -16,65 +17,65 @@
             <div class="table-responsive-md">
                 <table class="table table-sm align-middle" style="text-align: center;">
                     <thead>
-                    <tr>
-                        <th scope="col">Type</th>
-                        <th scope="col">Date</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Comment</th>
-                        <th scope="col"></th>
-                    </tr>
+                        <tr>
+                            <th scope="col">Type</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Comment</th>
+                            <th scope="col"></th>
+                        </tr>
                     </thead>
                     <tbody>
-                    @foreach (var report in _reports)
-                    {
-                        <tr>
-                            <td style="text-align: left;" data-bs-toggle="collapse" data-bs-target="#guid_@report.Id" aria-expanded="false" aria-controls="guid_@report.Id">
-                                <p style="white-space: pre-line">@report.Exception.Split(Environment.NewLine).FirstOrDefault()?.Split("Type:").Skip(1).FirstOrDefault()</p>
-                            </td>
-                            <td>
-                                @report.Date.ToString("yy-MM-dd HH:mm:ss")
-                            </td>
-                            <td>
-                                <EditForm Model="@report">
-                                    <InputSelect class="@ButtonColorType(report.Status)"
-                                                 ValueExpression="@(() => report.Status)"
-                                                 Value="@report.Status"
-                                                 ValueChanged="@((CrashReportStatus value) => OnStatusChange(report, value))">
-                                        @foreach (var e in Enum.GetValues<CrashReportStatus>())
-                                        {
-                                            <option value="@e" class="@ButtonColorType(e)">@e</option>
-                                        }
-                                    </InputSelect>
-                                </EditForm>
-                            </td>
-                            <td>
-                                <EditForm Model="@report">
-                                    <InputText id="name"
-                                               ValueExpression="@(() => report.Comment)"
-                                               Value="@report.Comment"
-                                               ValueChanged="@((value) => OnCommentChange(report, value))"/>
-                                </EditForm>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-outline-secondary">
-                                    Open Report
-                                </button>
-                            </td>
-                        </tr>
-                        <tr class="collapse" id="guid_@report.Id">
-                            <td colspan="5" style="text-align: left;">
-                                <div class="mx-3">
-                                    <p style="white-space: pre-line">@report.Exception</p>
-                                </div>
-                            </td>
-                        </tr>
-                    }
+                        @foreach (var report in _reports)
+                        {
+                            <tr>
+                                <td style="text-align: left;" data-bs-toggle="collapse" data-bs-target="#guid_@report.Id" aria-expanded="false" aria-controls="guid_@report.Id">
+                                    <p style="white-space: pre-line">@report.Exception.Split(Environment.NewLine).FirstOrDefault()?.Split("Type:").Skip(1).FirstOrDefault()</p>
+                                </td>
+                                <td>
+                                    @report.Date.ToString("yy-MM-dd HH:mm:ss")
+                                </td>
+                                <td>
+                                    <EditForm Model="@report">
+                                        <InputSelect class="@ButtonColorType(report.Status)"
+                                                     ValueExpression="@(() => report.Status)"
+                                                     Value="@report.Status"
+                                                     ValueChanged="@((CrashReportStatus value) => OnStatusChange(report, value))">
+                                            @foreach (var e in Enum.GetValues<CrashReportStatus>())
+                                            {
+                                                <option value="@e" class="@ButtonColorType(e)">@e</option>
+                                            }
+                                        </InputSelect>
+                                    </EditForm>
+                                </td>
+                                <td>
+                                    <EditForm Model="@report">
+                                        <InputText id="name"
+                                                   ValueExpression="@(() => report.Comment)"
+                                                   Value="@report.Comment"
+                                                   ValueChanged="@((value) => OnCommentChange(report, value))" />
+                                    </EditForm>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-outline-secondary" @onclick="@(() => OnClick(report))">
+                                        Open Report
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="guid_@report.Id">
+                                <td colspan="5" style="text-align: left;">
+                                    <div class="mx-3">
+                                        <p class="font-monospace fs-6" style="white-space: pre-line">@report.Exception</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
             <div class="row">
                 <div class="col">
-                    <Pagination Metadata="_pagingMetadata" Spread="5" SelectedPage="SelectedPage"/>
+                    <Pagination Metadata="_pagingMetadata" Spread="5" SelectedPage="SelectedPage" />
                 </div>
             </div>
         }
@@ -112,6 +113,10 @@
             report.Comment = value ?? string.Empty;
             StateHasChanged();
         }
+    }
+    private async void OnClick(CrashReportModel report)
+    {
+        await _jsRuntime.InvokeVoidAsync("open", report.Url, "_blank");
     }
 
     private async Task SelectedPage(int page)
