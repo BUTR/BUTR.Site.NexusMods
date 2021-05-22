@@ -4,6 +4,8 @@ using BUTR.CrashReportViewer.Server.Contexts;
 using BUTR.CrashReportViewer.Server.Helpers;
 using BUTR.CrashReportViewer.Server.Options;
 
+using Community.Microsoft.Extensions.Caching.PostgreSql;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,7 +21,6 @@ using System;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 namespace BUTR.CrashReportViewer.Server
 {
