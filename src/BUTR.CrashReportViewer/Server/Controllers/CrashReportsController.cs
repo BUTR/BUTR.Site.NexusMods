@@ -1,5 +1,6 @@
 ﻿using BUTR.CrashReportViewer.Server.Contexts;
 using BUTR.CrashReportViewer.Server.Helpers;
+using BUTR.CrashReportViewer.Server.Models.Contexts;
 using BUTR.CrashReportViewer.Shared.Models;
 using BUTR.CrashReportViewer.Shared.Models.API;
 
@@ -13,7 +14,6 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using BUTR.CrashReportViewer.Server.Models.Contexts;
 
 namespace BUTR.CrashReportViewer.Server.Controllers
 {
@@ -23,7 +23,6 @@ namespace BUTR.CrashReportViewer.Server.Controllers
     public class CrashReportsController : ControllerBase
     {
         public record CrashReportsQuery(int Page, int PageSize);
-
 
         private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
@@ -36,7 +35,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             _mainDbContext = mainDbContext ?? throw new ArgumentNullException(nameof(mainDbContext));
         }
 
-        [HttpGet]
+        [HttpGet("")]
         public async Task<ActionResult> Get([FromQuery] CrashReportsQuery query)
         {
             var page = query.Page;
@@ -87,7 +86,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             });
         }
 
-        [HttpGet("Update")]
+        [HttpPost("Update")]
         public async Task<ActionResult> Update([FromBody] CrashReportModel updatedCrashReport)
         {
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
