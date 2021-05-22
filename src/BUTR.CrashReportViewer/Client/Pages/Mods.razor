@@ -45,7 +45,7 @@
                 <tbody>
                     @foreach (var mod in _mods)
                     {
-                        <tr data-toggle="collapse">
+                        <tr>
                             <td>
                                 @mod.Name
                             </td>
@@ -90,7 +90,7 @@
     private bool _isLoading;
 
     private LinkModModel _model = new();
-    private List<ModModel> _mods;
+    private List<ModModel> _mods = new();
     private int _pageNumber = 1;
     private PagingMetadata _pagingMetadata = new();
 

@@ -2,7 +2,6 @@
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
 @inject BackendAPIClient _backendApiClient
-
 <!--https://jsfiddle.net/bootstrapious/j80aheo9/-->
 <div class="container">
     <div class="row">
@@ -19,7 +18,7 @@
                         <button type="submit" class="btn btn-primary btn-block text-uppercase mb-2">
                             @if (_isLoading)
                             {
-                                <span class="spinner-border spinner-border-sm mr-1"></span>
+                            <span class="spinner-border spinner-border-sm mr-1"></span>
                             }
                             Login
                         </button>
@@ -41,16 +40,24 @@
 
         _isLoading = true;
 
-        var result = await _backendApiClient.Authenticate(_model.NexusModsAPIKey);
-        if (result is null)
+        try
         {
-            _isLoading = false;
-            StateHasChanged();
+            var result = await _backendApiClient.Authenticate(_model.NexusModsAPIKey);
+            if (result is null)
+            {
+                _isLoading = false;
+                StateHasChanged();
+            }
+            else
+            {
+                await _localStorage.SetItemAsStringAsync("token", result);
+                _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "crash-reports-viewer", true);
+            }
         }
-        else
+        catch
         {
-            await _localStorage.SetItemAsStringAsync("token", result);
-            _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "crash-reports-viewer", true);
+            _isLoading = true;
+            StateHasChanged();
         }
     }
 }

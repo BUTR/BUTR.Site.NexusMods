@@ -72,7 +72,7 @@
             </table>
             <div class="row">
                 <div class="col">
-                    <Pagination Metadata="_pagingMetadata" Spread="2" SelectedPage="SelectedPage" />
+                    <Pagination Metadata="_pagingMetadata" Spread="5" SelectedPage="SelectedPage" />
                 </div>
             </div>
         }
@@ -82,7 +82,7 @@
 @code {
     private string _token = default!;
 
-    private List<CrashReportModel> _reports;
+    private List<CrashReportModel> _reports = new();
     private int _pageNumber = 1;
     private PagingMetadata _pagingMetadata = new();
 
