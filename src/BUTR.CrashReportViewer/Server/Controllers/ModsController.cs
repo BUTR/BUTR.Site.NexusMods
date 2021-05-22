@@ -23,6 +23,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
     public class ModsController : ControllerBase
     {
         public record LinkModQuery(string GameDomain, int ModId);
+        public record ModsQuery(int Page, int PageSize);
 
         private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
@@ -36,23 +37,45 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> Get()
+        public async Task<ActionResult> Get([FromQuery] ModsQuery query)
         {
+            var page = query.Page;
+            var pageSize = Math.Max(Math.Min(query.PageSize, 20), 5);
+
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
 
             if (await _nexusModsAPIClient.ValidateAPIKey(apiKeyClaim.Value) is not { } validateResponse)
                 return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
 
+            var userModCount = _mainDbContext.Mods
+                .AsNoTracking()
+                .Where(m => m.UserIds.Contains(validateResponse.UserId))
+                .Select(m => new ModModel(m.Name, m.GameDomain, m.ModId))
+                .Count();
+
             var userMods = _mainDbContext.Mods
                 .AsNoTracking()
-                .AsEnumerable()
-                .Where(m => m.UserIds.Contains(validateResponse.UserId));
-
-            var modModels = userMods
+                .OrderBy(m => m.ModId)
+                .Where(m => m.UserIds.Contains(validateResponse.UserId))
                 .Select(m => new ModModel(m.Name, m.GameDomain, m.ModId))
-                .OrderBy(m => m.ModId);
-            return StatusCode((int) HttpStatusCode.OK, modModels);
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var metadata = new PagingMetadata
+            {
+                PageSize = pageSize,
+                CurrentPage = page,
+                TotalCount = userModCount,
+                TotalPages = (int) Math.Ceiling((double) userModCount / (double) pageSize),
+            };
+
+            return StatusCode((int) HttpStatusCode.OK, new PagingResponse<ModModel>
+            {
+                Items = userMods,
+                Metadata = metadata
+            });
         }
 
         [HttpGet("GetMod")]

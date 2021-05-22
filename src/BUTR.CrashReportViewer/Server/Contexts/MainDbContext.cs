@@ -24,6 +24,7 @@ namespace BUTR.CrashReportViewer.Server.Contexts
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.ApplyConfiguration(new CrashReportTableEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new UserCrashReportTableEntityConfiguration());
         }
     }
     public class Dummy3DbContext : DbContext
@@ -54,6 +55,7 @@ namespace BUTR.CrashReportViewer.Server.Contexts
     {
         public DbSet<ModTable> Mods { get; set; } = default!;
         public DbSet<CrashReportTable> CrashReports { get; set; } = default!;
+        public DbSet<UserCrashReportTable> UserCrashReports { get; set; } = default!;
 
         public MainDbContext(DbContextOptions<MainDbContext> options) : base(options) { }
 

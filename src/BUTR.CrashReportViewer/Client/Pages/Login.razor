@@ -11,8 +11,10 @@
                 <h5 class="card-title text-center">Sign In</h5>
                 <form class="form-signin">
                     <hr class="my-4">
-                    <a class="btn btn-lg btn-primary btn-block text-uppercase" @onclick="OnDemoLogin" role="button">Demo</a>
-                    <a class="btn btn-lg btn-nexusmods btn-block text-uppercase" href="@NexusModsUrl" role="button">Log In via NexusMods</a>
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary btn-lg text-uppercase" @onclick="OnDemoLogin" role="button">Demo</a>
+                        <a class="btn btn-nexusmods btn-lg text-uppercase" href="@NexusModsUrl" role="button">Log In via NexusMods</a>
+                    </div>
                 </form>
             </div>
         </div>

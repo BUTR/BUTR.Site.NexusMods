@@ -4,8 +4,6 @@ namespace BUTR.CrashReportViewer.Server.Models.Contexts
 {
     public class UserCrashReportTable
     {
-        public int Id { get; set; } = default!;
-
         public int UserId { get; set; } = default!;
 
         public CrashReportTable CrashReport { get; set; } = default!;

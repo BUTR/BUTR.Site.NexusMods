@@ -45,11 +45,11 @@ namespace BUTR.CrashReportViewer.Server
 
             services.AddScoped<NexusModsAPIClient>();
 
-            services.AddDbContext<MainDbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
-            services.AddDbContext<Dummy1DbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
-            services.AddDbContext<Dummy2DbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
-            services.AddDbContext<Dummy3DbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
-            services.AddDbContext<Dummy4DbContext>(o => o.UseSqlServer(Configuration.GetConnectionString("Main")));
+            services.AddDbContext<MainDbContext>(o => o.UseNpgsql(Configuration.GetConnectionString("Main")));
+            services.AddDbContext<Dummy1DbContext>(o => o.UseNpgsql(Configuration.GetConnectionString("Main")));
+            services.AddDbContext<Dummy2DbContext>(o => o.UseNpgsql(Configuration.GetConnectionString("Main")));
+            services.AddDbContext<Dummy3DbContext>(o => o.UseNpgsql(Configuration.GetConnectionString("Main")));
+            services.AddDbContext<Dummy4DbContext>(o => o.UseNpgsql(Configuration.GetConnectionString("Main")));
 
             services.AddProxies();
 
@@ -87,12 +87,7 @@ namespace BUTR.CrashReportViewer.Server
                 );
             });
 
-            services.AddDistributedSqlServerCache(options =>
-            {
-                options.ConnectionString = Configuration.GetConnectionString("Main");
-                options.SchemaName = "dbo";
-                options.TableName = "nexusmods_cache_entry";
-            });
+            services.AddMemoryCache();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

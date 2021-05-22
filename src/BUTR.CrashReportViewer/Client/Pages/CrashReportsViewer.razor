@@ -15,13 +15,13 @@
         {
             <table class="table table-responsive-md table-sm align-middle" style="text-align: center;">
                 <thead>
-                    <tr>
-                        <th scope="col">Type</th>
-                        <th scope="col">Date</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Comment</th>
-                        <th scope="col"></th>
-                    </tr>
+                <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Comment</th>
+                    <th scope="col"></th>
+                </tr>
                 </thead>
                 <tbody>
                 @foreach (var report in _reports)
@@ -35,7 +35,10 @@
                         </td>
                         <td>
                             <EditForm Model="@report">
-                                <InputSelect @bind-Value="report.Status" class="@ButtonColorType(report.Status)">
+                                <InputSelect class="@ButtonColorType(report.Status)"
+                                             ValueExpression="@(()=>report.Status)"
+                                             Value="@report.Status"
+                                             ValueChanged="@((CrashReportStatus value) => OnStatusChange(report, value))">
                                     @foreach (var e in Enum.GetValues<CrashReportStatus>())
                                     {
                                         <option value="@e" class="@ButtonColorType(e)">@e</option>
@@ -45,7 +48,10 @@
                         </td>
                         <td>
                             <EditForm Model="@report">
-                                <InputText id="name" @bind-Value="report.Comment" @onfocusout="() => OnFocusOut(report)" />
+                                <InputText id="name"
+                                           ValueExpression="@(()=>report.Comment)"
+                                           Value="@report.Comment"
+                                           ValueChanged="@((value) => OnCommentChange(report, value))" />
                             </EditForm>
                         </td>
                         <td>
@@ -64,35 +70,65 @@
                 }
                 </tbody>
             </table>
+            <div class="row">
+                <div class="col">
+                    <Pagination Metadata="_pagingMetadata" Spread="2" SelectedPage="SelectedPage" />
+                </div>
+            </div>
         }
     </div>
 </div>
 
 @code {
-    private CrashReportModel[]? _reports;
     private string _token = default!;
+
+    private List<CrashReportModel> _reports;
+    private int _pageNumber = 1;
+    private PagingMetadata _pagingMetadata = new();
 
     protected override async Task OnInitializedAsync()
     {
         _token = await _localStorage.GetItemAsStringAsync("token");
-        _reports = await _backendApiClient.GetCrashReports(_token);
+        await GetCrashReports();
     }
 
-
-    private void OnFocusOut(CrashReportModel report)
+    private async void OnStatusChange(CrashReportModel report, CrashReportStatus value)
     {
-
+        var updatedCrashReport = report with { Status = value };
+        if (await _backendApiClient.UpdateCrashReport(_token, updatedCrashReport))
+        {
+            report.Status = value;
+            StateHasChanged();
+        }
     }
 
-    private void OnSelected()
+    private async void OnCommentChange(CrashReportModel report, string? value)
     {
-
+        var updatedCrashReport = report with { Comment = value ?? string.Empty };
+        if (await _backendApiClient.UpdateCrashReport(_token, updatedCrashReport))
+        {
+            report.Comment = value ?? string.Empty;
+            StateHasChanged();
+        }
     }
 
-    private string IsSelected(CrashReportStatus crs1, CrashReportStatus crs2)
-        => crs1 == crs2 ? "selected" : string.Empty;
+    private async Task SelectedPage(int page)
+    {
+        _pageNumber = page;
+        await GetCrashReports();
+    }
 
-    private string ButtonColorType(CrashReportStatus crashReportStatus) => crashReportStatus switch
+    private async Task GetCrashReports()
+    {
+        var response = await _backendApiClient.GetCrashReports(_token, _pageNumber);
+        if (response is not null)
+        {
+            _reports = response.Items;
+            _pagingMetadata = response.Metadata;
+        }
+    }
+
+    private static string ButtonColorType(CrashReportStatus crashReportStatus) => crashReportStatus switch
     {
         CrashReportStatus.New => "text-secondary",
         CrashReportStatus.BeingLookedAt => "text-info",
@@ -103,5 +139,4 @@
         CrashReportStatus.Fixed => "text-success",
         _ => "text-secondary"
     };
-
 }

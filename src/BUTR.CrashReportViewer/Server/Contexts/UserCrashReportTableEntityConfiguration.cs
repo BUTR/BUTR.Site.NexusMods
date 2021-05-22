@@ -11,13 +11,12 @@ namespace BUTR.CrashReportViewer.Server.Contexts
     {
         public void Configure(EntityTypeBuilder<UserCrashReportTable> builder)
         {
-            builder.ToTable("user_crash_report_entity").HasKey(p => p.Id);
-            builder.Property(p => p.Id).HasColumnName("id").ValueGeneratedOnAdd();
             builder.Property(p => p.UserId).HasColumnName("user_id").IsRequired();
             builder.Property(p => p.Status).HasColumnName("status").IsRequired();
             builder.Property(p => p.Comment).HasColumnName("comment").IsRequired();
-            builder.Property<Guid>("CrashReportForeignKey").HasColumnName("crash_report_fk").IsRequired();
-            builder.HasOne(p => p.CrashReport).WithMany(p => p.UserCrashReports).HasForeignKey("CrashReportForeignKey").OnDelete(DeleteBehavior.Cascade);
+            builder.Property<Guid>("CrashReportId").HasColumnName("crash_report_id").IsRequired();
+            builder.ToTable("user_crash_report_entity").HasKey("UserId", "CrashReportId");
+            builder.HasOne(p => p.CrashReport).WithMany(p => p.UserCrashReports).HasForeignKey("CrashReportId").OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

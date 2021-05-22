@@ -18,6 +18,7 @@ using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BUTR.CrashReportViewer.Server.Helpers
 {
@@ -32,18 +33,18 @@ namespace BUTR.CrashReportViewer.Server.Helpers
         };
 
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IDistributedCache _distributedCache;
-        private readonly DistributedCacheEntryOptions _expiration = new()
+        private readonly IMemoryCache _cache;
+        private readonly MemoryCacheEntryOptions _expiration = new()
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
         };
         private readonly SemaphoreSlim _lock = new(1, 1);
         private TimeLimiter _timeLimiter = TimeLimiter.GetFromMaxCountByInterval(30, TimeSpan.FromSeconds(1));
 
-        public NexusModsAPIClient(IHttpClientFactory httpClientFactory, IDistributedCache distributedCache)
+        public NexusModsAPIClient(IHttpClientFactory httpClientFactory, IMemoryCache cache)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         }
 
         public async Task<NexusModsValidateResponse?> ValidateAPIKey(string apiKey)
@@ -70,7 +71,7 @@ namespace BUTR.CrashReportViewer.Server.Helpers
         public async Task<NexusModsModInfoResponse?> GetMod(string gameDomain, int modId, string apiKey)
         {
             var key = $"{gameDomain}:{modId}";
-            if (await _distributedCache.GetStringAsync(key) is { } modJson)
+            if (_cache.Get<string>(key) is { } modJson)
             {
                 return JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
             }
@@ -90,7 +91,7 @@ namespace BUTR.CrashReportViewer.Server.Helpers
                     var mod = JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
 
                     _timeLimiter = ParseResponseLimits(response);
-                    await _distributedCache.SetAsync(key, Encoding.UTF8.GetBytes(modJson), _expiration);
+                    _cache.Set(key, Encoding.UTF8.GetBytes(modJson), _expiration);
                     return response.IsSuccessStatusCode ? mod : null;
                 }
                 finally

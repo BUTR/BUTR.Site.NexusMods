@@ -5,17 +5,16 @@
 @inject IHttpClientFactory _clientFactory
 @inject BackendAPIClient _backendApiClient
 
-<div class="card">
+<div class="card mb-3">
     <h4 class="card-header">Link Mod</h4>
     <div class="card-body">
         <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
             <DataAnnotationsValidator />
-            <div class="form-group">
-                <label>Mod Url</label>
-                <InputText @bind-Value="_model.ModUrl" placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1" class="form-control" />
-                <ValidationMessage For="@(() => _model.ModUrl)" />
+            <div class="mb-3">
+                <label for="inputModUrl" class="form-label">Mod Url</label>
+                <InputText class="form-control" @bind-Value="_model.ModUrl" placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1" />
             </div>
-            <button disabled="@_isLoading" class="btn btn-primary">
+            <button class="btn btn-primary" disabled="@_isLoading">
                 @if (_isLoading)
                 {
                     <span class="spinner-border spinner-border-sm mr-1"></span>
@@ -25,8 +24,7 @@
         </EditForm>
     </div>
 </div>
-<hr />
-<div class="card">
+<div class="card mb-3">
     <h4 class="card-header">Linked Mods</h4>
     <div class="card-body">
         @if (_mods == null)
@@ -45,52 +43,61 @@
                     </tr>
                 </thead>
                 <tbody>
-                @foreach (var mod in _mods)
-                {
-                    <tr data-toggle="collapse">
-                        <td>
-
-                        </td>
-                        <td>
-                            @mod.GameDomain
-                        </td>
-                        <td>
-                            @mod.ModId
-                        </td>
-                        <td style="text-align: right;">
-                            <div>
-                                <button type="button" class="btn btn-secondary" @onclick="() => OnRefreshMod(mod)">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-                                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"></path>
-                                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"></path>
-                                    </svg>
-                                </button>
-                                <button type="button" class="btn btn-secondary" @onclick="() => OnDeleteMod(mod)">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"></path>
-                                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                }
+                    @foreach (var mod in _mods)
+                    {
+                        <tr data-toggle="collapse">
+                            <td>
+                                @mod.Name
+                            </td>
+                            <td>
+                                @mod.GameDomain
+                            </td>
+                            <td>
+                                @mod.ModId
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="d-grid gap-2 d-md-block">
+                                    <button type="button" class="btn btn-secondary" @onclick="() => OnRefreshMod(mod)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                                            <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"></path>
+                                            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"></path>
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" @onclick="() => OnDeleteMod(mod)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"></path>
+                                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
                 </tbody>
             </table>
+            <div class="row">
+                <div class="col">
+                    <Pagination Metadata="_pagingMetadata" Spread="2" SelectedPage="SelectedPage" />
+                </div>
+            </div>
         }
     </div>
 </div>
 
 @code {
-    private LinkModModel _model = new();
-    private ModModel[]? _mods;
+
     private string _token = default!;
     private bool _isLoading;
+
+    private LinkModModel _model = new();
+    private List<ModModel> _mods;
+    private int _pageNumber = 1;
+    private PagingMetadata _pagingMetadata = new();
 
     protected override async Task OnInitializedAsync()
     {
         _token = await _localStorage.GetItemAsStringAsync("token");
-        _mods = await _backendApiClient.GetMods(_token);
+        await GetMods();
     }
 
     private async void OnValidSubmit()
@@ -100,7 +107,7 @@
         if (await DoLinkMod(_model))
         {
             _model = new LinkModModel();
-            _mods = await _backendApiClient.GetMods(_token);
+            await GetMods();
         }
 
         _isLoading = false;
@@ -126,7 +133,7 @@
     {
         if (await _backendApiClient.RefreshMod(_token, mod.GameDomain, mod.ModId.ToString()))
         {
-            _mods = await _backendApiClient.GetMods(_token);
+            await GetMods();
             StateHasChanged();
         }
     }
@@ -135,7 +142,7 @@
     {
         if (await DoUnlinkMod(mod))
         {
-            _mods = await _backendApiClient.GetMods(_token);
+            await GetMods();
             StateHasChanged();
         }
     }
@@ -152,7 +159,25 @@
         }
     }
 
-    private bool TryParse(LinkModModel modModel, [NotNullWhen(true)] out string? gameDomain, [NotNullWhen(true)] out string? modId)
+
+    private async Task SelectedPage(int page)
+    {
+        _pageNumber = page;
+        await GetMods();
+    }
+
+    private async Task GetMods()
+    {
+        var response = await _backendApiClient.GetMods(_token, _pageNumber);
+        if (response is not null)
+        {
+            _mods = response.Items;
+            _pagingMetadata = response.Metadata;
+        }
+    }
+
+
+    private static bool TryParse(LinkModModel modModel, [NotNullWhen(true)] out string? gameDomain, [NotNullWhen(true)] out string? modId)
     {
         gameDomain = null;
         modId = null;

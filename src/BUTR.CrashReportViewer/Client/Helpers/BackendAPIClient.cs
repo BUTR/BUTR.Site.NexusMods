@@ -5,6 +5,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -78,19 +79,29 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ProfileModel>(JsonSerializerOptions) : null;
         }
 
-        public async Task<ModModel[]?> GetMods(string token)
+        public async Task<PagingResponse<ModModel>?> GetMods(string token, int page)
         {
             if (token.Equals("demo", StringComparison.OrdinalIgnoreCase))
             {
-                return _demoUser.Mods.ToArray();
+                return new PagingResponse<ModModel>
+                {
+                    Items = _demoUser.Mods,
+                    Metadata = new PagingMetadata
+                    {
+                        PageSize = 10,
+                        CurrentPage = 1,
+                        TotalCount = _demoUser.Mods.Count,
+                        TotalPages = (int) Math.Ceiling((double) _demoUser.Mods.Count / 10d),
+                    }
+                };
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, "Mods");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods?page={page}&pageSize={10}");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var httpClient = _httpClientFactory.CreateClient("Backend");
             var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ModModel[]>(JsonSerializerOptions) : null;
+            return response.IsSuccessStatusCode? await response.Content.ReadFromJsonAsync<PagingResponse<ModModel>>(JsonSerializerOptions) : null;
         }
 
         public async Task<bool> RefreshMod(string token, string gameDomain, string modId)
@@ -147,19 +158,45 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<CrashReportModel[]?> GetCrashReports(string token)
+        public async Task<PagingResponse<CrashReportModel>?> GetCrashReports(string token, int page)
         {
             if (token.Equals("demo", StringComparison.OrdinalIgnoreCase))
             {
-                return _demoUser.CrashReports.ToArray();
+                return new PagingResponse<CrashReportModel>
+                {
+                    Items = _demoUser.CrashReports,
+                    Metadata = new PagingMetadata
+                    {
+                        PageSize = 10,
+                        CurrentPage = 1,
+                        TotalCount = _demoUser.CrashReports.Count,
+                        TotalPages = (int) Math.Ceiling((double) _demoUser.CrashReports.Count / 10d),
+                    }
+                };
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, "CrashReports");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"CrashReports?page={page}&pageSize={10}");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var httpClient = _httpClientFactory.CreateClient("Backend");
             var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<CrashReportModel[]>(JsonSerializerOptions) : null;
+            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PagingResponse<CrashReportModel>>(JsonSerializerOptions) : null;
+        }
+
+        public async Task<bool> UpdateCrashReport(string token, CrashReportModel crashReport)
+        {
+            if (token.Equals("demo", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "CrashReports/Update");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            request.Content = new StringContent(JsonSerializer.Serialize(crashReport, JsonSerializerOptions), Encoding.UTF8, "application/json");
+            var httpClient = _httpClientFactory.CreateClient("Backend");
+            var response = await httpClient.SendAsync(request);
+            return response.IsSuccessStatusCode;
         }
     }
 }
