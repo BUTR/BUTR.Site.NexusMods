@@ -33,16 +33,17 @@
         }
         else
         {
-            <table class="table table-responsive-md table-sm align-middle">
-                <thead>
+            <div class="table-responsive-md">
+                <table class="table table-sm align-middle">
+                    <thead>
                     <tr>
                         <th scope="col">Name</th>
                         <th scope="col">Game</th>
                         <th scope="col">Id</th>
                         <th scope="col"></th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     @foreach (var mod in _mods)
                     {
                         <tr>
@@ -73,11 +74,12 @@
                             </td>
                         </tr>
                     }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
             <div class="row">
                 <div class="col">
-                    <Pagination Metadata="_pagingMetadata" Spread="2" SelectedPage="SelectedPage" />
+                    <Pagination Metadata="_pagingMetadata" Spread="2" SelectedPage="SelectedPage"/>
                 </div>
             </div>
         }
