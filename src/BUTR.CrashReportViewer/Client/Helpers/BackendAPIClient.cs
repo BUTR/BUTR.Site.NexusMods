@@ -25,19 +25,17 @@ namespace BUTR.CrashReportViewer.Client.Helpers
         };
 
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly DemoUser _demoUser;
+        private DemoUser _demoUser = default!;
 
-        public BackendAPIClient(IHttpClientFactory httpClientFactory, DemoUser demoUser)
+        public BackendAPIClient(IHttpClientFactory httpClientFactory)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            _demoUser = demoUser ?? throw new ArgumentNullException(nameof(demoUser));
         }
 
         public async Task<string?> Authenticate(string apiKey)
         {
             if (apiKey.Equals("demo", StringComparison.OrdinalIgnoreCase))
             {
-                _demoUser.Reset();
                 return "demo";
             }
 
@@ -53,6 +51,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
         {
             if (token.Equals("demo", StringComparison.OrdinalIgnoreCase))
             {
+                _demoUser ??= await DemoUser.Create(_httpClientFactory);
                 return true;
             }
 

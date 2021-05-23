@@ -22,9 +22,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.CrashReportViewer.Server.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ApiController, Route("[controller]"), Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AuthenticationController : ControllerBase
     {
         private readonly ILogger _logger;
@@ -38,8 +36,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             _jwtOptions = jwtOptions.Value ?? throw new ArgumentNullException(nameof(jwtOptions));
         }
 
-        [HttpGet("Authenticate")]
-        [AllowAnonymous]
+        [HttpGet("Authenticate"), AllowAnonymous]
         public async Task<ActionResult> Authenticate([FromHeader] string? apiKey)
         {
             if (apiKey is null)

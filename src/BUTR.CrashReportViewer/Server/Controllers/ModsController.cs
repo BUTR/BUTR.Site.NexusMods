@@ -17,9 +17,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.CrashReportViewer.Server.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ApiController, Route("[controller]"), Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ModsController : ControllerBase
     {
         public record LinkModQuery(string GameDomain, int ModId);

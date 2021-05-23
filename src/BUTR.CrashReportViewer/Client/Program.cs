@@ -35,9 +35,13 @@ namespace BUTR.CrashReportViewer.Client
                     var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
                     client.BaseAddress = new Uri(backendOptions.Endpoint);
                 });
+                services.AddHttpClient("CrashReporter", (sp, client) =>
+                {
+                    var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
+                    client.BaseAddress = new Uri($"{backendOptions.Endpoint}/Reports/");
+                });
 
                 services.AddScoped<BackendAPIClient>();
-                services.AddSingleton<DemoUser>();
 
                 services.AddBlazoredLocalStorage();
 

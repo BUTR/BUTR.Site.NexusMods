@@ -44,6 +44,10 @@ namespace BUTR.CrashReportViewer.Server
             {
                 client.BaseAddress = new Uri("https://api.nexusmods.com/");
             });
+            services.AddHttpClient("CrashReporter", client =>
+            {
+                client.BaseAddress = new Uri("https://crash.butr.dev/report/");
+            });
 
             services.AddScoped<NexusModsAPIClient>();
 
