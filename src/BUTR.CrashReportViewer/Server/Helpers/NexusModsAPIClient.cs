@@ -55,17 +55,12 @@ namespace BUTR.CrashReportViewer.Server.Helpers
             var httpClient = _httpClientFactory.CreateClient("NexusModsAPI");
             var response = await httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode)
-            {
                 return null;
-            }
-            else
-            {
-                var responseType = await response.Content.ReadFromJsonAsync<NexusModsValidateResponse>();
-                if (responseType is null || responseType.Key != apiKey)
-                    return null;
+            var responseType = await response.Content.ReadFromJsonAsync<NexusModsValidateResponse>();
+            if (responseType is null || responseType.Key != apiKey)
+                return null;
 
-                return responseType;
-            }
+            return responseType;
         }
 
         public async Task<NexusModsModInfoResponse?> GetMod(string gameDomain, int modId, string apiKey)
@@ -73,31 +68,41 @@ namespace BUTR.CrashReportViewer.Server.Helpers
             var key = $"{gameDomain}:{modId}";
             if (await _cache.GetStringAsync(key) is { } modJson)
             {
-                return JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
+                return string.IsNullOrEmpty(modJson)
+                    ? null
+                    : JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
             }
-            else
+
+            try
             {
-                try
-                {
-                    await _lock.WaitAsync();
-                    await _timeLimiter;
+                await _lock.WaitAsync();
+                await _timeLimiter;
 
-                    var request = new HttpRequestMessage(HttpMethod.Get, $"/v1/games/{gameDomain}/mods/{modId}.json");
-                    request.Headers.Add("apikey", apiKey);
-                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    var httpClient = _httpClientFactory.CreateClient("NexusModsAPI");
-                    var response = await httpClient.SendAsync(request);
-                    modJson = await response.Content.ReadAsStringAsync();
-                    var mod = JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
-
-                    _timeLimiter = ParseResponseLimits(response);
-                    await _cache.SetStringAsync(key, modJson, _expiration);
-                    return response.IsSuccessStatusCode ? mod : null;
-                }
-                finally
+                var request = new HttpRequestMessage(HttpMethod.Get, $"/v1/games/{gameDomain}/mods/{modId}.json");
+                request.Headers.Add("apikey", apiKey);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var httpClient = _httpClientFactory.CreateClient("NexusModsAPI");
+                var response = await httpClient.SendAsync(request);
+                _timeLimiter = ParseResponseLimits(response);
+                if (!response.IsSuccessStatusCode)
                 {
-                    _lock.Release();
+                    await _cache.SetStringAsync(key, "", _expiration);
+                    return null;
                 }
+                modJson = await response.Content.ReadAsStringAsync();
+                var mod = JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
+                if (mod is null)
+                {
+                    await _cache.SetStringAsync(key, "", _expiration);
+                    return null;
+                }
+
+                await _cache.SetStringAsync(key, modJson, _expiration);
+                return response.IsSuccessStatusCode ? mod : null;
+            }
+            finally
+            {
+                _lock.Release();
             }
         }
 

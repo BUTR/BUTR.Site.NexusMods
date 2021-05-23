@@ -1,22 +1,22 @@
-﻿using System.ComponentModel;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace BUTR.CrashReportViewer.Shared.Models
 {
     public enum CrashReportStatus
     {
-        [Description("New")]
+        [Display(Name = "New")]
         New,
-        [Description("Being Looked At")]
+        [Display(Name = "Being Looked At")]
         BeingLookedAt,
-        [Description("Not My Fault")]
+        [Display(Name = "Not My Fault")]
         NotMyFault,
-        [Description("Known Issue")]
+        [Display(Name = "Known Issue")]
         Known,
-        [Description("Duplicate")]
+        [Display(Name = "Duplicate")]
         Duplicate,
-        [Description("Needs More Info")]
+        [Display(Name = "Needs More Info")]
         NeedsMoreInfo,
-        [Description("Fixed")]
+        [Display(Name = "Fixed")]
         Fixed
     }
 }

@@ -8,9 +8,13 @@
 <div class="card">
     <h4 class="card-header">Crash Reports</h4>
     <div class="card-body">
-        @if (_reports == null)
+        @if (_reports is null!)
         {
-            <span class="spinner-border"></span>
+            <div class="d-flex justify-content-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
         }
         else
         {
@@ -30,10 +34,10 @@
                         {
                             <tr>
                                 <td style="text-align: left;" data-bs-toggle="collapse" data-bs-target="#guid_@report.Id" aria-expanded="false" aria-controls="guid_@report.Id">
-                                    <p style="white-space: pre-line">@report.Exception.Split(Environment.NewLine).FirstOrDefault()?.Split("Type:").Skip(1).FirstOrDefault()</p>
+                                    <p style="white-space: pre-line">@(report.Type ?? string.Empty)</p>
                                 </td>
                                 <td>
-                                    @report.Date.ToString("yy-MM-dd HH:mm:ss")
+                                    @report.Date.ToString("yyyy-MM-dd HH:mm")
                                 </td>
                                 <td>
                                     <EditForm Model="@report">
@@ -41,9 +45,9 @@
                                                      ValueExpression="@(() => report.Status)"
                                                      Value="@report.Status"
                                                      ValueChanged="@((CrashReportStatus value) => OnStatusChange(report, value))">
-                                            @foreach (var e in Enum.GetValues<CrashReportStatus>())
+                                            @foreach (var crs in Enum.GetValues<CrashReportStatus>())
                                             {
-                                                <option value="@e" class="@ButtonColorType(e)">@e</option>
+                                                <option value="@crs" class="@ButtonColorType(crs)">@crs.GetDisplayName()</option>
                                             }
                                         </InputSelect>
                                     </EditForm>
@@ -53,7 +57,7 @@
                                         <InputText id="name"
                                                    ValueExpression="@(() => report.Comment)"
                                                    Value="@report.Comment"
-                                                   ValueChanged="@((value) => OnCommentChange(report, value))" />
+                                                   ValueChanged="@(value => OnCommentChange(report, value))" />
                                     </EditForm>
                                 </td>
                                 <td>
@@ -64,8 +68,12 @@
                             </tr>
                             <tr class="collapse" id="guid_@report.Id">
                                 <td colspan="5" style="text-align: left;">
-                                    <div class="mx-3">
-                                        <p class="font-monospace fs-6" style="white-space: pre-line">@report.Exception</p>
+                                    <div class="container-fluid mx-3">
+                                        <p class="font-monospace fs-6 lh-sm" style="white-space: pre-line">
+                                            <small>
+                                                @report.Exception
+                                            </small>
+                                        </p>
                                     </div>
                                 </td>
                             </tr>
@@ -85,7 +93,7 @@
 @code {
     private string _token = default!;
 
-    private List<CrashReportModel> _reports = new();
+    private List<CrashReportModel> _reports = default!;
     private int _pageNumber = 1;
     private PagingMetadata _pagingMetadata = new();
 

@@ -4,9 +4,13 @@
 @inject ILocalStorageService _localStorage
 @inject BackendAPIClient _backendApiClient
 
-@if (_user == null)
+@if (_user is null)
 {
-    <span class="spinner-border"></span>
+    <div class="d-flex justify-content-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
 }
 else
 {
@@ -23,11 +27,11 @@ else
                                     <h4><a href="@_user.Url">@_user.Name</a></h4>
                                     @if (_user.IsPremium)
                                     {
-                                        <p class="text-secondary mb-1">Premium</p>
+                                        <p class="text-secondary">Premium</p>
                                     }
                                     @if (_user.IsSupporter)
                                     {
-                                        <p class="text-muted font-size-sm">Supporter</p>
+                                        <p class="text-secondary">Supporter</p>
                                     }
                                 </div>
                             </div>
