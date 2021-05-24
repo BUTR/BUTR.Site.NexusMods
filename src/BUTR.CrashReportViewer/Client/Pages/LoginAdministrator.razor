@@ -1,4 +1,4 @@
-﻿@page "/login-nexusmods"
+﻿@page "/login-administrator"
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
 @inject BackendAPIClient _backendApiClient
@@ -8,13 +8,13 @@
     <div class="row">
         <div class="col-lg-10 col-xl-7 mx-auto">
             <div class="card">
-                <h4 class="card-header text-center">NexusMods Log In</h4>
+                <h4 class="card-header text-center">Administrator Log In</h4>
                 <div class="card-body">
                     <EditForm Model="@_model" OnValidSubmit="OnValidSubmit">
                         <DataAnnotationsValidator />
                         <div class="mb-3">
-                            <label for="inputNexusModsApiKey" class="form-label">NexusMods API Key</label>
-                            <InputText id="inputNexusModsApiKey" @bind-Value="_model.Input" type="password" required="" class="form-control border-0 shadow-sm px-4 text-primary" />
+                            <label for="inputToken" class="form-label">Administrator Token</label>
+                            <InputText id="inputToken" @bind-Value="_model.Input" type="password" required="" class="form-control border-0 shadow-sm px-4 text-primary" />
                         </div>
                         <button type="submit" class="btn btn-primary text-uppercase mb-2" disabled="@_isLoading">
                             @if (_isLoading)

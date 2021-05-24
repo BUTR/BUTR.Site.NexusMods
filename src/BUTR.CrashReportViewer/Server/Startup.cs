@@ -27,6 +27,7 @@ namespace BUTR.CrashReportViewer.Server
     public class Startup
     {
         private const string JwtSectionName = "Jwt";
+        private const string AuthenticationSectionName = "Authentication";
 
         public IConfiguration Configuration { get; }
 
@@ -38,6 +39,7 @@ namespace BUTR.CrashReportViewer.Server
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<JwtOptions>(Configuration.GetSection(JwtSectionName));
+            services.Configure<AuthenticationOptions>(Configuration.GetSection(AuthenticationSectionName));
 
 
             services.AddHttpClient("NexusModsAPI", client =>

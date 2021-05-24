@@ -39,15 +39,56 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             var page = query.Page;
             var pageSize = Math.Max(Math.Min(query.PageSize, 50), 10);
 
+            if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
+                return ForAdministrator(page, pageSize);
+
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
 
             if (await _nexusModsAPIClient.ValidateAPIKey(apiKeyClaim.Value) is not { } validateResponse)
                 return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
 
+            return ForUser(validateResponse.UserId, page, pageSize);
+        }
+
+        private ObjectResult ForAdministrator(int page, int pageSize)
+        {
+            var crashReportCount = _mainDbContext.CrashReports
+                .AsNoTracking()
+                .Count();
+
+            var crashReports = _mainDbContext.CrashReports
+                .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == -1))
+                .AsNoTracking()
+                .OrderBy(cr => cr.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(cr => new CrashReportModel(cr.Id, cr.Exception, cr.CreatedAt, cr.Url)
+                {
+                    Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
+                    Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
+                })
+                .ToList();
+
+            var metadata = new PagingMetadata
+            {
+                PageSize = pageSize,
+                CurrentPage = page,
+                TotalCount = crashReportCount,
+                TotalPages = (int) Math.Floor((double) crashReportCount / (double) pageSize),
+            };
+
+            return StatusCode((int) HttpStatusCode.OK, new PagingResponse<CrashReportModel>
+            {
+                Items = crashReports,
+                Metadata = metadata
+            });
+        }
+        private ObjectResult ForUser(int userId, int page, int pageSize)
+        {
             var userModIds = _mainDbContext.Mods
                 .AsNoTracking()
-                .Where(m => m.UserIds.Contains(validateResponse.UserId))
+                .Where(m => m.UserIds.Contains(userId))
                 .Select(m => m.ModId)
                 .ToArray();
 
@@ -56,7 +97,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                 .Count(cr => cr.ModIds.Any(crmi => userModIds.Contains(crmi)));
 
             var crashReports = _mainDbContext.CrashReports
-                .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == validateResponse.UserId))
+                .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == userId))
                 .AsNoTracking()
                 .OrderBy(cr => cr.CreatedAt)
                 .Where(cr => cr.ModIds.Any(crmi => userModIds.Contains(crmi)))
@@ -87,13 +128,21 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         [HttpPost("Update")]
         public async Task<ActionResult> Update([FromBody] CrashReportModel updatedCrashReport)
         {
+            if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
+                return await UpdateForAdministrator(updatedCrashReport);
+
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
 
             if (await _nexusModsAPIClient.ValidateAPIKey(apiKeyClaim.Value) is not { } validateResponse)
                 return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
 
-            if (await _mainDbContext.UserCrashReports.FindAsync(validateResponse.UserId, updatedCrashReport.Id) is { } userCrashReport)
+            return await UpdateForUser(validateResponse.UserId, updatedCrashReport);
+        }
+
+        private async Task<ObjectResult> UpdateForAdministrator(CrashReportModel updatedCrashReport)
+        {
+            if (await _mainDbContext.UserCrashReports.FindAsync(-1, updatedCrashReport.Id) is { } userCrashReport)
             {
                 userCrashReport.Status = updatedCrashReport.Status;
                 userCrashReport.Comment = updatedCrashReport.Comment;
@@ -107,7 +156,32 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 
                 await _mainDbContext.UserCrashReports.AddAsync(new UserCrashReportTable
                 {
-                    UserId = validateResponse.UserId,
+                    UserId = -1,
+                    CrashReport = crashReport,
+                    Status = updatedCrashReport.Status,
+                    Comment = updatedCrashReport.Comment,
+                });
+                await _mainDbContext.SaveChangesAsync();
+                return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Updated successful!"));
+            }
+        }
+        private async Task<ObjectResult> UpdateForUser(int userId, CrashReportModel updatedCrashReport)
+        {
+            if (await _mainDbContext.UserCrashReports.FindAsync(userId, updatedCrashReport.Id) is { } userCrashReport)
+            {
+                userCrashReport.Status = updatedCrashReport.Status;
+                userCrashReport.Comment = updatedCrashReport.Comment;
+                await _mainDbContext.SaveChangesAsync();
+                return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Updated successful!"));
+            }
+            else
+            {
+                var crashReport = await _mainDbContext.CrashReports.FindAsync(updatedCrashReport.Id);
+                //return StatusCode((int) HttpStatusCode.NotFound, new StandardResponse("Mod is not linked!"));
+
+                await _mainDbContext.UserCrashReports.AddAsync(new UserCrashReportTable
+                {
+                    UserId = userId,
                     CrashReport = crashReport,
                     Status = updatedCrashReport.Status,
                     Comment = updatedCrashReport.Comment,

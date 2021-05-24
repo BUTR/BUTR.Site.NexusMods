@@ -25,15 +25,23 @@ namespace BUTR.CrashReportViewer.Server.Controllers
     [ApiController, Route("[controller]"), Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AuthenticationController : ControllerBase
     {
+        private static readonly ProfileModel Administrator = new(-1, "Administrator", "admin@butr.dev", "", false, false);
+
         private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
         private readonly JwtOptions _jwtOptions;
+        private readonly AuthenticationOptions _authenticationOptions;
 
-        public AuthenticationController(ILogger<AuthenticationController> logger, NexusModsAPIClient nexusModsAPIClient, IOptions<JwtOptions> jwtOptions)
+        public AuthenticationController(
+            ILogger<AuthenticationController> logger,
+            NexusModsAPIClient nexusModsAPIClient,
+            IOptions<JwtOptions> jwtOptions,
+            IOptions<AuthenticationOptions> authenticationOptions)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _nexusModsAPIClient = nexusModsAPIClient ?? throw new ArgumentNullException(nameof(nexusModsAPIClient));
             _jwtOptions = jwtOptions.Value ?? throw new ArgumentNullException(nameof(jwtOptions));
+            _authenticationOptions = authenticationOptions.Value ?? throw new ArgumentNullException(nameof(authenticationOptions));
         }
 
         [HttpGet("Authenticate"), AllowAnonymous]
@@ -41,6 +49,16 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         {
             if (apiKey is null)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("API Key not found!"));
+
+            if (apiKey.Equals(_authenticationOptions.AdminToken, StringComparison.Ordinal))
+            {
+                return Ok(new JwtTokenResponse(GenerateJsonWebToken(new NexusModsValidateResponse
+                {
+                    UserId = Administrator.UserId,
+                    Name = Administrator.Name,
+                    Email = Administrator.Email
+                })));
+            }
 
             if (await _nexusModsAPIClient.ValidateAPIKey(apiKey) is not { } validateResponse)
                 return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
@@ -51,6 +69,9 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         [HttpGet("Validate")]
         public async Task<ActionResult> Validate()
         {
+            if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
+                return Ok();
+
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
 
@@ -63,6 +84,9 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         [HttpGet("Profile")]
         public async Task<ActionResult> Profile()
         {
+            if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
+                return Ok(Administrator);
+
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
 
@@ -95,6 +119,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                     { JwtRegisteredClaimNames.Sub, userInfo.Name },
                     { JwtRegisteredClaimNames.Email, userInfo.Email },
                     { "nmapikey", userInfo.Key },
+                    { ClaimTypes.Role, new [] { ApplicationRoles.User, userInfo.UserId == -1 ? ApplicationRoles.Administrator : string.Empty } },
                 },
                 SigningCredentials = signingCredentials,
                 EncryptingCredentials = encryptingCredentials,

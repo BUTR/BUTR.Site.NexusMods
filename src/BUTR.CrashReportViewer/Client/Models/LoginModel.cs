@@ -2,6 +2,6 @@
 {
     public class LoginModel
     {
-        public string NexusModsAPIKey { get; set; } = default!;
+        public string Input { get; set; } = default!;
     }
 }

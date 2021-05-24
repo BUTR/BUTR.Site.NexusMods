@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -39,6 +40,15 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         {
             var page = query.Page;
             var pageSize = Math.Max(Math.Min(query.PageSize, 20), 5);
+
+            if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
+            {
+                return StatusCode((int) HttpStatusCode.OK, new PagingResponse<ModModel>
+                {
+                    Items = new List<ModModel>(),
+                    Metadata = new PagingMetadata()
+                });
+            }
 
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
@@ -77,6 +87,9 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         [HttpGet("Get")]
         public async Task<ActionResult> Get([FromQuery] LinkModQuery query)
         {
+            if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
+                return StatusCode((int) HttpStatusCode.OK, new ModModel("", "", 0));
+
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
 
@@ -95,6 +108,9 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         [HttpGet("Link")]
         public async Task<ActionResult> Link([FromQuery] LinkModQuery query)
         {
+            if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
+                return StatusCode((int) HttpStatusCode.OK, new StandardResponse(""));
+
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
 
@@ -133,6 +149,9 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         [HttpGet("Unlink")]
         public async Task<ActionResult> Unlink([FromQuery] LinkModQuery query)
         {
+            if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
+                return StatusCode((int) HttpStatusCode.OK, new StandardResponse(""));
+
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
 
@@ -155,6 +174,9 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         [HttpGet("Refresh")]
         public async Task<ActionResult> Refresh([FromQuery] LinkModQuery query)
         {
+            if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
+                return StatusCode((int) HttpStatusCode.OK, new StandardResponse(""));
+
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
 

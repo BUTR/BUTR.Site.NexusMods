@@ -13,6 +13,7 @@
                     <hr class="my-4">
                     <div class="d-grid gap-2">
                         <a class="btn btn-primary btn-lg text-uppercase" @onclick="OnDemoLogin" role="button">Demo</a>
+                        <a class="btn btn-secondary btn-lg text-uppercase" href="@AdministratorUrl" role="button">Administrator</a>
                         <a class="btn btn-nexusmods btn-lg text-uppercase" href="@NexusModsUrl" role="button">Log In via NexusMods</a>
                     </div>
                 </form>
@@ -22,6 +23,7 @@
 </div>
 
 @code {
+    public string AdministratorUrl => $"login-administrator{new Uri(_navigationManager.Uri).Query}";
     public string NexusModsUrl => $"login-nexusmods{new Uri(_navigationManager.Uri).Query}";
 
     private async void OnDemoLogin()
