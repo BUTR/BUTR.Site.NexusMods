@@ -32,14 +32,14 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         }
 
-        public async Task<string?> Authenticate(string apiKey)
+        public async Task<string?> Authenticate(string apiKey, string? type = null)
         {
             if (apiKey.Equals("demo", StringComparison.OrdinalIgnoreCase))
             {
                 return "demo";
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/Authenticate");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"Authentication/Authenticate{(string.IsNullOrEmpty(type) ? string.Empty : $"?type={type}")}");
             request.Headers.Add("apikey", apiKey);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var httpClient = _httpClientFactory.CreateClient("Backend");

@@ -46,23 +46,28 @@ namespace BUTR.CrashReportViewer.Server.Controllers
         }
 
         [HttpGet("Authenticate"), AllowAnonymous]
-        public async Task<ActionResult> Authenticate([FromHeader] string? apiKey)
+        public async Task<ActionResult> Authenticate([FromHeader] string? apiKey, [FromQuery] string? type)
         {
             if (apiKey is null)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("API Key not found!"));
 
-            if (apiKey.Equals(_authenticationOptions.AdminToken, StringComparison.Ordinal))
+            if (type?.Equals("admin", StringComparison.OrdinalIgnoreCase) == true)
             {
-                return Ok(new JwtTokenResponse(GenerateJsonWebToken(new NexusModsValidateResponse
+                if (apiKey.Equals(_authenticationOptions.AdminToken, StringComparison.Ordinal))
                 {
-                    UserId = Administrator.UserId,
-                    Name = Administrator.Name,
-                    Email = Administrator.Email
-                })));
+                    return Ok(new JwtTokenResponse(GenerateJsonWebToken(new NexusModsValidateResponse
+                    {
+                        UserId = Administrator.UserId,
+                        Name = Administrator.Name,
+                        Email = Administrator.Email
+                    })));
+                }
+
+                return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid Administrator Token!"));
             }
 
             if (await _nexusModsAPIClient.ValidateAPIKey(apiKey) is not { } validateResponse)
-                return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
+                return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key!"));
 
             return Ok(new JwtTokenResponse(GenerateJsonWebToken(validateResponse)));
         }

@@ -43,7 +43,7 @@
 
         try
         {
-            var result = await _backendApiClient.Authenticate(_model.Input);
+            var result = await _backendApiClient.Authenticate(_model.Input, "admin");
             if (result is null)
             {
                 _isLoading = false;
