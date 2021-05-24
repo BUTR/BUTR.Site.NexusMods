@@ -1,6 +1,7 @@
 ﻿using BUTR.CrashReportViewer.Server.Helpers;
 using BUTR.CrashReportViewer.Server.Models.NexusModsAPI;
 using BUTR.CrashReportViewer.Server.Options;
+using BUTR.CrashReportViewer.Shared.Helpers;
 using BUTR.CrashReportViewer.Shared.Models;
 using BUTR.CrashReportViewer.Shared.Models.API;
 
@@ -25,7 +26,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
     [ApiController, Route("[controller]"), Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AuthenticationController : ControllerBase
     {
-        private static readonly ProfileModel Administrator = new(-1, "Administrator", "admin@butr.dev", "", false, false);
+        private static readonly ProfileModel Administrator = new(-1, "Administrator", "admin@butr.dev", "/images/default_profile.webp", false, false);
 
         private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;

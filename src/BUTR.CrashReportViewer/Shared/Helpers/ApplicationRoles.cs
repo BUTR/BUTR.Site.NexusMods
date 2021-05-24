@@ -1,4 +1,4 @@
-﻿namespace BUTR.CrashReportViewer.Server.Helpers
+﻿namespace BUTR.CrashReportViewer.Shared.Helpers
 {
     public static class ApplicationRoles
     {

@@ -1,6 +1,7 @@
 ﻿using BUTR.CrashReportViewer.Server.Contexts;
 using BUTR.CrashReportViewer.Server.Helpers;
 using BUTR.CrashReportViewer.Server.Models.Contexts;
+using BUTR.CrashReportViewer.Shared.Helpers;
 using BUTR.CrashReportViewer.Shared.Models;
 using BUTR.CrashReportViewer.Shared.Models.API;
 
