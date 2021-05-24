@@ -26,7 +26,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
     [ApiController, Route("[controller]"), Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class AuthenticationController : ControllerBase
     {
-        private static readonly ProfileModel Administrator = new(-1, "Administrator", "admin@butr.dev", "/images/default_profile.webp", false, false);
+        private static readonly ProfileModel Administrator = new(-1, "Administrator", "admin@butr.dev", "{BASE}images/default_profile.webp", false, false);
 
         private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;

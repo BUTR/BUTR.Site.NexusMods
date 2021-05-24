@@ -33,7 +33,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             if (!await _backendApiClient.Validate(token))
                 return new AuthenticationState(_anonymous);
 
-            if (await _backendApiClient.GetProfile(token) is { } profile && profile.UserId == -1)
+            if (await _backendApiClient.GetProfile(token) is { UserId: -1 })
                 return new AuthenticationState(_administrator);
 
             return new AuthenticationState(_authenticated);
