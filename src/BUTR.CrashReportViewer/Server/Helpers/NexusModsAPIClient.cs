@@ -11,14 +11,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace BUTR.CrashReportViewer.Server.Helpers
 {
@@ -49,60 +47,74 @@ namespace BUTR.CrashReportViewer.Server.Helpers
 
         public async Task<NexusModsValidateResponse?> ValidateAPIKey(string apiKey)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "v1/users/validate.json");
-            request.Headers.Add("apikey", apiKey);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _httpClientFactory.CreateClient("NexusModsAPI");
-            var response = await httpClient.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-                return null;
-            var responseType = await response.Content.ReadFromJsonAsync<NexusModsValidateResponse>();
-            if (responseType is null || responseType.Key != apiKey)
-                return null;
-
-            return responseType;
-        }
-
-        public async Task<NexusModsModInfoResponse?> GetMod(string gameDomain, int modId, string apiKey)
-        {
-            var key = $"{gameDomain}:{modId}";
-            if (await _cache.GetStringAsync(key) is { } modJson)
-            {
-                return string.IsNullOrEmpty(modJson)
-                    ? null
-                    : JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
-            }
-
             try
             {
-                await _lock.WaitAsync();
-                await _timeLimiter;
-
-                var request = new HttpRequestMessage(HttpMethod.Get, $"/v1/games/{gameDomain}/mods/{modId}.json");
+                var request = new HttpRequestMessage(HttpMethod.Get, "v1/users/validate.json");
                 request.Headers.Add("apikey", apiKey);
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 var httpClient = _httpClientFactory.CreateClient("NexusModsAPI");
                 var response = await httpClient.SendAsync(request);
-                _timeLimiter = ParseResponseLimits(response);
                 if (!response.IsSuccessStatusCode)
-                {
-                    await _cache.SetStringAsync(key, "", _expiration);
                     return null;
-                }
-                modJson = await response.Content.ReadAsStringAsync();
-                var mod = JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
-                if (mod is null)
-                {
-                    await _cache.SetStringAsync(key, "", _expiration);
+                var responseType = await response.Content.ReadFromJsonAsync<NexusModsValidateResponse>();
+                if (responseType is null || responseType.Key != apiKey)
                     return null;
+
+                return responseType;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<NexusModsModInfoResponse?> GetMod(string gameDomain, int modId, string apiKey)
+        {
+            try
+            {
+                var key = $"{gameDomain}:{modId}";
+                if (await _cache.GetStringAsync(key) is { } modJson)
+                {
+                    return string.IsNullOrEmpty(modJson)
+                        ? null
+                        : JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
                 }
 
-                await _cache.SetStringAsync(key, modJson, _expiration);
-                return response.IsSuccessStatusCode ? mod : null;
+                try
+                {
+                    await _lock.WaitAsync();
+                    await _timeLimiter;
+
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"/v1/games/{gameDomain}/mods/{modId}.json");
+                    request.Headers.Add("apikey", apiKey);
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    var httpClient = _httpClientFactory.CreateClient("NexusModsAPI");
+                    var response = await httpClient.SendAsync(request);
+                    _timeLimiter = ParseResponseLimits(response);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        await _cache.SetStringAsync(key, "", _expiration);
+                        return null;
+                    }
+                    modJson = await response.Content.ReadAsStringAsync();
+                    var mod = JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, JsonSerializerOptions);
+                    if (mod is null)
+                    {
+                        await _cache.SetStringAsync(key, "", _expiration);
+                        return null;
+                    }
+
+                    await _cache.SetStringAsync(key, modJson, _expiration);
+                    return response.IsSuccessStatusCode ? mod : null;
+                }
+                finally
+                {
+                    _lock.Release();
+                }
             }
-            finally
+            catch (Exception)
             {
-                _lock.Release();
+                return null;
             }
         }
 
@@ -114,21 +126,20 @@ namespace BUTR.CrashReportViewer.Server.Helpers
             var constraint = new CountByIntervalAwaitableConstraint(30, TimeSpan.FromSeconds(1));
 
 
-            var hourlyLimit = int.Parse(response.Headers.GetValues("X-RL-Hourly-Limit").FirstOrDefault());
+            var hourlyLimit = int.TryParse(response.Headers.GetValues("X-RL-Hourly-Limit").FirstOrDefault(), out var hourlyLimitVal) ? hourlyLimitVal : 0;
             var hourlyLimitConstraint = new CountByIntervalAwaitableConstraint(hourlyLimit, TimeSpan.FromHours(1));
 
-            var hourlyRemaining = int.Parse(response.Headers.GetValues("X-RL-Hourly-Remaining").FirstOrDefault());
-            var hourlyReset = DateTime.Parse(response.Headers.GetValues("X-RL-Hourly-Reset").FirstOrDefault());
+            var hourlyRemaining = int.TryParse(response.Headers.GetValues("X-RL-Hourly-Remaining").FirstOrDefault(), out var hourlyRemainingVal) ? hourlyRemainingVal : 0;
+            var hourlyReset = DateTime.TryParse(response.Headers.GetValues("X-RL-Hourly-Reset").FirstOrDefault(), out var hourlyResetVal) ? hourlyResetVal : DateTime.UtcNow;
             var hourlyTimeLeft = hourlyReset - DateTime.UtcNow;
             var hourlyRemainingConstraint = new CountByIntervalAwaitableConstraint(hourlyRemaining, hourlyTimeLeft);
-            //var hourlyRemainingConstraint = new CountByIntervalAwaitableConstraint(hourlyRemaining, hourlyTimeLeft);
 
 
-            var dailyLimit = int.Parse(response.Headers.GetValues("X-RL-Daily-Limit").FirstOrDefault());
+            var dailyLimit = int.TryParse(response.Headers.GetValues("X-RL-Daily-Limit").FirstOrDefault(), out var dailyLimitVal) ? dailyLimitVal : 0;
             var dailyLimitConstraint = new CountByIntervalAwaitableConstraint(dailyLimit, TimeSpan.FromDays(1));
 
-            var dailyRemaining = int.Parse(response.Headers.GetValues("X-RL-Daily-Remaining").FirstOrDefault());
-            var dailyReset = DateTime.Parse(response.Headers.GetValues("X-RL-Daily-Reset").FirstOrDefault());
+            var dailyRemaining = int.TryParse(response.Headers.GetValues("X-RL-Daily-Remaining").FirstOrDefault(), out var dailyRemainingVal) ? dailyRemainingVal : 0;
+            var dailyReset = DateTime.TryParse(response.Headers.GetValues("X-RL-Daily-Reset").FirstOrDefault(), out var dailyResetVal) ? dailyResetVal : DateTime.UtcNow;
             var dailyTimeLeft = dailyReset - DateTime.UtcNow;
             var dailyRemainingConstraint = new CountByIntervalAwaitableConstraint(dailyRemaining, dailyTimeLeft);
 

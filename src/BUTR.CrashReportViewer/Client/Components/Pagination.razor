@@ -27,9 +27,8 @@
 
     private void CreatePaginationLinks()
     {
-        _links = new List<PagingLink>();
+        _links = new List<PagingLink> { new(Metadata.CurrentPage - 1, Metadata.HasPrevious, "Previous") };
 
-        _links.Add(new PagingLink(Metadata.CurrentPage - 1, Metadata.HasPrevious, "Previous"));
 
         for (int i = 1; i <= Metadata.TotalPages; i++)
         {

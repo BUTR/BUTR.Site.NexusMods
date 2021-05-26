@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 
 using System;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace BUTR.CrashReportViewer.Client
@@ -26,19 +27,27 @@ namespace BUTR.CrashReportViewer.Client
             {
                 services.Configure<BackendOptions>(builder.Configuration.GetSection("Backend"));
 
-                services.AddScoped(sp => new HttpClient
+                var assemblyName = Assembly.GetEntryAssembly()?.GetName();
+                var userAgent = $"{assemblyName?.Name ?? "BUTR.CrashReportViewer.Client"} v{Assembly.GetEntryAssembly()?.GetName().Version}";
+                services.AddScoped(_ => new HttpClient
                 {
-                    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+                    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress),
+                    DefaultRequestHeaders =
+                    {
+                        {"User-Agent", userAgent}
+                    }
                 });
                 services.AddHttpClient("Backend", (sp, client) =>
                 {
                     var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
                     client.BaseAddress = new Uri(backendOptions.Endpoint);
+                    client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 });
                 services.AddHttpClient("CrashReporter", (sp, client) =>
                 {
                     var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
                     client.BaseAddress = new Uri($"{backendOptions.Endpoint}/Reports/");
+                    client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 });
 
                 services.AddScoped<BackendAPIClient>();

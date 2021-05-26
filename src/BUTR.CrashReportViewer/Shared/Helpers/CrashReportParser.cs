@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace BUTR.CrashReportViewer.Shared.Helpers
@@ -65,7 +64,7 @@ namespace BUTR.CrashReportViewer.Shared.Helpers
         private static Module ParseModule(HtmlNode node)
         {
             static string GetField(IEnumerable<string> lines, string field) => lines
-                .FirstOrDefault(l => l.StartsWith($"{field}:"))?.Split($"{field}:")?.Skip(1).FirstOrDefault()?.Trim() ?? string.Empty;
+                .FirstOrDefault(l => l.StartsWith($"{field}:"))?.Split($"{field}:").Skip(1).FirstOrDefault()?.Trim() ?? string.Empty;
 
             static ImmutableList<string> GetRange(IEnumerable<string> lines, string bField, IEnumerable<string> eFields) => lines
                 .SkipWhile(l => !l.StartsWith($"{bField}:")).Skip(1)
@@ -84,9 +83,9 @@ namespace BUTR.CrashReportViewer.Shared.Helpers
                 .Where(o => !o.Item.Contains(":") && !o.Item.Contains(".dll"))
                 .Select(o => lines.Skip(o.Index + 1).TakeWhile(l => l.Contains(":") || l.Contains(".dll")).ToImmutableList())
                 .Select(sml => new ModuleSubModule(
-                    sml.FirstOrDefault(l => l.StartsWith("Name:"))?.Split("Name:")?.Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
-                    sml.FirstOrDefault(l => l.StartsWith("DLLName:"))?.Split("DLLName:")?.Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
-                    sml.FirstOrDefault(l => l.StartsWith("SubModuleClassType:"))?.Split("SubModuleClassType:")?.Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
+                    sml.FirstOrDefault(l => l.StartsWith("Name:"))?.Split("Name:").Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
+                    sml.FirstOrDefault(l => l.StartsWith("DLLName:"))?.Split("DLLName:").Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
+                    sml.FirstOrDefault(l => l.StartsWith("SubModuleClassType:"))?.Split("SubModuleClassType:").Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
                     sml.SkipWhile(l => !l.StartsWith("Tags:")).Skip(1).TakeWhile(l => !l.StartsWith("Assemblies:")).Select(l =>
                     {
                         var split = l.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

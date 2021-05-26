@@ -39,12 +39,19 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return "demo";
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"Authentication/Authenticate{(string.IsNullOrEmpty(type) ? string.Empty : $"?type={type}")}");
-            request.Headers.Add("apikey", apiKey);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _httpClientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode ? (await response.Content.ReadFromJsonAsync<JwtTokenResponse>(JsonSerializerOptions))?.Token : null;
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"Authentication/Authenticate{(string.IsNullOrEmpty(type) ? string.Empty : $"?type={type}")}");
+                request.Headers.Add("apikey", apiKey);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var httpClient = _httpClientFactory.CreateClient("Backend");
+                var response = await httpClient.SendAsync(request);
+                return response.IsSuccessStatusCode ? (await response.Content.ReadFromJsonAsync<JwtTokenResponse>(JsonSerializerOptions))?.Token : null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public async Task<bool> Validate(string token)
@@ -55,12 +62,19 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return true;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/Validate");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _httpClientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode;
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/Validate");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var httpClient = _httpClientFactory.CreateClient("Backend");
+                var response = await httpClient.SendAsync(request);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public async Task<ProfileModel?> GetProfile(string token)
@@ -70,12 +84,19 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return _demoUser.Profile;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/Profile");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _httpClientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ProfileModel>(JsonSerializerOptions) : null;
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, "Authentication/Profile");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var httpClient = _httpClientFactory.CreateClient("Backend");
+                var response = await httpClient.SendAsync(request);
+                return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ProfileModel>(JsonSerializerOptions) : null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public async Task<PagingResponse<ModModel>?> GetMods(string token, int page)
@@ -95,12 +116,19 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 };
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods?page={page}&pageSize={10}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _httpClientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode? await response.Content.ReadFromJsonAsync<PagingResponse<ModModel>>(JsonSerializerOptions) : null;
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"Mods?page={page}&pageSize={10}");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var httpClient = _httpClientFactory.CreateClient("Backend");
+                var response = await httpClient.SendAsync(request);
+                return response.IsSuccessStatusCode? await response.Content.ReadFromJsonAsync<PagingResponse<ModModel>>(JsonSerializerOptions) : null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public async Task<bool> RefreshMod(string token, string gameDomain, string modId)
@@ -110,19 +138,26 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return true;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/Refresh?gameDomain={gameDomain}&modId={modId}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _httpClientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode;
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/Refresh?gameDomain={gameDomain}&modId={modId}");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var httpClient = _httpClientFactory.CreateClient("Backend");
+                var response = await httpClient.SendAsync(request);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public async Task<bool> LinkMod(string token, string gameDomain, string modId)
         {
             if (token.Equals("demo", StringComparison.OrdinalIgnoreCase))
             {
-                if (_demoUser.Mods.Find(m => m.GameDomain == gameDomain && m.ModId.ToString() == modId) is not { } mod && int.TryParse(modId, out var id))
+                if (_demoUser.Mods.Find(m => m.GameDomain == gameDomain && m.ModId.ToString() == modId) is null && int.TryParse(modId, out var id))
                 {
                     _demoUser.Mods.Add(new($"Demo Mod {gameDomain} {id}", gameDomain, id));
                     return true;
@@ -131,12 +166,19 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return false;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/Link?gameDomain={gameDomain}&modId={modId}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _httpClientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode;
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/Link?gameDomain={gameDomain}&modId={modId}");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var httpClient = _httpClientFactory.CreateClient("Backend");
+                var response = await httpClient.SendAsync(request);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public async Task<bool> UnlinkMod(string token, string gameDomain, string modId)
@@ -149,12 +191,19 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return false;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/Unlink?gameDomain={gameDomain}&modId={modId}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _httpClientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode;
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"Mods/Unlink?gameDomain={gameDomain}&modId={modId}");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var httpClient = _httpClientFactory.CreateClient("Backend");
+                var response = await httpClient.SendAsync(request);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public async Task<PagingResponse<CrashReportModel>?> GetCrashReports(string token, int page)
@@ -174,12 +223,19 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 };
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"CrashReports?page={page}&pageSize={10}");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var httpClient = _httpClientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PagingResponse<CrashReportModel>>(JsonSerializerOptions) : null;
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"CrashReports?page={page}&pageSize={10}");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var httpClient = _httpClientFactory.CreateClient("Backend");
+                var response = await httpClient.SendAsync(request);
+                return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PagingResponse<CrashReportModel>>(JsonSerializerOptions) : null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public async Task<bool> UpdateCrashReport(string token, CrashReportModel crashReport)
@@ -189,13 +245,20 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 return true;
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Post, "CrashReports/Update");
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            request.Content = new StringContent(JsonSerializer.Serialize(crashReport, JsonSerializerOptions), Encoding.UTF8, "application/json");
-            var httpClient = _httpClientFactory.CreateClient("Backend");
-            var response = await httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode;
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, "CrashReports/Update");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                request.Content = new StringContent(JsonSerializer.Serialize(crashReport, JsonSerializerOptions), Encoding.UTF8, "application/json");
+                var httpClient = _httpClientFactory.CreateClient("Backend");
+                var response = await httpClient.SendAsync(request);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }

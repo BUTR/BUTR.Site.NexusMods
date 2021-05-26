@@ -18,6 +18,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
 using System;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -41,14 +42,17 @@ namespace BUTR.CrashReportViewer.Server
             services.Configure<JwtOptions>(Configuration.GetSection(JwtSectionName));
             services.Configure<AuthenticationOptions>(Configuration.GetSection(AuthenticationSectionName));
 
-
+            var assemblyName = Assembly.GetEntryAssembly()?.GetName();
+            var userAgent = $"{assemblyName?.Name ?? "BUTR.CrashReportViewer.Server"} v{Assembly.GetEntryAssembly()?.GetName().Version}";
             services.AddHttpClient("NexusModsAPI", client =>
             {
                 client.BaseAddress = new Uri("https://api.nexusmods.com/");
+                client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
             services.AddHttpClient("CrashReporter", client =>
             {
                 client.BaseAddress = new Uri("https://crash.butr.dev/report/");
+                client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
 
             services.AddScoped<NexusModsAPIClient>();
@@ -111,11 +115,8 @@ namespace BUTR.CrashReportViewer.Server
                 {
                     var dbContext = (DbContext) serviceScope.ServiceProvider.GetRequiredService(type);
                     dbContext.Database.EnsureCreated();
-                    try
-                    {
-                        (dbContext.Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator)?.CreateTables();
-                    }
-                    catch { }
+                    try { (dbContext.Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator)?.CreateTables(); }
+                    catch (Exception){ }
                 }
             }
 

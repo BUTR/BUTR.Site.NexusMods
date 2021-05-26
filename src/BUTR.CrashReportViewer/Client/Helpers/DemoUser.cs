@@ -15,7 +15,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
         {
             public static async Task<DemoUserState> Create(IHttpClientFactory factory)
             {
-                List<CrashReportModel>? crm;
+                var crm = new List<CrashReportModel>();
                 try
                 {
                     const string baseUrl = "https://crash.butr.dev/report/";
@@ -24,10 +24,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                     var crs = await Task.WhenAll(reports.Select(r => CrashReportParser.ParseUrl(client, r)));
                     crm = crs.Select(cr => new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html")).ToList();
                 }
-                catch (Exception)
-                {
-                    crm = new List<CrashReportModel>();
-                }
+                catch (Exception) { }
 
                 return new(
                     new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true),
@@ -64,7 +61,6 @@ namespace BUTR.CrashReportViewer.Client.Helpers
 
         private readonly DemoUserState _state;
 
-        private DemoUser() { }
         private DemoUser(DemoUserState state) => _state = state;
     }
 }
