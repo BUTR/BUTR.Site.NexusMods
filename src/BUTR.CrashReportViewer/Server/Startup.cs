@@ -1,6 +1,3 @@
-using AspNetCore.Proxy;
-
-using BUTR.CrashReportViewer.Server.Contexts;
 using BUTR.CrashReportViewer.Server.Helpers;
 using BUTR.CrashReportViewer.Server.Options;
 
@@ -9,9 +6,6 @@ using Community.Microsoft.Extensions.Caching.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +16,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace BUTR.CrashReportViewer.Server
 {
@@ -56,14 +51,10 @@ namespace BUTR.CrashReportViewer.Server
             });
 
             services.AddScoped<NexusModsAPIClient>();
-
-            services.AddDbContext<MainDbContext>(o => o.UseNpgsql(Configuration.GetConnectionString("Main")));
-            services.AddDbContext<Dummy1DbContext>(o => o.UseNpgsql(Configuration.GetConnectionString("Main")));
-            services.AddDbContext<Dummy2DbContext>(o => o.UseNpgsql(Configuration.GetConnectionString("Main")));
-            services.AddDbContext<Dummy3DbContext>(o => o.UseNpgsql(Configuration.GetConnectionString("Main")));
-            services.AddDbContext<Dummy4DbContext>(o => o.UseNpgsql(Configuration.GetConnectionString("Main")));
-
-            services.AddProxies();
+            services.AddSingleton<SqlHelperInit>();
+            services.AddSingleton<SqlHelperMods>();
+            services.AddSingleton<SqlHelperCrashReports>();
+            services.AddSingleton<SqlHelperUserCrashReports>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -107,18 +98,9 @@ namespace BUTR.CrashReportViewer.Server
             });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, SqlHelperInit sqlHelperInit)
         {
-            using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
-            {
-                foreach (var type in new [] { typeof(Dummy1DbContext), typeof(Dummy2DbContext), typeof(Dummy3DbContext), typeof(Dummy4DbContext) })
-                {
-                    var dbContext = (DbContext) serviceScope.ServiceProvider.GetRequiredService(type);
-                    dbContext.Database.EnsureCreated();
-                    try { (dbContext.Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator)?.CreateTables(); }
-                    catch (Exception){ }
-                }
-            }
+            _ = sqlHelperInit.CreateTablesIfNotExistAsync(CancellationToken.None);
 
             if (env.IsDevelopment())
             {

@@ -1,6 +1,5 @@
-﻿using BUTR.CrashReportViewer.Server.Contexts;
-using BUTR.CrashReportViewer.Server.Helpers;
-using BUTR.CrashReportViewer.Server.Models.Contexts;
+﻿using BUTR.CrashReportViewer.Server.Helpers;
+using BUTR.CrashReportViewer.Server.Models.Database;
 using BUTR.CrashReportViewer.Shared.Helpers;
 using BUTR.CrashReportViewer.Shared.Models;
 using BUTR.CrashReportViewer.Shared.Models.API;
@@ -8,13 +7,13 @@ using BUTR.CrashReportViewer.Shared.Models.API;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.CrashReportViewer.Server.Controllers
@@ -27,13 +26,13 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 
         private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
-        private readonly MainDbContext _mainDbContext;
+        private readonly SqlHelperMods _sqlHelperMods;
 
-        public ModsController(ILogger<ModsController> logger, NexusModsAPIClient nexusModsAPIClient, MainDbContext mainDbContext)
+        public ModsController(ILogger<ModsController> logger, NexusModsAPIClient nexusModsAPIClient, SqlHelperMods sqlHelperMods)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _nexusModsAPIClient = nexusModsAPIClient ?? throw new ArgumentNullException(nameof(nexusModsAPIClient));
-            _mainDbContext = mainDbContext ?? throw new ArgumentNullException(nameof(mainDbContext));
+            _sqlHelperMods = sqlHelperMods ?? throw new ArgumentNullException(nameof(sqlHelperMods));
         }
 
         [HttpGet("")]
@@ -57,30 +56,19 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             if (await _nexusModsAPIClient.ValidateAPIKey(apiKeyClaim.Value) is not { } validateResponse)
                 return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
 
-            var userModCount = _mainDbContext.Mods
-                .AsNoTracking()
-                .Count(m => m.UserIds.Contains(validateResponse.UserId));
-
-            var userMods = _mainDbContext.Mods
-                .AsNoTracking()
-                .OrderBy(m => m.ModId)
-                .Where(m => m.UserIds.Contains(validateResponse.UserId))
-                .Select(m => new ModModel(m.Name, m.GameDomain, m.ModId))
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            var (userModsTotalCount, userMods) = await _sqlHelperMods.GetAsync(validateResponse.UserId, (page - 1) * pageSize, pageSize, CancellationToken.None);
 
             var metadata = new PagingMetadata
             {
                 PageSize = pageSize,
                 CurrentPage = page,
-                TotalCount = userModCount,
-                TotalPages = (int) Math.Ceiling((double) userModCount / (double) pageSize),
+                TotalCount = userModsTotalCount,
+                TotalPages = (int) Math.Ceiling((double) userModsTotalCount / (double) pageSize),
             };
 
             return StatusCode((int) HttpStatusCode.OK, new PagingResponse<ModModel>
             {
-                Items = userMods,
+                Items = userMods.Select(m => new ModModel(m.Name, m.GameDomain, m.ModId)),
                 Metadata = metadata
             });
         }
@@ -124,27 +112,26 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             if (validateResponse.UserId != modInfo.User.MemberId)
                 return StatusCode((int) HttpStatusCode.Forbidden, new StandardResponse("User does not have access to the mod!"));
 
-            if (await _mainDbContext.Mods.FindAsync(query.GameDomain, query.ModId) is not { } mod)
+            if (await _sqlHelperMods.FindAsync(query.GameDomain, query.ModId) is { } mod)
             {
-                await _mainDbContext.Mods.AddAsync(new ModTable
+                if (mod.UserIds.Contains(validateResponse.UserId))
+                    return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Already linked!"));
+            }
+            else
+            {
+                mod = new ModTableEntry
                 {
                     Name = modInfo.Name,
                     GameDomain = modInfo.DomainName,
                     ModId = modInfo.ModId,
-                    UserIds = new[] { validateResponse.UserId }
-                });
-                await _mainDbContext.SaveChangesAsync();
-            }
-            else
-            {
-                if (mod.UserIds.Contains(validateResponse.UserId))
-                    return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Already linked!"));
-
-                mod.UserIds = mod.UserIds.Concat(new[] { validateResponse.UserId }).ToArray();
-                await _mainDbContext.SaveChangesAsync();
+                    UserIds = new[] {validateResponse.UserId}
+                };
             }
 
-            return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Linked successful!"));
+            if (await _sqlHelperMods.UpsertAsync(mod with { UserIds = mod.UserIds.Concat(new[] {validateResponse.UserId}).ToArray() }) is not null)
+                return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Linked successful!"));
+
+            return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Failed to link!"));
         }
 
         [HttpGet("Unlink")]
@@ -159,17 +146,16 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             if (await _nexusModsAPIClient.ValidateAPIKey(apiKeyClaim.Value) is not { } validateResponse)
                 return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
 
-            if (await _mainDbContext.Mods.FindAsync(query.GameDomain, query.ModId) is not { } mod)
+            if (await _sqlHelperMods.FindAsync(query.GameDomain, query.ModId) is not { } mod)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Mod not found!"));
 
             if (!mod.UserIds.Contains(validateResponse.UserId))
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Mod is not linked to user!"));
 
-            mod.UserIds = mod.UserIds.Where(uid => uid != validateResponse.UserId).ToArray();
-            _mainDbContext.Mods.Update(mod);
-            await _mainDbContext.SaveChangesAsync();
+            if (await _sqlHelperMods.UpsertAsync(mod with { UserIds = mod.UserIds.Where(uid => uid != validateResponse.UserId).ToArray() }) is not null)
+                return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Unlinked successful!"));
 
-            return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Unlinked successful!"));
+            return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Failed to unlink!"));
         }
 
         [HttpGet("Refresh")]
@@ -190,11 +176,10 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             if (validateResponse.UserId != modInfo.User.MemberId)
                 return StatusCode((int) HttpStatusCode.Forbidden, new StandardResponse("User does not have access to the mod!"));
 
-            if (await _mainDbContext.Mods.FindAsync(query.GameDomain, query.ModId) is { } mod)
+            if (await _sqlHelperMods.FindAsync(query.GameDomain, query.ModId) is { } mod)
             {
-                mod.Name = modInfo.Name;
-                await _mainDbContext.SaveChangesAsync();
-                return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Updated successful!"));
+                if (await _sqlHelperMods.UpsertAsync(mod with { Name = modInfo.Name }) is not null)
+                    return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Updated successful!"));
             }
             return StatusCode((int) HttpStatusCode.NotFound, new StandardResponse("Mod is not linked!"));
         }

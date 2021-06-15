@@ -138,7 +138,7 @@
         var response = await _backendApiClient.GetCrashReports(_token, _pageNumber);
         if (response is not null)
         {
-            _reports = response.Items;
+            _reports = response.Items.ToList();
             _pagingMetadata = response.Metadata;
         }
     }

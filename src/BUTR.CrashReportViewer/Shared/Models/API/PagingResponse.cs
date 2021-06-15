@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace BUTR.CrashReportViewer.Shared.Models.API
 {
-    public class PagingResponse<T> where T : class
+    public record PagingResponse<T> where T : class
     {
-        public List<T> Items { get; set; } = new();
+        public IEnumerable<T> Items { get; set; } = Enumerable.Empty<T>();
         public PagingMetadata Metadata { get; set; } = new();
     }
 }

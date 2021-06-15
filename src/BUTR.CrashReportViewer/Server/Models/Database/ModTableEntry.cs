@@ -1,6 +1,6 @@
-﻿namespace BUTR.CrashReportViewer.Server.Models.Contexts
+﻿namespace BUTR.CrashReportViewer.Server.Models.Database
 {
-    public class ModTable
+    public record ModTableEntry
     {
         public string Name { get; set; } = default!;
 

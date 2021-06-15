@@ -2,7 +2,7 @@
 
 namespace BUTR.CrashReportViewer.Server.Models.NexusModsAPI
 {
-    public class NexusModsValidateResponse
+    public record NexusModsValidateResponse
     {
         [JsonPropertyName("user_id")]
         public int UserId { get; set; } = default!;

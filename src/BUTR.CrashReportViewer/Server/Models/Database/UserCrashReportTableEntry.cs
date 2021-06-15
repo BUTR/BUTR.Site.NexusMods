@@ -1,12 +1,12 @@
 ﻿using BUTR.CrashReportViewer.Shared.Models;
 
-namespace BUTR.CrashReportViewer.Server.Models.Contexts
+namespace BUTR.CrashReportViewer.Server.Models.Database
 {
-    public class UserCrashReportTable
+    public record UserCrashReportTableEntry
     {
         public int UserId { get; set; } = default!;
 
-        public CrashReportTable CrashReport { get; set; } = default!;
+        public CrashReportTableEntry? CrashReport { get; set; } = default!;
 
         public CrashReportStatus Status { get; set; } = default!;
 

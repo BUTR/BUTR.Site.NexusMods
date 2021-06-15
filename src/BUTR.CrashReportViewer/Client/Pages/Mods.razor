@@ -169,7 +169,7 @@
         var response = await _backendApiClient.GetMods(_token, _pageNumber);
         if (response is not null)
         {
-            _mods = response.Items;
+            _mods = response.Items.ToList();
             _pagingMetadata = response.Metadata;
         }
     }

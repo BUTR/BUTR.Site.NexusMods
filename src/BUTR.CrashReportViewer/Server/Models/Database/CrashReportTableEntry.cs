@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BUTR.CrashReportViewer.Server.Models.Contexts
+namespace BUTR.CrashReportViewer.Server.Models.Database
 {
-    public class CrashReportTable
+    public record CrashReportTableEntry
     {
         public Guid Id { get; set; } = default!;
 
@@ -15,6 +15,6 @@ namespace BUTR.CrashReportViewer.Server.Models.Contexts
 
         public string Url { get; set; } = default!;
 
-        public List<UserCrashReportTable> UserCrashReports { get; set; } = default!;
+        public List<UserCrashReportTableEntry> UserCrashReports { get; set; } = default!;
     }
 }

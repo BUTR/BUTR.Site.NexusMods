@@ -3,9 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace BUTR.CrashReportViewer.Server.Models.NexusModsAPI
 {
-    public class NexusModsModInfoResponse
+    public record NexusModsModInfoResponse
     {
-        public class NexusModsUser
+        public record NexusModsUser
         {
             [JsonPropertyName("member_id")]
             public int MemberId { get; set; } = default!;
@@ -17,7 +17,7 @@ namespace BUTR.CrashReportViewer.Server.Models.NexusModsAPI
             public string Name { get; set; } = default!;
         }
 
-        public class NexusModsEndorsement
+        public record NexusModsEndorsement
         {
             [JsonPropertyName("endorse_status")]
             public string EndorseStatus { get; set; } = default!;

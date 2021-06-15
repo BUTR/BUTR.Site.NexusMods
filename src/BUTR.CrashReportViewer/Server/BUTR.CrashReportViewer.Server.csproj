@@ -9,10 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNetCore.Proxy" Version="4.2.0" />
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="3.0.3.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.6" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.6" />
+    <PackageReference Include="Npgsql" Version="5.0.5" />
     <PackageReference Include="RateLimiter" Version="2.2.0" />
     <PackageReference Include="System.Linq.Async" Version="5.0.0" />
   </ItemGroup>

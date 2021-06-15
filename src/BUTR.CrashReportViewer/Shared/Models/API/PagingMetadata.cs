@@ -1,6 +1,6 @@
 ﻿namespace BUTR.CrashReportViewer.Shared.Models.API
 {
-    public class PagingMetadata
+    public record PagingMetadata
     {
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }

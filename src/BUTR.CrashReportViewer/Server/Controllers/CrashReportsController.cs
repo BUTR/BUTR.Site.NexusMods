@@ -1,6 +1,5 @@
-﻿using BUTR.CrashReportViewer.Server.Contexts;
-using BUTR.CrashReportViewer.Server.Helpers;
-using BUTR.CrashReportViewer.Server.Models.Contexts;
+﻿using BUTR.CrashReportViewer.Server.Helpers;
+using BUTR.CrashReportViewer.Server.Models.Database;
 using BUTR.CrashReportViewer.Shared.Helpers;
 using BUTR.CrashReportViewer.Shared.Models;
 using BUTR.CrashReportViewer.Shared.Models.API;
@@ -8,12 +7,12 @@ using BUTR.CrashReportViewer.Shared.Models.API;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using System;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.CrashReportViewer.Server.Controllers
@@ -25,13 +24,19 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 
         private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
-        private readonly MainDbContext _mainDbContext;
+        private readonly SqlHelperCrashReports _sqlHelperCrashReports;
+        private readonly SqlHelperUserCrashReports _sqlHelperUserCrashReports;
 
-        public CrashReportsController(ILogger<CrashReportsController> logger, NexusModsAPIClient nexusModsAPIClient, MainDbContext mainDbContext)
+        public CrashReportsController(
+            ILogger<CrashReportsController> logger,
+            NexusModsAPIClient nexusModsAPIClient,
+            SqlHelperCrashReports sqlHelperCrashReports,
+            SqlHelperUserCrashReports sqlHelperUserCrashReports)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _nexusModsAPIClient = nexusModsAPIClient ?? throw new ArgumentNullException(nameof(nexusModsAPIClient));
-            _mainDbContext = mainDbContext ?? throw new ArgumentNullException(nameof(mainDbContext));
+            _sqlHelperCrashReports = sqlHelperCrashReports ?? throw new ArgumentNullException(nameof(sqlHelperCrashReports));
+            _sqlHelperUserCrashReports = sqlHelperUserCrashReports ?? throw new ArgumentNullException(nameof(sqlHelperUserCrashReports));
         }
 
         [HttpGet("")]
@@ -41,7 +46,7 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             var pageSize = Math.Max(Math.Min(query.PageSize, 50), 10);
 
             if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
-                return ForAdministrator(page, pageSize);
+                return await ForAdministrator(page, pageSize);
 
             if (!HttpContext.User.HasClaim(c => c.Type == "nmapikey") || HttpContext.User.Claims.FirstOrDefault(c => c.Type == "nmapikey") is not { } apiKeyClaim)
                 return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Invalid Bearer!"));
@@ -49,27 +54,12 @@ namespace BUTR.CrashReportViewer.Server.Controllers
             if (await _nexusModsAPIClient.ValidateAPIKey(apiKeyClaim.Value) is not { } validateResponse)
                 return StatusCode((int) HttpStatusCode.Unauthorized, new StandardResponse("Invalid NexusMods API Key from Bearer!"));
 
-            return ForUser(validateResponse.UserId, page, pageSize);
+            return await ForUser(validateResponse.UserId, page, pageSize);
         }
 
-        private ObjectResult ForAdministrator(int page, int pageSize)
+        private async Task<ObjectResult> ForAdministrator(int page, int pageSize)
         {
-            var crashReportCount = _mainDbContext.CrashReports
-                .AsNoTracking()
-                .Count();
-
-            var crashReports = _mainDbContext.CrashReports
-                .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == -1))
-                .AsNoTracking()
-                .OrderBy(cr => cr.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(cr => new CrashReportModel(cr.Id, cr.Exception, cr.CreatedAt, cr.Url)
-                {
-                    Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
-                    Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
-                })
-                .ToList();
+            var (crashReportCount, crashReports) = await _sqlHelperCrashReports.GetAsync(-1, (page - 1) * pageSize, pageSize, CancellationToken.None);
 
             var metadata = new PagingMetadata
             {
@@ -81,35 +71,17 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 
             return StatusCode((int) HttpStatusCode.OK, new PagingResponse<CrashReportModel>
             {
-                Items = crashReports,
+                Items = crashReports.Select(cr => new CrashReportModel(cr.Id, cr.Exception, cr.CreatedAt, cr.Url)
+                {
+                    Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
+                    Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
+                }),
                 Metadata = metadata
             });
         }
-        private ObjectResult ForUser(int userId, int page, int pageSize)
+        private async Task<ObjectResult> ForUser(int userId, int page, int pageSize)
         {
-            var userModIds = _mainDbContext.Mods
-                .AsNoTracking()
-                .Where(m => m.UserIds.Contains(userId))
-                .Select(m => m.ModId)
-                .ToArray();
-
-            var crashReportCount = _mainDbContext.CrashReports
-                .AsNoTracking()
-                .Count(cr => cr.ModIds.Any(crmi => userModIds.Contains(crmi)));
-
-            var crashReports = _mainDbContext.CrashReports
-                .Include(cr => cr.UserCrashReports.Where(ucr => ucr.UserId == userId))
-                .AsNoTracking()
-                .OrderBy(cr => cr.CreatedAt)
-                .Where(cr => cr.ModIds.Any(crmi => userModIds.Contains(crmi)))
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(cr => new CrashReportModel(cr.Id, cr.Exception, cr.CreatedAt, cr.Url)
-                {
-                    Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
-                    Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
-                })
-                .ToList();
+            var (crashReportCount, crashReports) = await _sqlHelperCrashReports.GetAsync(userId, (page - 1) * pageSize, pageSize, CancellationToken.None);
 
             var metadata = new PagingMetadata
             {
@@ -121,7 +93,11 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 
             return StatusCode((int) HttpStatusCode.OK, new PagingResponse<CrashReportModel>
             {
-                Items = crashReports,
+                Items = crashReports.Select(cr => new CrashReportModel(cr.Id, cr.Exception, cr.CreatedAt, cr.Url)
+                {
+                    Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
+                    Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
+                }),
                 Metadata = metadata
             });
         }
@@ -143,51 +119,49 @@ namespace BUTR.CrashReportViewer.Server.Controllers
 
         private async Task<ObjectResult> UpdateForAdministrator(CrashReportModel updatedCrashReport)
         {
-            if (await _mainDbContext.UserCrashReports.FindAsync(-1, updatedCrashReport.Id) is { } userCrashReport)
+            if (await _sqlHelperUserCrashReports.FindAsync(-1, updatedCrashReport.Id) is { } userCrashReport)
             {
                 userCrashReport.Status = updatedCrashReport.Status;
                 userCrashReport.Comment = updatedCrashReport.Comment;
-                await _mainDbContext.SaveChangesAsync();
+                await _sqlHelperUserCrashReports.UpsertAsync(userCrashReport);
                 return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Updated successful!"));
             }
             else
             {
-                var crashReport = await _mainDbContext.CrashReports.FindAsync(updatedCrashReport.Id);
+                var crashReport = await _sqlHelperCrashReports.FindAsync(updatedCrashReport.Id);
                 //return StatusCode((int) HttpStatusCode.NotFound, new StandardResponse("Mod is not linked!"));
 
-                await _mainDbContext.UserCrashReports.AddAsync(new UserCrashReportTable
+                await _sqlHelperUserCrashReports.UpsertAsync(new UserCrashReportTableEntry
                 {
                     UserId = -1,
                     CrashReport = crashReport,
                     Status = updatedCrashReport.Status,
                     Comment = updatedCrashReport.Comment,
                 });
-                await _mainDbContext.SaveChangesAsync();
                 return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Updated successful!"));
             }
         }
         private async Task<ObjectResult> UpdateForUser(int userId, CrashReportModel updatedCrashReport)
         {
-            if (await _mainDbContext.UserCrashReports.FindAsync(userId, updatedCrashReport.Id) is { } userCrashReport)
+            if (await _sqlHelperUserCrashReports.FindAsync(userId, updatedCrashReport.Id) is { } userCrashReport)
             {
                 userCrashReport.Status = updatedCrashReport.Status;
                 userCrashReport.Comment = updatedCrashReport.Comment;
-                await _mainDbContext.SaveChangesAsync();
+                await _sqlHelperUserCrashReports.UpsertAsync(userCrashReport);
                 return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Updated successful!"));
             }
             else
             {
-                var crashReport = await _mainDbContext.CrashReports.FindAsync(updatedCrashReport.Id);
+                var crashReport = await _sqlHelperCrashReports.FindAsync(updatedCrashReport.Id);
                 //return StatusCode((int) HttpStatusCode.NotFound, new StandardResponse("Mod is not linked!"));
 
-                await _mainDbContext.UserCrashReports.AddAsync(new UserCrashReportTable
+                await _sqlHelperUserCrashReports.UpsertAsync(new UserCrashReportTableEntry
                 {
                     UserId = userId,
                     CrashReport = crashReport,
                     Status = updatedCrashReport.Status,
                     Comment = updatedCrashReport.Comment,
                 });
-                await _mainDbContext.SaveChangesAsync();
                 return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Updated successful!"));
             }
         }
