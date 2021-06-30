@@ -4,7 +4,6 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
 
-COPY ["nuget.config", "."]
 COPY ["BUTR.CrashReportViewer/Server/BUTR.CrashReportViewer.Server.csproj", "BUTR.CrashReportViewer/Server/"]
 COPY ["BUTR.CrashReportViewer/Shared/BUTR.CrashReportViewer.Shared.csproj", "BUTR.CrashReportViewer/Shared/"]
 
