@@ -10,7 +10,7 @@ namespace BUTR.CrashReportViewer.Server.Helpers
     public class SqlHelperInit
     {
         public static string CreateModsTable = @"
-CREATE TABLE IF NOT EXIST ""public"".""mod_entity"" (
+CREATE TABLE IF NOT EXISTS ""public"".""mod_entity"" (
     ""game_domain"" text NOT NULL,
     ""mod_id"" int4 NOT NULL,
     ""name"" text NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXIST ""public"".""mod_entity"" (
 ;";
 
         public static string CreateCrashReportTable = @"
-CREATE TABLE IF NOT EXIST ""public"".""crash_report_entity"" (
+CREATE TABLE IF NOT EXISTS ""public"".""crash_report_entity"" (
     ""id"" uuid NOT NULL,
     ""exception"" text NOT NULL,
     ""created_at"" timestamp NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXIST ""public"".""crash_report_entity"" (
 ;";
 
         public static string CreateUserCrashReportTable = @"
-CREATE TABLE IF NOT EXIST ""public"".""user_crash_report_entity"" (
+CREATE TABLE IF NOT EXISTS ""public"".""user_crash_report_entity"" (
     ""user_id"" int4 NOT NULL,
     ""crash_report_id"" uuid NOT NULL,
     ""status"" int4 NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXIST ""public"".""user_crash_report_entity"" (
 ;";
 
         public static string CreateCacheTable = @"
-CREATE TABLE IF NOT EXIST ""public"".""nexusmods_cache_entry"" (
+CREATE TABLE IF NOT EXISTS ""public"".""nexusmods_cache_entry"" (
     ""Id"" text NOT NULL,
     ""AbsoluteExpiration"" timestamptz,
     ""ExpiresAtTime"" timestamptz NOT NULL,
