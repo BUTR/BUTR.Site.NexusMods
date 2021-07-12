@@ -33,7 +33,7 @@ WHERE
         public static string CrashReportUpsert = @"
 INSERT INTO crash_report_entity(id, exception, created_at, mod_ids, url)
 VALUES (@id, @exception, @createdAt, @modIds, @url)
-ON CONFLICT ON CONSTRAINT PK_crash_report_entity
+ON CONFLICT ON CONSTRAINT crash_report_entity_pkey
 DO UPDATE SET exception=@exception, modIds=@modIds, url=@url
 RETURNING *
 ;";

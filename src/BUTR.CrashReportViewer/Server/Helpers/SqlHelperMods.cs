@@ -64,7 +64,7 @@ WHERE
         public static string ModsUpsert = @"
 INSERT INTO mod_entity(game_domain, mod_id, name, user_ids)
 VALUES (@gameDomain, @modId, @name, @userIds)
-ON CONFLICT ON CONSTRAINT PK_mod_entity
+ON CONFLICT ON CONSTRAINT mod_entity_pkey
 DO UPDATE SET user_ids=@userIds
 RETURNING *
 ;";

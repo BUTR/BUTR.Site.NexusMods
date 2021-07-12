@@ -35,7 +35,7 @@ WHERE
         public static string UserCrashReportUpsert = @"
 INSERT INTO user_crash_report_entity(user_id, status, comment, crash_report_id)
 VALUES (@userId, @status, @comment, @crashReportId)
-ON CONFLICT ON CONSTRAINT PK_crash_report_entity
+ON CONFLICT ON CONSTRAINT crash_report_entity_pkey
 DO UPDATE SET status=@status, comment=@comment
 RETURNING *
 ;";
