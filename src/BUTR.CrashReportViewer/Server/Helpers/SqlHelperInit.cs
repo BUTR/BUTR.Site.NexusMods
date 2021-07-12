@@ -1,7 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 using Npgsql;
 
+using Polly;
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,21 +57,35 @@ CREATE TABLE IF NOT EXISTS ""public"".""nexusmods_cache_entry"" (
 ;";
 
 
+        private readonly ILogger _logger;
         private readonly IConfiguration _configuration;
 
-        public SqlHelperInit(IConfiguration configuration) => _configuration = configuration;
+        public SqlHelperInit(ILogger<SqlHelperInit> logger, IConfiguration configuration)
+        {
+            _logger = logger;
+            _configuration = configuration;
+        }
 
         public async Task CreateTablesIfNotExistAsync(CancellationToken ct)
         {
-            await using var connection = new NpgsqlConnection(_configuration.GetConnectionString("Main"));
-            await connection.OpenAsync(ct);
-            await using var cmd = new NpgsqlCommand(
-                CreateModsTable +
-                CreateCrashReportTable +
-                CreateUserCrashReportTable +
-                CreateCacheTable, connection);
-            await using var reader = await cmd.ExecuteReaderAsync(ct);
-            while (await reader.NextResultAsync(ct)) { }
+            var policy = Policy.Handle<Exception>(ex => ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
+                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromMilliseconds(5000), (ex, time) =>
+                {
+                    _logger.LogError(ex, "Exception during sql init. Retrying after {RetrySeconds} seconds", time.TotalSeconds);
+                });
+
+            await policy.ExecuteAsync(async token =>
+            {
+                await using var connection = new NpgsqlConnection(_configuration.GetConnectionString("Main"));
+                await connection.OpenAsync(ct);
+                await using var cmd = new NpgsqlCommand(
+                    CreateModsTable +
+                    CreateCrashReportTable +
+                    CreateUserCrashReportTable +
+                    CreateCacheTable, connection);
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
+                while (await reader.NextResultAsync(ct)) { }
+            }, ct);
         }
     }
 }
