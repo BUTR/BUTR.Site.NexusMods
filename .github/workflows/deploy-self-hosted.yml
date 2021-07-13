@@ -10,6 +10,9 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    environment:
+      name: 'self-hosted-backend'
+      url: 'crashreporter-khadas.aragas.org'
     steps:
     - name: multiple command
       uses: appleboy/ssh-action@master
