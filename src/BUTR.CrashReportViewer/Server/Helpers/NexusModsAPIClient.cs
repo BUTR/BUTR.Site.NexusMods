@@ -27,7 +27,7 @@ namespace BUTR.CrashReportViewer.Server.Helpers
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             PropertyNameCaseInsensitive = true,
             Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-            Converters = {new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)},
+            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
         };
 
         private readonly IHttpClientFactory _httpClientFactory;

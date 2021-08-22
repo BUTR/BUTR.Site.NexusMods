@@ -1,4 +1,4 @@
-using Blazored.LocalStorage;
+﻿using Blazored.LocalStorage;
 
 using BUTR.CrashReportViewer.Client.Extensions;
 using BUTR.CrashReportViewer.Client.Helpers;

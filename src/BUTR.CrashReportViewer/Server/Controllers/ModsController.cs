@@ -124,11 +124,11 @@ namespace BUTR.CrashReportViewer.Server.Controllers
                     Name = modInfo.Name,
                     GameDomain = modInfo.DomainName,
                     ModId = modInfo.ModId,
-                    UserIds = new[] {validateResponse.UserId}
+                    UserIds = new[] { validateResponse.UserId }
                 };
             }
 
-            if (await _sqlHelperMods.UpsertAsync(mod with { UserIds = mod.UserIds.Concat(new[] {validateResponse.UserId}).ToArray() }) is not null)
+            if (await _sqlHelperMods.UpsertAsync(mod with { UserIds = mod.UserIds.Concat(new[] { validateResponse.UserId }).ToArray() }) is not null)
                 return StatusCode((int) HttpStatusCode.OK, new StandardResponse("Linked successful!"));
 
             return StatusCode((int) HttpStatusCode.BadRequest, new StandardResponse("Failed to link!"));
