@@ -1,5 +1,6 @@
 ﻿using BUTR.CrashReportViewer.Server.Extensions;
 using BUTR.CrashReportViewer.Server.Models.Database;
+
 using Microsoft.Extensions.Configuration;
 
 using Npgsql;

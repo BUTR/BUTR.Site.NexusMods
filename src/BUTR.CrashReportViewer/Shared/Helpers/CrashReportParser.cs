@@ -104,8 +104,8 @@ namespace BUTR.CrashReportViewer.Shared.Helpers
                 GetField(lines, "Singleplayer"),
                 GetField(lines, "Multiplayer"),
                 GetField(lines, "Url"),
-                GetModuleDependencyMetadatas(GetRange(lines, "Dependency Metadatas", new [] { "SubModules", "Additional Assemblies", "Url" })),
-                GetModuleSubModules(GetRange(lines, "SubModules", new [] { "Additional Assemblies" }))
+                GetModuleDependencyMetadatas(GetRange(lines, "Dependency Metadatas", new[] { "SubModules", "Additional Assemblies", "Url" })),
+                GetModuleSubModules(GetRange(lines, "SubModules", new[] { "Additional Assemblies" }))
             );
         }
     }
