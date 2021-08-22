@@ -1,7 +1,10 @@
 name: Daily code format check
+
 on:
   schedule:
     - cron: 0 0 * * * # Every day at midnight (UTC)
+  workflow_dispatch:
+  
 jobs:
   dotnet-format:
     runs-on: ubuntu-latest
