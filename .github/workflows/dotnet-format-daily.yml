@@ -1,4 +1,4 @@
-name: Daily code format check
+name: Daily Code Format Check
 
 on:
   schedule:
