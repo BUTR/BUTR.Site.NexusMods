@@ -1,10 +1,10 @@
 ﻿@page "/login-nexusmods-sso"
 @inject IJSRuntime _jsRuntime;
 @inject NavigationManager _navigationManager
+@inject ISessionStorageService _sessionStorage
 @inject ILocalStorageService _localStorage
 @inject BackendAPIClient _backendApiClient
 @inject DefaultJsonSerializer _jsonSerializer
-
 <!--https://jsfiddle.net/bootstrapious/j80aheo9/-->
 <div class="container">
     <div class="row">
@@ -48,11 +48,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // if (!await _localStorage.ContainKeyAsync("sso_uuid"))
-        await _localStorage.SetItemAsync("sso_uuid", Guid.NewGuid(), _cancellationTokenSource.Token);
+        if (!await _sessionStorage.ContainKeyAsync("sso_uuid"))
+            await _sessionStorage.SetItemAsync("sso_uuid", Guid.NewGuid());
 
-        var uuid = await _localStorage.GetItemAsync<Guid>("sso_uuid");
-        var token = await _localStorage.GetItemAsync<string>("sso_token");
+        var uuid = await _sessionStorage.GetItemAsync<Guid>("sso_uuid");
+        var token = await _sessionStorage.GetItemAsync<string>("sso_token");
 
         var request = _jsonSerializer.SerializeToUtf8Bytes(new SSORequest(uuid, token, 2));
 
@@ -63,71 +63,59 @@
 
     async Task ReceiveLoop()
     {
-        try
+        var buffer = new ArraySegment<byte>(new byte[1024]);
+        var sb = new StringBuilder();
+        while (!_cancellationTokenSource.IsCancellationRequested)
         {
-            var buffer = new ArraySegment<byte>(new byte[1024]);
-            var sb = new StringBuilder();
-            while (!_cancellationTokenSource.IsCancellationRequested)
+            var received = await _client.ReceiveAsync(buffer, _cancellationTokenSource.Token);
+            if (received.MessageType == WebSocketMessageType.Close)
+                break; ;
+
+            sb.Append(Encoding.UTF8.GetString(buffer.AsSpan(0, received.Count)));
+            if (received.EndOfMessage)
             {
-                // Note that the received block might only be part of a larger message. If this applies in your scenario,
-                // check the received.EndOfMessage and consider buffering the blocks until that property is true.
-                // Or use a higher-level library such as SignalR.
-                var received = await _client.ReceiveAsync(buffer, _cancellationTokenSource.Token);
-                if (received.MessageType == WebSocketMessageType.Close)
-                    return;
+                var text = sb.ToString();
+                sb.Clear();
 
-                sb.Append(Encoding.UTF8.GetString(buffer.AsSpan(0, received.Count)));
-                if (received.EndOfMessage)
+                var response = _jsonSerializer.Deserialize<SSOResponse?>(text);
+                if (response is not null && response.Success && response.Data is not null)
                 {
-                    var text = sb.ToString();
-                    sb.Clear();
-
-                    var response = _jsonSerializer.Deserialize<SSOResponse?>(text);
-                    if (response is not null && response.Success && response.Data is not null)
+                    if (response.Data.ConnectionToken is not null)
                     {
-                        if (response.Data.ConnectionToken is not null)
-                        {
-                            var uuid = await _localStorage.GetItemAsync<Guid>("sso_uuid");
-                            var applicationSlug = "vortex";
-                            var url = $"https://www.nexusmods.com/sso?id={uuid}&application={applicationSlug}";
-                            //await _jsRuntime.InvokeAsync<string>("open", url, "_blank");
-                            _url = url;
-                            StateHasChanged();
-                        }
-
-                        if (response.Data.ApiKey is not null)
-                        {
-                            _isLoading = true;
-
-                            try
-                            {
-                                var result = await _backendApiClient.Authenticate(response.Data.ApiKey);
-                                if (result is null)
-                                {
-                                    _isLoading = false;
-                                    StateHasChanged();
-                                }
-                                else
-                                {
-                                    await _localStorage.SetItemAsStringAsync("token", result);
-                                    _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "crash-reports-viewer", true);
-                                }
-                            }
-                            catch
-                            {
-                                _isLoading = true;
-                                StateHasChanged();
-                            }
-                        }
+                        await _sessionStorage.SetItemAsync("sso_token", response.Data.ConnectionToken);
+                        var uuid = await _sessionStorage.GetItemAsync<Guid>("sso_uuid");
+                        var applicationSlug = "vortex";
+                        _url = $"https://www.nexusmods.com/sso?id={uuid}&application={applicationSlug}";
+                        StateHasChanged();
                     }
 
+                    if (response.Data.ApiKey is not null)
+                    {
+                        _isLoading = true;
+
+                        try
+                        {
+                            var result = await _backendApiClient.Authenticate(response.Data.ApiKey);
+                            if (result is null)
+                            {
+                                _isLoading = false;
+                                StateHasChanged();
+                            }
+                            else
+                            {
+                                await _localStorage.SetItemAsStringAsync("token", result);
+                                _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "articles", true);
+                            }
+                        }
+                        catch
+                        {
+                            _isLoading = true;
+                            StateHasChanged();
+                        }
+                    }
                 }
+
             }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
         }
     }
 
