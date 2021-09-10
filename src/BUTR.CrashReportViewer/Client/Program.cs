@@ -1,4 +1,5 @@
 ﻿using Blazored.LocalStorage;
+using Blazored.SessionStorage;
 
 using BUTR.CrashReportViewer.Client.Extensions;
 using BUTR.CrashReportViewer.Client.Helpers;
@@ -28,7 +29,7 @@ namespace BUTR.CrashReportViewer.Client
                 services.Configure<BackendOptions>(builder.Configuration.GetSection("Backend"));
 
                 var assemblyName = Assembly.GetEntryAssembly()?.GetName();
-                var userAgent = $"{assemblyName?.Name ?? "BUTR.CrashReportViewer.Client"} v{Assembly.GetEntryAssembly()?.GetName().Version}";
+                var userAgent = $"{assemblyName?.Name} v{assemblyName?.Version}";
                 services.AddScoped(_ => new HttpClient
                 {
                     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress),
@@ -53,6 +54,7 @@ namespace BUTR.CrashReportViewer.Client
                 services.AddScoped<BackendAPIClient>();
 
                 services.AddBlazoredLocalStorage();
+                services.AddBlazoredSessionStorage();
 
                 services.AddAuthorizationCore();
                 services.AddScoped<AuthenticationStateProvider, SimpleAuthenticationStateProvider>();
