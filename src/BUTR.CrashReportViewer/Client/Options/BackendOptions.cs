@@ -1,4 +1,4 @@
-namespace BUTR.CrashReportViewer.Client.Options
+﻿namespace BUTR.CrashReportViewer.Client.Options
 {
     public record BackendOptions
     {

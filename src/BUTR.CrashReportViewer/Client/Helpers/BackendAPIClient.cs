@@ -123,7 +123,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 var httpClient = _httpClientFactory.CreateClient("Backend");
                 var response = await httpClient.SendAsync(request);
-                return response.IsSuccessStatusCode? await response.Content.ReadFromJsonAsync<PagingResponse<ModModel>>(JsonSerializerOptions) : null;
+                return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PagingResponse<ModModel>>(JsonSerializerOptions) : null;
             }
             catch (Exception)
             {

@@ -1,4 +1,4 @@
-using BUTR.CrashReportViewer.Server.Helpers;
+﻿using BUTR.CrashReportViewer.Server.Helpers;
 using BUTR.CrashReportViewer.Server.Options;
 
 using Community.Microsoft.Extensions.Caching.PostgreSql;
@@ -74,7 +74,8 @@ namespace BUTR.CrashReportViewer.Server
                     };
                 });
 
-            services.AddControllers().AddJsonOptions(opts => {
+            services.AddControllers().AddJsonOptions(opts =>
+            {
                 opts.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                 opts.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                 opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
