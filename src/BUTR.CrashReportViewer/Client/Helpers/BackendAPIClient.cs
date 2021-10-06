@@ -58,7 +58,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
         {
             if (token.Equals("demo", StringComparison.OrdinalIgnoreCase))
             {
-                _demoUser ??= await DemoUser.Create(_httpClientFactory);
+                _demoUser ??= await DemoUser.CreateAsync();
                 return true;
             }
 
