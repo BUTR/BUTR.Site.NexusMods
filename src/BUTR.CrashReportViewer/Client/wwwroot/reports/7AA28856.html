@@ -1,0 +1,4351 @@
+
+<html>
+  <head>
+    <title>Bannerlord Crash Report</title>
+    <meta charset='utf-8'>
+    <game version='e1.5.6.255751'>
+    <report id='8ed3054e-e88c-4c1f-9a1e-b032663f77f2'>
+    <style>
+        .headers {
+            font-family: "Consolas", monospace;
+        }
+        .root-container {
+            font-family: "Consolas", monospace;
+            font-size: small;
+
+            margin: 5px;
+			background-color: white;
+            border: 1px solid grey;
+            padding: 5px;
+        }
+        .headers-container {
+            display: none;
+        }
+        .modules-container {
+            margin: 5px;
+            background-color: #ffffe0;
+            border: 1px solid grey;
+            padding: 5px;
+        }
+        .submodules-container {
+            margin: 5px;
+            border: 1px solid grey;
+            background-color: #f8f8e7;
+            padding: 5px;
+        }
+        .modules-official-container {
+            margin: 5px;
+            background-color: #f4fcdc;
+            border: 1px solid grey;
+            padding: 5px;
+        }
+        .submodules-official-container {
+            margin: 5px;
+            border: 1px solid grey;
+            background-color: #f0f4e4;
+            padding: 5px;
+        }
+        .modules-invalid-container {
+            margin: 5px;
+            background-color: #ffefd5;
+            border: 1px solid grey;
+            padding: 5px;
+        }
+        .submodules-invalid-container {
+            margin: 5px;
+            border: 1px solid grey;
+            background-color: #f5ecdf;
+            padding: 5px;
+        }
+    </style>
+  </head>
+  <body style='background-color: #ececec;'>
+    <table style='width: 100%;'>
+      <tbody>
+        <tr>
+          <td style='width: 80%;'>
+            <div>
+              <b>Bannerlord has encountered a problem and will close itself.</b>
+              <br/>
+              This is a community Crash Report. Please save it and use it for reporting the error. Do not provide screenshots, provide the report!
+              <br/>
+              Most likely this error was caused by a custom installed module.
+              <br/>
+              <br/>
+              If you were in the middle of something, the progress might be lost.
+              <br/>
+            </div>
+          </td>
+           <td>
+		    <div style='float:right; margin-left:10px;'>
+		      <label>Without Color:</label>
+			  <input type='checkbox' onclick='changeBackgroundColor(this)'>
+			  <br/>
+			  <br/>
+			  <label>Font Size:</label>
+              <select class='input' onchange='changeFontSize(this);'>
+                <option value='1.0em' selected='selected'>Standard</option>
+			    <option value='0.9em'>Medium</option>
+                <option value='0.8em'>Small</option>
+              </select>
+			</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class='root-container'>
+      <h2><a href='javascript:;' class='headers' onclick='showHideById(this, "exception")'>+ Exception</a></h2>
+      <div id='exception' class='headers-container'>
+      Exception information
+<br/>
+Type: System.ArgumentNullException
+</br>
+Message: Value cannot be null.
+Parameter name: key
+</br>
+Source: mscorlib
+</br>
+CallStack:
+</br>
+<ol>
+<li>   at System.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)</li>
+<li>   at System.Collections.Generic.Dictionary`2.FindEntry(TKey key)</li>
+<li>   at System.Collections.Generic.Dictionary`2.TryGetValue(TKey key, TValue& value)</li>
+<li>   at TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.CaravansCampaignBehavior.UpdateAverageValues()</li>
+<li>   at TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.CaravansCampaignBehavior.OnSessionLaunched(CampaignGameStarter campaignGameStarter)</li>
+<li>   at TaleWorlds.CampaignSystem.MbEvent`1.InvokeList(EventHandlerRec`1 list, T t)</li>
+<li>   at TaleWorlds.CampaignSystem.CampaignEvents.OnSessionStart(CampaignGameStarter campaignGameStarter)</li>
+<li>   at TaleWorlds.CampaignSystem.CampaignEventDispatcher.OnSessionStart(CampaignGameStarter campaignGameStarter)</li>
+<li>   at TaleWorlds.CampaignSystem.Campaign.OnSessionStart(CampaignGameStarter starter)</li>
+<li>   at TaleWorlds.CampaignSystem.Campaign.DoLoadingForGameType(GameTypeLoadingStates gameTypeLoadingState, GameTypeLoadingStates& nextState)</li>
+<li>   at StoryMode.CampaignStoryMode.DoLoadingForGameType(GameTypeLoadingStates gameTypeLoadingState, GameTypeLoadingStates& nextState)</li>
+<li>   at TaleWorlds.Core.GameType.DoLoadingForGameType()</li>
+<li>   at SandBox.CampaignGameManager.DoLoadingForGameManager(GameManagerLoadingSteps gameManagerLoadingStep, GameManagerLoadingSteps& nextStep)</li>
+<li>   at TaleWorlds.Core.GameManagerBase.DoLoadingForGameManager()</li>
+<li>   at TaleWorlds.MountAndBlade.GameLoadingState.OnTick(Single dt)</li>
+<li>   at TaleWorlds.Core.GameStateManager.OnTick(Single dt)</li>
+<li>   at TaleWorlds.MountAndBlade.Module.OnApplicationTick_Patch2(Module this, Single dt)</li>
+</ol>
+
+
+      </div>
+    </div>
+    <div class='root-container'>
+      <h2><a href='javascript:;' class='headers' onclick='showHideById(this, "installed-modules")'>+ Installed Modules</a></h2>
+      <div id='installed-modules' class='headers-container'>
+      <ul>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "BetterExceptionWindow")'>+ BetterExceptionWindow (BetterExceptionWindow, e2.1.0.0)</a></b>
+<div id='BetterExceptionWindow' style='display: none'>
+Id: BetterExceptionWindow</br>
+Name: BetterExceptionWindow</br>
+Version: e2.1.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>BetterExceptionWindow</b></br>
+Name: BetterExceptionWindow</br>
+DLLName: BetterExceptionWindow.dll</br>
+SubModuleClassType: BetterExceptionWindow.Main</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+Additional Assemblies:</br>
+<ul>
+<li>Newtonsoft.Json.DLL (Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed)</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "Bannerlord.Harmony")'>+ Harmony (Bannerlord.Harmony, v2.0.4.53)</a></b>
+<div id='Bannerlord.Harmony' style='display: none'>
+Id: Bannerlord.Harmony</br>
+Name: Harmony</br>
+Version: v2.0.4.53</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependency Metadatas:</br>
+<ul>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+
+</ul>
+Url: <a href='https://www.nexusmods.com/mountandblade2bannerlord/mods/2006'>https://www.nexusmods.com/mountandblade2bannerlord/mods/2006</a></br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>Harmony</b></br>
+Name: Harmony</br>
+DLLName: Bannerlord.Harmony.dll</br>
+SubModuleClassType: Bannerlord.Harmony.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "Bannerlord.ButterLib")'>+ ButterLib (Bannerlord.ButterLib, v1.0.21.0)</a></b>
+<div id='Bannerlord.ButterLib' style='display: none'>
+Id: Bannerlord.ButterLib</br>
+Name: ButterLib</br>
+Version: v1.0.21.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+
+</ul>
+Dependency Metadatas:</br>
+<ul>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("BetterExceptionWindow").scrollIntoView(false)'>BetterExceptionWindow</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.ModuleLoader").scrollIntoView(false)'>Bannerlord.ModuleLoader</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+
+</ul>
+Url: <a href='https://www.nexusmods.com/mountandblade2bannerlord/mods/2018'>https://www.nexusmods.com/mountandblade2bannerlord/mods/2018</a></br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>ButterLib</b></br>
+Name: ButterLib</br>
+DLLName: Bannerlord.ButterLib.dll</br>
+SubModuleClassType: Bannerlord.ButterLib.ButterLibSubModule</br>
+Assemblies:</br>
+<ul>
+<li>Microsoft.Extensions.DependencyInjection.Abstractions.dll</li>
+<li>Microsoft.Extensions.Logging.Abstractions.dll</li>
+<li>Microsoft.Extensions.DependencyInjection.dll</li>
+<li>Microsoft.Extensions.Logging.dll</li>
+<li>Microsoft.Extensions.Options.dll</li>
+<li>Microsoft.Extensions.Primitives.dll</li>
+<li>Serilog.dll</li>
+<li>Serilog.Extensions.Logging.dll</li>
+<li>Serilog.Sinks.File.dll</li>
+<li>System.Runtime.CompilerServices.Unsafe.dll</li>
+<li>Microsoft.Bcl.HashCode.dll</li>
+<li>System.Reflection.Metadata.dll</li>
+<li>System.Collections.Immutable.dll</li>
+
+</ul>
+</div>
+</li>
+<li>
+<div class="submodules-container">
+<b>ButterLib Implementation Loader</b></br>
+Name: ButterLib Implementation Loader</br>
+DLLName: Bannerlord.ButterLib.dll</br>
+SubModuleClassType: Bannerlord.ButterLib.ImplementationLoaderSubModule</br>
+</div>
+</li>
+
+</ul>
+Additional Assemblies:</br>
+<ul>
+<li>Bannerlord.ButterLib.Implementation.1.5.6.dll (Bannerlord.ButterLib.Implementation.1.5.6, Version=1.0.21.0, Culture=neutral, PublicKeyToken=null)</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "Bannerlord.UIExtenderEx")'>+ UIExtenderEx (Bannerlord.UIExtenderEx, v2.0.0.0)</a></b>
+<div id='Bannerlord.UIExtenderEx' style='display: none'>
+Id: Bannerlord.UIExtenderEx</br>
+Name: UIExtenderEx</br>
+Version: v2.0.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+
+</ul>
+Dependency Metadatas:</br>
+<ul>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+
+</ul>
+Url: <a href='https://www.nexusmods.com/mountandblade2bannerlord/mods/2102'>https://www.nexusmods.com/mountandblade2bannerlord/mods/2102</a></br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>UIExtenderEx</b></br>
+Name: UIExtenderEx</br>
+DLLName: Bannerlord.UIExtenderEx.dll</br>
+SubModuleClassType: Bannerlord.UIExtenderEx.SubModule</br>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "Bannerlord.MBOptionScreen")'>+ Mod Configuration Menu v4 (Bannerlord.MBOptionScreen, v4.1.2.6)</a></b>
+<div id='Bannerlord.MBOptionScreen' style='display: none'>
+Id: Bannerlord.MBOptionScreen</br>
+Name: Mod Configuration Menu v4</br>
+Version: v4.1.2.6</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+
+</ul>
+Dependency Metadatas:</br>
+<ul>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+
+</ul>
+Url: <a href='https://www.nexusmods.com/mountandblade2bannerlord/mods/612'>https://www.nexusmods.com/mountandblade2bannerlord/mods/612</a></br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>MCMv4</b></br>
+Name: MCMv4</br>
+DLLName: MCMv4.dll</br>
+SubModuleClassType: MCM.MCMSubModule</br>
+</div>
+</li>
+<li>
+<div class="submodules-container">
+<b>MCMv4 Basic Implementation</b></br>
+Name: MCMv4 Basic Implementation</br>
+DLLName: MCMv4.dll</br>
+SubModuleClassType: MCM.Implementation.MCMImplementationSubModule</br>
+</div>
+</li>
+<li>
+<div class="submodules-container">
+<b>MCMv4 UI</b></br>
+Name: MCMv4 UI</br>
+DLLName: MCMv4.UI.dll</br>
+SubModuleClassType: MCM.UI.MCMUISubModule</br>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "Bannerlord.MBOptionScreen.MCMv3")'>+ MCMv4 MCMv3 Integration (Bannerlord.MBOptionScreen.MCMv3, v4.1.2.6)</a></b>
+<div id='Bannerlord.MBOptionScreen.MCMv3' style='display: none'>
+Id: Bannerlord.MBOptionScreen.MCMv3</br>
+Name: MCMv4 MCMv3 Integration</br>
+Version: v4.1.2.6</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+
+</ul>
+Dependency Metadatas:</br>
+<ul>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+
+</ul>
+Url: <a href='https://www.nexusmods.com/mountandblade2bannerlord/mods/612'>https://www.nexusmods.com/mountandblade2bannerlord/mods/612</a></br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>MCMv4 MCMv3 Compatibility</b></br>
+Name: MCMv4 MCMv3 Compatibility</br>
+DLLName: MCMv4.Implementation.MCMv3.dll</br>
+SubModuleClassType: MCM.Implementation.MCMv3.MCMMCMv3SubModule</br>
+Assemblies:</br>
+<ul>
+<li>MCMv3.dll</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "Bannerlord.MBOptionScreen.ModLib")'>+ MCMv4 ModLib v1/v13 Integration (Bannerlord.MBOptionScreen.ModLib, v4.1.2.6)</a></b>
+<div id='Bannerlord.MBOptionScreen.ModLib' style='display: none'>
+Id: Bannerlord.MBOptionScreen.ModLib</br>
+Name: MCMv4 ModLib v1/v13 Integration</br>
+Version: v4.1.2.6</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+
+</ul>
+Dependency Metadatas:</br>
+<ul>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li>Load Before       <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+
+</ul>
+Url: <a href='https://www.nexusmods.com/mountandblade2bannerlord/mods/612'>https://www.nexusmods.com/mountandblade2bannerlord/mods/612</a></br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>ModLib Substitute</b></br>
+Name: ModLib Substitute</br>
+DLLName: ModLib.dll</br>
+SubModuleClassType: ModLib.ModLibSubModule</br>
+</div>
+</li>
+<li>
+<div class="submodules-container">
+<b>ModLib.Definitions Substitute</b></br>
+Name: ModLib.Definitions Substitute</br>
+DLLName: ModLib.Definitions.dll</br>
+SubModuleClassType: ModLib.Definitions.ModLibSubModule</br>
+</div>
+</li>
+<li>
+<div class="submodules-container">
+<b>MCMv4 ModLib Compatibility</b></br>
+Name: MCMv4 ModLib Compatibility</br>
+DLLName: MCMv4.Implementation.ModLib.dll</br>
+SubModuleClassType: MCM.Implementation.ModLib.MCMModLibSubModule</br>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-official-container">
+<b><a href='javascript:;' onclick='showHideById(this, "Native")'>+ Native (Native, e1.5.6.0)</a></b>
+<div id='Native' style='display: none'>
+Id: Native</br>
+Name: Native</br>
+Version: e1.5.6.0</br>
+Official: True</br>
+Singleplayer: True</br>
+Multiplayer: True</br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-official-container">
+<b>ViewSubModule</b></br>
+Name: ViewSubModule</br>
+DLLName: TaleWorlds.MountAndBlade.View.dll</br>
+SubModuleClassType: TaleWorlds.MountAndBlade.View.ViewSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+<li>
+<div class="submodules-official-container">
+<b>GauntletUISubModule</b></br>
+Name: GauntletUISubModule</br>
+DLLName: TaleWorlds.MountAndBlade.GauntletUI.dll</br>
+SubModuleClassType: TaleWorlds.MountAndBlade.GauntletUI.GauntletUISubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+<li>
+<div class="submodules-official-container">
+<b>DedicatedServerSubModule</b></br>
+Name: DedicatedServerSubModule</br>
+DLLName: TaleWorlds.MountAndBlade.DedicatedServer.dll</br>
+SubModuleClassType: TaleWorlds.MountAndBlade.DedicatedServer.DedicatedServerSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: matchmaker</li>
+
+</ul>
+</div>
+</li>
+<li>
+<div class="submodules-official-container">
+<b>DedicatedCustomServerSubModule</b></br>
+Name: DedicatedCustomServerSubModule</br>
+DLLName: TaleWorlds.MountAndBlade.DedicatedCustomServer.dll</br>
+SubModuleClassType: TaleWorlds.MountAndBlade.DedicatedCustomServer.DedicatedCustomServerSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: custom</li>
+
+</ul>
+</div>
+</li>
+<li>
+<div class="submodules-official-container">
+<b>PlatformPSSubModule</b></br>
+Name: PlatformPSSubModule</br>
+DLLName: TaleWorlds.MountAndBlade.Platform.PS.dll</br>
+SubModuleClassType: TaleWorlds.MountAndBlade.Platform.PS.PlatformPSSubModule</br>
+Tags:</br>
+<ul>
+<li>ExclusivePlatform: Orbis</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+Additional Assemblies:</br>
+<ul>
+<li>TaleWorlds.MountAndBlade.Platform.PC.dll (TaleWorlds.MountAndBlade.Platform.PC, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null)</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-official-container">
+<b><a href='javascript:;' onclick='showHideById(this, "SandBoxCore")'>+ SandBox Core (SandBoxCore, e1.5.6.0)</a></b>
+<div id='SandBoxCore' style='display: none'>
+Id: SandBoxCore</br>
+Name: SandBox Core</br>
+Version: e1.5.6.0</br>
+Official: True</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-official-container">
+<b><a href='javascript:;' onclick='showHideById(this, "CustomBattle")'>+ CustomBattle (CustomBattle, e1.5.6.0)</a></b>
+<div id='CustomBattle' style='display: none'>
+Id: CustomBattle</br>
+Name: CustomBattle</br>
+Version: e1.5.6.0</br>
+Official: True</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-official-container">
+<b>CustomBattleSubModule</b></br>
+Name: CustomBattleSubModule</br>
+DLLName: TaleWorlds.MountAndBlade.CustomBattle.dll</br>
+SubModuleClassType: TaleWorlds.MountAndBlade.CustomBattle.CustomBattleSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-official-container">
+<b><a href='javascript:;' onclick='showHideById(this, "Sandbox")'>+ Sandbox (Sandbox, e1.5.6.0)</a></b>
+<div id='Sandbox' style='display: none'>
+Id: Sandbox</br>
+Name: Sandbox</br>
+Version: e1.5.6.0</br>
+Official: True</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-official-container">
+<b>SandBox</b></br>
+Name: SandBox</br>
+DLLName: SandBox.dll</br>
+SubModuleClassType: SandBox.SandBoxSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+<li>
+<div class="submodules-official-container">
+<b>SandBox.View</b></br>
+Name: SandBox.View</br>
+DLLName: SandBox.View.dll</br>
+SubModuleClassType: SandBox.View.SandBoxViewSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+Assemblies:</br>
+<ul>
+<li>SandBox.ViewModelCollection.dll</li>
+
+</ul>
+</div>
+</li>
+<li>
+<div class="submodules-official-container">
+<b>SandBox.GauntletUI</b></br>
+Name: SandBox.GauntletUI</br>
+DLLName: SandBox.GauntletUI.dll</br>
+SubModuleClassType: SandBox.GauntletUI.SandBoxGauntletUISubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-official-container">
+<b><a href='javascript:;' onclick='showHideById(this, "StoryMode")'>+ StoryMode (StoryMode, e1.5.6.0)</a></b>
+<div id='StoryMode' style='display: none'>
+Id: StoryMode</br>
+Name: StoryMode</br>
+Version: e1.5.6.0</br>
+Official: True</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-official-container">
+<b>StoryMode</b></br>
+Name: StoryMode</br>
+DLLName: StoryMode.dll</br>
+SubModuleClassType: StoryMode.StoryModeSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+<li>
+<div class="submodules-official-container">
+<b>StoryMode.View</b></br>
+Name: StoryMode.View</br>
+DLLName: StoryMode.View.dll</br>
+SubModuleClassType: StoryMode.View.StoryModeViewSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+Assemblies:</br>
+<ul>
+<li>StoryMode.ViewModelCollection.dll</li>
+
+</ul>
+</div>
+</li>
+<li>
+<div class="submodules-official-container">
+<b>StoryMode.GauntletUI</b></br>
+Name: StoryMode.GauntletUI</br>
+DLLName: StoryMode.GauntletUI.dll</br>
+SubModuleClassType: StoryMode.GauntletUI.StoryModeGauntletUISubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "SavingOverhaul")'>+ SavingOverhaul (SavingOverhaul, v1.2.1.0)</a></b>
+<div id='SavingOverhaul' style='display: none'>
+Id: SavingOverhaul</br>
+Name: SavingOverhaul</br>
+Version: v1.2.1.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>SavingOverhaul</b></br>
+Name: SavingOverhaul</br>
+DLLName: SavingOverhaul.dll</br>
+SubModuleClassType: SavingOverhaul.Main</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "BetterLooting")'>+ Better Looting (BetterLooting, v1.0.0.0)</a></b>
+<div id='BetterLooting' style='display: none'>
+Id: BetterLooting</br>
+Name: Better Looting</br>
+Version: v1.0.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>BetterLooting</b></br>
+Name: BetterLooting</br>
+DLLName: BetterLooting.dll</br>
+SubModuleClassType: BetterLooting.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "BetterSmithing")'>+ Better Smithing (BetterSmithing, v1.0.8.0)</a></b>
+<div id='BetterSmithing' style='display: none'>
+Id: BetterSmithing</br>
+Name: Better Smithing</br>
+Version: v1.0.8.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>BetterSmithing.MainFrame</b></br>
+Name: BetterSmithing.MainFrame</br>
+DLLName: BetterSmithing.MainFrame.dll</br>
+SubModuleClassType: BetterSmithing.MainFrame.MainFrameSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+<li>
+<div class="submodules-container">
+<b>BetterSmithing</b></br>
+Name: BetterSmithing</br>
+DLLName: BetterSmithing.Main.dll</br>
+SubModuleClassType: BetterSmithing.Main.Main</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+Additional Assemblies:</br>
+<ul>
+<li>BetterSmithing.Core.DLL (BetterSmithing.Core, Version=1.0.8.0, Culture=neutral, PublicKeyToken=null)</li>
+<li>BetterSmithing.Settings.DLL (BetterSmithing.Settings, Version=1.0.8.0, Culture=neutral, PublicKeyToken=null)</li>
+<li>BetterSmithing.Inputs.DLL (BetterSmithing.Inputs, Version=1.0.8.0, Culture=neutral, PublicKeyToken=null)</li>
+<li>BetterSmithing.Utilities.DLL (BetterSmithing.Utilities, Version=1.0.8.0, Culture=neutral, PublicKeyToken=null)</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "CalradiaExpanded")'>+ Calradia Expanded (CalradiaExpanded, a1.1.2.0)</a></b>
+<div id='CalradiaExpanded' style='display: none'>
+Id: CalradiaExpanded</br>
+Name: Calradia Expanded</br>
+Version: a1.1.2.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "CraftedItemCopyright")'>+ Crafted Item Copyright- Jiro's Fix (CraftedItemCopyright, v1.5.6.2)</a></b>
+<div id='CraftedItemCopyright' style='display: none'>
+Id: CraftedItemCopyright</br>
+Name: Crafted Item Copyright- Jiro's Fix</br>
+Version: v1.5.6.2</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+
+</ul>
+Dependency Metadatas:</br>
+<ul>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+<li>ERROR! MODULE WITH ID 'Bannerlord.MBOptionScreen.MBO' NOT FOUND!</li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>CraftedItemCopyright</b></br>
+Name: CraftedItemCopyright</br>
+DLLName: CraftedItemCopyright.dll</br>
+SubModuleClassType: CraftedItemCopyright.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "DaytimeHideouts")'>+ Daytime Hideouts (DaytimeHideouts, v1.4.0.0)</a></b>
+<div id='DaytimeHideouts' style='display: none'>
+Id: DaytimeHideouts</br>
+Name: Daytime Hideouts</br>
+Version: v1.4.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>DaytimeHideouts</b></br>
+Name: DaytimeHideouts</br>
+DLLName: DaytimeHideouts.dll</br>
+SubModuleClassType: DaytimeHideouts.DaytimeHideoutsSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "zzCharacterCreation")'>+ Detailed Character Creation (zzCharacterCreation, v1.2.0.0)</a></b>
+<div id='zzCharacterCreation' style='display: none'>
+Id: zzCharacterCreation</br>
+Name: Detailed Character Creation</br>
+Version: v1.2.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>CharacterCreation</b></br>
+Name: CharacterCreation</br>
+DLLName: CharacterCreation.dll</br>
+SubModuleClassType: CharacterCreation.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "DismembermentPlus")'>+ Dismemberment (Plus) (DismembermentPlus, v1.0.3.7)</a></b>
+<div id='DismembermentPlus' style='display: none'>
+Id: DismembermentPlus</br>
+Name: Dismemberment (Plus)</br>
+Version: v1.0.3.7</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen.MCMv3").scrollIntoView(false)'>Bannerlord.MBOptionScreen.MCMv3</a></li>
+
+</ul>
+Dependency Metadatas:</br>
+<ul>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen.MCMv3").scrollIntoView(false)'>Bannerlord.MBOptionScreen.MCMv3</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>Dismemberment (Plus)</b></br>
+Name: Dismemberment (Plus)</br>
+DLLName: DismembermentPlus.dll</br>
+SubModuleClassType: DismembermentPlus.Main</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "zExpandedBandits")'>+ zExpandedBandits (zExpandedBandits, v0.0.9.0)</a></b>
+<div id='zExpandedBandits' style='display: none'>
+Id: zExpandedBandits</br>
+Name: zExpandedBandits</br>
+Version: v0.0.9.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "DistinguishedService")'>+ Distinguished Service (DistinguishedService, v4.2.0.0)</a></b>
+<div id='DistinguishedService' style='display: none'>
+Id: DistinguishedService</br>
+Name: Distinguished Service</br>
+Version: v4.2.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>DistinguishedService</b></br>
+Name: DistinguishedService</br>
+DLLName: DistinguishedService.dll</br>
+SubModuleClassType: DistinguishedService.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+Additional Assemblies:</br>
+<ul>
+<li>Fasterflect.DLL (Fasterflect, Version=2.1.3.0, Culture=neutral, PublicKeyToken=38d18473284c1ca7)</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "MBFastDialogue")'>+ MBFastDialogue (MBFastDialogue, v2.4.0.0)</a></b>
+<div id='MBFastDialogue' style='display: none'>
+Id: MBFastDialogue</br>
+Name: MBFastDialogue</br>
+Version: v2.4.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>MBFastDialogue</b></br>
+Name: MBFastDialogue</br>
+DLLName: MBFastDialogue.dll</br>
+SubModuleClassType: MBFastDialogue.FastDialogueSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "HideoutPartyUnlimited")'>+ Hideout Party Unlimited (HideoutPartyUnlimited, e1.5.6.0)</a></b>
+<div id='HideoutPartyUnlimited' style='display: none'>
+Id: HideoutPartyUnlimited</br>
+Name: Hideout Party Unlimited</br>
+Version: e1.5.6.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>HideoutPartyUnlimited</b></br>
+Name: HideoutPartyUnlimited</br>
+DLLName: HideoutPartyUnlimited.dll</br>
+SubModuleClassType: HideoutPartyUnlimited.HideoutPartyUnlimited</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "ImprovedGarrisons")'>+ Improved Garrisons (ImprovedGarrisons, v3.7.0.8)</a></b>
+<div id='ImprovedGarrisons' style='display: none'>
+Id: ImprovedGarrisons</br>
+Name: Improved Garrisons</br>
+Version: v3.7.0.8</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>ImprovedGarrisons</b></br>
+Name: ImprovedGarrisons</br>
+DLLName: ImprovedGarrisons.dll</br>
+SubModuleClassType: ImprovedGarrisons.Main</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "KaosesPartySizes")'>+ Kaoses Party Sizes - Jiro's Revival (KaosesPartySizes, v1.5.3.0)</a></b>
+<div id='KaosesPartySizes' style='display: none'>
+Id: KaosesPartySizes</br>
+Name: Kaoses Party Sizes - Jiro's Revival</br>
+Version: v1.5.3.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>KaosesPartySizes</b></br>
+Name: KaosesPartySizes</br>
+DLLName: KaosesPartySizes.dll</br>
+SubModuleClassType: KaosesPartySizes.KaosesPartySizesSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "ExitSettlement")'>+ Exit Settlement (ExitSettlement, v1.4.0.0)</a></b>
+<div id='ExitSettlement' style='display: none'>
+Id: ExitSettlement</br>
+Name: Exit Settlement</br>
+Version: v1.4.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>ExitSettlement</b></br>
+Name: ExitSettlement</br>
+DLLName: ExitSettlement.dll</br>
+SubModuleClassType: ExitSettlement.ExitSettlementSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "ManageRemoteCompanions")'>+ Manage Remote Companions - Jiro's Fix (ManageRemoteCompanions, v1.5.6.1)</a></b>
+<div id='ManageRemoteCompanions' style='display: none'>
+Id: ManageRemoteCompanions</br>
+Name: Manage Remote Companions - Jiro's Fix</br>
+Version: v1.5.6.1</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+
+</ul>
+Url: <a href='https://www.nexusmods.com/mountandblade2bannerlord/mods/2194'>https://www.nexusmods.com/mountandblade2bannerlord/mods/2194</a></br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>ManageRemoteCompanions</b></br>
+Name: ManageRemoteCompanions</br>
+DLLName: ManageRemoteCompanions.dll</br>
+SubModuleClassType: ManageRemoteCompanions.Main</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "Arrowmod")'>+ Nicer projectiles (Arrowmod, v1.0.0.0)</a></b>
+<div id='Arrowmod' style='display: none'>
+Id: Arrowmod</br>
+Name: Nicer projectiles</br>
+Version: v1.0.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "ResponsiveSoldiersBoiZoi")'>+ Responsive Soldiers (ResponsiveSoldiersBoiZoi, v0.2.1.0)</a></b>
+<div id='ResponsiveSoldiersBoiZoi' style='display: none'>
+Id: ResponsiveSoldiersBoiZoi</br>
+Name: Responsive Soldiers</br>
+Version: v0.2.1.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>ResponsiveSoldiers</b></br>
+Name: ResponsiveSoldiers</br>
+DLLName: ResponsiveSoldiers.dll</br>
+SubModuleClassType: ResponsiveSoldiers.ResponsiveSoldiersSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "SoundTheAlarm")'>+ Sound The Alarm (SoundTheAlarm, v1.5.1.0)</a></b>
+<div id='SoundTheAlarm' style='display: none'>
+Id: SoundTheAlarm</br>
+Name: Sound The Alarm</br>
+Version: v1.5.1.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen.MCMv3").scrollIntoView(false)'>Bannerlord.MBOptionScreen.MCMv3</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>SoundTheAlarm</b></br>
+Name: SoundTheAlarm</br>
+DLLName: SoundTheAlarm.dll</br>
+SubModuleClassType: SoundTheAlarm.STAMain</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "TrueNobleOpinion")'>+ True Noble Opinion (TrueNobleOpinion, v1.0.1.0)</a></b>
+<div id='TrueNobleOpinion' style='display: none'>
+Id: TrueNobleOpinion</br>
+Name: True Noble Opinion</br>
+Version: v1.0.1.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>TrueNobleOpinion</b></br>
+Name: TrueNobleOpinion</br>
+DLLName: TrueNobleOpinion.dll</br>
+SubModuleClassType: TrueNobleOpinion.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "TruePrisoners")'>+ True Prisoners (TruePrisoners, v1.5.6.0)</a></b>
+<div id='TruePrisoners' style='display: none'>
+Id: TruePrisoners</br>
+Name: True Prisoners</br>
+Version: v1.5.6.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>TruePrisoners</b></br>
+Name: TruePrisoners</br>
+DLLName: TruePrisoners.dll</br>
+SubModuleClassType: TruePrisoners.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "XorberaxCutThroughEveryone")'>+ Xorberax's Cut Through Everyone (XorberaxCutThroughEveryone, e0.3.1.0)</a></b>
+<div id='XorberaxCutThroughEveryone' style='display: none'>
+Id: XorberaxCutThroughEveryone</br>
+Name: Xorberax's Cut Through Everyone</br>
+Version: e0.3.1.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>CutThroughEveryone</b></br>
+Name: CutThroughEveryone</br>
+DLLName: CutThroughEveryone.dll</br>
+SubModuleClassType: CutThroughEveryone.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "BearMyBanner")'>+ Bear my Banner (BearMyBanner, v0.7.3.0)</a></b>
+<div id='BearMyBanner' style='display: none'>
+Id: BearMyBanner</br>
+Name: Bear my Banner</br>
+Version: v0.7.3.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen.MCMv3").scrollIntoView(false)'>Bannerlord.MBOptionScreen.MCMv3</a></li>
+
+</ul>
+Dependency Metadatas:</br>
+<ul>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen.MCMv3").scrollIntoView(false)'>Bannerlord.MBOptionScreen.MCMv3</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>BearMyBanner</b></br>
+Name: BearMyBanner</br>
+DLLName: BearMyBanner.dll</br>
+SubModuleClassType: BearMyBanner.Main</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "XorberaxShoulderCam")'>+ Xorberax's Shoulder Cam (XorberaxShoulderCam, e0.6.0.0)</a></b>
+<div id='XorberaxShoulderCam' style='display: none'>
+Id: XorberaxShoulderCam</br>
+Name: Xorberax's Shoulder Cam</br>
+Version: e0.6.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>ShoulderCam</b></br>
+Name: ShoulderCam</br>
+DLLName: ShoulderCam.dll</br>
+SubModuleClassType: ShoulderCam.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "CustomSpawns")'>+ CustomSpawns (CustomSpawns, v1.4.2.0)</a></b>
+<div id='CustomSpawns' style='display: none'>
+Id: CustomSpawns</br>
+Name: CustomSpawns</br>
+Version: v1.4.2.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>CustomSpawns</b></br>
+Name: CustomSpawns</br>
+DLLName: CustomSpawns.dll</br>
+SubModuleClassType: CustomSpawns.Main</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "ShowMeTheTournaments")'>+ Show Me The Tournaments (ShowMeTheTournaments, v1.0.0.0)</a></b>
+<div id='ShowMeTheTournaments' style='display: none'>
+Id: ShowMeTheTournaments</br>
+Name: Show Me The Tournaments</br>
+Version: v1.0.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>ShowMeTheTournaments</b></br>
+Name: ShowMeTheTournaments</br>
+DLLName: ShowMeTheTournaments.dll</br>
+SubModuleClassType: ShowMeTheTournaments.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "zzzBetterTournamentRewardHorses")'>+ Tournament Reward Horses (zzzBetterTournamentRewardHorses, v1.0.0.0)</a></b>
+<div id='zzzBetterTournamentRewardHorses' style='display: none'>
+Id: zzzBetterTournamentRewardHorses</br>
+Name: Tournament Reward Horses</br>
+Version: v1.0.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "HighSellPrice")'>+ High Sell Price Alert (HighSellPrice, e1.0.0.0)</a></b>
+<div id='HighSellPrice' style='display: none'>
+Id: HighSellPrice</br>
+Name: High Sell Price Alert</br>
+Version: e1.0.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>HighSellPrice</b></br>
+Name: HighSellPrice</br>
+DLLName: HighSellPrice.dll</br>
+SubModuleClassType: HighSellPrice.HighSellPriceSubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "LtG_Imperial Troop Fixed")'>+ Imperial Troop Fixed (LtG_Imperial Troop Fixed, v0.9.0.0)</a></b>
+<div id='LtG_Imperial Troop Fixed' style='display: none'>
+Id: LtG_Imperial Troop Fixed</br>
+Name: Imperial Troop Fixed</br>
+Version: v0.9.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "DiplomacyFixes")'>+ Diplomacy Fixes - Jiro's Build (DiplomacyFixes, v1.5.6.1)</a></b>
+<div id='DiplomacyFixes' style='display: none'>
+Id: DiplomacyFixes</br>
+Name: Diplomacy Fixes - Jiro's Build</br>
+Version: v1.5.6.1</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+
+</ul>
+Dependency Metadatas:</br>
+<ul>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+<li>ERROR! MODULE WITH ID 'Bannerlord.MBOptionScreen.MBO' NOT FOUND!</li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>DiplomacyFixes</b></br>
+Name: DiplomacyFixes</br>
+DLLName: DiplomacyFixes.dll</br>
+SubModuleClassType: DiplomacyFixes.MySubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "ZCrouchToSprint")'>+ Crouch To Sprint (ZCrouchToSprint, v2.0.0.0)</a></b>
+<div id='ZCrouchToSprint' style='display: none'>
+Id: ZCrouchToSprint</br>
+Name: Crouch To Sprint</br>
+Version: v2.0.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "CantRunForever")'>+ Can't Run Forever (CantRunForever, v1.4.0.0)</a></b>
+<div id='CantRunForever' style='display: none'>
+Id: CantRunForever</br>
+Name: Can't Run Forever</br>
+Version: v1.4.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+
+</ul>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>CantRunForever</b></br>
+Name: CantRunForever</br>
+DLLName: CantRunForever.dll</br>
+SubModuleClassType: CantRunForever.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "SkillChanger")'>+ Skill Changer (SkillChanger, v1.0.0.0)</a></b>
+<div id='SkillChanger' style='display: none'>
+Id: SkillChanger</br>
+Name: Skill Changer</br>
+Version: v1.0.0.0</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>SkillChanger</b></br>
+Name: SkillChanger</br>
+DLLName: SkillChanger.dll</br>
+SubModuleClassType: SkillChanger.SkillChanger</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+<li>
+<div class="modules-container">
+<b><a href='javascript:;' onclick='showHideById(this, "zzBannerlordTweaks")'>+ Bannerlord Tweaks (zzBannerlordTweaks, v1.5.6.8)</a></b>
+<div id='zzBannerlordTweaks' style='display: none'>
+Id: zzBannerlordTweaks</br>
+Name: Bannerlord Tweaks</br>
+Version: v1.5.6.8</br>
+Official: False</br>
+Singleplayer: True</br>
+Multiplayer: False</br>
+Dependencies:</br>
+<ul>
+<li><a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li><a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+
+</ul>
+Dependency Metadatas:</br>
+<ul>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.Harmony").scrollIntoView(false)'>Bannerlord.Harmony</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.ButterLib").scrollIntoView(false)'>Bannerlord.ButterLib</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.UIExtenderEx").scrollIntoView(false)'>Bannerlord.UIExtenderEx</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Bannerlord.MBOptionScreen").scrollIntoView(false)'>Bannerlord.MBOptionScreen</a></li>
+<li>ERROR! MODULE WITH ID 'Bannerlord.MBOptionScreen.MBO' NOT FOUND!</li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Native").scrollIntoView(false)'>Native</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("SandBoxCore").scrollIntoView(false)'>SandBoxCore</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("Sandbox").scrollIntoView(false)'>Sandbox</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("StoryMode").scrollIntoView(false)'>StoryMode</a></li>
+<li>Load After        <a href='javascript:;' onclick='document.getElementById("CustomBattle").scrollIntoView(false)'>CustomBattle</a></li>
+
+</ul>
+Url: <a href='https://www.nexusmods.com/mountandblade2bannerlord/mods/2036'>https://www.nexusmods.com/mountandblade2bannerlord/mods/2036</a></br>
+SubModules:</br>
+<ul>
+<li>
+<div class="submodules-container">
+<b>BannerlordTweaks</b></br>
+Name: BannerlordTweaks</br>
+DLLName: BannerlordTweaks.dll</br>
+SubModuleClassType: BannerlordTweaks.SubModule</br>
+Tags:</br>
+<ul>
+<li>DedicatedServerType: none</li>
+<li>IsNoRenderModeElement: false</li>
+
+</ul>
+</div>
+</li>
+
+</ul>
+</div>
+</div>
+</li>
+</ul>
+
+      </div>
+    </div>
+    <div class='root-container'>
+      <h2><a href='javascript:;' class='headers' onclick='showHideById(this, "assemblies")'>+ Assemblies</a></h2>
+      <div id='assemblies' class='headers-container'>
+      <label>Hide: </label>
+      <label><input type='checkbox' onclick='showHideByClassName(this, "tw_assembly")'> Game Core</label>
+      <label><input type='checkbox' onclick='showHideByClassName(this, "sys_assembly")'> System</label>
+      <label><input type='checkbox' onclick='showHideByClassName(this, "module_assembly")'> Modules</label>
+      <label><input type='checkbox' onclick='showHideByClassName(this, "unclas_assembly")'> Unclassified</label>
+      <ul>
+<li class='module_assembly'>BetterExceptionWindow, 2.0.0.0, MSIL, 89f186fb0a2e43d5b8ba056ce1bd84d5, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\BetterExceptionWindow\bin\Win64_Shipping_Client\BetterExceptionWindow.dll">C:\Games\Mount & Blade II Bannerlord\Modules\BetterExceptionWindow\bin\Win64_Shipping_Client\BetterExceptionWindow.dll</a></li>
+<li class='module_assembly'>Bannerlord.Harmony, 2.0.4.53, MSIL, e54415a615b87cc23f351fbd344134d7, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.Harmony\bin\Win64_Shipping_Client\Bannerlord.Harmony.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.Harmony\bin\Win64_Shipping_Client\Bannerlord.Harmony.dll</a></li>
+<li class='module_assembly'>Microsoft.Extensions.DependencyInjection.Abstractions, 2.0.0.0, MSIL, 6f3cca084046a16c91f64953bd6ae66c, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.DependencyInjection.Abstractions.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.DependencyInjection.Abstractions.dll</a></li>
+<li class='module_assembly'>Microsoft.Extensions.Logging.Abstractions, 2.0.0.0, MSIL, f6bfb173119f48eed8b3616a3fd5464f, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.Logging.Abstractions.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.Logging.Abstractions.dll</a></li>
+<li class='module_assembly'>Microsoft.Extensions.DependencyInjection, 2.0.0.0, MSIL, 432c3bdf19dfa3d6440e8f1454e68e2e, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.DependencyInjection.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.DependencyInjection.dll</a></li>
+<li class='module_assembly'>Microsoft.Extensions.Logging, 2.0.0.0, MSIL, ddebddf19ecf76882309e8f8f1a1c75b, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.Logging.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.Logging.dll</a></li>
+<li class='module_assembly'>Microsoft.Extensions.Options, 2.0.0.0, MSIL, 0cd6938593b1785b4ac087f7fe5c47e9, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.Options.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.Options.dll</a></li>
+<li class='module_assembly'>Microsoft.Extensions.Primitives, 2.0.0.0, MSIL, b5c71bed0a0cc2db2aa02445a4afa774, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.Primitives.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Extensions.Primitives.dll</a></li>
+<li class='module_assembly'>Serilog, 2.0.0.0, MSIL, 4acef2e24ddf747e6b4d2cc105d891a8, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Serilog.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Serilog.dll</a></li>
+<li class='module_assembly'>Serilog.Extensions.Logging, 2.0.0.0, MSIL, 08c12f84daddd3fb3c6b3d8dd5c8b6ad, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Serilog.Extensions.Logging.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Serilog.Extensions.Logging.dll</a></li>
+<li class='module_assembly'>Serilog.Sinks.File, 2.0.0.0, MSIL, 4c2b0737d9a73da09172d3c210b0265d, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Serilog.Sinks.File.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Serilog.Sinks.File.dll</a></li>
+<li class='module_assembly'>System.Runtime.CompilerServices.Unsafe, 4.0.4.1, MSIL, da04a75ddc22118ed24e0b53e474805a, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\System.Runtime.CompilerServices.Unsafe.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\System.Runtime.CompilerServices.Unsafe.dll</a></li>
+<li class='module_assembly'>Microsoft.Bcl.HashCode, 1.0.0.0, MSIL, 6dbd6d235a6e454ff9edb1fd4c1384bb, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Bcl.HashCode.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Microsoft.Bcl.HashCode.dll</a></li>
+<li class='module_assembly'>System.Reflection.Metadata, 5.0.0.0, MSIL, c4ea65bd802f1ccd3ea2ad1841fd85c2, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\System.Reflection.Metadata.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\System.Reflection.Metadata.dll</a></li>
+<li class='module_assembly'>System.Collections.Immutable, 5.0.0.0, MSIL, c598080fa777d6e63dfd0370e97ec8f3, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\System.Collections.Immutable.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\System.Collections.Immutable.dll</a></li>
+<li class='module_assembly'>Bannerlord.ButterLib, 1.0.21.0, Amd64, 2b08d6de44f633065878135aaff2625f, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Bannerlord.ButterLib.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Bannerlord.ButterLib.dll</a></li>
+<li class='module_assembly'>Bannerlord.UIExtenderEx, 2.0.0.0, MSIL, 1794428aee67d330b30438b3d6936fc4, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.UIExtenderEx\bin\Win64_Shipping_Client\Bannerlord.UIExtenderEx.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.UIExtenderEx\bin\Win64_Shipping_Client\Bannerlord.UIExtenderEx.dll</a></li>
+<li class='module_assembly'>MCMv4, 4.1.2.6, MSIL, 379f9783565fc6545478a45510837b6e, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv4.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv4.dll</a></li>
+<li class='module_assembly'>MCMv4.UI, 4.1.2.6, MSIL, a44e8ba2ebbf34dca11ee46337c71282, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv4.UI.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen\bin\Win64_Shipping_Client\MCMv4.UI.dll</a></li>
+<li class='module_assembly'>MCMv3, 3.1.9.0, MSIL, 539dbdfb0b4cbe2692ccd2e719032b6d, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen.MCMv3\bin\Win64_Shipping_Client\MCMv3.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen.MCMv3\bin\Win64_Shipping_Client\MCMv3.dll</a></li>
+<li class='module_assembly'>MCMv4.Implementation.MCMv3, 4.1.2.6, MSIL, b098b7d21204f93995ec7ba436a0778c, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen.MCMv3\bin\Win64_Shipping_Client\MCMv4.Implementation.MCMv3.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen.MCMv3\bin\Win64_Shipping_Client\MCMv4.Implementation.MCMv3.dll</a></li>
+<li class='module_assembly'>ModLib, 4.1.2.6, MSIL, 68e3b7b00fe8f51505471ade571585e2, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen.ModLib\bin\Win64_Shipping_Client\ModLib.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen.ModLib\bin\Win64_Shipping_Client\ModLib.dll</a></li>
+<li class='module_assembly'>ModLib.Definitions, 4.1.2.6, MSIL, 6f2c1941678651d8e80c52468dd919fd, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen.ModLib\bin\Win64_Shipping_Client\ModLib.Definitions.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen.ModLib\bin\Win64_Shipping_Client\ModLib.Definitions.dll</a></li>
+<li class='module_assembly'>MCMv4.Implementation.ModLib, 4.1.2.6, MSIL, 28e23a9327ea1fae6be8cb05eeb1d2d9, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen.ModLib\bin\Win64_Shipping_Client\MCMv4.Implementation.ModLib.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.MBOptionScreen.ModLib\bin\Win64_Shipping_Client\MCMv4.Implementation.ModLib.dll</a></li>
+<li class='module_assembly'>TaleWorlds.MountAndBlade.View, 1.0.0.0, Amd64, debb31a3248f367fee1732fbdeed1b10, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Native\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.View.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Native\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.View.dll</a></li>
+<li class='module_assembly'>TaleWorlds.MountAndBlade.GauntletUI, 1.0.0.0, Amd64, 0415517f6b1d733a95387a0515ff4f11, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Native\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.GauntletUI.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Native\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.GauntletUI.dll</a></li>
+<li class='module_assembly'>TaleWorlds.MountAndBlade.CustomBattle, 1.0.0.0, Amd64, c1792a236e17ac73feec72592f5d9e3f, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\CustomBattle\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.CustomBattle.dll">C:\Games\Mount & Blade II Bannerlord\Modules\CustomBattle\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.CustomBattle.dll</a></li>
+<li class='module_assembly'>SandBox, 1.0.0.0, Amd64, 527a81003534e49f649edef373e4f6a9, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Sandbox\bin\Win64_Shipping_Client\SandBox.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Sandbox\bin\Win64_Shipping_Client\SandBox.dll</a></li>
+<li class='module_assembly'>SandBox.ViewModelCollection, 1.0.0.0, Amd64, ee042848e2849549843513b1b6a6c9fa, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Sandbox\bin\Win64_Shipping_Client\SandBox.ViewModelCollection.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Sandbox\bin\Win64_Shipping_Client\SandBox.ViewModelCollection.dll</a></li>
+<li class='module_assembly'>SandBox.View, 1.0.0.0, Amd64, ea57d453519c78fb267be6984701277c, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Sandbox\bin\Win64_Shipping_Client\SandBox.View.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Sandbox\bin\Win64_Shipping_Client\SandBox.View.dll</a></li>
+<li class='module_assembly'>SandBox.GauntletUI, 1.0.0.0, Amd64, 0413e65528be9c52466211dc7c602014, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Sandbox\bin\Win64_Shipping_Client\SandBox.GauntletUI.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Sandbox\bin\Win64_Shipping_Client\SandBox.GauntletUI.dll</a></li>
+<li class='module_assembly'>StoryMode, 1.0.0.0, Amd64, da812360973614a3a6f42741ea260166, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\StoryMode\bin\Win64_Shipping_Client\StoryMode.dll">C:\Games\Mount & Blade II Bannerlord\Modules\StoryMode\bin\Win64_Shipping_Client\StoryMode.dll</a></li>
+<li class='module_assembly'>StoryMode.ViewModelCollection, 1.0.0.0, Amd64, 12061053092bb93ee652584bb6d83648, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\StoryMode\bin\Win64_Shipping_Client\StoryMode.ViewModelCollection.dll">C:\Games\Mount & Blade II Bannerlord\Modules\StoryMode\bin\Win64_Shipping_Client\StoryMode.ViewModelCollection.dll</a></li>
+<li class='module_assembly'>StoryMode.View, 1.0.0.0, Amd64, 8e8f0b0675958ba9ab3efd34092e4a9e, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\StoryMode\bin\Win64_Shipping_Client\StoryMode.View.dll">C:\Games\Mount & Blade II Bannerlord\Modules\StoryMode\bin\Win64_Shipping_Client\StoryMode.View.dll</a></li>
+<li class='module_assembly'>StoryMode.GauntletUI, 1.0.0.0, Amd64, 6ea50a912279b0fc88d7af3385c49eac, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\StoryMode\bin\Win64_Shipping_Client\StoryMode.GauntletUI.dll">C:\Games\Mount & Blade II Bannerlord\Modules\StoryMode\bin\Win64_Shipping_Client\StoryMode.GauntletUI.dll</a></li>
+<li class='module_assembly'>SavingOverhaul, 1.0.0.0, MSIL, bd33960706ada1b09102332ff7d7fc01, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\SavingOverhaul\bin\Win64_Shipping_Client\SavingOverhaul.dll">C:\Games\Mount & Blade II Bannerlord\Modules\SavingOverhaul\bin\Win64_Shipping_Client\SavingOverhaul.dll</a></li>
+<li class='module_assembly'>BetterLooting, 1.0.0.0, Amd64, 39834006ac9165cfbf1f1c714c5f58f7, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\BetterLooting\bin\Win64_Shipping_Client\BetterLooting.dll">C:\Games\Mount & Blade II Bannerlord\Modules\BetterLooting\bin\Win64_Shipping_Client\BetterLooting.dll</a></li>
+<li class='module_assembly'>BetterSmithing.MainFrame, 1.0.8.0, Amd64, a820eea3382c2727b54961299fd0cd7f, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.MainFrame.dll">C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.MainFrame.dll</a></li>
+<li class='module_assembly'>BetterSmithing.Main, 1.0.8.0, Amd64, 1fdd0533987e18d19cf7f08c2a44e5ac, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.Main.dll">C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.Main.dll</a></li>
+<li class='module_assembly'>CraftedItemCopyright, 1.5.5.0, Amd64, f0fabd8dc9f56f285dd752bbc3104334, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\CraftedItemCopyright\bin\Win64_Shipping_Client\CraftedItemCopyright.dll">C:\Games\Mount & Blade II Bannerlord\Modules\CraftedItemCopyright\bin\Win64_Shipping_Client\CraftedItemCopyright.dll</a></li>
+<li class='module_assembly'>DaytimeHideouts, 1.0.0.0, Amd64, 355f40af848617ac3860e4ce19dd0542, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\DaytimeHideouts\bin\Win64_Shipping_Client\DaytimeHideouts.dll">C:\Games\Mount & Blade II Bannerlord\Modules\DaytimeHideouts\bin\Win64_Shipping_Client\DaytimeHideouts.dll</a></li>
+<li class='module_assembly'>CharacterCreation, 1.0.0.0, Amd64, 876373f040d41a9003773a61206e14a6, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\zzCharacterCreation\bin\Win64_Shipping_Client\CharacterCreation.dll">C:\Games\Mount & Blade II Bannerlord\Modules\zzCharacterCreation\bin\Win64_Shipping_Client\CharacterCreation.dll</a></li>
+<li class='module_assembly'>DismembermentPlus, 1.0.3.7, Amd64, ef33b80becab2ff9b7afdf38529db64d, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\DismembermentPlus\bin\Win64_Shipping_Client\DismembermentPlus.dll">C:\Games\Mount & Blade II Bannerlord\Modules\DismembermentPlus\bin\Win64_Shipping_Client\DismembermentPlus.dll</a></li>
+<li class='module_assembly'>DistinguishedService, 1.0.0.0, Amd64, c75bb655c2d2bb6c89816aea88e20c84, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\DistinguishedService\bin\Win64_Shipping_Client\DistinguishedService.dll">C:\Games\Mount & Blade II Bannerlord\Modules\DistinguishedService\bin\Win64_Shipping_Client\DistinguishedService.dll</a></li>
+<li class='module_assembly'>MBFastDialogue, 1.0.0.0, MSIL, e7e7205089c4255c4f847b387069ebb9, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\MBFastDialogue\bin\Win64_Shipping_Client\MBFastDialogue.dll">C:\Games\Mount & Blade II Bannerlord\Modules\MBFastDialogue\bin\Win64_Shipping_Client\MBFastDialogue.dll</a></li>
+<li class='module_assembly'>HideoutPartyUnlimited, 1.0.0.0, Amd64, 9a036e0eead675fd81f6cac1eb4eb993, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\HideoutPartyUnlimited\bin\Win64_Shipping_Client\HideoutPartyUnlimited.dll">C:\Games\Mount & Blade II Bannerlord\Modules\HideoutPartyUnlimited\bin\Win64_Shipping_Client\HideoutPartyUnlimited.dll</a></li>
+<li class='module_assembly'>ImprovedGarrisons, 1.0.0.0, MSIL, 070e900e9f6db883e6f7e07bd1a61809, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\ImprovedGarrisons\bin\Win64_Shipping_Client\ImprovedGarrisons.dll">C:\Games\Mount & Blade II Bannerlord\Modules\ImprovedGarrisons\bin\Win64_Shipping_Client\ImprovedGarrisons.dll</a></li>
+<li class='module_assembly'>KaosesPartySizes, 1.0.0.0, Amd64, 2a2a54b484e11e1522b5e58fe2e22a00, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\KaosesPartySizes\bin\Win64_Shipping_Client\KaosesPartySizes.dll">C:\Games\Mount & Blade II Bannerlord\Modules\KaosesPartySizes\bin\Win64_Shipping_Client\KaosesPartySizes.dll</a></li>
+<li class='module_assembly'>ExitSettlement, 1.0.0.0, Amd64, 7f2530013db170bbd22c5a928ccf9f01, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\ExitSettlement\bin\Win64_Shipping_Client\ExitSettlement.dll">C:\Games\Mount & Blade II Bannerlord\Modules\ExitSettlement\bin\Win64_Shipping_Client\ExitSettlement.dll</a></li>
+<li class='module_assembly'>ManageRemoteCompanions, 1.5.5.0, Amd64, 87bae402fd490f7f2b97d12b2610768d, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\ManageRemoteCompanions\bin\Win64_Shipping_Client\ManageRemoteCompanions.dll">C:\Games\Mount & Blade II Bannerlord\Modules\ManageRemoteCompanions\bin\Win64_Shipping_Client\ManageRemoteCompanions.dll</a></li>
+<li class='module_assembly'>ResponsiveSoldiers, 1.0.0.0, Amd64, 464c65c538db0b174e8a71fa758b5a26, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\ResponsiveSoldiersBoiZoi\bin\Win64_Shipping_Client\ResponsiveSoldiers.dll">C:\Games\Mount & Blade II Bannerlord\Modules\ResponsiveSoldiersBoiZoi\bin\Win64_Shipping_Client\ResponsiveSoldiers.dll</a></li>
+<li class='module_assembly'>SoundTheAlarm, 1.0.0.0, Amd64, d407b044033d895641614743166cd851, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\SoundTheAlarm\bin\Win64_Shipping_Client\SoundTheAlarm.dll">C:\Games\Mount & Blade II Bannerlord\Modules\SoundTheAlarm\bin\Win64_Shipping_Client\SoundTheAlarm.dll</a></li>
+<li class='module_assembly'>TrueNobleOpinion, 1.0.0.0, MSIL, 884df073a58a3d7d6ed8a7a49b67d655, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\TrueNobleOpinion\bin\Win64_Shipping_Client\TrueNobleOpinion.dll">C:\Games\Mount & Blade II Bannerlord\Modules\TrueNobleOpinion\bin\Win64_Shipping_Client\TrueNobleOpinion.dll</a></li>
+<li class='module_assembly'>TruePrisoners, 1.0.0.0, MSIL, 6e615544c7ff6ecdd849ff45c656dacf, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\TruePrisoners\bin\Win64_Shipping_Client\TruePrisoners.dll">C:\Games\Mount & Blade II Bannerlord\Modules\TruePrisoners\bin\Win64_Shipping_Client\TruePrisoners.dll</a></li>
+<li class='module_assembly'>CutThroughEveryone, 1.0.0.0, Amd64, 74f44f4f54cc0c7fb5b32438f9034080, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\XorberaxCutThroughEveryone\bin\Win64_Shipping_Client\CutThroughEveryone.dll">C:\Games\Mount & Blade II Bannerlord\Modules\XorberaxCutThroughEveryone\bin\Win64_Shipping_Client\CutThroughEveryone.dll</a></li>
+<li class='module_assembly'>BearMyBanner, 1.0.0.0, MSIL, 168b54154a0e025472a845cd8f9ca652, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\BearMyBanner\bin\Win64_Shipping_Client\BearMyBanner.dll">C:\Games\Mount & Blade II Bannerlord\Modules\BearMyBanner\bin\Win64_Shipping_Client\BearMyBanner.dll</a></li>
+<li class='module_assembly'>ShoulderCam, 1.0.0.0, Amd64, 87aab67c9eecc6ae42221c6cadfc61ac, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\XorberaxShoulderCam\bin\Win64_Shipping_Client\ShoulderCam.dll">C:\Games\Mount & Blade II Bannerlord\Modules\XorberaxShoulderCam\bin\Win64_Shipping_Client\ShoulderCam.dll</a></li>
+<li class='module_assembly'>CustomSpawns, 1.0.0.0, Amd64, d4dad2176a88de823fe87a5912494d3c, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\CustomSpawns\bin\Win64_Shipping_Client\CustomSpawns.dll">C:\Games\Mount & Blade II Bannerlord\Modules\CustomSpawns\bin\Win64_Shipping_Client\CustomSpawns.dll</a></li>
+<li class='module_assembly'>ShowMeTheTournaments, 1.0.0.0, Amd64, 33f80389edaaad40faecc9d3a7816d87, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\ShowMeTheTournaments\bin\Win64_Shipping_Client\ShowMeTheTournaments.dll">C:\Games\Mount & Blade II Bannerlord\Modules\ShowMeTheTournaments\bin\Win64_Shipping_Client\ShowMeTheTournaments.dll</a></li>
+<li class='module_assembly'>HighSellPrice, 1.0.0.0, MSIL, 090aa10c79b60c981954522fc8070ed4, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\HighSellPrice\bin\Win64_Shipping_Client\HighSellPrice.dll">C:\Games\Mount & Blade II Bannerlord\Modules\HighSellPrice\bin\Win64_Shipping_Client\HighSellPrice.dll</a></li>
+<li class='module_assembly'>DiplomacyFixes, 1.0.0.0, Amd64, 850887ce14645b94342ccefa59bc089f, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\DiplomacyFixes\bin\Win64_Shipping_Client\DiplomacyFixes.dll">C:\Games\Mount & Blade II Bannerlord\Modules\DiplomacyFixes\bin\Win64_Shipping_Client\DiplomacyFixes.dll</a></li>
+<li class='module_assembly'>CantRunForever, 1.0.0.0, MSIL, baaacc2dce3e3ad29ec6d91df4f2d045, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\CantRunForever\bin\Win64_Shipping_Client\CantRunForever.dll">C:\Games\Mount & Blade II Bannerlord\Modules\CantRunForever\bin\Win64_Shipping_Client\CantRunForever.dll</a></li>
+<li class='module_assembly'>SkillChanger, 1.0.0.0, MSIL, 689066f456c74c8317cac94a3685e2ec, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\SkillChanger\bin\Win64_Shipping_Client\SkillChanger.dll">C:\Games\Mount & Blade II Bannerlord\Modules\SkillChanger\bin\Win64_Shipping_Client\SkillChanger.dll</a></li>
+<li class='module_assembly'>BannerlordTweaks, 1.5.6.0, Amd64, bcbfb6b8cd4572b36e829d9452ca7f36, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\zzBannerlordTweaks\bin\Win64_Shipping_Client\BannerlordTweaks.dll">C:\Games\Mount & Blade II Bannerlord\Modules\zzBannerlordTweaks\bin\Win64_Shipping_Client\BannerlordTweaks.dll</a></li>
+<li class='sys_assembly'>mscorlib, 4.0.0.0, Amd64, b046f2e0515b6881b0b0001b4fc2a832, <a href="C:\Windows\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll">C:\Windows\Microsoft.NET\Framework64\v4.0.30319\mscorlib.dll</a></li>
+<li class='tw_assembly'>ManagedStarter, 1.0.0.0, Amd64, 25b3a63f3055d2b8e04c264516f2edd2, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\Bannerlord.exe">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\Bannerlord.exe</a></li>
+<li class='tw_assembly'>TaleWorlds.Starter.Library, 1.0.0.0, Amd64, 2ad7973d59f2fdfdeea19bb68eee5007, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Starter.Library.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Starter.Library.dll</a></li>
+<li class='sys_assembly'>netstandard, 2.0.0.0, MSIL, e631c3ae18c51e1e3a67ca435109f203, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\netstandard\v4.0_2.0.0.0__cc7b13ffcd2ddd51\netstandard.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\netstandard\v4.0_2.0.0.0__cc7b13ffcd2ddd51\netstandard.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.Library, 1.0.0.0, Amd64, c0f77f627f74c568d3b1331cf9c45da0, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Library.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Library.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.DotNet, 1.0.0.0, Amd64, 3e5aaad95d51eb172dedb7a5cdb7a0e9, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.DotNet.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.DotNet.dll</a></li>
+<li class='sys_assembly'>System.Runtime.InteropServices.RuntimeInformation, 4.0.0.0, MSIL, 47cf6cea9d8c3e7df51e0eabe2e4d964, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Runtime.InteropServices.RuntimeInformation\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Runtime.InteropServices.RuntimeInformation.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Runtime.InteropServices.RuntimeInformation\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Runtime.InteropServices.RuntimeInformation.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.MountAndBlade, 1.0.0.0, Amd64, 1ea670948ef42d97d5236b6810ba6cfd, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.dll</a></li>
+<li class='sys_assembly'>System.Core, 4.0.0.0, MSIL, d8a8c6b7793392737d3443cbb1ea57d8, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Core\v4.0_4.0.0.0__b77a5c561934e089\System.Core.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Core\v4.0_4.0.0.0__b77a5c561934e089\System.Core.dll</a></li>
+<li class='sys_assembly'>System, 4.0.0.0, MSIL, 0bb71d142e81d37d32311f8f54bf98c2, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System\v4.0_4.0.0.0__b77a5c561934e089\System.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System\v4.0_4.0.0.0__b77a5c561934e089\System.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.DotNet.AutoGenerated, 1.0.0.0, Amd64, 599d336b7d22d72647efe10f92e88242, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.DotNet.AutoGenerated.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.DotNet.AutoGenerated.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.Engine, 1.0.0.0, Amd64, c463f9285a9770751f40da2d2e534f4b, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Engine.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Engine.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.InputSystem, 1.0.0.0, Amd64, 75b235f3f8c5e44e58041a2702561d9a, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.InputSystem.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.InputSystem.dll</a></li>
+<li class='tw_assembly'>System.Numerics.Vectors, 4.1.3.0, MSIL, e9abb00cd885368e7943974f8c11e61e, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\System.Numerics.Vectors.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\System.Numerics.Vectors.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.Engine.AutoGenerated, 1.0.0.0, Amd64, 35f4c1e14b95d5f91bae1e6c41f74d85, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Engine.AutoGenerated.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Engine.AutoGenerated.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.Core, 1.0.0.0, Amd64, 1f780dbbe44a4e3e2563d9846e5c7ce3, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Core.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Core.dll</a></li>
+<li class='sys_assembly'>System.ValueTuple, 4.0.0.0, MSIL, 9bc08fc5b9dca0cecfffd0a328260bb5, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.ValueTuple\v4.0_4.0.0.0__cc7b13ffcd2ddd51\System.ValueTuple.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.ValueTuple\v4.0_4.0.0.0__cc7b13ffcd2ddd51\System.ValueTuple.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.MountAndBlade.Diamond, 1.0.0.0, Amd64, d8be90b207c10ac055e0fefe8af15021, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.Diamond.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.Diamond.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.PlayerServices, 1.0.0.0, Amd64, fddd2aa3227b1d1a26d35387c43ab63c, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.PlayerServices.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.PlayerServices.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.ObjectSystem, 1.0.0.0, Amd64, ac0672ee5cb50b94f46d587341fcea8e, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.ObjectSystem.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.ObjectSystem.dll</a></li>
+<li class='sys_assembly'>System.Xml, 4.0.0.0, MSIL, 23b1a0dfd736bc9990fb472524733270, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Xml\v4.0_4.0.0.0__b77a5c561934e089\System.Xml.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Xml\v4.0_4.0.0.0__b77a5c561934e089\System.Xml.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.Localization, 1.0.0.0, Amd64, d8b77edad4fddfa2faac9170198dd3a7, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Localization.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Localization.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.PlatformService, 1.0.0.0, Amd64, c14db4d27823461b04987937b9252a96, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.PlatformService.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.PlatformService.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.SaveSystem, 1.0.0.0, Amd64, abd4f57247e665d54b07c9cccd1e6516, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.SaveSystem.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.SaveSystem.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.Diamond.ChatSystem.Library, 1.0.0.0, Amd64, d939dc7b2cda4813ef82f966efe43d4b, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.ChatSystem.Library.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.ChatSystem.Library.dll</a></li>
+<li class='sys_assembly'>System.Security, 4.0.0.0, MSIL, 7b3663befcd4d7e633f819068a0586dc, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Security\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Security.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Security\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Security.dll</a></li>
+<li class='sys_assembly'>System.Configuration, 4.0.0.0, MSIL, 415f319d97c4a3939e39a4a2c93a6efc, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Configuration\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Configuration.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Configuration\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Configuration.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.Network, 1.0.0.0, Amd64, bbd68e0cef95c41edc37b626830bd4e3, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Network.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Network.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.MountAndBlade.AutoGenerated, 1.0.0.0, Amd64, 100b27206311bd601cba889802a119fe, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.AutoGenerated.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.AutoGenerated.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.Diamond, 1.0.0.0, Amd64, 97c710f7e850d3792c17e92793f7dc17, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.dll</a></li>
+<li class='sys_assembly'>Microsoft.VisualBasic, 10.0.0.0, MSIL, bc10b7250409ba027bb261ba94a0e30c, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\Microsoft.VisualBasic\v4.0_10.0.0.0__b03f5f7f11d50a3a\Microsoft.VisualBasic.dll</a></li>
+<li class='sys_assembly'>System.Windows.Forms, 4.0.0.0, MSIL, e912352187e9cf7a0a4791431ed93d4f, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Windows.Forms\v4.0_4.0.0.0__b77a5c561934e089\System.Windows.Forms.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Windows.Forms\v4.0_4.0.0.0__b77a5c561934e089\System.Windows.Forms.dll</a></li>
+<li class='sys_assembly'>System.Drawing, 4.0.0.0, MSIL, 6501caefb774e9f36dbca541d99d8c9c, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Drawing\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Drawing.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Drawing\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Drawing.dll</a></li>
+<li class='tw_assembly'>0Harmony, 2.0.4.0, MSIL, 49eb0f4ac96c709d82560b143f666bc8, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\0Harmony.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\0Harmony.dll</a></li>
+<li class='tw_assembly'>Newtonsoft.Json, 11.0.0.0, MSIL, 4a28a0f32bb09c6986b835af164f8c92, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\Newtonsoft.Json.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\Newtonsoft.Json.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.GauntletUI, 1.0.0.0, Amd64, 35d9cefa819057e1002425888d50eaf4, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.TwoDimension, 1.0.0.0, Amd64, 347a1e7dabee0a03b42710f7d1808b04, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.TwoDimension.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.TwoDimension.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.CampaignSystem, 1.0.0.0, Amd64, a73d9e892177e7ae1e45a919005d930f, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.CampaignSystem.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.CampaignSystem.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.MountAndBlade.ViewModelCollection, 1.0.0.0, Amd64, 1a637c24c75e41f460779f3cf8756c76, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.ViewModelCollection.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.ViewModelCollection.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.Core.ViewModelCollection, 1.0.0.0, Amd64, 956e4d97c4f8401c672524f085dcd341, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Core.ViewModelCollection.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Core.ViewModelCollection.dll</a></li>
+<li class='module_assembly'>TaleWorlds.MountAndBlade.Platform.PC, 1.0.0.0, Amd64, 5030ab938eb9fc2ec9ee8e38fe6c3f9b, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Native\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.Platform.PC.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Native\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.Platform.PC.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.BattlEye.Client, 1.0.0.0, Amd64, 2c1a7f37fd36186f63b4b21799f94a45, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.BattlEye.Client.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.BattlEye.Client.dll</a></li>
+<li class='module_assembly'>BetterSmithing.Core, 1.0.8.0, Amd64, 75dda9cf541fdbbc7e813e8a272c0f53, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.Core.dll">C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.Core.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.CampaignSystem.ViewModelCollection, 1.0.0.0, Amd64, e7239fdb75b2b14a4861d3438a316e55, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.CampaignSystem.ViewModelCollection.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.CampaignSystem.ViewModelCollection.dll</a></li>
+<li class='module_assembly'>BetterSmithing.Settings, 1.0.8.0, Amd64, 2519c092d1211ada6347bc61b8aedceb, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.Settings.dll">C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.Settings.dll</a></li>
+<li class='module_assembly'>BetterSmithing.Inputs, 1.0.8.0, Amd64, e8703c44d56f38127a378a9fdda800de, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.Inputs.dll">C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.Inputs.dll</a></li>
+<li class='module_assembly'>Newtonsoft.Json, 12.0.0.0, MSIL, 6815034209687816d8cf401877ec8133, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\BetterExceptionWindow\bin\Win64_Shipping_Client\Newtonsoft.Json.dll">C:\Games\Mount & Blade II Bannerlord\Modules\BetterExceptionWindow\bin\Win64_Shipping_Client\Newtonsoft.Json.dll</a></li>
+<li class='sys_assembly'>System.Runtime.Serialization, 4.0.0.0, MSIL, 5dbb869b0680ee93fa5b816283e57426, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Runtime.Serialization\v4.0_4.0.0.0__b77a5c561934e089\System.Runtime.Serialization.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Runtime.Serialization\v4.0_4.0.0.0__b77a5c561934e089\System.Runtime.Serialization.dll</a></li>
+<li class='sys_assembly'>System.Numerics, 4.0.0.0, MSIL, 5f5967f625b36581cd04c19cbc63030c, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Numerics\v4.0_4.0.0.0__b77a5c561934e089\System.Numerics.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Numerics\v4.0_4.0.0.0__b77a5c561934e089\System.Numerics.dll</a></li>
+<li class='unclas_assembly'>Snippets, 0.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Anonymously Hosted DynamicMethods Assembly, 0.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>HarmonySharedState, 0.0.0.0, MSIL, EMPTY</li>
+<li class='unclas_assembly'>MonoMod.Utils.Cil.ILGeneratorProxy, 0.0.0.0, MSIL, EMPTY</li>
+<li class='sys_assembly'>System.Data, 4.0.0.0, Amd64, f2244dfe1db43431f2f95953d897e218, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_64\System.Data\v4.0_4.0.0.0__b77a5c561934e089\System.Data.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_64\System.Data\v4.0_4.0.0.0__b77a5c561934e089\System.Data.dll</a></li>
+<li class='module_assembly'>Bannerlord.ButterLib.Implementation.1.5.6, 1.0.21.0, Amd64, cb94026b1f1299a5cab88b08ea02aa35, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Bannerlord.ButterLib.Implementation.1.5.6.dll">C:\Games\Mount & Blade II Bannerlord\Modules\Bannerlord.ButterLib\bin\Win64_Shipping_Client\Bannerlord.ButterLib.Implementation.1.5.6.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.GauntletUI.PrefabSystem, 1.0.0.0, Amd64, 846936676aba8cb4eac7742c78c924a2, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.PrefabSystem.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.PrefabSystem.dll</a></li>
+<li class='unclas_assembly'>MonoMod.Utils.GetManagedSizeHelper, 0.0.0.0, MSIL, EMPTY</li>
+<li class='tw_assembly'>TaleWorlds.PSAI, 1.0.0.0, Amd64, a038ac281c17d22f90bde147f95acc09, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.PSAI.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.PSAI.dll</a></li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='tw_assembly'>TaleWorlds.Engine.GauntletUI, 1.0.0.0, Amd64, a571712ccc4cf9e421bff4ce405edccb, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Engine.GauntletUI.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Engine.GauntletUI.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.GauntletUI.ExtraWidgets, 1.0.0.0, Amd64, 92d8477369fea53c42cfee5f7f117845, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.ExtraWidgets.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.ExtraWidgets.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.MountAndBlade.GauntletUI.Widgets, 1.0.0.0, Amd64, 340152ec920ccf5fd1d8f54f90f55327, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.GauntletUI.Widgets.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.GauntletUI.Widgets.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.GauntletUI.Data, 1.0.0.0, Amd64, d9b3b5914645916b350b1cda1f87f12f, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.Data.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.GauntletUI.Data.dll</a></li>
+<li class='module_assembly'>BetterSmithing.Utilities, 1.0.8.0, Amd64, 88ef577d254ea3efed17a9e1af0b9df4, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.Utilities.dll">C:\Games\Mount & Blade II Bannerlord\Modules\BetterSmithing\bin\Win64_Shipping_Client\BetterSmithing.Utilities.dll</a></li>
+<li class='sys_assembly'>System.Data.SqlXml, 4.0.0.0, MSIL, db34a51cdc667dbe7f68f1f87ba9b096, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Data.SqlXml\v4.0_4.0.0.0__b77a5c561934e089\System.Data.SqlXml.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Data.SqlXml\v4.0_4.0.0.0__b77a5c561934e089\System.Data.SqlXml.dll</a></li>
+<li class='sys_assembly'>Accessibility, 4.0.0.0, MSIL, 56eeeb4a628ae7dec89bf6daa7f7646e, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\Accessibility\v4.0_4.0.0.0__b03f5f7f11d50a3a\Accessibility.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\Accessibility\v4.0_4.0.0.0__b03f5f7f11d50a3a\Accessibility.dll</a></li>
+<li class='sys_assembly'>System.ServiceModel.Internals, 4.0.0.0, MSIL, d01549ba1c15985841431bb2be1f2398, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.ServiceModel.Internals\v4.0_4.0.0.0__31bf3856ad364e35\System.ServiceModel.Internals.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.ServiceModel.Internals\v4.0_4.0.0.0__31bf3856ad364e35\System.ServiceModel.Internals.dll</a></li>
+<li class='sys_assembly'>System.Transactions, 4.0.0.0, Amd64, 5a776842cae054d8d7c1acb7a582e3cc, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_64\System.Transactions\v4.0_4.0.0.0__b77a5c561934e089\System.Transactions.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_64\System.Transactions\v4.0_4.0.0.0__b77a5c561934e089\System.Transactions.dll</a></li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='tw_assembly'>TaleWorlds.MountAndBlade.Helpers, 1.0.0.0, Amd64, 9ff5e0639c71c4ea019324e1495f6167, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.Helpers.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.MountAndBlade.Helpers.dll</a></li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='tw_assembly'>TaleWorlds.PlatformService.GOG, 1.0.0.0, Amd64, 204051213588788705c60ca5ea22ecf4, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.PlatformService.GOG.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.PlatformService.GOG.dll</a></li>
+<li class='tw_assembly'>GalaxyCSharp, 3.133.7.0, MSIL, 09b9e02b9c677e5d3831213e298b555d, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\GalaxyCSharp.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\GalaxyCSharp.dll</a></li>
+<li class='tw_assembly'>TaleWorlds.Diamond.AccessProvider.Test, 1.0.0.0, Amd64, d2884261bb9c6048ff8539492f481a85, <a href="C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.AccessProvider.Test.dll">C:\Games\Mount & Blade II Bannerlord\bin\Win64_Shipping_Client\TaleWorlds.Diamond.AccessProvider.Test.dll</a></li>
+<li class='sys_assembly'>System.Xml.Linq, 4.0.0.0, MSIL, ab1c52f8ca1b12d566ff5aa13c6cfb91, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Xml.Linq\v4.0_4.0.0.0__b77a5c561934e089\System.Xml.Linq.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Xml.Linq\v4.0_4.0.0.0__b77a5c561934e089\System.Xml.Linq.dll</a></li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='sys_assembly'>System.Management, 4.0.0.0, MSIL, 9e7ed408141a30a7a3aa1e174834b208, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Management\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Management.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Management\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Management.dll</a></li>
+<li class='unclas_assembly'>Microsoft.GeneratedCode, 1.0.0.0, None, DYNAMIC</li>
+<li class='module_assembly'>Fasterflect, 2.1.3.0, MSIL, 7be66d62e4086029e9233ece9142f900, <a href="C:\Games\Mount & Blade II Bannerlord\Modules\DistinguishedService\bin\Win64_Shipping_Client\Fasterflect.dll">C:\Games\Mount & Blade II Bannerlord\Modules\DistinguishedService\bin\Win64_Shipping_Client\Fasterflect.dll</a></li>
+<li class='sys_assembly'>System.Configuration.Install, 4.0.0.0, MSIL, 369502997d258b8cdada7cfad9c6cd0c, <a href="C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Configuration.Install\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Configuration.Install.dll">C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Configuration.Install\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Configuration.Install.dll</a></li>
+</ul>
+
+      </div>
+    </div>
+    <div class='root-container'>
+      <h2><a href='javascript:;' class='headers' onclick='showHideById(this, "harmony-patches")'>+ Harmony Patches</a></h2>
+      <div id='harmony-patches' class='headers-container'>
+      <ul>
+<li>
+TaleWorlds.DotNet.Managed.ApplicationTick
+<ul>
+<li>
+Finalizers
+<ul>
+<li>Owner: org.calradia.admiralnelson.betterexceptionwindow; Namespace: BetterExceptionWindow.Main+OnApplicationTickCorePatchFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.Engine.ScriptComponentBehaviour.OnTick
+<ul>
+<li>
+Finalizers
+<ul>
+<li>Owner: org.calradia.admiralnelson.betterexceptionwindow; Namespace: BetterExceptionWindow.Main+OnComponentBehaviourTickPatchFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.Module.OnApplicationTick
+<ul>
+<li>
+Finalizers
+<ul>
+<li>Owner: org.calradia.admiralnelson.betterexceptionwindow; Namespace: BetterExceptionWindow.Main+OnApplicationTickPatchFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.View.Missions.MissionView.OnMissionScreenTick
+<ul>
+<li>
+Finalizers
+<ul>
+<li>Owner: org.calradia.admiralnelson.betterexceptionwindow; Namespace: BetterExceptionWindow.Main+OnMissionScreenTickPatchFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.Engine.Screens.ScreenManager.Tick
+<ul>
+<li>
+Finalizers
+<ul>
+<li>Owner: org.calradia.admiralnelson.betterexceptionwindow; Namespace: BetterExceptionWindow.Main+OnFrameTickPatchFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.Mission.Tick
+<ul>
+<li>
+Finalizers
+<ul>
+<li>Owner: org.calradia.admiralnelson.betterexceptionwindow; Namespace: BetterExceptionWindow.Main+OnTickMissionPatchFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.MissionBehaviour.OnMissionTick
+<ul>
+<li>
+Finalizers
+<ul>
+<li>Owner: org.calradia.admiralnelson.betterexceptionwindow; Namespace: BetterExceptionWindow.Main+OnMissionTickPatchFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.SaveSystem.TypeExtensions.IsContainer
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.ButterLib.SaveSystem; Namespace: Bannerlord.ButterLib.Implementation.SaveSystem.Patches.TypeExtensionsPatchIsContainerPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.Library.ViewModel.ExecuteCommand
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.mcm.ui.viewmodelpatch; Namespace: MCM.UI.Patches.ViewModelPatchExecuteCommandPatch; </li>
+
+</ul>
+</li>
+<li>
+Transpilers
+<ul>
+<li>Owner: bannerlord.uiextender.ex; Namespace: Bannerlord.UIExtenderEx.Patches.ViewModelPatchViewModel_ExecuteCommand_Transpiler; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.GauntletUI.PrefabSystem.WidgetPrefab.LoadFrom
+<ul>
+<li>
+Transpilers
+<ul>
+<li>Owner: bannerlord.uiextender.ex; Namespace: Bannerlord.UIExtenderEx.Patches.WidgetPrefabPatchWidgetPrefab_LoadFrom_Transpiler; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.GauntletUI.PrefabSystem.WidgetFactory.Initialize
+<ul>
+<li>
+Transpilers
+<ul>
+<li>Owner: bannerlord.uiextender.ex; Namespace: Bannerlord.UIExtenderEx.Patches.WidgetFactoryPatchInitializeTranspiler; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.GauntletUI.BrushFactory.get_Brushes
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: bannerlord.uiextender.ex; Namespace: Bannerlord.UIExtenderEx.ResourceManager.BrushFactoryManagerGetBrushesPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.GauntletUI.BrushFactory.GetBrush
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.uiextender.ex; Namespace: Bannerlord.UIExtenderEx.ResourceManager.BrushFactoryManagerGetBrushPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.GauntletUI.PrefabSystem.WidgetFactory.GetCustomType
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.uiextender.ex; Namespace: Bannerlord.UIExtenderEx.ResourceManager.WidgetFactoryManagerGetCustomTypePrefix; </li>
+<li>Owner: bannerlord.mcm.resourcehandler.post154; Namespace: MCM.UI.Patches.WidgetFactoryPost154PatchGetCustomTypePrefix; Index: 1; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.GauntletUI.PrefabSystem.WidgetFactory.CreateBuiltinWidget
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.uiextender.ex; Namespace: Bannerlord.UIExtenderEx.ResourceManager.WidgetFactoryManagerCreateBuiltinWidgetPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.GauntletUI.PrefabSystem.WidgetFactory.GetWidgetTypes
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.uiextender.ex; Namespace: Bannerlord.UIExtenderEx.ResourceManager.WidgetFactoryManagerGetWidgetTypesPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.GauntletUI.PrefabSystem.WidgetFactory.IsCustomType
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.uiextender.ex; Namespace: Bannerlord.UIExtenderEx.ResourceManager.WidgetFactoryManagerIsCustomTypePrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.GauntletUI.PrefabSystem.WidgetFactory.OnUnload
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.uiextender.ex; Namespace: Bannerlord.UIExtenderEx.ResourceManager.WidgetFactoryManagerOnUnloadPrefix; </li>
+<li>Owner: bannerlord.mcm.resourcehandler.post154; Namespace: MCM.UI.Patches.WidgetFactoryPost154PatchOnUnloadPrefix; Index: 1; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.TwoDimension.EditableText.GetCursorPosition
+<ul>
+<li>
+Finalizers
+<ul>
+<li>Owner: bannerlord.mcm.ui.editabletextpatch; Namespace: MCM.UI.Patches.EditableTextPatchGetCursorPosition; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.MBSubModuleBase.OnSubModuleLoad
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: butterlib.delayedsubmoduleloader.static; Namespace: Bannerlord.ButterLib.DelayedSubModule.DelayedSubModuleManagerBaseSubModuleLoadPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.MBSubModuleBase.OnSubModuleUnloaded
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: butterlib.delayedsubmoduleloader.static; Namespace: Bannerlord.ButterLib.DelayedSubModule.DelayedSubModuleManagerBaseOnSubModuleUnloadedPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.MBSubModuleBase.OnBeforeInitialModuleScreenSetAsRoot
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: butterlib.delayedsubmoduleloader.static; Namespace: Bannerlord.ButterLib.DelayedSubModule.DelayedSubModuleManagerBaseOnBeforeInitialModuleScreenSetAsRootPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.MBSubModuleBase.OnGameStart
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: butterlib.delayedsubmoduleloader.static; Namespace: Bannerlord.ButterLib.DelayedSubModule.DelayedSubModuleManagerBaseOnGameStartPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.MBSubModuleBase.OnGameEnd
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: butterlib.delayedsubmoduleloader.static; Namespace: Bannerlord.ButterLib.DelayedSubModule.DelayedSubModuleManagerBaseOnGameEndPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.SandBoxSubModule.OnSubModuleLoad
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: butterlib.delayedsubmoduleloader.sandboxsubmodule; Namespace: Bannerlord.ButterLib.DelayedSubModule.DelayedSubModuleManagerSubModuleLoadPrefix; </li>
+
+</ul>
+</li>
+<li>
+Postfixes
+<ul>
+<li>Owner: butterlib.delayedsubmoduleloader.sandboxsubmodule; Namespace: Bannerlord.ButterLib.DelayedSubModule.DelayedSubModuleManagerSubModuleLoadPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.SandBoxSubModule.OnGameStart
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: butterlib.delayedsubmoduleloader.sandboxsubmodule; Namespace: Bannerlord.ButterLib.DelayedSubModule.DelayedSubModuleManagerOnGameStartPrefix; </li>
+
+</ul>
+</li>
+<li>
+Postfixes
+<ul>
+<li>Owner: butterlib.delayedsubmoduleloader.sandboxsubmodule; Namespace: Bannerlord.ButterLib.DelayedSubModule.DelayedSubModuleManagerOnGameStartPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+MCM.IntegratedLoaderSubModule..ctor
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.mcm.implementation.mcmv3.loaderpreventer; Namespace: MCM.Implementation.MCMv3.Patches.MCMv3IntegratedLoaderSubModulePatchStopIntegratedLoaderSubModuleCtor; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.ViewModelCollection.GameOptions.OptionsVM..ctor
+<ul>
+<li>
+Transpilers
+<ul>
+<li>Owner: bannerlord.uiextender.ex.viewmodels.MCM.UI; Namespace: Bannerlord.UIExtenderEx.Patches.ViewModelWithMixinPatchViewModel_Constructor_Transpiler; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.ViewModelCollection.GameOptions.OptionsVM..ctor
+<ul>
+<li>
+Transpilers
+<ul>
+<li>Owner: bannerlord.uiextender.ex.viewmodels.MCM.UI; Namespace: Bannerlord.UIExtenderEx.Patches.ViewModelWithMixinPatchViewModel_Constructor_Transpiler; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.Library.ViewModel.OnFinalize
+<ul>
+<li>
+Transpilers
+<ul>
+<li>Owner: bannerlord.uiextender.ex.viewmodels.MCM.UI; Namespace: Bannerlord.UIExtenderEx.Patches.ViewModelWithMixinPatchViewModel_Finalize_Transpiler; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.CraftingCampaignBehavior.CreateCraftedWeapon
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.CraftingCampaignBehaviorPatchesCreateCraftedWeaponPrefix; </li>
+
+</ul>
+</li>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.CraftingCampaignBehaviorPatchesCreateCraftedWeaponPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.CraftingCampaignBehavior.DoRefinement
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.CraftingCampaignBehaviorPatchesDoRefinementPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.CraftingCampaignBehavior.DoSmelting
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.CraftingCampaignBehaviorPatchesDoSmeltingPostfix; </li>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.DoSmeltingPatchPostfix; Index: 1; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.Core.Crafting.get_CraftedWeaponName
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.CraftingPatchesCraftedWeaponNameGetterPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.Core.Crafting.InitializePreCraftedWeaponOnLoad
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.CraftingPatchesInitializePreCraftedWeaponOnLoadPostfix; </li>
+<li>Owner: mod.CraftedItemCopyright.bannerlord; Namespace: CraftedItemCopyright.CraftedItemCopyrightPatches+InitializePreCraftedWeaponOnLoadPatchPostfix; Index: 1; </li>
+
+</ul>
+</li>
+<li>
+Finalizers
+<ul>
+<li>Owner: mod.CraftedItemCopyright.bannerlord; Namespace: CraftedItemCopyright.CraftedItemCopyrightPatches+InitializePreCraftedWeaponOnLoadPatchFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Map.DefaultSmithingModel.GetRefiningFormulas
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.DefaultSmithingModelPatchesGetRefiningFormulasPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Map.DefaultSmithingModel.GetModifierTierForSmithedWeapon
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.DefaultSmithingModelPatchesGetModifierTierForSmithedWeaponPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.InventoryLogic.InitializeRosters
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: com.bannerlord.Jiros.ManageRemoteCompanionsAndParties; Namespace: ManageRemoteCompanions.PatchInventoryInitRostersPrefix; </li>
+
+</ul>
+</li>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.InventoryLogicPatchesInitializeRostersPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.GauntletUI.CraftingGauntletScreen.Initialize
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.CraftingGauntletScreenPatchesInitializePostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.GauntletUI.CraftingGauntletScreen.OnFinalize
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.CraftingGauntletScreenPatchesOnFinalizePostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.CraftingVM..ctor
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.CraftingVMPatchesConstructorPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.CraftingVM.ExecuteSwitchToCrafting
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.CraftingVMPatchesExecuteSwitchToCraftingPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.CraftingVM.ExecuteSwitchToSmelting
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.CraftingVMPatchesExecuteSwitchToSmeltingPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.CraftingVM.ExecuteSwitchToRefinement
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.CraftingVMPatchesExecuteSwitchToRefinementPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.CraftingVM.set_CurrentCraftingHero
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.CraftingVMPatchesCurrentCraftingHeroSetterPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.CraftingVM.HaveEnergy
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.CraftingVMPatchesHaveEnergyPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.Craft.Refinement.RefinementVM.OnCraftingHeroChanged
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.RefinementVMPatchesOnCraftingHeroChangedPrefix; </li>
+
+</ul>
+</li>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.RefinementVMPatchesOnCraftingHeroChangedPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.Craft.Smelting.SmeltingSortControllerVM.SortByCurrentState
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.SmeltingSortControllerVMPatchesSortByCurrentStatePrefix; </li>
+
+</ul>
+</li>
+<li>
+Finalizers
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.SmeltingSortControllerVMPatchesSortByCurrentStateFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.Craft.Smelting.SmeltingSortControllerVM.ExecuteSortByName
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.SmeltingSortControllerVMPatchesExecuteSortByNamePrefix; </li>
+
+</ul>
+</li>
+<li>
+Finalizers
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.SmeltingSortControllerVMPatchesExecuteSortByNameFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.Craft.Smelting.SmeltingSortControllerVM.ExecuteSortByYield
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.SmeltingSortControllerVMPatchesExecuteSortByYieldPrefix; </li>
+
+</ul>
+</li>
+<li>
+Finalizers
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.SmeltingSortControllerVMPatchesExecuteSortByYieldFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.Craft.Smelting.SmeltingSortControllerVM.ExecuteSortByType
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.SmeltingSortControllerVMPatchesExecuteSortByTypePrefix; </li>
+
+</ul>
+</li>
+<li>
+Finalizers
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.SmeltingSortControllerVMPatchesExecuteSortByTypeFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.Craft.Smelting.SmeltingVM.RefreshList
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.SmeltingVMPatchesRefreshListPrefix; </li>
+
+</ul>
+</li>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.RefreshListRenamePatchPostfix; Index: 1; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.Craft.Smelting.SmeltingVM.SmeltSelectedItems
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.SmeltingVMPatchesSmeltSelectedItemsPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.Craft.WeaponDesign.WeaponDesignVM.set_IsInFinalCraftingStage
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.BetterSmithing; Namespace: BetterSmithing.MainFrame.Patches.ViewModelPatches.WeaponDesignVMPatchesIsInFinalCraftingStageSetterPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.Craft.WeaponDesign.WeaponDesignVM..ctor
+<ul>
+<li>
+Transpilers
+<ul>
+<li>Owner: bannerlord.uiextender.ex.viewmodels.BetterSmithing; Namespace: Bannerlord.UIExtenderEx.Patches.ViewModelWithMixinPatchViewModel_Constructor_Transpiler; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.Craft.WeaponDesign.WeaponDesignVM.OnFinalize
+<ul>
+<li>
+Transpilers
+<ul>
+<li>Owner: bannerlord.uiextender.ex.viewmodels.BetterSmithing; Namespace: Bannerlord.UIExtenderEx.Patches.ViewModelWithMixinPatchViewModel_Finalize_Transpiler; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.TournamentGame.GetTournamentPrize
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.CraftedItemCopyright.bannerlord; Namespace: CraftedItemCopyright.CraftedItemCopyrightPatches+GetTournamentPrizePatchPostfix; </li>
+
+</ul>
+</li>
+<li>
+Finalizers
+<ul>
+<li>Owner: mod.CraftedItemCopyright.bannerlord; Namespace: CraftedItemCopyright.CraftedItemCopyrightPatches+GetTournamentPrizePatchFinalizer; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.HideoutCampaignBehavior.IsHideoutAttackableNow
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.daytimehideouts; Namespace: DaytimeHideouts.HideoutCampaignBehaviorIsHideoutAttackableNowPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.CharacterObject.UpdatePlayerCharacterBodyProperties
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.popowanobi.dcc; Namespace: CharacterCreation.Patches.CharacterObjectPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement.ClanLordItemVM.OnNamingHeroOver
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.popowanobi.dcc; Namespace: CharacterCreation.Patches.ClanLordItemVMPatchOnNamingHeroOverPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.ViewModelCollection.FaceGenPropertyVM.RefreshValues
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.popowanobi.dcc; Namespace: CharacterCreation.Patches.FaceGenPropertyVMPatchRefreshValuesPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.ViewModelCollection.FaceGenPropertyVM.set_Value
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.popowanobi.dcc; Namespace: CharacterCreation.Patches.FaceGenPropertyVMPatchSetValuePostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.Module.CreateProcessedSkinsXMLForNative
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.popowanobi.dcc; Namespace: CharacterCreation.Patches.ModuleProcessSkinsXmlPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.BodyGenerator.SaveCurrentCharacter
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.popowanobi.dcc; Namespace: CharacterCreation.Patches.BodyGeneratorPatch+SaveCurrentCharacterPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.DynamicBodyCampaignBehavior.DailyTick
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.popowanobi.dcc; Namespace: CharacterCreation.Patches.DynamicBodyPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.MissionBehaviour.OnRegisterBlow
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: DismembermentPlus; Namespace: DismembermentPlus.Patches.OnRegisterBlowPatchOnRegisterBlowPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.ViewModelCollection.HUD.KillFeed.SPKillFeedVM.OnAgentRemoved
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: DismembermentPlus; Namespace: DismembermentPlus.Patches.SPKillFeedVMPatchOnAgentRemovedPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.ViewModelCollection.HUD.KillFeed.SPKillFeedVM.OnPersonalKill
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: DismembermentPlus; Namespace: DismembermentPlus.Patches.SPKillFeedVMPatchOnPersonalKillPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.DefaultClanTierModel.GetCompanionLimitFromTier
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.distinguishedservice; Namespace: DistinguishedService.CompanionLimitPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.GameMenus.GameMenuCallbackManager.InitializeState
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: io.dallen.bannerlord.fastdialogue; Namespace: MBFastDialogue.Patches.GameMenuCallbackManagerPatch1Postfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+StoryMode.GameModels.StoryModeEncounterGameMenuModel.GetEncounterMenu
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: io.dallen.bannerlord.fastdialogue; Namespace: MBFastDialogue.Patches.StoryModeEncounterGameMenuModelPatch1Postfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.View.Map.MapScreen.HandleLeftMouseButtonClick
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.exitsettlement; Namespace: ExitSettlement.MapScreenHandleLeftMouseButtonClickPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.ClanManagement.Categories.ClanPartiesVM.OnPartySelection
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: com.bannerlord.Jiros.ManageRemoteCompanionsAndParties; Namespace: ManageRemoteCompanions.PatchClanPartiesVMPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.InventoryLogic.ResetLogic
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: com.bannerlord.Jiros.ManageRemoteCompanionsAndParties; Namespace: ManageRemoteCompanions.PatchInventoryResetPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.SPInventoryVM.get_CharacterList
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: com.bannerlord.Jiros.ManageRemoteCompanionsAndParties; Namespace: ManageRemoteCompanions.SPInventoryVMPatchv2Postfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.Mission.DecideWeaponCollisionReaction
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: xorberax.cutthrougheveryone; Namespace: CutThroughEveryone.CutThroughEveryonePatchDecideWeaponCollisionReactionPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.Mission.MeleeHitCallback
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: xorberax.cutthrougheveryone; Namespace: CutThroughEveryone.CutThroughEveryonePatchMeleeHitCallbackPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.View.Screen.MissionScreen.UpdateCamera
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: xorberax.shouldercam; Namespace: ShoulderCam.ShoulderCamPatchPrefix; </li>
+
+</ul>
+</li>
+<li>
+Postfixes
+<ul>
+<li>Owner: xorberax.shouldercam; Namespace: ShoulderCam.ShoulderCamPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.CharacterDevelopment.Managers.SkillLevelingManager.OnSurgeryApplied
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: com.Questry.CustomSpawns; Namespace: CustomSpawns.HarmonyPatches.OnSurgeryAppliedBugPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.GauntletUI.Widgets.Nameplate.SettlementNameplateEventVisualWidget.UpdateVisual
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.highsellprice; Namespace: HighSellPrice.HighSellPriceWidgetPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.ViewModelCollection.Nameplate.SettlementNameplateVM.RefreshDynamicProperties
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.highsellprice; Namespace: HighSellPrice.HighSellPriceVMPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.Actions.DeclareWarAction.Apply
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.DeclareWarActionPatchApplyPatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.Actions.DeclareWarAction.ApplyDeclareWarOverProvocation
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.DeclareWarActionPatchApplyDeclareWarOverProvocationPatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+StoryMode.Behaviors.Quests.SupportKingdomQuestBehavior+SupportKingdomQuest.MainStoryLineChosen
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.SupportKingdomQuestPatchPostFix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.DefaultClanPoliticsModel.CalculateInfluenceChange
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.DefaultClanPoliticsModelPatchCalculateInfluenceChangePatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.Actions.GiveGoldToClanAction.ApplyFromHeroToClan
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.GiveGoldToClanActionPatchApplyFromHeroToClanPatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.KingdomDecisionProposalBehavior.ConsiderWar
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.KingdomDecisionProposalBehaviorPatchConsiderWarDecisionPatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.KingdomDecisionProposalBehavior.ConsiderPeace
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.KingdomDecisionProposalBehaviorPatchConsiderPeacePatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameMenusCallbacks.menu_settlement_taken_on_init
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.GameMenusCallbacksPatchmenu_settlement_taken_on_initPatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.KingdomManagementVM.RefreshValues
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.KingdomManagementVMPatchRefreshValuesPatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.KingdomManagementVM.ExecuteClose
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.KingdomManagementVMPatchExecuteClosePatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.UrbanCharactersCampaignBehavior.RegisterEvents
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.UrbanCharactersCampaignBehaviorPatchRegisterEventsPatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.UrbanCharactersCampaignBehavior.DailyTickHero
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.UrbanCharactersCampaignBehaviorPatchHourlyTickPatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.BarterBehaviors.DiplomaticBartersBehavior.ConsiderWar
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.DiplomaticBartersBehaviorPatchConsiderWarPatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.GauntletUI.EncyclopediaData.GetEncyclopediaPageInstance
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.EncyclopediaDataPatchGetEncyclopediaPageInstancePatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.ViewModelCollection.KingdomManagement.KingdomDiplomacy.KingdomDiplomacyVM.RefreshDiplomacyList
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.diplomacyfixes; Namespace: DiplomacyFixes.Patches.KingdomDiplomacyVMPatchRefreshDiplomacyListPatch; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.CampaignBehaviorManager.OnGameLoaded
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: Bannerlord.ButterLib.ObjectSystem; Namespace: Bannerlord.ButterLib.Implementation.ObjectSystem.Patches.CampaignBehaviorManagerPatchOnGameLoadedPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.CampaignBehaviorManager.OnBeforeSave
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: Bannerlord.ButterLib.ObjectSystem; Namespace: Bannerlord.ButterLib.Implementation.ObjectSystem.Patches.CampaignBehaviorManagerPatchOnBeforeSavePostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.GauntletUI.Data.GauntletMovie.LoadMovie
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: bannerlord.mcm.resourcehandler.post154; Namespace: MCM.UI.Patches.GauntletMoviePatchLoadMovieHarmony; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.ViewModelCollection.InitialMenuVM..ctor
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: bannerlord.mcm.mainmenuscreeninjection_v4; Namespace: MCM.UI.Functionality.DefaultGameMenuScreenHandlerConstructor; Priority: 300; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.View.Map.MapScreen.GetEscapeMenuItems
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: bannerlord.mcm.escapemenuinjection_v3; Namespace: MCM.UI.Functionality.DefaultIngameMenuScreenHandlerMapScreen_GetEscapeMenuItems; Priority: 300; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.GauntletUI.GauntletMissionSingleplayerEscapeMenu.GetEscapeMenuItems
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: bannerlord.mcm.escapemenuinjection_v3; Namespace: MCM.UI.Functionality.DefaultIngameMenuScreenHandlerMissionSingleplayerEscapeMenu_GetEscapeMenuItems; Priority: 300; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.GauntletUI.GauntletMissionSingleplayerEscapeMenu.OnMissionScreenInitialize
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: bannerlord.mcm.escapemenuinjection_v3; Namespace: MCM.UI.Functionality.DefaultIngameMenuScreenHandlerOnMissionScreenInitialize; Priority: 300; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.MountAndBlade.GauntletUI.GauntletMissionEscapeMenuBase.OnMissionScreenFinalize
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: bannerlord.mcm.escapemenuinjection_v3; Namespace: MCM.UI.Functionality.DefaultIngameMenuScreenHandlerOnMissionScreenFinalize; Priority: 300; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.DefaultNotificationsCampaignBehavior.OnRelationChanged
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: HLC.TrueNobleOpinion; Namespace: TrueNobleOpinion.ApplyRelationBetweenHeroesOverridePrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Map.DefaultDiplomacyModel.GetHeroesForEffectiveRelation
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: HLC.TrueNobleOpinion; Namespace: TrueNobleOpinion.DiplomaticRelationOverridePrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.Campaign.HourlyTick
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: HLC.TruePrisoners; Namespace: TruePrisoners.PrisonerEscapeTickPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.BarterBehaviors.DiplomaticBartersBehavior.ConsiderRansomPrisoner
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: HLC.TruePrisoners; Namespace: TruePrisoners.PrisonerFreedomOverridePrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.PrisonerRecruitCampaignBehavior.AddDialogs
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: HLC.TruePrisoners; Namespace: TruePrisoners.PrisonerDialogOverridePrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.EncounterGameMenuBehavior.AddGameMenus
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: HLC.TruePrisoners; Namespace: TruePrisoners.CastleOutsideDialogOverridePostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.Barterables.JoinKingdomAsClanBarterable.GetUnitValueForFaction
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.BarterablePatchesPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.CraftingCampaignBehavior.GetMaxHeroCraftingStamina
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.GetMaxHeroCraftingStaminaPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors.CraftingCampaignBehavior.HourlyTick
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.HourlyTickPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Map.DefaultBanditDensityModel.GetPlayerMaximumTroopCountForHideoutMission
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.DefaultBanditDensityModelPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Map.DefaultBattleRewardModel.CalculateRenownGain
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.DefaultBattleRewardModelPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Map.DefaultBattleRewardModel.CalculateInfluenceGain
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.DefaultBattleRewardModelInfluencePatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.DefaultBuildingTypes.InitializeAll
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.DefaultBuildingTypesPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Party.DefaultPartySizeLimitModel.CalculateMobilePartyMemberSizeLimit
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.DefaultCaravanPartySizeLimitModelPatchPostfix; </li>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.DefaultPartySizeLimitModelPatchPostfix; Index: 1; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Party.DefaultPartySizeLimitModel.CalculateMobilePartyPrisonerSizeLimitInternal
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.DefaultPrisonerSizeLimitModelPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Party.DefaultPartyWageModel.GetTotalWage
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.DefaultPartyWageModelPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.DefaultTournamentModel.GetRenownReward
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.DefaultTournamentModelPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.Source.Missions.HideoutMissionController.IsSideDepleted
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.IsSideDepletedPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.Source.Missions.HideoutMissionController.InitializeMission
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.InitializeMissionPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.TournamentMissions.Missions.TournamentBehavior.OnPlayerWinTournament
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.OnPlayerWinTournamentPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.ViewModelCollection.Tournament.TournamentVM.RefreshBetProperties
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.RefreshBetPropertiesPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.ViewModelCollection.Tournament.TournamentVM.RefreshValues
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.RefreshValuesPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+SandBox.ViewModelCollection.Tournament.TournamentVM.get_IsBetButtonEnabled
+<ul>
+<li>
+Prefixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.IsBetButtonEnabledPatchPrefix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.Core.WeaponComponentData.get_CanHitMultipleTargets
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: mod.bannerlord.tweaks; Namespace: BannerlordTweaks.Patches.WeaponComponentDataPatchPostfix; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.DefaultGenericXpModel.GetXpMultiplier
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: SkillChanger; Namespace: SkillChanger.LevelingPatcherGetXpMultiplier; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.DefaultCharacterDevelopmentModel.get_LevelsPerAttributePoint
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: SkillChanger; Namespace: SkillChanger.LevelingPatcherLevelsPerAttributePoint; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.DefaultCharacterDevelopmentModel.get_FocusPointsPerLevel
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: SkillChanger; Namespace: SkillChanger.LevelingPatcherFocusPointsPerLevel; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Map.DefaultSmithingModel.ResearchPointsNeedForNewPart
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: SkillChanger; Namespace: SkillChanger.SmithingPatcherResearchPointsNeedForNewPart; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Map.DefaultSmithingModel.GetEnergyCostForRefining
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: SkillChanger; Namespace: SkillChanger.SmithingPatcherGetEnergyCostForRefining; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Map.DefaultSmithingModel.GetEnergyCostForSmithing
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: SkillChanger; Namespace: SkillChanger.SmithingPatcherGetEnergyCostForSmithing; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+<li>
+TaleWorlds.CampaignSystem.SandBox.GameComponents.Map.DefaultSmithingModel.GetEnergyCostForSmelting
+<ul>
+<li>
+Postfixes
+<ul>
+<li>Owner: SkillChanger; Namespace: SkillChanger.SmithingPatcherGetEnergyCostForSmelting; </li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+<br/>
+</ul>
+
+      </div>
+    </div>
+    <!--
+    <div class='root-container'>
+      <h2><a href='javascript:;' class='headers' onclick='showHideById(this, "log-files")'>+ Log Files</a></h2>
+      <div id='log-files' class='headers-container'>
+      
+      </div>
+    </div>
+    -->
+    <script>
+      function showHideById(element, id) {
+          if (document.getElementById(id).style.display === 'block') {
+              document.getElementById(id).style.display = 'none';
+              element.innerHTML = element.innerHTML.replace('-', '+');
+          } else {
+              document.getElementById(id).style.display = 'block';
+              element.innerHTML = element.innerHTML.replace('+', '-');
+          }
+      }
+      function showHideByClassName(element, className) {
+          var list = document.getElementsByClassName(className)
+          for (var i = 0; i < list.length; i++) {
+              list[i].style.display = (element.checked) ? 'none' : 'list-item';
+          }
+      }
+      function setBackgroundColorByClassName(className, color) {
+          var list = document.getElementsByClassName(className);
+          for (var i = 0; i < list.length; i++) {
+            list[i].style.backgroundColor = color;
+          }
+      }
+      function changeFontSize(fontSize) {
+          document.getElementById('exception').style.fontSize = fontSize.value;
+          document.getElementById('installed-modules').style.fontSize = fontSize.value;
+          document.getElementById('assemblies').style.fontSize = fontSize.value;
+          document.getElementById('harmony-patches').style.fontSize = fontSize.value;
+      }
+      function changeBackgroundColor(element) {
+          document.body.style.backgroundColor = (!element.checked) ? '#ececec' : 'white';
+          setBackgroundColorByClassName('headers-container', (!element.checked) ? 'white' : 'white');
+          setBackgroundColorByClassName('modules-container', (!element.checked) ? '#ffffe0' : 'white');
+          setBackgroundColorByClassName('submodules-container', (!element.checked) ? '#f8f8e7' : 'white');
+          setBackgroundColorByClassName('modules-official-container', (!element.checked) ? '#f4fcdc' : 'white');
+          setBackgroundColorByClassName('submodules-official-container', (!element.checked) ? '#f0f4e4' : 'white');
+          setBackgroundColorByClassName('modules-invalid-container', (!element.checked) ? '#ffefd5' : 'white');
+          setBackgroundColorByClassName('submodules-invalid-container', (!element.checked) ? '#f5ecdf' : 'white');
+      }
+    </script>
+  </body>
+</html>

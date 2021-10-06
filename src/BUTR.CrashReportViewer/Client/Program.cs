@@ -38,6 +38,11 @@ namespace BUTR.CrashReportViewer.Client
                         {"User-Agent", userAgent}
                     }
                 });
+                services.AddHttpClient("Internal", (sp, client) =>
+                {
+                    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+                    client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+                });
                 services.AddHttpClient("Backend", (sp, client) =>
                 {
                     var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;

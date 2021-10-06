@@ -4,6 +4,7 @@ using BUTR.CrashReportViewer.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace BUTR.CrashReportViewer.Client.Helpers
@@ -12,8 +13,9 @@ namespace BUTR.CrashReportViewer.Client.Helpers
     {
         private readonly struct DemoUserState
         {
-            public static async Task<DemoUserState> CreateAsync()
+            public static async Task<DemoUserState> CreateAsync(IHttpClientFactory factory)
             {
+                var client = factory.CreateClient("Internal");
                 const string baseUrl = "https://crash.butr.dev/report/";
                 return new(
                     new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true),
@@ -26,11 +28,12 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                     },
                     new[]
                     {
-                        CrashReportParser.Parse("FC58E239", DemoData.ReportFC58E239),
-                        CrashReportParser.Parse("7AA28856", DemoData.Report7AA28856),
-                        CrashReportParser.Parse("4EFF0B0A", DemoData.Report4EFF0B0A),
-                        CrashReportParser.Parse("3DF57593", DemoData.Report3DF57593),
-                    }.Select(cr => new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html")).ToList()
+                        CrashReportParser.Parse("FC58E239", await client.GetStringAsync("reports/FC58E239.html")),
+                        CrashReportParser.Parse("7AA28856", await client.GetStringAsync("reports/7AA28856.html")),
+                        CrashReportParser.Parse("4EFF0B0A", await client.GetStringAsync("reports/4EFF0B0A.html")),
+                        CrashReportParser.Parse("3DF57593", await client.GetStringAsync("reports/3DF57593.html")),
+                    }.Select(cr =>
+                        new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html")).ToList()
                 );
             }
 
@@ -47,7 +50,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             }
         }
 
-        public static async Task<DemoUser> CreateAsync() => new(await DemoUserState.CreateAsync());
+        public static async Task<DemoUser> CreateAsync(IHttpClientFactory factory) => new(await DemoUserState.CreateAsync(factory));
 
 
         public ProfileModel Profile => _state.Profile;
