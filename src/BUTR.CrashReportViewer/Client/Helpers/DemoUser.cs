@@ -18,11 +18,10 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 var crm = new List<CrashReportModel>();
                 try
                 {
-                    const string baseUrl = "https://crash.butr.dev/report/";
-                    var client = factory.CreateClient("CrashReporter");
+                    var client = factory.CreateClient("CrashReporterDemo");
                     var reports = new[] { "FC58E239", "7AA28856", "4EFF0B0A", "3DF57593" };
                     var crs = await Task.WhenAll(reports.Select(r => CrashReportParser.ParseUrl(client, r)));
-                    crm = crs.Select(cr => new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html")).ToList();
+                    crm = crs.Select(cr => new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{client.BaseAddress}{cr.Id2}.html")).ToList();
                 }
                 catch (Exception) { }
 

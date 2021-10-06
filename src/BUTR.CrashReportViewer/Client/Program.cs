@@ -50,6 +50,12 @@ namespace BUTR.CrashReportViewer.Client
                     client.BaseAddress = new Uri($"{backendOptions.Endpoint}/Reports/");
                     client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 });
+                services.AddHttpClient("CrashReporterDemo", (sp, client) =>
+                {
+                    var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
+                    client.BaseAddress = new Uri("https://crash.butr.dev/report/");
+                    client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+                });
 
                 services.AddScoped<BackendAPIClient>();
 
