@@ -15,8 +15,18 @@ namespace BUTR.CrashReportViewer.Client.Helpers
         {
             public static async Task<DemoUserState> CreateAsync(IHttpClientFactory factory)
             {
-                var client = factory.CreateClient("Internal");
-                const string baseUrl = "https://crash.butr.dev/report/";
+                var crm = new List<CrashReportModel>();
+                try
+                {
+                    const string baseUrl = "https://crash.butr.dev/report/";
+                    var client = factory.CreateClient("InternalReports");
+                    var reports = new[] { "FC58E239", "7AA28856", "4EFF0B0A", "3DF57593" };
+                    var crs = await Task.WhenAll(reports.Select(r => CrashReportParser.ParseUrl(client, r)));
+                    crm = crs.Select(cr => new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html")).ToList();
+                }
+                catch (Exception) { }
+
+
                 return new(
                     new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true),
                     new()
@@ -26,14 +36,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                         new("Demo Mod 3", "demo", 3),
                         new("Demo Mod 4", "demo", 4),
                     },
-                    new[]
-                    {
-                        CrashReportParser.Parse("FC58E239", await client.GetStringAsync("reports/FC58E239.html")),
-                        CrashReportParser.Parse("7AA28856", await client.GetStringAsync("reports/7AA28856.html")),
-                        CrashReportParser.Parse("4EFF0B0A", await client.GetStringAsync("reports/4EFF0B0A.html")),
-                        CrashReportParser.Parse("3DF57593", await client.GetStringAsync("reports/3DF57593.html")),
-                    }.Select(cr =>
-                        new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html")).ToList()
+                    crm
                 );
             }
 
