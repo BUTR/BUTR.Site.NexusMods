@@ -28,7 +28,7 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     steps:
     - name: Setup
-      uses: butr/actions-common-setup@v1.2
+      uses: butr/actions-common-setup@v1.3
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
 
