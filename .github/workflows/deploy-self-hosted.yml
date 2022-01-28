@@ -17,10 +17,10 @@ jobs:
     - name: multiple command
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        port: ${{ secrets.PORT }}
+        host: ${{ secrets.HOST_2 }}
+        username: ${{ secrets.USERNAME_2 }}
+        password: ${{ secrets.PASSWORD_2 }}
+        port: ${{ secrets.PORT_2 }}
         script: |
           docker image pull ghcr.io/butr/crashreportviewer;
           docker stack deploy --prune --resolve-image always -c /deploy/crashreporter/docker-compose.yml crashreporter;
