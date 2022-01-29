@@ -4,6 +4,7 @@ using Blazored.SessionStorage;
 using BUTR.CrashReportViewer.Client.Extensions;
 using BUTR.CrashReportViewer.Client.Helpers;
 using BUTR.CrashReportViewer.Client.Options;
+using BUTR.CrashReportViewer.Shared.Helpers;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -56,6 +57,7 @@ namespace BUTR.CrashReportViewer.Client
                     client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 });
 
+                services.AddSingleton<DefaultJsonSerializer>();
                 services.AddScoped<BackendAPIClient>();
 
                 services.AddBlazoredLocalStorage();
