@@ -12,8 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: 'self-hosted-backend'
-      #url: 'https://crashreporter-khadas.aragas.org'
-      url: 'https://crashreporter-vps.aragas.org'
+      url: 'https://vps-crashreporter.aragas.org'
     steps:
     - name: multiple command
       uses: appleboy/ssh-action@master
