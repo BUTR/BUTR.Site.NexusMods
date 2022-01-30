@@ -5,6 +5,7 @@ using BUTR.CrashReportViewer.Client.Extensions;
 using BUTR.CrashReportViewer.Client.Helpers;
 using BUTR.CrashReportViewer.Client.Options;
 using BUTR.CrashReportViewer.Shared.Helpers;
+using BUTR.NexusMods.Core.Services;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -14,12 +15,25 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http;
 using System.Reflection;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Unicode;
 using System.Threading.Tasks;
 
 namespace BUTR.CrashReportViewer.Client
 {
     public class Program
     {
+        private static JsonSerializerOptions Configure(JsonSerializerOptions opt)
+        {
+            opt.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            opt.PropertyNameCaseInsensitive = true;
+            opt.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
+            opt.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            return opt;
+        }
+
         public static Task Main(string[] args) => CreateHostBuilder(args).Build().RunAsync();
 
         public static WebAssemblyHostBuilder CreateHostBuilder(string[] args) => WebAssemblyHostBuilder
@@ -56,6 +70,14 @@ namespace BUTR.CrashReportViewer.Client
                     client.BaseAddress = new Uri($"{backendOptions.Endpoint}/Reports/");
                     client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 });
+
+                services.Configure<JsonSerializerOptions>(opt => Configure(opt));
+
+                services.AddScoped<DefaultNexusModsProvider>();
+                services.AddScoped<IAuthenticationProvider, DefaultNexusModsProvider>(sp => sp.GetRequiredService<DefaultNexusModsProvider>());
+                services.AddScoped<IProfileProvider, DefaultNexusModsProvider>(sp => sp.GetRequiredService<DefaultNexusModsProvider>());
+                services.AddScoped<ITokenContainer, LocalStorageTokenContainer>();
+
 
                 services.AddSingleton<DefaultJsonSerializer>();
                 services.AddScoped<BackendAPIClient>();
