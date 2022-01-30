@@ -91,7 +91,6 @@
 </div>
 
 @code {
-    private string _token = default!;
 
     private List<CrashReportModel> _reports = default!;
     private int _pageNumber = 1;
@@ -99,14 +98,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _token = await _localStorage.GetItemAsStringAsync("token");
         await GetCrashReports();
     }
 
     private async void OnStatusChange(CrashReportModel report, CrashReportStatus value)
     {
         var updatedCrashReport = report with { Status = value };
-        if (await _backendApiClient.UpdateCrashReport(_token, updatedCrashReport))
+        if (await _backendApiClient.UpdateCrashReport(updatedCrashReport))
         {
             report.Status = value;
             StateHasChanged();
@@ -116,7 +114,7 @@
     private async void OnCommentChange(CrashReportModel report, string? value)
     {
         var updatedCrashReport = report with { Comment = value ?? string.Empty };
-        if (await _backendApiClient.UpdateCrashReport(_token, updatedCrashReport))
+        if (await _backendApiClient.UpdateCrashReport(updatedCrashReport))
         {
             report.Comment = value ?? string.Empty;
             StateHasChanged();
@@ -135,7 +133,7 @@
 
     private async Task GetCrashReports()
     {
-        var response = await _backendApiClient.GetCrashReports(_token, _pageNumber);
+        var response = await _backendApiClient.GetCrashReports(_pageNumber);
         if (response is not null)
         {
             _reports = response.Items.ToList();

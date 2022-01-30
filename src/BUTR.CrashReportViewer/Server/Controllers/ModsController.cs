@@ -5,6 +5,8 @@ using BUTR.NexusMods.Server.Core.Helpers;
 using BUTR.NexusMods.Shared.Helpers;
 using BUTR.NexusMods.Shared.Models.API;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 

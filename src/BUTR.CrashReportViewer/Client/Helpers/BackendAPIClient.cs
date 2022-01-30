@@ -29,7 +29,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
         }
 
-        public async Task<PagingResponse<ModModel>?> GetMods(string token, int page, CancellationToken ct = default)
+        public async Task<PagingResponse<ModModel>?> GetMods(int page, CancellationToken ct = default)
         {
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
@@ -48,6 +48,12 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 };
             }
 
+            var token = await _tokenContainer.GetTokenAsync(ct);
+            if (token is null)
+            {
+                return null;
+            }
+
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"Mods?page={page}&pageSize={10}");
@@ -63,12 +69,18 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             }
         }
 
-        public async Task<bool> RefreshMod(string token, string gameDomain, string modId, CancellationToken ct = default)
+        public async Task<bool> RefreshMod(string gameDomain, string modId, CancellationToken ct = default)
         {
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
                 return true;
+            }
+
+            var token = await _tokenContainer.GetTokenAsync(ct);
+            if (token is null)
+            {
+                return false;
             }
 
             try
@@ -86,7 +98,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             }
         }
 
-        public async Task<bool> LinkMod(string token, string gameDomain, string modId, CancellationToken ct = default)
+        public async Task<bool> LinkMod(string gameDomain, string modId, CancellationToken ct = default)
         {
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
@@ -98,6 +110,12 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                     return true;
                 }
 
+                return false;
+            }
+
+            var token = await _tokenContainer.GetTokenAsync(ct);
+            if (token is null)
+            {
                 return false;
             }
 
@@ -116,7 +134,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             }
         }
 
-        public async Task<bool> UnlinkMod(string token, string gameDomain, string modId, CancellationToken ct = default)
+        public async Task<bool> UnlinkMod(string gameDomain, string modId, CancellationToken ct = default)
         {
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
@@ -125,6 +143,12 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 if (_demoUser.Mods.Find(m => m.GameDomain == gameDomain && m.ModId.ToString() == modId) is { } mod)
                     return _demoUser.Mods.Remove(mod);
 
+                return false;
+            }
+
+            var token = await _tokenContainer.GetTokenAsync(ct);
+            if (token is null)
+            {
                 return false;
             }
 
@@ -143,7 +167,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             }
         }
 
-        public async Task<PagingResponse<CrashReportModel>?> GetCrashReports(string token, int page, CancellationToken ct = default)
+        public async Task<PagingResponse<CrashReportModel>?> GetCrashReports(int page, CancellationToken ct = default)
         {
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
@@ -162,6 +186,12 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 };
             }
 
+            var token = await _tokenContainer.GetTokenAsync(ct);
+            if (token is null)
+            {
+                return null;
+            }
+
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"CrashReports?page={page}&pageSize={10}");
@@ -177,12 +207,18 @@ namespace BUTR.CrashReportViewer.Client.Helpers
             }
         }
 
-        public async Task<bool> UpdateCrashReport(string token, CrashReportModel crashReport, CancellationToken ct = default)
+        public async Task<bool> UpdateCrashReport(CrashReportModel crashReport, CancellationToken ct = default)
         {
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
                 return true;
+            }
+
+            var token = await _tokenContainer.GetTokenAsync(ct);
+            if (token is null)
+            {
+                return false;
             }
 
             try

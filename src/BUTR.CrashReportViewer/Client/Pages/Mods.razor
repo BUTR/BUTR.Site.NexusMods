@@ -1,7 +1,6 @@
 ﻿@attribute [Authorize]
 @page "/mods"
 @inject NavigationManager _navigationManager
-@inject ILocalStorageService _localStorage
 @inject IHttpClientFactory _clientFactory
 @inject BackendAPIClient _backendApiClient
 
@@ -83,8 +82,7 @@
 </div>
 
 @code {
-
-    private string _token = default!;
+    
     private bool _isLoading;
 
     private LinkModModel _model = new();
@@ -94,7 +92,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _token = await _localStorage.GetItemAsStringAsync("token");
         await GetMods();
     }
 
@@ -119,7 +116,7 @@
             if (!ModsUtils.TryParse(model.ModUrl, out var gameDomain, out var modId))
                 return false;
 
-            return await _backendApiClient.LinkMod(_token, gameDomain, modId);
+            return await _backendApiClient.LinkMod(gameDomain, modId);
         }
         catch (Exception)
         {
@@ -129,7 +126,7 @@
 
     private async void OnRefreshMod(ModModel mod)
     {
-        if (await _backendApiClient.RefreshMod(_token, mod.GameDomain, mod.ModId.ToString()))
+        if (await _backendApiClient.RefreshMod(mod.GameDomain, mod.ModId.ToString()))
         {
             await GetMods();
             StateHasChanged();
@@ -149,7 +146,7 @@
     {
         try
         {
-            return await _backendApiClient.UnlinkMod(_token, model.GameDomain, model.ModId.ToString());
+            return await _backendApiClient.UnlinkMod(model.GameDomain, model.ModId.ToString());
         }
         catch (Exception)
         {
@@ -166,7 +163,7 @@
 
     private async Task GetMods()
     {
-        var response = await _backendApiClient.GetMods(_token, _pageNumber);
+        var response = await _backendApiClient.GetMods(_pageNumber);
         if (response is not null)
         {
             _mods = response.Items.ToList();
