@@ -1,13 +1,25 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31229.75
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BUTR.CrashReportViewer.Server", "BUTR.CrashReportViewer\Server\BUTR.CrashReportViewer.Server.csproj", "{7D4C0C44-5059-4ED5-9304-FF0A573EE023}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BUTR.CrashReportViewer.Client", "BUTR.CrashReportViewer\Client\BUTR.CrashReportViewer.Client.csproj", "{F076380C-E4D2-4ACB-821A-CB0ACE21E9CF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BUTR.CrashReportViewer.Shared", "BUTR.CrashReportViewer\Shared\BUTR.CrashReportViewer.Shared.csproj", "{273F664A-847C-429B-8A7D-FA83FCE8C2E1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{49388931-B9B2-47AE-98F2-8701623F1F1E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C161254D-1B6E-48DE-9F26-EFC403F74F11}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{08B0089B-DF7C-4F13-841A-0277239D5CEE}"
+	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\backend-docker.yml = ..\.github\workflows\backend-docker.yml
+		..\.github\workflows\deploy-self-hosted.yml = ..\.github\workflows\deploy-self-hosted.yml
+		..\.github\workflows\dotnet-format-daily.yml = ..\.github\workflows\dotnet-format-daily.yml
+		..\.github\workflows\frontend.yml = ..\.github\workflows\frontend.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +42,13 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7D4C0C44-5059-4ED5-9304-FF0A573EE023} = {C161254D-1B6E-48DE-9F26-EFC403F74F11}
+		{F076380C-E4D2-4ACB-821A-CB0ACE21E9CF} = {C161254D-1B6E-48DE-9F26-EFC403F74F11}
+		{273F664A-847C-429B-8A7D-FA83FCE8C2E1} = {C161254D-1B6E-48DE-9F26-EFC403F74F11}
+		{C161254D-1B6E-48DE-9F26-EFC403F74F11} = {49388931-B9B2-47AE-98F2-8701623F1F1E}
+		{08B0089B-DF7C-4F13-841A-0277239D5CEE} = {49388931-B9B2-47AE-98F2-8701623F1F1E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5CC1A63D-E570-4BEB-8282-0BD9B24B5C5C}

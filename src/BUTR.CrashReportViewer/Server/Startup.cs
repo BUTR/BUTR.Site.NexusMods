@@ -1,4 +1,5 @@
 ﻿using BUTR.CrashReportViewer.Server.Helpers;
+using BUTR.CrashReportViewer.Server.Services;
 using BUTR.NexusMods.Server.Core.Extensions;
 using BUTR.NexusMods.Server.Core.Options;
 
@@ -63,6 +64,8 @@ namespace BUTR.CrashReportViewer.Server
             services.AddSingleton<SqlHelperMods>();
             services.AddSingleton<SqlHelperCrashReports>();
             services.AddSingleton<SqlHelperUserCrashReports>();
+
+            services.AddHostedService<SqlService>();
 
             services.AddServerCore(Configuration, JwtSectionName);
 

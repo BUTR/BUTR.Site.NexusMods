@@ -58,7 +58,7 @@ jobs:
     - name: Image digest
       run: echo ${{ steps.docker_build.outputs.digest }}
 
-    - name: Trigger Aragas.QServer.Hosting
+    - name: Trigger deploy-self-hosted.yml
       uses: peter-evans/repository-dispatch@v1
       with:
         token: ${{ secrets.TOKEN_GPR }}
