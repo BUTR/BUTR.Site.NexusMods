@@ -12,14 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: 'self-hosted-backend'
-      url: 'https://crashreporter-khadas.aragas.org'
+      url: 'https://vps-crashreporter.aragas.org'
     steps:
     - name: multiple command
       uses: appleboy/ssh-action@master
       with:
+        #host: ${{ secrets.HOST }}
         host: ${{ secrets.HOST_2 }}
+        #username: ${{ secrets.USERNAME }}
         username: ${{ secrets.USERNAME_2 }}
+        #password: ${{ secrets.PASSWORD }}
         password: ${{ secrets.PASSWORD_2 }}
+        #port: ${{ secrets.PORT }}
         port: ${{ secrets.PORT_2 }}
         script: |
           docker image pull ghcr.io/butr/crashreportviewer;
