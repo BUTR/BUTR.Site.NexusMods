@@ -1,21 +1,21 @@
 ﻿using BUTR.CrashReportViewer.Server.Helpers;
-using BUTR.CrashReportViewer.Server.Options;
+using BUTR.NexusMods.Server.Core.Extensions;
+using BUTR.NexusMods.Server.Core.Options;
 
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
 
 using System;
 using System.Reflection;
-using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Unicode;
 using System.Threading;
 
 namespace BUTR.CrashReportViewer.Server
@@ -24,6 +24,15 @@ namespace BUTR.CrashReportViewer.Server
     {
         private const string JwtSectionName = "Jwt";
         private const string AuthenticationSectionName = "Authentication";
+
+        private static JsonSerializerOptions Configure(JsonSerializerOptions opt)
+        {
+            opt.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            opt.PropertyNameCaseInsensitive = true;
+            opt.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
+            opt.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            return opt;
+        }
 
         public IConfiguration Configuration { get; }
 
@@ -50,36 +59,14 @@ namespace BUTR.CrashReportViewer.Server
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
 
-            services.AddScoped<NexusModsAPIClient>();
             services.AddSingleton<SqlHelperInit>();
             services.AddSingleton<SqlHelperMods>();
             services.AddSingleton<SqlHelperCrashReports>();
             services.AddSingleton<SqlHelperUserCrashReports>();
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    var jwtOptions = Configuration.GetSection(JwtSectionName).Get<JwtOptions>();
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = false,
-                        ValidateActor = false,
-                        ValidateTokenReplay = false,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SignKey)),
-                        TokenDecryptionKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.EncryptionKey)),
-                        ClockSkew = TimeSpan.FromMinutes(5),
-                    };
-                });
+            services.AddServerCore(Configuration, JwtSectionName);
 
-            services.AddControllers().AddJsonOptions(opts =>
-            {
-                opts.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-                opts.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-            });
+            services.AddControllers().AddServerCore().AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
             services.AddRazorPages();
 
             services.AddCors(options =>

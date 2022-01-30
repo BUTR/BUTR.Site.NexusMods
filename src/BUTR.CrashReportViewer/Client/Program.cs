@@ -4,8 +4,7 @@ using Blazored.SessionStorage;
 using BUTR.CrashReportViewer.Client.Extensions;
 using BUTR.CrashReportViewer.Client.Helpers;
 using BUTR.CrashReportViewer.Client.Options;
-using BUTR.CrashReportViewer.Shared.Helpers;
-using BUTR.NexusMods.Core.Services;
+using BUTR.NexusMods.Blazor.Core.Services;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -78,8 +77,6 @@ namespace BUTR.CrashReportViewer.Client
                 services.AddScoped<IProfileProvider, DefaultNexusModsProvider>(sp => sp.GetRequiredService<DefaultNexusModsProvider>());
                 services.AddScoped<ITokenContainer, LocalStorageTokenContainer>();
 
-
-                services.AddSingleton<DefaultJsonSerializer>();
                 services.AddScoped<BackendAPIClient>();
 
                 services.AddBlazoredLocalStorage();

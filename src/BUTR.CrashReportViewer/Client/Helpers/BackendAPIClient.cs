@@ -1,16 +1,15 @@
 ﻿using BUTR.CrashReportViewer.Shared.Models;
-using BUTR.CrashReportViewer.Shared.Models.API;
-using BUTR.NexusMods.Core.Services;
+using BUTR.NexusMods.Blazor.Core.Services;
+using BUTR.NexusMods.Shared.Models.API;
+
+using Microsoft.Extensions.Options;
 
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,22 +17,16 @@ namespace BUTR.CrashReportViewer.Client.Helpers
 {
     public class BackendAPIClient
     {
-        private static JsonSerializerOptions JsonSerializerOptions { get; } = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true,
-            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
-        };
-
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ITokenContainer _tokenContainer;
+        private readonly JsonSerializerOptions _jsonSerializerOptions;
         private DemoUser? _demoUser;
 
-        public BackendAPIClient(IHttpClientFactory httpClientFactory, ITokenContainer tokenContainer)
+        public BackendAPIClient(IHttpClientFactory httpClientFactory, ITokenContainer tokenContainer, IOptions<JsonSerializerOptions> jsonSerializerOptions)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
+            _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
         }
 
         public async Task<PagingResponse<ModModel>?> GetMods(string token, int page, CancellationToken ct = default)
@@ -62,7 +55,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 var httpClient = _httpClientFactory.CreateClient("Backend");
                 var response = await httpClient.SendAsync(request, ct);
-                return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PagingResponse<ModModel>>(JsonSerializerOptions, ct) : null;
+                return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PagingResponse<ModModel>>(_jsonSerializerOptions, ct) : null;
             }
             catch (Exception)
             {
@@ -176,7 +169,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 var httpClient = _httpClientFactory.CreateClient("Backend");
                 var response = await httpClient.SendAsync(request, ct);
-                return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PagingResponse<CrashReportModel>>(JsonSerializerOptions, ct) : null;
+                return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PagingResponse<CrashReportModel>>(_jsonSerializerOptions, ct) : null;
             }
             catch (Exception)
             {
@@ -197,7 +190,7 @@ namespace BUTR.CrashReportViewer.Client.Helpers
                 var request = new HttpRequestMessage(HttpMethod.Post, "CrashReports/Update");
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                request.Content = new StringContent(JsonSerializer.Serialize(crashReport, JsonSerializerOptions), Encoding.UTF8, "application/json");
+                request.Content = new StringContent(JsonSerializer.Serialize(crashReport, _jsonSerializerOptions), Encoding.UTF8, "application/json");
                 var httpClient = _httpClientFactory.CreateClient("Backend");
                 var response = await httpClient.SendAsync(request, ct);
                 return response.IsSuccessStatusCode;

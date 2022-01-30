@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BUTR.NexusMods.Server.Core" Version="1.0.0.21" />
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="3.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.1" />
     <PackageReference Include="Npgsql" Version="6.0.3" />

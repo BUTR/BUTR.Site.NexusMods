@@ -1,5 +1,6 @@
 ﻿using BUTR.CrashReportViewer.Shared.Helpers;
 using BUTR.CrashReportViewer.Shared.Models;
+using BUTR.NexusMods.Shared.Models;
 
 using System;
 using System.Collections.Generic;

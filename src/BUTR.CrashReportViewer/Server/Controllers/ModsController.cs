@@ -1,11 +1,10 @@
 ﻿using BUTR.CrashReportViewer.Server.Helpers;
 using BUTR.CrashReportViewer.Server.Models.Database;
-using BUTR.CrashReportViewer.Shared.Helpers;
 using BUTR.CrashReportViewer.Shared.Models;
-using BUTR.CrashReportViewer.Shared.Models.API;
+using BUTR.NexusMods.Server.Core.Helpers;
+using BUTR.NexusMods.Shared.Helpers;
+using BUTR.NexusMods.Shared.Models.API;
 
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
