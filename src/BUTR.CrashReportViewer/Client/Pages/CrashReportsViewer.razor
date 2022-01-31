@@ -5,7 +5,7 @@
 @inject BackendAPIClient _backendApiClient
 @inject IJSRuntime _jsRuntime;
 
-<div class="card">
+<div class="card overflow-auto">
     <h4 class="card-header">Crash Reports</h4>
     <div class="card-body">
         @if (_reports is null)
