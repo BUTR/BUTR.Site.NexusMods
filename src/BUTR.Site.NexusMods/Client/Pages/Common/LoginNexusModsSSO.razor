@@ -1,0 +1,183 @@
+﻿@page "/login-nexusmods-sso"
+
+@implements IAsyncDisposable
+
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jsRuntime;
+@inject ISessionStorageService _sessionStorage
+@inject IAuthenticationProvider _authenticationProvider
+@inject IOptions<JsonSerializerOptions> _jsonSerializerOptions
+@inject INotificationService _notificationService
+
+<Container>
+    <Row Flex="Flex.JustifyContent.Center">
+        <Column ColumnSize="ColumnSize.Is6.OnDesktop.IsAuto.OnMobile">
+            <Card Margin="Margin.Is5.OnDesktop.Is3.OnMobile" Border="Border.Is0.Rounded" Shadow="Shadow.Small">
+                <CardHeader>
+                    <CardTitle Size="4" Margin="Margin.Is0">NexusMods SSO Log In</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <Steps SelectedStep="@_selectedStep" SelectedStepChanged="@OnSelectedStepChanged">
+                        <Items>
+                            <Step Name="InitializingSSO" Completed="_stepIndex > 0" @onclick="_ => null!">
+                                <Text Style="@TextStyle" >Initializing SSO</Text>
+                            </Step>
+                            <Step Name="ButtonClick" Completed="_stepIndex > 1" @onclick="_ => null!">
+                                <Text Style="@TextStyle" >Open NexusMods</Text>
+                            </Step>
+                            <Step Name="Authorise" Completed="_stepIndex > 2" @onclick="_ => null!">
+                                <Text Style="@TextStyle" >Allow in NexusMods</Text>
+                            </Step>
+                            <Step Name="Finalizing" Completed="_stepIndex > 3" @onclick="_ => null!">
+                                <Marker>
+                                    <Icon Name="IconName.Flag" />
+                                </Marker>
+                                <Caption>
+                                    <Text Style="@TextStyle" >Finalizing</Text>
+                                </Caption>
+                            </Step>
+                        </Items>
+                        <Content>
+                            <StepPanel Name="InitializingSSO">
+                                Initializing NexusMods SSO...
+                            </StepPanel>
+                            <StepPanel Name="ButtonClick">
+                                <Button Block="true" Color="Color.Primary" Type="@ButtonType.Submit" Clicked="@OpenUrl" PreventDefaultOnSubmit="true">
+                                    Open NexusMods Site
+                                </Button>
+                            </StepPanel>
+                            <StepPanel Name="Authorise">
+                                Click the yellow 'Authorise' button on NexusMods!
+                            </StepPanel>
+                            <StepPanel Name="Finalizing">
+                                Final authorization...
+                            </StepPanel>
+                        </Content>
+                    </Steps>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+@code {
+
+    private static string TextStyle = $"word-break: normal;";
+
+    private record SSORequest([property: JsonPropertyName("id")] Guid Id, [property: JsonPropertyName("token")] string? Token, [property: JsonPropertyName("protocol")] int Protocol);
+    private record SSOResponse([property: JsonPropertyName("success")] bool Success, [property: JsonPropertyName("data")] SSOResponseData? Data);
+    private record SSOResponseData([property: JsonPropertyName("connection_token")] string? ConnectionToken, [property: JsonPropertyName("api_key")] string? ApiKey);
+
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private readonly ClientWebSocket _client = new();
+    private Task _receiveTask = default!;
+    private string? _url;
+
+    private string _selectedStep = "InitializingSSO";
+    private int _stepIndex;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await _sessionStorage.ContainKeyAsync("sso_uuid"))
+            await _sessionStorage.SetItemAsync("sso_uuid", Guid.NewGuid());
+
+        var uuid = await _sessionStorage.GetItemAsync<Guid>("sso_uuid");
+        var token = await _sessionStorage.GetItemAsync<string>("sso_token");
+
+        var request = JsonSerializer.SerializeToUtf8Bytes(new SSORequest(uuid, token, 2), _jsonSerializerOptions?.Value ?? new());
+
+        _selectedStep = "InitializingSSO";
+        StateHasChanged();
+        await _client.ConnectAsync(new Uri("wss://sso.nexusmods.com"), _cancellationTokenSource.Token);
+        _receiveTask = ReceiveLoop();
+        await _client.SendAsync(request, WebSocketMessageType.Text, true, _cancellationTokenSource.Token);
+    }
+
+    async Task ReceiveLoop()
+    {
+        var buffer = new ArraySegment<byte>(new byte[1024]);
+        var sb = new StringBuilder();
+        while (!_cancellationTokenSource.IsCancellationRequested)
+        {
+            var received = await _client.ReceiveAsync(buffer, _cancellationTokenSource.Token);
+            if (received.MessageType == WebSocketMessageType.Close)
+                break;
+
+            sb.Append(Encoding.UTF8.GetString(buffer.AsSpan(0, received.Count)));
+            if (received.EndOfMessage)
+            {
+                var text = sb.ToString();
+                sb.Clear();
+
+                var response = JsonSerializer.Deserialize<SSOResponse?>(text, _jsonSerializerOptions?.Value ?? new());
+                if (response is not null && response.Success && response.Data is not null)
+                {
+                    if (response.Data.ConnectionToken is not null)
+                    {
+                        await _sessionStorage.SetItemAsync("sso_token", response.Data.ConnectionToken);
+                        var uuid = await _sessionStorage.GetItemAsync<Guid>("sso_uuid");
+                        var applicationSlug = "vortex";
+                        _url = $"https://www.nexusmods.com/sso?id={uuid}&application={applicationSlug}";
+                        _selectedStep = "ButtonClick";
+                        StateHasChanged();
+                    }
+
+                    if (response.Data.ApiKey is not null)
+                    {
+                        _selectedStep = "Finalizing";
+                        StateHasChanged();
+
+                        try
+                        {
+                            var result = await _authenticationProvider.AuthenticateAsync(response.Data.ApiKey);
+                            if (result is null)
+                            {
+                                await _notificationService.Error("Failed to authorize!");
+                            }
+                            else
+                            {
+                                _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "");
+                            }
+                        }
+                        catch
+                        {
+                            await _notificationService.Error("Failed to authorize!");
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+    private async Task OpenUrl()
+    {
+        _selectedStep = "Authorise";
+        StateHasChanged();
+        await _jsRuntime.InvokeAsync<string>("open", _url, "_blank");
+    }
+
+    private Task OnSelectedStepChanged(string name)
+    {
+        _stepIndex = name switch
+        {
+            "InitializingSSO" => 0,
+            "ButtonClick" => 1,
+            "Authorise" => 2,
+            "Finalizing" => 3,
+            _ => _stepIndex
+        };
+        _selectedStep = name;
+       return Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _cancellationTokenSource.Cancel();
+        try{ await _client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None); }
+        catch (Exception) { }
+        await Task.WhenAny(_receiveTask, Task.Delay(2000));
+        _client.Dispose();
+    }
+
+}

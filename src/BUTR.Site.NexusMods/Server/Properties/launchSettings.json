@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "BUTR.Site.NexusMods.Server": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+  }

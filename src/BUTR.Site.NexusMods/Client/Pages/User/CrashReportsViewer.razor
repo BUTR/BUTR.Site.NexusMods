@@ -1,0 +1,159 @@
+﻿@attribute [Authorize]
+@page "/crash-reports-viewer"
+
+@inject INotificationService _notificationService
+@inject ICrashReportProvider _crashReportProvider
+@inject IJSRuntime _jsRuntime;
+
+<Modal ShowBackdrop @ref="_modalRef">
+    <ModalContent Size="ModalSize.ExtraLarge" Centered>
+        <ModalHeader>
+            <ModalTitle>Crash Report Entry</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            @if (@_report is not null)
+            {
+                <Form>
+                    <Field>
+                        <Text Style="white-space:break-spaces; word-break:break-all;" >
+                            <Small>
+                                @(_report.Exception
+                                .Replace("\n\n", "\n")
+                                .Replace("\r\r", "\r")
+                                .Replace("\r\n\r\n", "\r\n")
+                                .Trim()
+                                .Trim(new [] { '\r', '\n', '\r'}))
+                            </Small>
+                        </Text>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Status</FieldLabel>
+                        <FieldBody>
+                           <Select TValue="CrashReportStatus" @bind-SelectedValue="@_report.Status">
+                                @foreach (var crs in Enum.GetValues<CrashReportStatus>())
+                                {
+                                    <SelectItem Value="@crs">@crs.GetDisplayName()</SelectItem>
+                                }
+                            </Select>
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldLabel>Comment</FieldLabel>
+                        <FieldBody Width="Width.Is25">
+                            <MemoEdit AutoSize @bind-Text="@_report.Comment" />
+                        </FieldBody>
+                    </Field>
+                </Form> 
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@(async () => await @HideModal(false))">Cancel</Button>
+            <Button Color="Color.Primary" Clicked="@(async () => await @HideModal(true))">Done</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Crash Reports</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <DataGrid @ref="_dataGridRef"
+                  TItem="CrashReportModel"
+                  Data="@_reports"
+                  SelectedRowChanged="SelectDeselect"
+                  ReadData="@OnReadData"
+                  TotalItems="@_pagingMetadata.TotalCount"
+                  CurrentPage="@_pagingMetadata.CurrentPage"
+                  PageSize="@_pagingMetadata.PageSize"
+                  SelectionMode="DataGridSelectionMode.Single"
+                  ShowPager
+                  Responsive>
+            <DataGridColumns>
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Type" Sortable="false" />
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date" Sortable="false" />
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" Sortable="false" />
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Comment)" Caption="Comment" Sortable="false" />
+            </DataGridColumns>
+            <ButtonRowTemplate>
+                <Button Color="Color.Primary" Disabled="@(_report is null)" Clicked="@ShowModal">
+                    Check
+                </Button>
+                <Button Color="Color.Primary" Disabled="@(_report is null)" Clicked="@(() => OnClick(_report!))">
+                    Open HTML
+                </Button>
+            </ButtonRowTemplate>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@code {
+
+    private CrashReportModel? _report;
+    private CrashReportModel[]? _reports = Array.Empty<CrashReportModel>();
+    private PagingMetadata _pagingMetadata = new() { CurrentPage = 1 };
+
+    private Modal _modalRef = default!;
+    private DataGrid<CrashReportModel?> _dataGridRef = default!;
+
+    private async Task ShowModal() => await _modalRef.Show();
+
+    private async Task HideModal(bool save)
+    {
+        await _modalRef.Hide();
+        if (save && _report is not null)
+        {
+            var updatedCrashReport = _report with { };
+            if (await _crashReportProvider.UpdateCrashReport(updatedCrashReport))
+            {
+                await _notificationService.Success($"Saved Crash Report!", "Success!");
+            }
+            else
+            {
+                await _notificationService.Error($"Failed to save Crash Report!", "Error!");
+            }
+        }
+    }
+
+    private void SelectDeselect(CrashReportModel model)
+    {
+        if (_report != model)
+        {
+            _report = model;
+        }
+        else if (_report is not null)
+        {
+            _dataGridRef.SelectedRow = null;
+            _report = null;
+        }
+        else
+        {
+            _report = model;
+        }
+    }
+
+    private async Task OnClick(CrashReportModel report)
+    {
+        await _jsRuntime.InvokeVoidAsync("open", report.Url, "_blank");
+    }
+
+    private async Task GetCrashReports(CancellationToken ct = default)
+    {
+        var response = await _crashReportProvider.GetCrashReports(_pagingMetadata.CurrentPage, ct);
+        if (response is not null)
+        {
+            _reports = response.Items.ToArray();
+            _pagingMetadata = response.Metadata;
+        }
+    }
+
+    private async Task OnReadData(DataGridReadDataEventArgs<CrashReportModel> e)
+    {
+        if (!e.CancellationToken.IsCancellationRequested)
+        {
+            await GetCrashReports(e.CancellationToken);
+        }
+    }
+
+}

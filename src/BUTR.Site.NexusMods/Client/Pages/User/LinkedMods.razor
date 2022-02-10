@@ -1,0 +1,159 @@
+﻿@attribute [Authorize]
+@page "/linked-mods"
+
+@inject IModProvider _modProvider
+@inject IJSRuntime _jsRuntime;
+
+<Card Margin="Margin.Is4">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Link Mod</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Form>
+            <Field>
+                <FieldLabel>Mod Url</FieldLabel>
+                <FieldBody>
+                    <TextEdit Role="@TextRole.Url" @bind-Text="@_model.ModUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1"></TextEdit>
+                </FieldBody>
+            </Field>
+            <Field>
+                <Button Color="Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSubmit" PreventDefaultOnSubmit="true">
+                     <LoadingTemplate>
+                        Linking...
+                    </LoadingTemplate>
+                    <ChildContent>
+                        Link
+                    </ChildContent>
+                </Button>
+            </Field>
+        </Form>
+    </CardBody>
+</Card>
+
+<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Linked Mods</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <DataGrid @ref="_dataGridRef"
+                  TItem="ModModel"
+                  Data="@_mods"
+                  SelectedRowChanged="SelectDeselect"
+                  ReadData="@OnReadData"
+                  TotalItems="@_pagingMetadata.TotalCount"
+                  CurrentPage="@_pagingMetadata.CurrentPage"
+                  PageSize="@_pagingMetadata.PageSize"
+                  ShowPager
+                  Responsive>
+            <DataGridColumns>
+                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name" Sortable="false"/>
+            </DataGridColumns>
+            <ButtonRowTemplate>
+                <Button Color="Color.Primary" Disabled="@(_mod is null)" Clicked="@(async () => await OnClick(_mod!))">
+                    Open Page
+                </Button>
+                <Button Color="Color.Danger" Disabled="@(_mod is null)" Clicked="@(async () => await OnDelete(context))">
+                    <LoadingTemplate>
+                        Unlinking...
+                    </LoadingTemplate>
+                    <ChildContent>
+                        Unlink
+                    </ChildContent>
+                </Button>
+            </ButtonRowTemplate>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@code {
+
+    private sealed record LinkModModel
+    {
+        public string ModUrl { get; set; } = default!;
+    }
+
+    private bool _isLoading;
+
+    private LinkModModel _model = new();
+
+    private ModModel? _mod = default!;
+    private ModModel[] _mods = Array.Empty<ModModel>();
+    private PagingMetadata _pagingMetadata = new() { CurrentPage = 1 };
+
+    private DataGrid<ModModel?> _dataGridRef = default!;
+
+    private void SelectDeselect(ModModel model)
+    {
+        if (_mod != model)
+        {
+            _mod = model;
+        }
+        else if (_mod is not null)
+        {
+            _dataGridRef.SelectedRow = null;
+            _mod = null;
+        }
+        else
+        {
+            _mod = model;
+        }
+    }
+
+    private async Task OnClick(ModModel mod)
+    {
+        await _jsRuntime.InvokeVoidAsync("open", mod.Url, "_blank");
+    }
+
+    private async void OnSubmit()
+    {
+        _isLoading = true;
+
+        if (await DoLinkMod(_model))
+        {
+            _model = new LinkModModel();
+            await GetMods();
+        }
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task<bool> DoLinkMod(LinkModModel model)
+    {
+        if (!ModsUtils.TryParse(model.ModUrl, out var gameDomain, out var modId))
+            return false;
+
+        return await _modProvider.LinkMod(gameDomain, modId);
+    }
+
+    private async Task<bool> DoUnlinkMod(ModModel model)
+    {
+        return await _modProvider.UnlinkMod(model.GameDomain, model.ModId.ToString());
+    }
+
+    private async Task GetMods(CancellationToken ct = default)
+    {
+        if (await _modProvider.GetMods(_pagingMetadata.CurrentPage, ct) is { } response)
+        {
+            _mods = response.Items.ToArray();
+            _pagingMetadata = response.Metadata;
+        }
+    }
+
+    private async Task OnReadData(DataGridReadDataEventArgs<ModModel> e)
+    {
+        if (!e.CancellationToken.IsCancellationRequested)
+        {
+            await GetMods(e.CancellationToken);
+        }
+    }
+
+    private async Task OnDelete(ButtonRowContext<ModModel> context)
+    {
+        if (await DoUnlinkMod(context.DeleteCommand.Item))
+        {
+            await context.DeleteCommand.Clicked.InvokeAsync();
+        }
+    }
+
+}

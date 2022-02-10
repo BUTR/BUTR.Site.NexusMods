@@ -1,0 +1,13 @@
+﻿@attribute [Authorize]
+@page "/logout"
+
+@inject IAuthenticationProvider _authentication
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await _authentication.Deauthenticate();
+    }
+
+}

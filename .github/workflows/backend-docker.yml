@@ -7,7 +7,7 @@ on:
     paths:
       - '.github/workflows/backend-docker.yml'
       - 'src/**'
-      - '!src/BUTR.CrashReportViewer/Client/**'
+      - '!src/BUTR.Site.NexusMods/Client/**'
       - 'build/**'
   workflow_dispatch:
 
@@ -48,10 +48,10 @@ jobs:
       with:
         builder: ${{ steps.buildx.outputs.name }}
         context: ./src
-        file: ./src/BUTR.CrashReportViewer/Server/Dockerfile
+        file: ./src/BUTR.Site.NexusMods/Server/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
-        tags: ghcr.io/butr/crashreportviewer:latest
+        tags: ghcr.io/butr/sitenexusmods:latest
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
 
@@ -62,6 +62,6 @@ jobs:
       uses: peter-evans/repository-dispatch@v1
       with:
         token: ${{ secrets.TOKEN_GPR }}
-        repository: BUTR/BUTR.CrashReportViewer 
+        repository: BUTR/BUTR.Site.NexusMods 
         event-type: deploy-docker-image
         

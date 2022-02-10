@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: 'self-hosted-backend'
-      url: 'https://vps-crashreporter.aragas.org'
+      url: 'https://vps-sitenexusmods.aragas.org'
     steps:
     - name: multiple command
       uses: appleboy/ssh-action@master
@@ -26,5 +26,5 @@ jobs:
         #port: ${{ secrets.PORT }}
         port: ${{ secrets.PORT_2 }}
         script: |
-          docker image pull ghcr.io/butr/crashreportviewer;
-          docker stack deploy --prune --resolve-image always -c /deploy/crashreporter/docker-compose.yml crashreporter;
+          docker image pull ghcr.io/butr/sitenexusmods;
+          docker stack deploy --prune --resolve-image always -c /deploy/sitenexusmods/docker-compose.yml sitenexusmods;

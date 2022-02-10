@@ -1,0 +1,88 @@
+@inject NavigationManager _navigationManager
+
+<Blazorise.ThemeProvider Theme="@_theme">
+    <CascadingAuthenticationState>
+        <Router AppAssembly="typeof(App).Assembly">
+            <Found Context="routeData">
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(DefaultLayout)">
+                    <Authorizing>
+                        <Spinner/>
+                    </Authorizing>
+                    <NotAuthorized>
+                        @if (context.User.Identity?.IsAuthenticated != true)
+                        {
+                            if (_navigationManager.Uri.EndsWith("logout"))
+                            {
+                                _navigationManager.NavigateTo("login");
+                            }
+                            else
+                            {
+                                _navigationManager.NavigateTo($"login?returnUrl={Uri.EscapeDataString(_navigationManager.Uri)}");
+                            }
+                        }
+                        else
+                        {
+                            <p>You are not authorized to access this resource.</p>
+                        }
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            </Found>
+            <NotFound>
+                <LayoutView Layout="@typeof(DefaultLayout)">
+                    @{
+                        _navigationManager.NavigateTo("");
+                    }
+                </LayoutView>
+            </NotFound>
+        </Router>
+        <NotificationAlert Location="NotificationLocation.Left" />
+    </CascadingAuthenticationState>
+</Blazorise.ThemeProvider>
+
+@code{
+
+    private readonly Theme _theme = new()
+    {
+        ColorOptions = new()
+        {
+            Primary = "#0B5ED7",
+            Dark = "#212529",
+            Light = "#F8F9FA",
+            //Secondary = "#A65529",
+            //Success = "#23C02E",
+            //Info = "#9BD8FE",
+            //Warning = "#F8B86C",
+            //Danger = "#F95741",
+            //Light = "#F0F0F0",
+            //Dark = "#535353"
+        },
+        BackgroundOptions = new()
+        {
+            Primary = "#0B5ED7",
+            Dark = "#212529",
+            Light = "#F8F9FA",
+            Body = "#E2E8F0",
+        },
+
+        BarOptions = new()
+        {
+            DarkColors = new()
+            {
+                BackgroundColor = "#212529",
+                DropdownColorOptions = new()
+                {
+                    BackgroundColor = "#212529"
+                }
+            }
+        },
+        TextColorOptions = new()
+        {
+            Primary = "#0B5ED7",
+            Dark = "#212529",
+            Light = "#F8F9FA",
+            Body = "#E2E8F0",
+        },
+
+    };
+
+}

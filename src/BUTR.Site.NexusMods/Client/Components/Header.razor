@@ -1,0 +1,103 @@
+﻿@implements IAsyncDisposable
+
+@inject AuthenticationStateProvider _authenticationStateProvider
+@inject IProfileProvider _profileProvider
+
+<Bar Style="height: 48px;" Padding="Padding.Is0" Mode="BarMode.Horizontal" Breakpoint="Breakpoint.Desktop" Background="Background.Dark" ThemeContrast="ThemeContrast.Dark">
+    <BarBrand>
+        <BarItem TextAlignment="TextAlignment.Center">
+            <BarLink To="">
+                <Figure Margin="Margin.Is0" Size="FigureSize.Is32x32">
+                    <FigureImage Margin="Margin.Is0" Source="/favicon.svg" AlternateText="BUTR Logo" />
+                </Figure>
+                BUTR
+            </BarLink>
+        </BarItem>
+    </BarBrand>
+    <BarToggler />
+    <BarMenu>
+        <AuthorizeView>
+
+            <Authorized>
+                <BarStart>
+                    <BarItem>
+                        <BarLink To="linked-mods">Linked Mods</BarLink>
+                    </BarItem>
+
+                    <BarItem>
+                        <BarLink To="crash-reports-viewer">Crash Reports</BarLink>
+                    </BarItem>
+                    <AuthorizeView Context="context2" Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")">
+                        <Authorized>
+                            <BarItem>
+                                <BarLink To="role-manager">Role Manager</BarLink>
+                            </BarItem>
+                        </Authorized>
+                    </AuthorizeView>
+                </BarStart>
+                <BarEnd>
+                    <BarItem>
+                        <BarDropdown>
+                            <BarDropdownToggle>
+                                <Figure Margin="Margin.Is0" Size="FigureSize.Is32x32">
+                                    <FigureImage Margin="Margin.Is0" Source="@(_user?.ProfileUrl ?? FallabckIcon)" Border="Border.RoundedCircle" AlternateText="BUTR Logo"/>
+                                </Figure>
+                            </BarDropdownToggle>
+                            <BarDropdownMenu Background="Background.Dark" RightAligned="true">
+                                <BarDropdownItem Background="Background.Dark">
+                                    <BarLink To="profile">My Profile</BarLink>
+                                </BarDropdownItem>
+                                <BarDropdownDivider Background="Background.Secondary"/>
+                                <BarDropdownItem Background="Background.Dark">
+                                    <BarLink To="logout">Logout</BarLink>
+                                </BarDropdownItem>
+                            </BarDropdownMenu>
+                        </BarDropdown>
+                    </BarItem>
+                </BarEnd>
+            </Authorized>
+
+            <NotAuthorized>
+                <BarStart>
+                </BarStart>
+                <BarEnd>
+                    <BarItem>
+                        <BarLink To="login">Login</BarLink>
+                    </BarItem>
+                </BarEnd>
+            </NotAuthorized>
+
+        </AuthorizeView>
+    </BarMenu>
+</Bar>
+@code {
+
+    private const string FallabckIcon = "/images/default_profile.webp";
+    private ProfileModel? _user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _authenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
+        _user = await _profileProvider.GetProfileAsync();
+
+        await base.OnInitializedAsync();
+    }
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        _profileProvider.GetProfileAsync().ContinueWith(profile =>
+        {
+            _user = profile.Result;
+            StateHasChanged();
+        });
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _authenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+
+        return ValueTask.CompletedTask;
+    }
+
+}
