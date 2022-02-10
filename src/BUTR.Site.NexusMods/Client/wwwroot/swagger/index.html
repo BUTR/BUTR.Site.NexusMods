@@ -49,7 +49,7 @@
                         return JSON.parse(withoutComments);
                     })
                     .then(data => {
-                        const url = data.Backend.Endpoint + '/api/v1/swagger.json';
+                        const url = data.Backend.Endpoint + 'api/v1/swagger.json';
                         window.ui = window.SwaggerUIBundle({
                             url: url,
                             dom_id: '#swagger-ui',
