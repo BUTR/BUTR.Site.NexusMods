@@ -4,14 +4,14 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 
-COPY ["BUTR.Site.NexusMods/Server/BUTR.Site.NexusMods.Server.csproj", "BUTR.Site.NexusMods/Server/"]
-COPY ["BUTR.Site.NexusMods/Shared/BUTR.Site.NexusMods.Shared.csproj", "BUTR.Site.NexusMods/Shared/"]
+COPY ["BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj", "BUTR.Site.NexusMods.Server/"]
+COPY ["BUTR.Site.NexusMods.Shared/BUTR.Site.NexusMods.Shared.csproj", "BUTR.Site.NexusMods.Shared/"]
 
-RUN dotnet restore "BUTR.Site.NexusMods/Server/BUTR.Site.NexusMods.Server.csproj"
+RUN dotnet restore "BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj"
 
 COPY . .
 
-WORKDIR "/src/BUTR.Site.NexusMods/Server"
+WORKDIR "/src/BUTR.Site.NexusMods.Server"
 RUN dotnet build "BUTR.Site.NexusMods.Server.csproj" -c Release -o /app/build
 
 
