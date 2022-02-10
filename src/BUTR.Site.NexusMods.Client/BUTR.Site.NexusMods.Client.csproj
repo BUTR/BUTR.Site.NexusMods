@@ -30,7 +30,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\Shared\BUTR.Site.NexusMods.Shared.csproj" />
+    <ProjectReference Include="..\BUTR.Site.NexusMods.Shared.csproj" />
   </ItemGroup>
  
 </Project>
