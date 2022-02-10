@@ -3,7 +3,12 @@
 @inject AuthenticationStateProvider _authenticationStateProvider
 @inject IProfileProvider _profileProvider
 
-<Bar Style="height: 48px;" Padding="Padding.Is0" Mode="BarMode.Horizontal" Breakpoint="Breakpoint.Desktop" Background="Background.Dark" ThemeContrast="ThemeContrast.Dark">
+<Bar Style="height: 48px;"
+     Padding="Padding.Is0"
+     Mode="BarMode.Horizontal"
+     Breakpoint="Breakpoint.Desktop"
+     Background="Background.Dark"
+     ThemeContrast="ThemeContrast.Dark">
     <BarBrand>
         <BarItem TextAlignment="TextAlignment.Center">
             <BarLink To="">
@@ -43,11 +48,11 @@
                                     <FigureImage Margin="Margin.Is0" Source="@(_user?.ProfileUrl ?? FallabckIcon)" Border="Border.RoundedCircle" AlternateText="BUTR Logo"/>
                                 </Figure>
                             </BarDropdownToggle>
-                            <BarDropdownMenu Background="Background.Dark" RightAligned="true">
+                            <BarDropdownMenu Background="Background.Dark" RightAligned>
                                 <BarDropdownItem Background="Background.Dark">
                                     <BarLink To="profile">My Profile</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownDivider Background="Background.Secondary"/>
+                                <BarDropdownDivider Background="Background.Light"/>
                                 <BarDropdownItem Background="Background.Dark">
                                     <BarLink To="logout">Logout</BarLink>
                                 </BarDropdownItem>
@@ -70,6 +75,7 @@
         </AuthorizeView>
     </BarMenu>
 </Bar>
+
 @code {
 
     private const string FallabckIcon = "images/default_profile.webp";

@@ -40,49 +40,82 @@
 </Blazorise.ThemeProvider>
 
 @code{
+        
+    private const string ColourWhite = "#FFFFFF";
+    private const string ColourBlack = "#000000";
+
+    private const string ColourBody = "#F5F5F6";
+
+    private const string ColourPrimary = "#424242";
+    private const string ColourPrimaryLight = "#6D6D6D";
+    private const string ColourPrimaryDark = "#1B1B1B";
+
+    private const string ColourSecondary = "#4CAF50";
+    private const string ColourSecondaryLight = "#80E27E";
+    private const string ColourSecondaryDark = "#087F23";
+
+    private const string ColourDanger = "#BB2124";
+    private const string ColourSuccess = "#22BB33";
+    private const string ColourWarning = "#F0AD4E";
+    private const string ColourInfo = "#5BC0DE";
+
 
     private readonly Theme _theme = new()
     {
         ColorOptions = new()
         {
-            Primary = "#0B5ED7",
-            Dark = "#212529",
-            Light = "#F8F9FA",
-            //Secondary = "#A65529",
-            //Success = "#23C02E",
-            //Info = "#9BD8FE",
-            //Warning = "#F8B86C",
-            //Danger = "#F95741",
-            //Light = "#F0F0F0",
-            //Dark = "#535353"
+            Primary = ColourSecondary,
+            Light = ColourSecondaryLight,
+            Dark = ColourSecondaryDark,
+
+            Secondary = ColourBlack,
+
+            Danger = ColourDanger,
+            Success = ColourSuccess,
+            Warning = ColourWarning,
+            Info = ColourInfo,
         },
         BackgroundOptions = new()
         {
-            Primary = "#0B5ED7",
-            Dark = "#212529",
-            Light = "#F8F9FA",
-            Body = "#E2E8F0",
-        },
+            Body = ColourBody,
 
+            Primary = ColourPrimary,
+            Light = ColourPrimaryLight,
+            Dark = ColourPrimaryDark,
+
+            Secondary = ColourWhite,
+
+            Danger = ColourDanger,
+            Success = ColourSuccess,
+            Warning = ColourWarning,
+            Info = ColourInfo,
+        },
         BarOptions = new()
         {
             DarkColors = new()
             {
-                BackgroundColor = "#212529",
+                BackgroundColor = ColourPrimary,
                 DropdownColorOptions = new()
                 {
-                    BackgroundColor = "#212529"
-                }
-            }
+                    BackgroundColor = ColourPrimary,
+                },
+            },
         },
         TextColorOptions = new()
         {
-            Primary = "#0B5ED7",
-            Dark = "#212529",
-            Light = "#F8F9FA",
-            Body = "#E2E8F0",
-        },
+            Body = ColourWhite,
+            
+            Primary = ColourWhite,
+            Light = ColourWhite,
+            Dark = ColourWhite,
+            
+            Secondary = ColourBlack,
 
+            Danger = ColourWhite,
+            Success = ColourWhite,
+            Warning = ColourWhite,
+            Info = ColourWhite,
+        },
     };
 
 }

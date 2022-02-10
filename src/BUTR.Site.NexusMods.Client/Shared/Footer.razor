@@ -4,7 +4,7 @@
 
 <Div Flex="Flex.JustifyContent.Center">
     <Div Padding="Padding.Is2.FromLeft.Is2.FromRight">
-        <Blazorise.Link To="@GetSwaggerUrl()">API</Blazorise.Link>
+        <Blazorise.Link To="swagger">API</Blazorise.Link>
     </Div>
 
     <Div Padding="Padding.Is2.FromLeft.Is2.FromRight">
@@ -15,9 +15,3 @@
 <Div Flex="Flex.JustifyContent.Center">
     © 2022 BUTR
 </Div>
-
-@code {
-
-    private string GetSwaggerUrl() => _env.IsProduction() ? "swagger/index.html" : $"swagger/index.html?env={_env.Environment}";
-
-}

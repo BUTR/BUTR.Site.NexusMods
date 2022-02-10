@@ -1,0 +1,38 @@
+﻿@page "/swagger"
+
+@implements IAsyncDisposable
+
+@inject IJSRuntime _jsRuntime
+@inject IOptions<BackendOptions> _backendOptions
+
+<style>
+    .swagger-ui .scheme-container {
+        background: transparent;
+    }
+    .swagger-ui .opblock .opblock-section-header {
+        background: transparent;
+    }
+</style>
+
+<div id="swagger-ui"></div>
+
+@code {
+
+    private IJSObjectReference _module = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./../js/swagger.js");
+
+        await _module.InvokeVoidAsync("init", "#swagger-ui", _backendOptions.Value.Endpoint);
+
+        await base.OnInitializedAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _module.InvokeVoidAsync("deinit");
+        await _module.DisposeAsync();
+    }
+
+}

@@ -12,7 +12,6 @@
 
     <link href="_content/Blazorise/blazorise.css" rel="stylesheet" />
     <link href="_content/Blazorise.Bootstrap5/blazorise.bootstrap5.css" rel="stylesheet" />
-    <link href="_content/Blazorise.SpinKit/blazorise.spinkit.css" rel="stylesheet" />
     <link href="_content/Blazorise.Snackbar/blazorise.snackbar.css" rel="stylesheet" />
 
     <link rel="stylesheet" href="css/app.css" />
@@ -32,7 +31,7 @@
 
         <script src="_framework/blazor.webassembly.js" autostart="false"></script>
         <script type="module">
-            import { BrotliDecode } from './decode.min.js';
+            import { BrotliDecode } from './js/decode.min.js';
             Blazor.start({
                 loadBootResource: function (type, name, defaultUri, integrity) {
                     if (type !== 'dotnetjs' && location.hostname !== 'localhost') {

@@ -10,30 +10,43 @@
                 <CardBody>
                     <Heading Padding="Padding.Is3" Size="HeadingSize.Is5" TextAlignment="TextAlignment.Center" TextWeight="TextWeight.Light">Sign In</Heading>
                     <Divider/>
-                    @if (DemoLoginEnabled)
-                    {
-                        <Row Margin="Margin.Is2">
-                            <Button Block="true" Border="Border.RoundedPill" TextTransform="TextTransform.Uppercase" Padding="Padding.Is3" TextWeight="TextWeight.Bold" Color="Color.Primary" Clicked="@OnDemoLogin">
-                                Demo
-                            </Button>
-                        </Row>
-                    }
-                    @if (SSOLoginEnabled)
-                    {
-                        <Row Margin="Margin.Is2">
-                            <Button Block="true" Border="Border.RoundedPill" TextTransform="TextTransform.Uppercase" Padding="Padding.Is3" TextWeight="TextWeight.Bold" Style="@ButtonNexusModsStyle" TextColor="TextColor.White" Type="@ButtonType.Link" To="@NexusModsSSOUrl">
-                                Log In via NexusMods SSO
-                            </Button>
-                        </Row>
-                    }
-                    @if (RawTokenLoginEnabled)
-                    {
-                        <Row Margin="Margin.Is2">
-                            <Button Block="true" Border="Border.RoundedPill" TextTransform="TextTransform.Uppercase" Padding="Padding.Is3" TextWeight="TextWeight.Bold" Style="@ButtonNexusModsStyle" TextColor="TextColor.White" Type="@ButtonType.Link" To="@NexusModsTokenUrl">
-                                Log In via NexusMods Token
-                            </Button>
-                        </Row>
-                    }
+                    <Row Margin="Margin.Is2">
+                        <Button Block
+                                Border="Border.RoundedPill"
+                                TextTransform="TextTransform.Uppercase"
+                                Padding="Padding.Is3"
+                                TextWeight="TextWeight.Bold"
+                                Color="Color.Primary"
+                                Clicked="@OnDemoLogin">
+                            Demo
+                        </Button>
+                    </Row>
+                    <Row Margin="Margin.Is2">
+                        <Button Block
+                                Border="Border.RoundedPill"
+                                TextTransform="TextTransform.Uppercase"
+                                Padding="Padding.Is3"
+                                TextWeight="TextWeight.Bold"
+                                Style="@ButtonNexusModsStyle"
+                                TextColor="TextColor.White"
+                                Type="@ButtonType.Link"
+                                To="@NexusModsSSOUrl">
+                            Log In via NexusMods SSO
+                        </Button>
+                    </Row>
+                    <Row Margin="Margin.Is2">
+                        <Button Block
+                                Border="Border.RoundedPill"
+                                TextTransform="TextTransform.Uppercase"
+                                Padding="Padding.Is3"
+                                TextWeight="TextWeight.Bold"
+                                Style="@ButtonNexusModsStyle"
+                                TextColor="TextColor.White"
+                                Type="@ButtonType.Link"
+                                To="@NexusModsTokenUrl">
+                            Log In via NexusMods Token
+                        </Button>
+                    </Row>
                 </CardBody>
             </Card>
         </Column>

@@ -1,4 +1,10 @@
-﻿using Blazorise.Localization;
+﻿using Blazored.LocalStorage;
+using Blazored.SessionStorage;
+
+using Blazorise;
+using Blazorise.Bootstrap5;
+using Blazorise.Icons.FontAwesome;
+using Blazorise.Localization;
 
 using BUTR.Site.NexusMods.Client.Extensions;
 using BUTR.Site.NexusMods.Client.Options;
@@ -18,9 +24,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using System.Threading.Tasks;
-
-using Config = Blazorise.Config;
-using ServiceCollectionExtensions = Blazored.LocalStorage.ServiceCollectionExtensions;
 
 namespace BUTR.Site.NexusMods.Client
 {
@@ -42,63 +45,64 @@ namespace BUTR.Site.NexusMods.Client
             .AddRootComponent<App>("#app")
             .ConfigureServices((builder, services) =>
             {
-                OptionsConfigurationServiceCollectionExtensions.Configure<BackendOptions>(services, builder.Configuration.GetSection("Backend"));
-
                 var assemblyName = Assembly.GetEntryAssembly()?.GetName();
-                var userAgent = $"{assemblyName?.Name} v{assemblyName?.Version}";
-                ServiceCollectionServiceExtensions.AddScoped(services, _ => new HttpClient
+                var userAgent = $"{assemblyName?.Name ?? "ERROR"} v{assemblyName?.Version?.ToString() ?? "ERROR"}";
+
+                services.Configure<BackendOptions>(builder.Configuration.GetSection("Backend"));
+
+                services.AddScoped(_ => new HttpClient
                 {
                     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress),
                     DefaultRequestHeaders = { { "User-Agent", userAgent } }
                 });
-                HttpClientFactoryServiceCollectionExtensions.AddHttpClient(services, "InternalReports", (sp, client) =>
+                services.AddHttpClient("InternalReports", (sp, client) =>
                 {
                     client.BaseAddress = new Uri($"{builder.HostEnvironment.BaseAddress}reports/");
                     client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 });
-                HttpClientFactoryServiceCollectionExtensions.AddHttpClient(services, "Backend").ConfigureHttpClient((sp, client) =>
+                services.AddHttpClient("CrashReporter", (sp, client) =>
+                {
+                    var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
+                    client.BaseAddress = new Uri($"{backendOptions.Endpoint}/Reports/");
+                    client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+                });
+                services.AddHttpClient("Backend").ConfigureHttpClient((sp, client) =>
                 {
                     var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
                     client.BaseAddress = new Uri(backendOptions.Endpoint);
                     client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 }).AddHttpMessageHandler<AuthenticationDelegatingHandler>();
-                HttpClientFactoryServiceCollectionExtensions.AddHttpClient(services, "CrashReporter", (sp, client) =>
-                {
-                    var backendOptions = ServiceProviderServiceExtensions.GetRequiredService<IOptions<BackendOptions>>(sp).Value;
-                    client.BaseAddress = new Uri($"{backendOptions.Endpoint}/Reports/");
-                    client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-                });
 
-                OptionsServiceCollectionExtensions.Configure<JsonSerializerOptions>(services, opt => Configure(opt));
+                services.Configure<JsonSerializerOptions>(opt => Configure(opt));
 
-                ServiceCollectionServiceExtensions.AddTransient<AuthenticationDelegatingHandler>(services);
+                services.AddTransient<AuthenticationDelegatingHandler>();
 
-                ServiceCollectionServiceExtensions.AddScoped<DefaultBackendProvider>(services);
-                ServiceCollectionServiceExtensions.AddScoped<IAuthenticationProvider, DefaultAuthenticationProvider>(services);
+                services.AddScoped<DefaultBackendProvider>();
+                services.AddScoped<IAuthenticationProvider, DefaultAuthenticationProvider>();
                 //services.AddScoped<IAuthenticationProvider, DefaultBackendProvider>(sp => sp.GetRequiredService<DefaultBackendProvider>());
-                ServiceCollectionServiceExtensions.AddScoped<IProfileProvider, DefaultBackendProvider>(services, sp => ServiceProviderServiceExtensions.GetRequiredService<DefaultBackendProvider>(sp));
-                ServiceCollectionServiceExtensions.AddScoped<IRoleProvider, DefaultBackendProvider>(services, sp => ServiceProviderServiceExtensions.GetRequiredService<DefaultBackendProvider>(sp));
-                ServiceCollectionServiceExtensions.AddScoped<IModProvider, DefaultBackendProvider>(services, sp => ServiceProviderServiceExtensions.GetRequiredService<DefaultBackendProvider>(sp));
-                ServiceCollectionServiceExtensions.AddScoped<ICrashReportProvider, DefaultBackendProvider>(services, sp => ServiceProviderServiceExtensions.GetRequiredService<DefaultBackendProvider>(sp));
+                services.AddScoped<IProfileProvider, DefaultBackendProvider>(sp => sp.GetRequiredService<DefaultBackendProvider>());
+                services.AddScoped<IRoleProvider, DefaultBackendProvider>(sp => sp.GetRequiredService<DefaultBackendProvider>());
+                services.AddScoped<IModProvider, DefaultBackendProvider>(sp => sp.GetRequiredService<DefaultBackendProvider>());
+                services.AddScoped<ICrashReportProvider, DefaultBackendProvider>(sp => sp.GetRequiredService<DefaultBackendProvider>());
 
-                ServiceCollectionServiceExtensions.AddScoped<ITokenContainer, LocalStorageTokenContainer>(services);
-                ServiceCollectionServiceExtensions.AddScoped<LocalStorageCache>(services);
+                services.AddScoped<ITokenContainer, LocalStorageTokenContainer>();
+                services.AddScoped<LocalStorageCache>();
 
-                ServiceCollectionExtensions.AddBlazoredLocalStorage(services);
-                Blazored.SessionStorage.ServiceCollectionExtensions.AddBlazoredSessionStorage(services);
+                services.AddBlazoredLocalStorage();
+                services.AddBlazoredSessionStorage();
 
-                AuthorizationServiceCollectionExtensions.AddAuthorizationCore(services);
-                ServiceCollectionServiceExtensions.AddScoped<SimpleAuthenticationStateProvider>(services);
-                ServiceCollectionServiceExtensions.AddScoped<AuthenticationStateProvider, SimpleAuthenticationStateProvider>(services, sp => ServiceProviderServiceExtensions.GetRequiredService<SimpleAuthenticationStateProvider>(sp));
+                services.AddAuthorizationCore();
+                services.AddScoped<SimpleAuthenticationStateProvider>();
+                services.AddScoped<AuthenticationStateProvider, SimpleAuthenticationStateProvider>(sp => sp.GetRequiredService<SimpleAuthenticationStateProvider>());
 
-                Config.AddBlazorise(services, options =>
+                services.AddBlazorise(options =>
                 {
                     options.ChangeTextOnKeyPress = true;
                 });
-                Blazorise.Bootstrap5.Config.AddBootstrap5Providers(services);
-                Blazorise.Icons.FontAwesome.Config.AddFontAwesomeIcons(services);
-                ServiceCollectionDescriptorExtensions.Replace(services, ServiceDescriptor.Scoped<ITextLocalizerService, InvariantTextLocalizerService>());
+                services.AddBootstrap5Providers();
+                services.AddFontAwesomeIcons();
 
+                services.Replace(ServiceDescriptor.Scoped<ITextLocalizerService, InvariantTextLocalizerService>());
             });
     }
 }
