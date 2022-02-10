@@ -7,7 +7,7 @@ on:
     paths:
       - '.github/workflows/frontend.yml'
       - 'src/**'
-      - '!src/BUTR.Site.NexusMods/Server/**'
+      - '!src/BUTR.Site.NexusMods.Server/**'
       - 'build/**'
   workflow_dispatch:
 
@@ -30,7 +30,7 @@ jobs:
         github-token: ${{secrets.GITHUB_TOKEN}}
 
     - name: Publish with dotnet
-      run: dotnet publish src/BUTR.Site.NexusMods/Client/BUTR.Site.NexusMods.Client.csproj --configuration Release --output build
+      run: dotnet publish src/BUTR.Site.NexusMods.Client/BUTR.Site.NexusMods.Client.csproj --configuration Release --output build
     
     - name: Change base href in index.html
       run: sed -i 's/<base href="\/" \/>/<base href="\/BUTR.Site.NexusMods\/" \/>/g' build/wwwroot/index.html

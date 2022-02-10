@@ -7,7 +7,7 @@ on:
     paths:
       - '.github/workflows/backend-docker.yml'
       - 'src/**'
-      - '!src/BUTR.Site.NexusMods/Client/**'
+      - '!src/BUTR.Site.NexusMods.Client/**'
       - 'build/**'
   workflow_dispatch:
 
@@ -48,7 +48,7 @@ jobs:
       with:
         builder: ${{ steps.buildx.outputs.name }}
         context: ./src
-        file: ./src/BUTR.Site.NexusMods/Server/Dockerfile
+        file: ./src/BUTR.Site.NexusMods.Server/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
         tags: ghcr.io/butr/sitenexusmods:latest
