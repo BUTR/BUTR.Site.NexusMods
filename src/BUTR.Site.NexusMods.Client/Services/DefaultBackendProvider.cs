@@ -89,11 +89,11 @@ namespace BUTR.Site.NexusMods.Client.Services
     public sealed class DefaultBackendProvider : IProfileProvider, IRoleProvider, IModProvider, ICrashReportProvider
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly LocalStorageCache _cache;
+        private readonly StorageCache _cache;
         private readonly ITokenContainer _tokenContainer;
         private readonly JsonSerializerOptions _jsonSerializerOptions;
 
-        public DefaultBackendProvider(IHttpClientFactory httpClientFactory, LocalStorageCache cache, ITokenContainer tokenContainer, IOptions<JsonSerializerOptions> jsonSerializerOptions)
+        public DefaultBackendProvider(IHttpClientFactory httpClientFactory, StorageCache cache, ITokenContainer tokenContainer, IOptions<JsonSerializerOptions> jsonSerializerOptions)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));

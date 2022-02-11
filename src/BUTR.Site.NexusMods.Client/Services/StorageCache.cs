@@ -1,4 +1,5 @@
 ﻿using Blazored.LocalStorage;
+using Blazored.SessionStorage;
 
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
@@ -18,7 +19,7 @@ namespace BUTR.Site.NexusMods.Client.Services
         public IChangeToken? ChangeToken { get; init; }
     }
 
-    public sealed class LocalStorageCache : IAsyncDisposable
+    public sealed class StorageCache : IAsyncDisposable
     {
         private record EntryOptions<T>
         {
@@ -26,7 +27,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             public DateTimeOffset? AbsoluteExpiration { get; init; }
         }
 
-        private readonly ILocalStorageService _localStorage;
+        private readonly ISessionStorageService _storage;
         private readonly JsonSerializerOptions _jsonSerializerOptions;
 
         private readonly List<IChangeToken> _expirationTokens = new();
@@ -34,9 +35,9 @@ namespace BUTR.Site.NexusMods.Client.Services
         private readonly List<CancellationTokenSource> _cancellationTokenSources = new();
         private readonly ConcurrentDictionary<string, object> _tasksInProgress = new();
 
-        public LocalStorageCache(ILocalStorageService localStorage, IOptions<JsonSerializerOptions> jsonSerializerOptions)
+        public StorageCache(ISessionStorageService storage, IOptions<JsonSerializerOptions> jsonSerializerOptions)
         {
-            _localStorage = localStorage ?? throw new ArgumentNullException(nameof(localStorage));
+            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
             _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
         }
 
@@ -59,7 +60,7 @@ namespace BUTR.Site.NexusMods.Client.Services
                 }
             }
 
-            if (await _localStorage.GetItemAsStringAsync(key, ct) is not { } json)
+            if (await _storage.GetItemAsStringAsync(key, ct) is not { } json)
             {
                 return await TryGetValue();
             }
@@ -107,14 +108,14 @@ namespace BUTR.Site.NexusMods.Client.Services
             }
 
             var data = new EntryOptions<T> { Value = value, AbsoluteExpiration = options.AbsoluteExpiration };
-            await _localStorage.SetItemAsStringAsync(key, JsonSerializer.Serialize(data, _jsonSerializerOptions), ct);
+            await _storage.SetItemAsStringAsync(key, JsonSerializer.Serialize(data, _jsonSerializerOptions), ct);
         }
 
         public async Task RemoveAsync(string key_, CancellationToken ct)
         {
             var key = $"cache_{key_}";
 
-            await _localStorage.RemoveItemAsync(key, ct);
+            await _storage.RemoveItemAsync(key, ct);
         }
 
         public async ValueTask DisposeAsync()

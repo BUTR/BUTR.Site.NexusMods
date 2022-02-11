@@ -86,7 +86,7 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddScoped<ICrashReportProvider, DefaultBackendProvider>(sp => sp.GetRequiredService<DefaultBackendProvider>());
 
                 services.AddScoped<ITokenContainer, LocalStorageTokenContainer>();
-                services.AddScoped<LocalStorageCache>();
+                services.AddScoped<StorageCache>();
 
                 services.AddBlazoredLocalStorage();
                 services.AddBlazoredSessionStorage();
