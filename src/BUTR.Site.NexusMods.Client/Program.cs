@@ -7,6 +7,7 @@ using Blazorise.Icons.FontAwesome;
 using Blazorise.Localization;
 
 using BUTR.Site.NexusMods.Client.Extensions;
+using BUTR.Site.NexusMods.Client.Models;
 using BUTR.Site.NexusMods.Client.Options;
 using BUTR.Site.NexusMods.Client.Services;
 
@@ -87,6 +88,8 @@ namespace BUTR.Site.NexusMods.Client
 
                 services.AddScoped<ITokenContainer, LocalStorageTokenContainer>();
                 services.AddScoped<StorageCache>();
+
+                services.AddTransient<BrotliDecompressorService>();
 
                 services.AddBlazoredLocalStorage();
                 services.AddBlazoredSessionStorage();

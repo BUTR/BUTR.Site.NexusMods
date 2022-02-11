@@ -3,8 +3,10 @@ using BUTR.Site.NexusMods.Shared.Models;
 using BUTR.Site.NexusMods.Shared.Models.API;
 
 using Microsoft.Extensions.Options;
+using Microsoft.JSInterop;
 
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -89,13 +91,15 @@ namespace BUTR.Site.NexusMods.Client.Services
     public sealed class DefaultBackendProvider : IProfileProvider, IRoleProvider, IModProvider, ICrashReportProvider
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly BrotliDecompressorService _brotliDecompressor;
         private readonly StorageCache _cache;
         private readonly ITokenContainer _tokenContainer;
         private readonly JsonSerializerOptions _jsonSerializerOptions;
 
-        public DefaultBackendProvider(IHttpClientFactory httpClientFactory, StorageCache cache, ITokenContainer tokenContainer, IOptions<JsonSerializerOptions> jsonSerializerOptions)
+        public DefaultBackendProvider(IHttpClientFactory httpClientFactory, BrotliDecompressorService brotliDecompressor, StorageCache cache, ITokenContainer tokenContainer, IOptions<JsonSerializerOptions> jsonSerializerOptions)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _brotliDecompressor = brotliDecompressor ?? throw new ArgumentNullException(nameof(brotliDecompressor));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
             _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
@@ -186,10 +190,10 @@ namespace BUTR.Site.NexusMods.Client.Services
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
-                var mods = await DemoUser.GetMods();
+                var mods = await DemoUser.GetMods().ToListAsync(ct);
                 return new PagingResponse<ModModel>
                 {
-                    Items = mods,
+                    Items = mods.ToAsyncEnumerable(),
                     Metadata = new PagingMetadata
                     {
                         PageSize = 10,
@@ -217,7 +221,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
-                var mods = await DemoUser.GetMods();
+                var mods = await DemoUser.GetMods().ToListAsync(ct);
                 if (mods.Find(m => m.GameDomain == gameDomain && m.ModId == modId) is null)
                 {
                     mods.Add(new($"Demo Mod {gameDomain} {modId}", gameDomain, modId));
@@ -244,7 +248,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
-                var mods = await DemoUser.GetMods();
+                var mods = await DemoUser.GetMods().ToListAsync(ct);
                 if (mods.Find(m => m.GameDomain == gameDomain && m.ModId == modId) is { } mod)
                     return mods.Remove(mod);
 
@@ -269,7 +273,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
-                var crashReports = await DemoUser.GetCrashReports(_httpClientFactory);
+                var crashReports = DemoUser.GetCrashReports(_httpClientFactory, _brotliDecompressor);
                 return new PagingResponse<CrashReportModel>
                 {
                     Items = crashReports,
@@ -277,8 +281,8 @@ namespace BUTR.Site.NexusMods.Client.Services
                     {
                         PageSize = 10,
                         CurrentPage = 1,
-                        TotalCount = crashReports.Count,
-                        TotalPages = (int) Math.Ceiling((double) crashReports.Count / 10d),
+                        TotalCount = 4,
+                        TotalPages = 1,
                     }
                 };
             }

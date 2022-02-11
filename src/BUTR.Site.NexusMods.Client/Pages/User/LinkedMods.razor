@@ -135,7 +135,7 @@
     {
         if (await _modProvider.GetMods(_pagingMetadata.CurrentPage, ct) is { } response)
         {
-            _mods = response.Items.ToList();
+            _mods = await response.Items.ToListAsync(ct);
             _pagingMetadata = response.Metadata;
         }
     }

@@ -1,8 +1,10 @@
-﻿using BUTR.Site.NexusMods.Shared.Helpers;
+﻿using BUTR.Site.NexusMods.Client.Services;
+using BUTR.Site.NexusMods.Shared.Helpers;
 using BUTR.Site.NexusMods.Shared.Models;
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -22,24 +24,43 @@ namespace BUTR.Site.NexusMods.Client.Models
         private static List<CrashReportModel>? _crashReports;
 
         public static Task<ProfileModel> GetProfile() => Task.FromResult(_profile);
-        public static Task<List<ModModel>> GetMods() => Task.FromResult(_mods);
-        public static async Task<List<CrashReportModel>> GetCrashReports(IHttpClientFactory factory)
+        public static IAsyncEnumerable<ModModel> GetMods() => _mods.ToAsyncEnumerable();
+        public static async IAsyncEnumerable<CrashReportModel> GetCrashReports(IHttpClientFactory factory, BrotliDecompressorService brotliDecompressor)
         {
+            static async Task<(string Id, string Content)> DownloadReport(HttpClient client, BrotliDecompressorService brotliDecompressor, string id)
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{id}.html.br");
+                var response = await client.SendAsync(request);
+                var compressed = await response.Content.ReadAsStreamAsync();
+                var decompressed = await brotliDecompressor.DecompileAsync(compressed);
+                var data = new StreamReader(decompressed);
+                return (id, await data.ReadToEndAsync());
+            }
+
             if (_crashReports is null)
             {
                 var crm = new List<CrashReportModel>();
-                try
+                const string baseUrl = "https://crash.butr.dev/report/";
+                var client = factory.CreateClient("InternalReports");
+                var reports = new[] { "FC58E239", "7AA28856", "4EFF0B0A", "3DF57593" };
+                var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, brotliDecompressor, r)));
+                foreach (var (id, content) in contents)
                 {
-                    const string baseUrl = "https://crash.butr.dev/report/";
-                    var client = factory.CreateClient("InternalReports");
-                    var reports = new[] { "FC58E239", "7AA28856", "4EFF0B0A", "3DF57593" };
-                    var crs = await Task.WhenAll(reports.Select(r => CrashReportParser.ParseUrl(client, r)));
-                    crm = crs.Select(cr => new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html")).ToList();
+                    var cr = CrashReportParser.Parse(id, content);
+                    var report = new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html");
+                    crm.Add(report);
+                    yield return report;
+
                 }
-                catch (Exception) { }
                 _crashReports = crm;
             }
-            return _crashReports;
+            else
+            {
+                foreach (var crashReport in _crashReports)
+                {
+                    yield return crashReport;
+                }
+            }
         }
     }
 }

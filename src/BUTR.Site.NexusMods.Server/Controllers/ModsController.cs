@@ -72,7 +72,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             {
                 return StatusCode(StatusCodes.Status200OK, new PagingResponse<ModModel>
                 {
-                    Items = new List<ModModel>(),
+                    Items = AsyncEnumerable.Empty<ModModel>(),
                     Metadata = new PagingMetadata()
                 });
             }
@@ -89,7 +89,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             return StatusCode(StatusCodes.Status200OK, new PagingResponse<ModModel>
             {
-                Items = userMods.Select(m => new ModModel(m.Name, m.GameDomain, m.ModId)),
+                Items = userMods.Select(m => new ModModel(m.Name, m.GameDomain, m.ModId)).ToAsyncEnumerable(),
                 Metadata = metadata
             });
         }

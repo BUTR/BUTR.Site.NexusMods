@@ -67,7 +67,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 {
                     Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
                     Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
-                }),
+                }).ToAsyncEnumerable(),
                 Metadata = metadata
             });
         }
@@ -89,7 +89,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 {
                     Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
                     Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
-                }),
+                }).ToAsyncEnumerable(),
                 Metadata = metadata
             });
         }
