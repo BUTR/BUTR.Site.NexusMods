@@ -60,7 +60,7 @@ namespace BUTR.Site.NexusMods.Client
                 {
                     client.BaseAddress = new Uri($"{builder.HostEnvironment.BaseAddress}reports/");
                     client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-                });
+                }).AddHttpMessageHandler<AssetsDelegatingHandler>();
                 services.AddHttpClient("CrashReporter", (sp, client) =>
                 {
                     var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
@@ -76,6 +76,7 @@ namespace BUTR.Site.NexusMods.Client
 
                 services.Configure<JsonSerializerOptions>(opt => Configure(opt));
 
+                services.AddTransient<AssetsDelegatingHandler>();
                 services.AddTransient<AuthenticationDelegatingHandler>();
 
                 services.AddScoped<DefaultBackendProvider>();

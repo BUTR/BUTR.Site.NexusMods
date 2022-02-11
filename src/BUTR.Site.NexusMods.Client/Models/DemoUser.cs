@@ -25,16 +25,13 @@ namespace BUTR.Site.NexusMods.Client.Models
 
         public static Task<ProfileModel> GetProfile() => Task.FromResult(_profile);
         public static IAsyncEnumerable<ModModel> GetMods() => _mods.ToAsyncEnumerable();
-        public static async IAsyncEnumerable<CrashReportModel> GetCrashReports(IHttpClientFactory factory, BrotliDecompressorService brotliDecompressor)
+        public static async IAsyncEnumerable<CrashReportModel> GetCrashReports(IHttpClientFactory factory)
         {
-            static async Task<(string Id, string Content)> DownloadReport(HttpClient client, BrotliDecompressorService brotliDecompressor, string id)
+            static async Task<(string Id, string Content)> DownloadReport(HttpClient client, string id)
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{id}.html.br");
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{id}.html");
                 var response = await client.SendAsync(request);
-                var compressed = await response.Content.ReadAsStreamAsync();
-                var decompressed = await brotliDecompressor.DecompileAsync(compressed);
-                var data = new StreamReader(decompressed);
-                return (id, await data.ReadToEndAsync());
+                return (id, await response.Content.ReadAsStringAsync());
             }
 
             if (_crashReports is null)
@@ -43,7 +40,7 @@ namespace BUTR.Site.NexusMods.Client.Models
                 const string baseUrl = "https://crash.butr.dev/report/";
                 var client = factory.CreateClient("InternalReports");
                 var reports = new[] { "FC58E239", "7AA28856", "4EFF0B0A", "3DF57593" };
-                var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, brotliDecompressor, r)));
+                var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, r)));
                 foreach (var (id, content) in contents)
                 {
                     var cr = CrashReportParser.Parse(id, content);

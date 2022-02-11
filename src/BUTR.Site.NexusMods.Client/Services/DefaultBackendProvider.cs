@@ -91,15 +91,13 @@ namespace BUTR.Site.NexusMods.Client.Services
     public sealed class DefaultBackendProvider : IProfileProvider, IRoleProvider, IModProvider, ICrashReportProvider
     {
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly BrotliDecompressorService _brotliDecompressor;
         private readonly StorageCache _cache;
         private readonly ITokenContainer _tokenContainer;
         private readonly JsonSerializerOptions _jsonSerializerOptions;
 
-        public DefaultBackendProvider(IHttpClientFactory httpClientFactory, BrotliDecompressorService brotliDecompressor, StorageCache cache, ITokenContainer tokenContainer, IOptions<JsonSerializerOptions> jsonSerializerOptions)
+        public DefaultBackendProvider(IHttpClientFactory httpClientFactory, StorageCache cache, ITokenContainer tokenContainer, IOptions<JsonSerializerOptions> jsonSerializerOptions)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            _brotliDecompressor = brotliDecompressor ?? throw new ArgumentNullException(nameof(brotliDecompressor));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
             _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
@@ -273,7 +271,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
-                var crashReports = DemoUser.GetCrashReports(_httpClientFactory, _brotliDecompressor);
+                var crashReports = DemoUser.GetCrashReports(_httpClientFactory);
                 return new PagingResponse<CrashReportModel>
                 {
                     Items = crashReports,
