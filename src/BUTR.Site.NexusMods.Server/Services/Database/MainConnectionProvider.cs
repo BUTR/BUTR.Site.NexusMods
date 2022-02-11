@@ -11,7 +11,7 @@ namespace BUTR.Site.NexusMods.Server.Services.Database
 {
     public class MainConnectionProvider
     {
-        public NpgsqlConnection Connection => new (_options.Main);
+        public NpgsqlConnection Connection => new(_options.Main);
 
         private readonly ILogger _logger;
         private readonly ConnectionStringsOptions _options;

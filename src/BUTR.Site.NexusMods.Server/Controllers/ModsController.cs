@@ -76,7 +76,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                     Metadata = new PagingMetadata()
                 });
             }
-            
+
             var (userModsTotalCount, userMods) = await _sqlHelperMods.GetPaginatedAsync(HttpContext.GetUserId(), (page - 1) * pageSize, pageSize, ct);
 
             var metadata = new PagingMetadata

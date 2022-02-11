@@ -45,7 +45,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
                 return await ForAdministrator(page, pageSize);
-            
+
             return await ForUser(HttpContext.GetUserId(), page, pageSize);
         }
 
