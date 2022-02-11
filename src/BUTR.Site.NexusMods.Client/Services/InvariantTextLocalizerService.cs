@@ -10,7 +10,7 @@ namespace BUTR.Site.NexusMods.Client.Services
     {
         public CultureInfo SelectedCulture => CultureInfo.InvariantCulture;
 
-        public IEnumerable<CultureInfo> AvailableCultures => new [] { CultureInfo.InvariantCulture };
+        public IEnumerable<CultureInfo> AvailableCultures => new[] { CultureInfo.InvariantCulture };
 
         public event EventHandler? LocalizationChanged;
 
