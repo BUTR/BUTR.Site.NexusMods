@@ -32,11 +32,11 @@ function makeid(length) {
     return result;
 }
 
-function isEmpty(obj) {
-    // ReSharper disable once MissingHasOwnPropertyInForeach
-    // ReSharper disable once UnusedLocals
-    for (let _ in obj) {
-        return false;
+function isEmptyObject(obj) {
+    for (let name in obj) {
+        if (obj.hasOwnProperty(name)) {
+            return false;
+        }
     }
     return true;
 }
@@ -58,7 +58,7 @@ function removeCss() {
 
 async function render(elementId, backendUrl) {
     const importResult = await importModule(js);
-    if (importResult && !isEmpty(importResult))
+    if (importResult && !isEmptyObject(importResult))
         state.SwaggerUIBundle = importResult;
 
     state.SwaggerUIBundle({

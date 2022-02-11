@@ -22,7 +22,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./../js/swagger.js");
+        _module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "js/swagger.js");
 
         await _module.InvokeVoidAsync("init", "#swagger-ui", _backendOptions.Value.Endpoint);
 
