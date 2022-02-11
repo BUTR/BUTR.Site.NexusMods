@@ -91,7 +91,7 @@
 @code {
 
     private CrashReportModel? _report;
-    private CrashReportModel[]? _reports = Array.Empty<CrashReportModel>();
+    private List<CrashReportModel> _reports = new();
     private PagingMetadata _pagingMetadata = new() { CurrentPage = 1 };
 
     private Modal _modalRef = default!;
@@ -143,7 +143,7 @@
         var response = await _crashReportProvider.GetCrashReports(_pagingMetadata.CurrentPage, ct);
         if (response is not null)
         {
-            _reports = response.Items.ToArray();
+            _reports = response.Items.ToList();
             _pagingMetadata = response.Metadata;
         }
     }

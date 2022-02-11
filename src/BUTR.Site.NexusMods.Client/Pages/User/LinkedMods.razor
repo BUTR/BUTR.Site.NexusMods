@@ -76,8 +76,8 @@
 
     private LinkModModel _model = new();
 
-    private ModModel? _mod = default!;
-    private ModModel[] _mods = Array.Empty<ModModel>();
+    private ModModel? _mod;
+    private List<ModModel> _mods = new();
     private PagingMetadata _pagingMetadata = new() { CurrentPage = 1 };
 
     private DataGrid<ModModel?> _dataGridRef = default!;
@@ -123,19 +123,19 @@
         if (!ModsUtils.TryParse(model.ModUrl, out var gameDomain, out var modId))
             return false;
 
-        return await _modProvider.LinkMod(gameDomain, modId);
+        return await _modProvider.LinkMod(gameDomain, modId.Value);
     }
 
     private async Task<bool> DoUnlinkMod(ModModel model)
     {
-        return await _modProvider.UnlinkMod(model.GameDomain, model.ModId.ToString());
+        return await _modProvider.UnlinkMod(model.GameDomain, model.ModId);
     }
 
     private async Task GetMods(CancellationToken ct = default)
     {
         if (await _modProvider.GetMods(_pagingMetadata.CurrentPage, ct) is { } response)
         {
-            _mods = response.Items.ToArray();
+            _mods = response.Items.ToList();
             _pagingMetadata = response.Metadata;
         }
     }

@@ -9,7 +9,7 @@ namespace BUTR.Site.NexusMods.Client.Services
     public interface IModProvider
     {
         Task<PagingResponse<ModModel>?> GetMods(int page, CancellationToken ct = default);
-        Task<bool> LinkMod(string gameDomain, string modId, CancellationToken ct = default);
-        Task<bool> UnlinkMod(string gameDomain, string modId, CancellationToken ct = default);
+        Task<bool> LinkMod(string gameDomain, int modId, CancellationToken ct = default);
+        Task<bool> UnlinkMod(string gameDomain, int modId, CancellationToken ct = default);
     }
 }

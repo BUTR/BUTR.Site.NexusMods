@@ -212,15 +212,15 @@ namespace BUTR.Site.NexusMods.Client.Services
                 return null;
             }
         }
-        public async Task<bool> LinkMod(string gameDomain, string modId, CancellationToken ct = default)
+        public async Task<bool> LinkMod(string gameDomain, int modId, CancellationToken ct = default)
         {
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
                 var mods = await DemoUser.GetMods();
-                if (mods.Find(m => m.GameDomain == gameDomain && m.ModId.ToString() == modId) is null && int.TryParse(modId, out var id))
+                if (mods.Find(m => m.GameDomain == gameDomain && m.ModId == modId) is null)
                 {
-                    mods.Add(new($"Demo Mod {gameDomain} {id}", gameDomain, id));
+                    mods.Add(new($"Demo Mod {gameDomain} {modId}", gameDomain, modId));
                     return true;
                 }
 
@@ -239,13 +239,13 @@ namespace BUTR.Site.NexusMods.Client.Services
                 return false;
             }
         }
-        public async Task<bool> UnlinkMod(string gameDomain, string modId, CancellationToken ct = default)
+        public async Task<bool> UnlinkMod(string gameDomain, int modId, CancellationToken ct = default)
         {
             var tokenType = await _tokenContainer.GetTokenTypeAsync(ct);
             if (tokenType?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
                 var mods = await DemoUser.GetMods();
-                if (mods.Find(m => m.GameDomain == gameDomain && m.ModId.ToString() == modId) is { } mod)
+                if (mods.Find(m => m.GameDomain == gameDomain && m.ModId == modId) is { } mod)
                     return mods.Remove(mod);
 
                 return false;
