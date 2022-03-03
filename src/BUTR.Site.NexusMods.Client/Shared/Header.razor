@@ -21,10 +21,9 @@
     </BarBrand>
     <BarToggler />
     <BarMenu>
-        <AuthorizeView>
-
-            <Authorized>
-                <BarStart>
+        <BarStart>
+            <AuthorizeView>
+                <Authorized>
                     <BarItem>
                         <BarLink To="linked-mods">Linked Mods</BarLink>
                     </BarItem>
@@ -39,8 +38,26 @@
                             </BarItem>
                         </Authorized>
                     </AuthorizeView>
-                </BarStart>
-                <BarEnd>
+                </Authorized>
+            </AuthorizeView>
+        </BarStart>
+
+        <BarEnd>
+            <BarItem>
+                <BarDropdown>
+                    <BarDropdownToggle>Tools</BarDropdownToggle>
+                    <BarDropdownMenu Background="Background.Dark" RightAligned>
+                        <BarDropdownItem Background="Background.Dark">
+                            <BarLink To="localization-parser">Localization Parser</BarLink>
+                        </BarDropdownItem>
+                        <BarDropdownItem Background="Background.Dark">
+                            <BarLink To="assembly-string-editor">Assembly String Editor</BarLink>
+                        </BarDropdownItem>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>
+            <AuthorizeView>
+                <Authorized>
                     <BarItem>
                         <BarDropdown>
                             <BarDropdownToggle>
@@ -59,20 +76,15 @@
                             </BarDropdownMenu>
                         </BarDropdown>
                     </BarItem>
-                </BarEnd>
-            </Authorized>
+                </Authorized>
 
-            <NotAuthorized>
-                <BarStart>
-                </BarStart>
-                <BarEnd>
+                <NotAuthorized>
                     <BarItem>
                         <BarLink To="login">Login</BarLink>
                     </BarItem>
-                </BarEnd>
-            </NotAuthorized>
-
-        </AuthorizeView>
+                </NotAuthorized>
+            </AuthorizeView>
+        </BarEnd>
     </BarMenu>
 </Bar>
 

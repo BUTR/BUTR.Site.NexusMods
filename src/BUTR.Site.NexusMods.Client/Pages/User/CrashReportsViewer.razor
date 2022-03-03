@@ -12,13 +12,13 @@
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            @if (@_report is not null)
+            @if (@_entry is not null)
             {
                 <Form>
                     <Field>
                         <Text Style="white-space:break-spaces; word-break:break-all;" >
                             <Small>
-                                @(_report.Exception
+                                @(_entry.Exception
                                 .Replace("\n\n", "\n")
                                 .Replace("\r\r", "\r")
                                 .Replace("\r\n\r\n", "\r\n")
@@ -30,7 +30,7 @@
                     <Field>
                         <FieldLabel>Status</FieldLabel>
                         <FieldBody>
-                           <Select TValue="CrashReportStatus" @bind-SelectedValue="@_report.Status">
+                           <Select TValue="CrashReportStatus" @bind-SelectedValue="@_entry.Status">
                                 @foreach (var crs in Enum.GetValues<CrashReportStatus>())
                                 {
                                     <SelectItem Value="@crs">@crs.GetDisplayName()</SelectItem>
@@ -41,7 +41,7 @@
                     <Field>
                         <FieldLabel>Comment</FieldLabel>
                         <FieldBody Width="Width.Is25">
-                            <MemoEdit AutoSize @bind-Text="@_report.Comment" />
+                            <MemoEdit AutoSize @bind-Text="@_entry.Comment" />
                         </FieldBody>
                     </Field>
                 </Form> 
@@ -61,7 +61,7 @@
     <CardBody>
         <DataGrid @ref="_dataGridRef"
                   TItem="CrashReportModel"
-                  Data="@_reports"
+                  Data="@_entries"
                   SelectedRowChanged="SelectDeselect"
                   ReadData="@OnReadData"
                   TotalItems="@_pagingMetadata.TotalCount"
@@ -77,10 +77,10 @@
                 <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Comment)" Caption="Comment" Sortable="false" />
             </DataGridColumns>
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_report is null)" Clicked="@ShowModal">
+                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@ShowModal">
                     Check
                 </Button>
-                <Button Color="Color.Primary" Disabled="@(_report is null)" Clicked="@(() => OnClick(_report!))">
+                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(() => OnClick(_entry!))">
                     Open HTML
                 </Button>
             </ButtonRowTemplate>
@@ -90,8 +90,8 @@
 
 @code {
 
-    private CrashReportModel? _report;
-    private List<CrashReportModel> _reports = new();
+    private CrashReportModel? _entry;
+    private List<CrashReportModel> _entries = new();
     private PagingMetadata _pagingMetadata = new() { CurrentPage = 1 };
 
     private Modal _modalRef = default!;
@@ -102,9 +102,9 @@
     private async Task HideModal(bool save)
     {
         await _modalRef.Hide();
-        if (save && _report is not null)
+        if (save && _entry is not null)
         {
-            var updatedCrashReport = _report with { };
+            var updatedCrashReport = _entry with { };
             if (await _crashReportProvider.UpdateCrashReport(updatedCrashReport))
             {
                 await _notificationService.Success($"Saved Crash Report!", "Success!");
@@ -118,18 +118,18 @@
 
     private void SelectDeselect(CrashReportModel model)
     {
-        if (_report != model)
+        if (_entry != model)
         {
-            _report = model;
+            _entry = model;
         }
-        else if (_report is not null)
+        else if (_entry is not null)
         {
             _dataGridRef.SelectedRow = null;
-            _report = null;
+            _entry = null;
         }
         else
         {
-            _report = model;
+            _entry = model;
         }
     }
 
@@ -143,7 +143,7 @@
         var response = await _crashReportProvider.GetCrashReports(_pagingMetadata.CurrentPage, ct);
         if (response is not null)
         {
-            _reports = await response.Items.ToListAsync(ct);
+            _entries = await response.Items.ToListAsync(ct);
             _pagingMetadata = response.Metadata;
         }
     }

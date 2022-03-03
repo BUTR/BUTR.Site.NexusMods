@@ -91,6 +91,7 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddScoped<StorageCache>();
 
                 services.AddTransient<BrotliDecompressorService>();
+                services.AddTransient<DownloadFileService>();
 
                 services.AddBlazoredLocalStorage();
                 services.AddBlazoredSessionStorage();

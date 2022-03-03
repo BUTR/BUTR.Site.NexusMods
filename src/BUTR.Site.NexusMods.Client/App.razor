@@ -1,8 +1,14 @@
+@using Microsoft.Extensions.Logging
+@using Microsoft.AspNetCore.Components.WebAssembly.Services
+@using System.Reflection
+
 @inject NavigationManager _navigationManager
+@inject LazyAssemblyLoader _assemblyLoader
+@inject ILogger<App> _logger
 
 <Blazorise.ThemeProvider Theme="@_theme">
     <CascadingAuthenticationState>
-        <Router AppAssembly="typeof(App).Assembly">
+        <Router AppAssembly="typeof(App).Assembly" OnNavigateAsync="@OnNavigateAsync" AdditionalAssemblies="@_lazyLoadedAssemblies">
             <Found Context="routeData">
                 <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(DefaultLayout)">
                     <Authorizing>
@@ -117,5 +123,30 @@
             Info = ColourWhite,
         },
     };
+
+    private readonly List<Assembly> _lazyLoadedAssemblies = new();
+
+    private async Task OnNavigateAsync(NavigationContext args)
+    {
+        try
+        {
+            if (args.Path is "assembly-string-editor" or "localization-parser")
+            {
+                var assemblies = await _assemblyLoader.LoadAssembliesAsync(new[]
+                {
+                    "CsvHelper.dll",
+                    "Mono.Cecil.dll",
+                    "Mono.Cecil.Mdb.dll",
+                    "Mono.Cecil.Pdb.dll",
+                    "Mono.Cecil.Rocks.dll",
+                });
+                _lazyLoadedAssemblies.AddRange(assemblies);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error: {Message}", ex.Message);
+        }
+    }
 
 }

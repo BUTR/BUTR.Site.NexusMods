@@ -1,0 +1,189 @@
+﻿@page "/assembly-string-editor"
+
+@using Mono.Cecil
+@using Mono.Cecil.Cil
+
+@implements IAsyncDisposable
+
+@inject DownloadFileService _downloadFileService
+
+<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Assembly String Editor</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <CardText>
+            You can directly edit text
+        </CardText>
+        <FileEdit Changed="@OnFileSelected"/>
+        <DataGrid @ref="_dataGridRef"
+                  TItem="BaseLocalizationString"
+                  Data="@_entries"
+                  SelectedRowChanged="SelectDeselect"
+                  SelectionMode="DataGridSelectionMode.Single"
+                  Editable
+                  EditMode="DataGridEditMode.Inline"
+                  Resizable
+                  ResizeMode="TableResizeMode.Header"
+                  Responsive>
+            <DataGridColumns>
+                <DataGridCommandColumn TItem="BaseLocalizationString" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
+                <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Assembly)" Caption="@nameof(BaseLocalizationString.Assembly)" Sortable="false"/>
+                <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Text)" Caption="@nameof(BaseLocalizationString.Text)" Editable Sortable="false">
+                    <EditTemplate>
+                        <TextEdit Text="@((string) context.CellValue)" TextChanged="@(v => OnEdit(context, v))"/>
+                    </EditTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Location)" Caption="@nameof(BaseLocalizationString.Location)" Sortable="false"/>
+            </DataGridColumns>
+        </DataGrid>
+        <Button Color="Color.Primary" Disabled="@(_entries.Count <= 0)" Clicked="@(OnClear)">
+            Clear
+        </Button>
+        <Button Color="Color.Primary" Disabled="@(_entries.Count <= 0)" Clicked="@(OnExport)">
+            Export Assembly
+        </Button>
+    </CardBody>
+</Card>
+
+@code {
+
+    private static bool IsTranslationString(in ReadOnlySpan<char> span)
+    {
+        if (span.Length < 3)
+            return false;
+
+        if (span[0] != '{' || span[1] != '=')
+            return false;
+
+        if (span.IndexOf('}') == -1)
+            return false;
+
+        return true;
+    }
+
+    private abstract record BaseLocalizationString(string Assembly, string Text, string Location);
+    private record FieldLocalizationString(string Assembly, string Text, string Location, FieldDefinition FieldDefinition) : BaseLocalizationString(Assembly, Text, Location);
+    private record MethodLocalizationString(string Assembly, string Text, string Location, MethodDefinition MethodDefinition, Instruction CodeInstruction) : BaseLocalizationString(Assembly, Text, Location);
+
+    private Stream? _currentFileStream;
+    private object? _currentFile; // We need to hide the type so LazyLoad can work
+    private string? _currentFileName;
+
+    private BaseLocalizationString? _entry;
+    private readonly List<BaseLocalizationString> _entries = new();
+
+    private DataGrid<BaseLocalizationString?> _dataGridRef = default!;
+
+    private void SelectDeselect(BaseLocalizationString model)
+    {
+        if (_entry != model)
+        {
+            _entry = model;
+        }
+        else if (_entry is not null)
+        {
+            _dataGridRef.SelectedRow = null;
+            _entry = null;
+        }
+        else
+        {
+            _entry = model;
+        }
+    }
+
+    private async Task OnFileSelected(FileChangedEventArgs e)
+    {
+        _entries.Clear();
+        if (_currentFile is AssemblyDefinition assemblyDefinition)
+            assemblyDefinition.Dispose();
+        if (_currentFileStream is not null)
+            await _currentFileStream.DisposeAsync();
+
+        if (e.Files.Length != 1)
+            return;
+
+        var file = e.Files[0];
+        var ms = new MemoryStream();
+        await file.WriteToStreamAsync(ms);
+        ms.Seek(0, SeekOrigin.Begin);
+        await ParseLibrary(file.Name, ms);
+    }
+
+    private Task OnEdit(CellEditContext<BaseLocalizationString> context, string value)
+    {
+        if (context.Item is FieldLocalizationString fieldLocalizationString)
+        {
+            fieldLocalizationString.FieldDefinition.Constant = value;
+            context.CellValue = value;
+        }
+
+        if (context.Item is MethodLocalizationString methodLocalizationString)
+        {
+            var ilProcessor = methodLocalizationString.MethodDefinition.Body.GetILProcessor();
+            ilProcessor.Replace(methodLocalizationString.CodeInstruction, Instruction.Create(methodLocalizationString.CodeInstruction.OpCode, value));
+            context.CellValue = value;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnClear()
+    {
+        _entries.Clear();
+        return Task.CompletedTask;
+    }
+
+    private async Task OnExport()
+    {
+        if (_currentFile is AssemblyDefinition assemblyDefinition && !string.IsNullOrEmpty(_currentFileName))
+        {
+            var ms = new MemoryStream();
+            assemblyDefinition.Write(ms, new WriterParameters { DeterministicMvid = true });
+            ms.Seek(0, SeekOrigin.Begin);
+            await _downloadFileService.DownloadFileAsync(_currentFileName, "application/octet-stream", ms);
+        }
+    }
+
+    private Task ParseLibrary(string name, Stream assemblyStream)
+    {
+        var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyStream);
+        _currentFile = assemblyDefinition;
+        _currentFileName = name;
+        _currentFileStream = assemblyStream;
+
+
+        foreach (var fieldDefinition in assemblyDefinition.MainModule.Types.SelectMany(x => x.Fields))
+        {
+            if (!fieldDefinition.IsLiteral)
+                continue;
+
+            if (fieldDefinition.Constant is string text && !string.IsNullOrEmpty(text) && !IsTranslationString(text))
+                _entries.Add(new FieldLocalizationString(name, text, fieldDefinition.FullName, fieldDefinition));
+        }
+
+        foreach (var methodDefinition in assemblyDefinition.MainModule.Types.SelectMany(x => x.Methods))
+        {
+            if (!methodDefinition.HasBody)
+                continue;
+
+            foreach (var codeInstruction in methodDefinition.Body.Instructions)
+            {
+                if (codeInstruction.Operand is string text  && !string.IsNullOrEmpty(text) && !IsTranslationString(text))
+                    _entries.Add(new MethodLocalizationString(name, text, methodDefinition.FullName, methodDefinition, codeInstruction));
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _entries.Clear();
+        if (_currentFile is AssemblyDefinition assemblyDefinition)
+            assemblyDefinition.Dispose();
+        if (_currentFileStream is not null)
+            await _currentFileStream.DisposeAsync();
+    }
+
+}

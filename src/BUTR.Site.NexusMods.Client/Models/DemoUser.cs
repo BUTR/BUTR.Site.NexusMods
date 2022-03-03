@@ -1,10 +1,8 @@
-﻿using BUTR.Site.NexusMods.Client.Services;
-using BUTR.Site.NexusMods.Shared.Helpers;
+﻿using BUTR.Site.NexusMods.Shared.Helpers;
 using BUTR.Site.NexusMods.Shared.Models;
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;

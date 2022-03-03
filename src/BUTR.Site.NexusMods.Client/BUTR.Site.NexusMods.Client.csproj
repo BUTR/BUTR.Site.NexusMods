@@ -16,15 +16,24 @@
     <PackageReference Include="Blazorise.DataGrid" Version="0.9.5.5" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.5.5" />
     <PackageReference Include="Blazorise.Snackbar" Version="0.9.5.5" />
-    <PackageReference Include="Flurl" Version="3.0.4" />
+    <PackageReference Include="CsvHelper" Version="27.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.4" />
     <PackageReference Include="System.Text.Encodings.Web" Version="6.0.0" />
     <PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <BlazorWebAssemblyLazyLoad Include="CsvHelper.dll" />
+    <BlazorWebAssemblyLazyLoad Include="Mono.Cecil.dll" />
+    <BlazorWebAssemblyLazyLoad Include="Mono.Cecil.Mdb.dll" />
+    <BlazorWebAssemblyLazyLoad Include="Mono.Cecil.Pdb.dll" />
+    <BlazorWebAssemblyLazyLoad Include="Mono.Cecil.Rocks.dll" />
   </ItemGroup>
   
   <ItemGroup>
