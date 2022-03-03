@@ -97,10 +97,10 @@
         await using var ms = new MemoryStream();
         await using var csv = new CsvWriter(new StreamWriter(ms), new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            Delimiter = ";",
-            LeaveOpen = true
+            Delimiter = ";"
         });
         await csv.WriteRecordsAsync(_entries);
+        await csv.FlushAsync();
         ms.Seek(0, SeekOrigin.Begin);
         await _downloadFileService.DownloadFileAsync("localization.csv", "text/csv", ms);
     }
