@@ -1,22 +1,22 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>BUTR.CrashReportViewer</title>
-    <base href="/" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>BUTR.CrashReportViewer</title>
+        <base href="/" />
+        <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" integrity="sha512-GQGU0fMMi238uA+a/bdWJfpUGKUkBdgfFdgBm72SUQ6BeyWjoY/ton0tEjH+OSH9iP4Dfh+7HM0I9f5eR0L/4w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" integrity="sha512-GQGU0fMMi238uA+a/bdWJfpUGKUkBdgfFdgBm72SUQ6BeyWjoY/ton0tEjH+OSH9iP4Dfh+7HM0I9f5eR0L/4w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    <link href="_content/Blazorise/blazorise.css" rel="stylesheet" />
-    <link href="_content/Blazorise.Bootstrap5/blazorise.bootstrap5.css" rel="stylesheet" />
-    <link href="_content/Blazorise.Snackbar/blazorise.snackbar.css" rel="stylesheet" />
+        <link href="_content/Blazorise/blazorise.css" rel="stylesheet" />
+        <link href="_content/Blazorise.Bootstrap5/blazorise.bootstrap5.css" rel="stylesheet" />
+        <link href="_content/Blazorise.Snackbar/blazorise.snackbar.css" rel="stylesheet" />
 
-    <link rel="stylesheet" href="css/app.css" />
-    <link rel="stylesheet" href="BUTR.Site.NexusMods.Client.styles.css" />
-</head>
+        <link rel="stylesheet" href="css/app.css" />
+        <link rel="stylesheet" href="BUTR.Site.NexusMods.Client.styles.css" />
+    </head>
     <body>
         <div id="app">
             <div class="spinner-loading">
@@ -51,5 +51,92 @@
             });
         </script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js" integrity="sha512-pax4MlgXjHEPfCwcJLQhigY7+N8rt6bVvWLFyUMuxShv170X53TRzGPmPkZmGBhk+jikR8WBM4yl7A9WMHHqvg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <!-- Since GitHub doesn't provide any way to get simple metrics from Pages, we use Yandex. -->
+        <!-- Please create an issue on our repo if you have a better alternative! -->
+        <!-- https://github.com/BUTR/BUTR.Site.NexusMods -->
+        <script src="js/cookieconsent.min.js"></script>
+        <script>
+            
+            var consent = CookieConsent({
+                consentReset: true,
+                buttons: [ 'allowCookies', 'allowSelection', 'rejectCookies' ],
+                text: {
+                    day: ['Day', 'Days'],
+                    year: ['Year', 'Years'],
+                    allowCookies: 'Allow All Cookies',
+                    allowSelection: 'Allow Selection',
+                    rejectCookies: 'Allow Essential Cookies',
+                    details: 'Settings',
+                    name: 'Name',
+                    provider: 'Provider',
+                    expiration: 'Expiration',
+                    type: 'Type',
+                    purpose: 'Purpose',
+                    optoutAlready: 'You have already deactivated this function.',
+                    optoutSuccess: 'Successfully deactivated.',
+                    changes: '<p class="cc-changed">We got new cookies</p>',
+                    consentReset: 'You have objected your consent, notice not all cookies can be deleted now and will stay until they expire.',
+                    message: 'We use cookies in this site. Check the settings for more info!'
+                },
+                groups: [
+                    {
+                        label: 'Essential',
+                        name: 'essential',
+                        required: true,
+                        default: true,
+                        purpose: 'Essential cookies help us making our site work.',
+                        cookies: [
+                            {
+                                name: 'cookieSettings',
+                                provider: 'Our Website',
+                                purpose: '',
+                                type: 'HTTP',
+                                expires: '1 year'
+                            }
+                        ]
+                    },
+                    {
+                        label: 'Metrics',
+                        name: 'metrics',
+                        default: true,
+                        purpose: 'Metrics cookies are used by us to check how the site is used by users',
+                        cookies: [
+                            {
+                                name: 'yuidss, i, _ym_d, yandexuid, _ym_uid, ymex',
+                                provider: 'Yandex',
+                                id: 'YA',
+                                expires: '365 day'
+                            },
+                            {
+                                name: '_ym_isad',
+                                provider: 'Yandex',
+                                id: 'YA',
+                                expires: '2 day'
+                            },
+                            {
+                                name: 'yabs-sid',
+                                provider: 'Yandex',
+                                id: 'YA',
+                                expires: 'Session day'
+                            }
+                        ]
+                    }
+                ]
+            });
+            consent.feedback('YA', function (allowed) {
+                if (allowed) {
+                    (function () {
+                        window.ym = window.ym || function () { (window.ym.a = window.ym.a || []).push(arguments) };
+                        window.ym.l = 1 * new Date();
+                        const k = document.createElement("script");
+                        const a = document.getElementsByTagName("script")[0];
+                        k.async = 1;
+                        k.src = "https://mc.yandex.ru/metrika/tag.js";
+                        a.parentNode.insertBefore(k, a);
+                    })();
+                    ym(87711623, "init", { clickmap: true, trackLinks: true, accurateTrackBounce: true });
+                }
+            });
+        </script>
     </body>
 </html>
