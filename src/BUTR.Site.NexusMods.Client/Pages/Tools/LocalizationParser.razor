@@ -3,7 +3,6 @@
 
 @using CsvHelper
 @using CsvHelper.Configuration
-@using Mono.Cecil
 
 @inject DownloadFileService _downloadFileService
 
@@ -87,26 +86,60 @@
     private async Task ParseLibrary(string name, Stream assemblyStream)
     {
         await using var _ = assemblyStream;
-        using var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyStream);
+        using var reader = new PEReader(assemblyStream);
+        var metadata = reader.GetMetadataReader();
 
-        foreach (var fieldDefinition in assemblyDefinition.MainModule.Types.SelectMany(x => x.Fields))
+        foreach (var fieldDefinitionHandle in metadata.FieldDefinitions)
         {
-            if (!fieldDefinition.IsLiteral)
+            var fieldDefinition = metadata.GetFieldDefinition(fieldDefinitionHandle);
+
+            if (!fieldDefinition.Attributes.HasFlag(FieldAttributes.Literal))
                 continue;
 
-            if (fieldDefinition.Constant is string text && !string.IsNullOrEmpty(text) && LocalizationUtils.IsTranslationString(text))
+            var constantHandle = fieldDefinition.GetDefaultValue();
+            if (constantHandle.IsNil)
+                continue;
+
+            var constant = metadata.GetConstant(constantHandle);
+            if (constant.TypeCode != ConstantTypeCode.String)
+                continue;
+
+            var blob = metadata.GetBlobReader(constant.Value);
+            if (blob.ReadConstant(constant.TypeCode) is string text && !string.IsNullOrEmpty(text) && LocalizationUtils.IsTranslationString(text))
                 _entries.Add(new(name, text));
         }
 
-        foreach (var methodDefinition in assemblyDefinition.MainModule.Types.SelectMany(x => x.Methods))
+        foreach (var methodDefinitionHandle in metadata.MethodDefinitions)
         {
-            if (!methodDefinition.HasBody)
+            var methodDefinition = metadata.GetMethodDefinition(methodDefinitionHandle);
+
+            if (methodDefinition.RelativeVirtualAddress == 0)
                 continue;
 
-            foreach (var codeInstruction in methodDefinition.Body.Instructions)
+            var body = reader.GetMethodBody(methodDefinition.RelativeVirtualAddress);
+            foreach (var codeInstruction in ILReader.GetInstructions(metadata, body))
             {
-                if (codeInstruction.Operand is string text  && !string.IsNullOrEmpty(text) && LocalizationUtils.IsTranslationString(text))
+                if (codeInstruction.OperandType != OperandType.InlineString)
+                    continue;
+
+                var ilReader = body.GetILReader();
+                ilReader.Offset = codeInstruction.OperandOffset;
+                var metadataToken = ilReader.ReadInt32();
+                string? text;
+                try
+                {
+                    var userString = MetadataTokens.UserStringHandle(metadataToken);
+                    text = metadata.GetUserString(userString);
+                }
+                catch (BadImageFormatException)
+                {
+                    text = null;
+                }
+                if (!string.IsNullOrEmpty(text) && LocalizationUtils.IsTranslationString(text))
+                {
                     _entries.Add(new(name, text));
+                }
+                break;
             }
         }
     }

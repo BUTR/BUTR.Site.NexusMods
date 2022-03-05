@@ -139,7 +139,7 @@
                 });
                 _lazyLoadedAssemblies.AddRange(assemblies);
             }
-            if (args.Path is "assembly-string-editor" or "localization-parser" or "localizer")
+            if (args.Path is "assembly-string-editor")
             {
                 var assemblies = await _assemblyLoader.LoadAssembliesAsync(new[]
                 {
