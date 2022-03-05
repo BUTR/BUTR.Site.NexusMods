@@ -1,0 +1,176 @@
+﻿@attribute [AllowAnonymous]
+@page "/localizer"
+
+@using Mono.Cecil
+@using System.Xml
+
+@inject DownloadFileService _downloadFileService
+
+<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Localizer</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Fields>
+            <Field ColumnSize="ColumnSize.Is3">
+                <FieldLabel>Language</FieldLabel>
+                <Autocomplete TItem="string"
+                              TValue="string"
+                              Data="@_languages"
+                              TextField="@(x => x)"
+                              ValueField="@(x => x)"
+                              @bind-SelectedValue="@_language"
+                              Placeholder="English"
+                              Filter="AutocompleteFilter.StartsWith"
+                              FreeTyping />
+            </Field>
+            <Field>
+                <FieldLabel ColumnSize="ColumnSize.Is1">Files</FieldLabel>
+                <FieldBody>
+                    <FileEdit Changed="@OnFileSelected" Multiple="true"/>
+                </FieldBody>
+            </Field>
+        </Fields>
+        <Field>
+            <DataGrid @ref="_dataGridRef"
+                      TItem="StringEntry"
+                      Data="@_entries"
+                      SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
+                      SelectionMode="DataGridSelectionMode.Single"
+                      Editable
+                      EditMode="DataGridEditMode.Inline"
+                      Resizable
+                      ResizeMode="TableResizeMode.Header"
+                      Responsive>
+                <DataGridColumns>
+                    <DataGridCommandColumn TItem="StringEntry" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
+                    <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Id)" Caption="@nameof(StringEntry.Id)" Sortable="false"/>
+                    <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Original)" Caption="@nameof(StringEntry.Original)" Sortable="false"/>
+                    <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Translation)" Caption="@nameof(StringEntry.Translation)" Sortable="false" Editable>
+                        <EditTemplate>
+                            <TextEdit Text="@((string) context.CellValue)" TextChanged="@(v => context.CellValue = v)"/>
+                        </EditTemplate>
+                    </DataGridColumn>
+                </DataGridColumns>
+            </DataGrid>
+            <Button Color="Color.Primary" Disabled="@(_entries.Count <= 0)" Clicked="@(OnClear)">
+                Clear
+            </Button>
+            <Button Color="Color.Primary" Disabled="@(_entries.Count <= 0)" Clicked="@(OnExport)">
+                Export as XML
+            </Button>
+        </Field>
+    </CardBody>
+</Card>
+
+
+@code {
+
+    private static readonly IEnumerable<string> _languages = new[]
+    {
+        "English",
+        "Português (BR)",
+        "简体中文",
+        "繁體中文",
+        "Deutsch",
+        "Français",
+        "Italiano",
+        "日本語",
+        "한국어",
+        "Polski",
+        "Русский",
+        "Español (LA)",
+        "Türkçe",
+    };
+
+    private record StringEntry(string Id, string Original, string Translation);
+
+    private string _language = string.Empty;
+    private StringEntry? _entry;
+    private readonly List<StringEntry> _entries = new();
+
+    private DataGrid<StringEntry?> _dataGridRef = default!;
+
+    private async Task OnFileSelected(FileChangedEventArgs e)
+    {
+        foreach (var file in e.Files)
+        {
+            var ms = new MemoryStream();
+            await file.WriteToStreamAsync(ms);
+            ms.Seek(0, SeekOrigin.Begin);
+            await ParseLibrary(file.Name, ms);
+        }
+    }
+
+    private Task OnClear()
+    {
+        _entries.Clear();
+        return Task.CompletedTask;
+    }
+
+    private async Task OnExport()
+    {
+        await using var ms = new MemoryStream();
+        var doc = new XmlDocument();
+
+        var xmlDeclaration = doc.CreateXmlDeclaration("1.0", "UTF-8", null);
+        var root = doc.DocumentElement;
+        doc.InsertBefore(xmlDeclaration, root);
+
+        var baseElement = doc.CreateElement(string.Empty, "base", string.Empty);
+        baseElement.SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        baseElement.SetAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
+        baseElement.SetAttribute("type", "string");
+        doc.AppendChild(baseElement);
+
+        var tagsElement = doc.CreateElement(string.Empty, "tags", string.Empty);
+        baseElement.AppendChild(tagsElement);
+        
+        var languageElement = doc.CreateElement(string.Empty, "tag", string.Empty);
+        languageElement.SetAttribute("language", _language);
+        tagsElement.AppendChild(languageElement);
+
+        var stringsElement = doc.CreateElement(string.Empty, "strings", string.Empty);
+        baseElement.AppendChild(stringsElement);
+
+        foreach (var entry in _entries)
+        {
+            var stringElement = doc.CreateElement(string.Empty, "string", string.Empty);
+            stringElement.SetAttribute("id", entry.Id);
+            stringElement.SetAttribute("text", entry.Translation);
+            stringsElement.AppendChild(stringElement);
+        }
+
+        doc.Save(ms);
+        ms.Seek(0, SeekOrigin.Begin);
+        await _downloadFileService.DownloadFileAsync("strings.xml", "application/xml", ms);
+    }
+
+    private async Task ParseLibrary(string name, Stream assemblyStream)
+    {
+        await using var _ = assemblyStream;
+        using var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyStream);
+
+        foreach (var fieldDefinition in assemblyDefinition.MainModule.Types.SelectMany(x => x.Fields))
+        {
+            if (!fieldDefinition.IsLiteral)
+                continue;
+
+            if (fieldDefinition.Constant is string text && !string.IsNullOrEmpty(text) && LocalizationUtils.TryParseTranslationString(text, out var id, out var content))
+                _entries.Add(new(id, content, "-"));
+        }
+
+        foreach (var methodDefinition in assemblyDefinition.MainModule.Types.SelectMany(x => x.Methods))
+        {
+            if (!methodDefinition.HasBody)
+                continue;
+
+            foreach (var codeInstruction in methodDefinition.Body.Instructions)
+            {
+                if (codeInstruction.Operand is string text  && !string.IsNullOrEmpty(text) && LocalizationUtils.TryParseTranslationString(text, out var id, out var content))
+                    _entries.Add(new(id, content, "-"));
+            }
+        }
+    }
+
+}

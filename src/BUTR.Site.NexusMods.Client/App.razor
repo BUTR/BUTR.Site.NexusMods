@@ -131,11 +131,18 @@
     {
         try
         {
-            if (args.Path is "assembly-string-editor" or "localization-parser")
+            if (args.Path is "localization-parser")
             {
                 var assemblies = await _assemblyLoader.LoadAssembliesAsync(new[]
                 {
                     "CsvHelper.dll",
+                });
+                _lazyLoadedAssemblies.AddRange(assemblies);
+            }
+            if (args.Path is "assembly-string-editor" or "localization-parser" or "localizer")
+            {
+                var assemblies = await _assemblyLoader.LoadAssembliesAsync(new[]
+                {
                     "Mono.Cecil.dll",
                     "Mono.Cecil.Mdb.dll",
                     "Mono.Cecil.Pdb.dll",

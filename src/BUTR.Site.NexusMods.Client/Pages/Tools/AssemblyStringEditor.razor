@@ -13,55 +13,47 @@
         <CardTitle Size="4" Margin="Margin.Is0">Assembly String Editor</CardTitle>
     </CardHeader>
     <CardBody>
-        <CardText>
-            You can directly edit text
-        </CardText>
-        <FileEdit Changed="@OnFileSelected"/>
-        <DataGrid @ref="_dataGridRef"
-                  TItem="BaseLocalizationString"
-                  Data="@_entries"
-                  SelectedRowChanged="SelectDeselect"
-                  SelectionMode="DataGridSelectionMode.Single"
-                  Editable
-                  EditMode="DataGridEditMode.Inline"
-                  Resizable
-                  ResizeMode="TableResizeMode.Header"
-                  Responsive>
-            <DataGridColumns>
-                <DataGridCommandColumn TItem="BaseLocalizationString" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
-                <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Assembly)" Caption="@nameof(BaseLocalizationString.Assembly)" Sortable="false"/>
-                <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Text)" Caption="@nameof(BaseLocalizationString.Text)" Editable Sortable="false">
-                    <EditTemplate>
-                        <TextEdit Text="@((string) context.CellValue)" TextChanged="@(v => OnEdit(context, v))"/>
-                    </EditTemplate>
-                </DataGridColumn>
-                <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Location)" Caption="@nameof(BaseLocalizationString.Location)" Sortable="false"/>
-            </DataGridColumns>
-        </DataGrid>
-        <Button Color="Color.Primary" Disabled="@(_entries.Count <= 0)" Clicked="@(OnClear)">
-            Clear
-        </Button>
-        <Button Color="Color.Primary" Disabled="@(_entries.Count <= 0)" Clicked="@(OnExport)">
-            Export Assembly
-        </Button>
+        <Fields>
+            <Field>
+                <FieldLabel ColumnSize="ColumnSize.Is1">Files</FieldLabel>
+                <FieldBody>
+                    <FileEdit Changed="@OnFileSelected"/>
+                </FieldBody>
+            </Field>
+        </Fields>
+        <Field>
+            <DataGrid @ref="_dataGridRef"
+                      TItem="BaseLocalizationString"
+                      Data="@_entries"
+                      SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
+                      SelectionMode="DataGridSelectionMode.Single"
+                      Editable
+                      EditMode="DataGridEditMode.Inline"
+                      Resizable
+                      ResizeMode="TableResizeMode.Header"
+                      Responsive>
+                <DataGridColumns>
+                    <DataGridCommandColumn TItem="BaseLocalizationString" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
+                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Assembly)" Caption="@nameof(BaseLocalizationString.Assembly)" Sortable="false"/>
+                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Text)" Caption="@nameof(BaseLocalizationString.Text)" Editable Sortable="false">
+                        <EditTemplate>
+                            <TextEdit Text="@((string) context.CellValue)" TextChanged="@(v => OnEdit(context, v))"/>
+                        </EditTemplate>
+                    </DataGridColumn>
+                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Location)" Caption="@nameof(BaseLocalizationString.Location)" Sortable="false"/>
+                </DataGridColumns>
+            </DataGrid>
+            <Button Color="Color.Primary" Disabled="@(_entries.Count <= 0)" Clicked="@(OnClear)">
+                Clear
+            </Button>
+            <Button Color="Color.Primary" Disabled="@(_entries.Count <= 0)" Clicked="@(OnExport)">
+                Export Assembly
+            </Button>
+        </Field>
     </CardBody>
 </Card>
 
 @code {
-
-    private static bool IsTranslationString(in ReadOnlySpan<char> span)
-    {
-        if (span.Length < 3)
-            return false;
-
-        if (span[0] != '{' || span[1] != '=')
-            return false;
-
-        if (span.IndexOf('}') == -1)
-            return false;
-
-        return true;
-    }
 
     private abstract record BaseLocalizationString(string Assembly, string Text, string Location);
     private record FieldLocalizationString(string Assembly, string Text, string Location, FieldDefinition FieldDefinition) : BaseLocalizationString(Assembly, Text, Location);
@@ -75,23 +67,6 @@
     private readonly List<BaseLocalizationString> _entries = new();
 
     private DataGrid<BaseLocalizationString?> _dataGridRef = default!;
-
-    private void SelectDeselect(BaseLocalizationString model)
-    {
-        if (_entry != model)
-        {
-            _entry = model;
-        }
-        else if (_entry is not null)
-        {
-            _dataGridRef.SelectedRow = null;
-            _entry = null;
-        }
-        else
-        {
-            _entry = model;
-        }
-    }
 
     private async Task OnFileSelected(FileChangedEventArgs e)
     {
@@ -159,7 +134,7 @@
             if (!fieldDefinition.IsLiteral)
                 continue;
 
-            if (fieldDefinition.Constant is string text && !string.IsNullOrEmpty(text) && !IsTranslationString(text))
+            if (fieldDefinition.Constant is string text && !string.IsNullOrEmpty(text) && !LocalizationUtils.IsTranslationString(text))
                 _entries.Add(new FieldLocalizationString(name, text, fieldDefinition.FullName, fieldDefinition));
         }
 
@@ -170,7 +145,7 @@
 
             foreach (var codeInstruction in methodDefinition.Body.Instructions)
             {
-                if (codeInstruction.Operand is string text  && !string.IsNullOrEmpty(text) && !IsTranslationString(text))
+                if (codeInstruction.Operand is string text  && !string.IsNullOrEmpty(text) && !LocalizationUtils.IsTranslationString(text))
                     _entries.Add(new MethodLocalizationString(name, text, methodDefinition.FullName, methodDefinition, codeInstruction));
             }
         }
