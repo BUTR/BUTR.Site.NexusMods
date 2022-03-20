@@ -25,11 +25,12 @@ namespace BUTR.Site.NexusMods.Client.Models
         public static IAsyncEnumerable<ModModel> GetMods() => _mods.ToAsyncEnumerable();
         public static async IAsyncEnumerable<CrashReportModel> GetCrashReports(IHttpClientFactory factory)
         {
-            static async Task<(string Id, string Content)> DownloadReport(HttpClient client, string id)
+            static async Task<CrashRecord> DownloadReport(HttpClient client, string id)
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{id}.html");
                 var response = await client.SendAsync(request);
-                return (id, await response.Content.ReadAsStringAsync());
+                var content = await response.Content.ReadAsStringAsync();
+                return CrashReportParser.Parse(id, content);
             }
 
             if (_crashReports is null)
@@ -39,9 +40,8 @@ namespace BUTR.Site.NexusMods.Client.Models
                 var client = factory.CreateClient("InternalReports");
                 var reports = new[] { "FC58E239", "7AA28856", "4EFF0B0A", "3DF57593" };
                 var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, r)));
-                foreach (var (id, content) in contents)
+                foreach (var cr in contents)
                 {
-                    var cr = CrashReportParser.Parse(id, content);
                     var report = new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html");
                     crm.Add(report);
                     yield return report;
