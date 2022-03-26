@@ -1,4 +1,6 @@
-﻿using BUTR.Authentication.NexusMods.Authentication;
+﻿using Aragas.Extensions.Options.FluentValidation.Extensions;
+
+using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Authentication.NexusMods.Extensions;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
@@ -55,17 +57,17 @@ namespace BUTR.Site.NexusMods.Server
             var urlsSection = _configuration.GetSection(UrlsSectionName);
             var jwtSection = _configuration.GetSection(JwtSectionName);
 
-            services.Configure<ConnectionStringsOptions>(connectionStringSection);
-            services.Configure<ServiceUrlsOptions>(urlsSection);
-            services.Configure<JwtOptions>(jwtSection);
+            services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>(connectionStringSection);
+            services.AddValidatedOptionsWithHttp<ServiceUrlsOptions, ServiceUrlsOptionsValidator>(urlsSection);
+            services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>(jwtSection);
 
-            services.AddHttpClient("NexusModsAPI").ConfigureHttpClient((sp, client) =>
+            services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((sp, client) =>
             {
                 var opts = sp.GetRequiredService<IOptions<ServiceUrlsOptions>>().Value;
                 client.BaseAddress = new Uri(opts.NexusMods);
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
-            services.AddHttpClient("CrashReporter").ConfigureHttpClient((sp, client) =>
+            services.AddHttpClient<CrashReporterClient>().ConfigureHttpClient((sp, client) =>
             {
                 var opts = sp.GetRequiredService<IOptions<ServiceUrlsOptions>>().Value;
                 client.BaseAddress = new Uri(opts.CrashReporter);
@@ -83,7 +85,6 @@ namespace BUTR.Site.NexusMods.Server
             services.AddHostedService<SeederService>();
 
             //services.AddServerCore(_configuration, JwtSectionName);
-            services.AddScoped<NexusModsAPIClient>();
 
             services.AddNexusModsDefaultServices();
 

@@ -13,6 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aragas.Extensions.Options.FluentValidation" Version="1.0.0.8" />
     <PackageReference Include="BUTR.Authentication.NexusMods" Version="1.0.0.1" />
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="3.0.3.2" />
     <PackageReference Include="Npgsql" Version="6.0.3" />

@@ -20,7 +20,7 @@ namespace BUTR.Site.NexusMods.Server.Services
 {
     public class NexusModsAPIClient
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly HttpClient _httpClient;
         private readonly IDistributedCache _cache;
         private readonly JsonSerializerOptions _jsonSerializerOptions;
         private readonly DistributedCacheEntryOptions _expiration = new()
@@ -30,9 +30,9 @@ namespace BUTR.Site.NexusMods.Server.Services
         private readonly SemaphoreSlim _lock = new(1, 1);
         private TimeLimiter _timeLimiter = TimeLimiter.GetFromMaxCountByInterval(30, TimeSpan.FromSeconds(1));
 
-        public NexusModsAPIClient(IHttpClientFactory httpClientFactory, IDistributedCache cache, IOptions<JsonSerializerOptions> jsonSerializerOptions)
+        public NexusModsAPIClient(HttpClient httpClient, IDistributedCache cache, IOptions<JsonSerializerOptions> jsonSerializerOptions)
         {
-            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
         }
@@ -44,8 +44,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                 var request = new HttpRequestMessage(HttpMethod.Get, "v1/users/validate.json");
                 request.Headers.Add("apikey", apiKey);
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                var httpClient = _httpClientFactory.CreateClient("NexusModsAPI");
-                var response = await httpClient.SendAsync(request);
+                var response = await _httpClient.SendAsync(request);
                 if (!response.IsSuccessStatusCode)
                     return null;
                 var responseType = await response.Content.ReadFromJsonAsync<NexusModsValidateResponse>();
@@ -78,8 +77,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                     var request = new HttpRequestMessage(HttpMethod.Get, $"/v1/games/{gameDomain}/mods/{modId}.json");
                     request.Headers.Add("apikey", apiKey);
                     request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    var httpClient = _httpClientFactory.CreateClient("NexusModsAPI");
-                    var response = await httpClient.SendAsync(request);
+                    var response = await _httpClient.SendAsync(request);
                     _timeLimiter = ParseResponseLimits(response);
                     if (!response.IsSuccessStatusCode)
                     {

@@ -55,18 +55,12 @@ namespace BUTR.Site.NexusMods.Client
                     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress),
                     DefaultRequestHeaders = { { "User-Agent", userAgent } }
                 });
-                services.AddHttpClient("InternalReports", (sp, client) =>
+                services.AddHttpClient("InternalReports").ConfigureHttpClient((sp, client) =>
                 {
                     client.BaseAddress = new Uri($"{builder.HostEnvironment.BaseAddress}reports/");
                     client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 }).AddHttpMessageHandler<AssetsDelegatingHandler>();
-                services.AddHttpClient("CrashReporter", (sp, client) =>
-                {
-                    var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
-                    client.BaseAddress = new Uri($"{backendOptions.Endpoint}/Reports/");
-                    client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-                });
-                services.AddHttpClient("Backend").ConfigureHttpClient((sp, client) =>
+                services.AddHttpClient<DefaultBackendProvider>().ConfigureHttpClient((sp, client) =>
                 {
                     var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
                     client.BaseAddress = new Uri(backendOptions.Endpoint);
@@ -78,7 +72,6 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddTransient<AssetsDelegatingHandler>();
                 services.AddTransient<AuthenticationDelegatingHandler>();
 
-                services.AddScoped<DefaultBackendProvider>();
                 services.AddScoped<IAuthenticationProvider, DefaultAuthenticationProvider>();
                 //services.AddScoped<IAuthenticationProvider, DefaultBackendProvider>(sp => sp.GetRequiredService<DefaultBackendProvider>());
                 services.AddScoped<IProfileProvider, DefaultBackendProvider>(sp => sp.GetRequiredService<DefaultBackendProvider>());

@@ -91,13 +91,15 @@ namespace BUTR.Site.NexusMods.Client.Services
     public sealed class DefaultBackendProvider : IProfileProvider, IRoleProvider, IModProvider, ICrashReportProvider
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly HttpClient _httpClient;
         private readonly StorageCache _cache;
         private readonly ITokenContainer _tokenContainer;
         private readonly JsonSerializerOptions _jsonSerializerOptions;
 
-        public DefaultBackendProvider(IHttpClientFactory httpClientFactory, StorageCache cache, ITokenContainer tokenContainer, IOptions<JsonSerializerOptions> jsonSerializerOptions)
+        public DefaultBackendProvider(IHttpClientFactory httpClientFactory, HttpClient httpClient, StorageCache cache, ITokenContainer tokenContainer, IOptions<JsonSerializerOptions> jsonSerializerOptions)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
             _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
@@ -110,8 +112,7 @@ namespace BUTR.Site.NexusMods.Client.Services
                 try
                 {
                     var request = new HttpRequestMessage(HttpMethod.Get, "api/v1/Authentication/Profile");
-                    var httpClient = _httpClientFactory.CreateClient("Backend");
-                    var response = await httpClient.SendAsync(request, ct);
+                    var response = await _httpClient.SendAsync(request, ct);
                     if (!response.IsSuccessStatusCode || await response.Content.ReadFromJsonAsync<ProfileModel?>(_jsonSerializerOptions, ct) is not { } profile)
                         return null;
 
@@ -150,8 +151,7 @@ namespace BUTR.Site.NexusMods.Client.Services
                 {
                     Content = new StringContent(JsonSerializer.Serialize(new { UserId = userId, Role = role }, _jsonSerializerOptions), Encoding.UTF8, "application/json")
                 };
-                var httpClient = _httpClientFactory.CreateClient("Backend");
-                var response = await httpClient.SendAsync(request, ct);
+                var response = await _httpClient.SendAsync(request, ct);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception)
@@ -173,8 +173,7 @@ namespace BUTR.Site.NexusMods.Client.Services
                 {
                     Content = new StringContent(JsonSerializer.Serialize(new { UserId = userId }, _jsonSerializerOptions), Encoding.UTF8, "application/json")
                 };
-                var httpClient = _httpClientFactory.CreateClient("Backend");
-                var response = await httpClient.SendAsync(request, ct);
+                var response = await _httpClient.SendAsync(request, ct);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception)
@@ -205,8 +204,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"api/v1/Mods?page={page}&pageSize={10}");
-                var httpClient = _httpClientFactory.CreateClient("Backend");
-                var response = await httpClient.SendAsync(request, ct);
+                var response = await _httpClient.SendAsync(request, ct);
                 return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PagingResponse<ModModel>>(_jsonSerializerOptions, ct) : null;
             }
             catch (Exception)
@@ -232,8 +230,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"api/v1/Mods/Link?gameDomain={gameDomain}&modId={modId}");
-                var httpClient = _httpClientFactory.CreateClient("Backend");
-                var response = await httpClient.SendAsync(request, ct);
+                var response = await _httpClient.SendAsync(request, ct);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception)
@@ -256,8 +253,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"api/v1/Mods/Unlink?gameDomain={gameDomain}&modId={modId}");
-                var httpClient = _httpClientFactory.CreateClient("Backend");
-                var response = await httpClient.SendAsync(request, ct);
+                var response = await _httpClient.SendAsync(request, ct);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception)
@@ -288,8 +284,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"api/v1/CrashReports?page={page}&pageSize={10}");
-                var httpClient = _httpClientFactory.CreateClient("Backend");
-                var response = await httpClient.SendAsync(request, ct);
+                var response = await _httpClient.SendAsync(request, ct);
                 return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<PagingResponse<CrashReportModel>>(_jsonSerializerOptions, ct) : null;
             }
             catch (Exception)
@@ -311,8 +306,7 @@ namespace BUTR.Site.NexusMods.Client.Services
                 {
                     Content = new StringContent(JsonSerializer.Serialize(crashReport, _jsonSerializerOptions), Encoding.UTF8, "application/json")
                 };
-                var httpClient = _httpClientFactory.CreateClient("Backend");
-                var response = await httpClient.SendAsync(request, ct);
+                var response = await _httpClient.SendAsync(request, ct);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception)
