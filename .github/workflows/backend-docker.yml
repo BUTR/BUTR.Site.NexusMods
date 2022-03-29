@@ -59,7 +59,7 @@ jobs:
       run: echo ${{ steps.docker_build.outputs.digest }}
 
     - name: Trigger deploy-self-hosted.yml
-      uses: peter-evans/repository-dispatch@v1
+      uses: peter-evans/repository-dispatch@v2
       with:
         token: ${{ secrets.TOKEN_GPR }}
         repository: BUTR/BUTR.Site.NexusMods 
