@@ -64,10 +64,10 @@ WHERE
         /// @id, @name, @userId, @content
         /// </summary>
         public static string ModListUpsert = @"
-INSERT INTO modlist_entity(id, name, userId, content)
+INSERT INTO modlist_entity(id, name, user_id, content)
 VALUES (@id, @name, @userId, @content)
 ON CONFLICT ON CONSTRAINT modlist_entity_pkey
-DO UPDATE SET content=@content
+DO UPDATE SET content = @content
 RETURNING *
 ;";
 

@@ -34,7 +34,7 @@ WHERE
 INSERT INTO role_entity(user_id, role)
 VALUES (@user_id, @role)
 ON CONFLICT ON CONSTRAINT role_entity_pkey
-DO UPDATE SET role=@role
+DO UPDATE SET role = @role
 RETURNING *
 ;";
 

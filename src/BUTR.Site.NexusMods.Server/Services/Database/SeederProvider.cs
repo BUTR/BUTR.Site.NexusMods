@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS ""public"".""mod_entity"" (
     ""game_domain"" text NOT NULL,
     ""mod_id"" int4 NOT NULL,
     ""name"" text NOT NULL,
-    ""user_ids"" _int4 NOT NULL,
+    ""user_ids"" int4[] NOT NULL,
     CONSTRAINT mod_entity_pkey PRIMARY KEY (""game_domain"",""mod_id"")
 )
 ;";
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS ""public"".""crash_report_entity"" (
     ""id"" uuid NOT NULL,
     ""exception"" text NOT NULL,
     ""created_at"" timestamp NOT NULL,
-    ""mod_ids"" _int4 NOT NULL,
+    ""mod_ids"" int4[] NOT NULL,
     ""url"" text NOT NULL,
     CONSTRAINT crash_report_entity_pkey PRIMARY KEY (""id"")
 )
