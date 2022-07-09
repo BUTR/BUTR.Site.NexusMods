@@ -1,5 +1,5 @@
-﻿using BUTR.Site.NexusMods.Shared.Helpers;
-using BUTR.Site.NexusMods.Shared.Models;
+﻿using BUTR.Site.NexusMods.ServerClient;
+using BUTR.Site.NexusMods.Shared.Helpers;
 
 using System;
 using System.Collections.Generic;
@@ -14,10 +14,10 @@ namespace BUTR.Site.NexusMods.Client.Models
         private static readonly ProfileModel _profile = new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true, ApplicationRoles.User);
         private static readonly List<ModModel> _mods = new()
         {
-            new("Demo Mod 1", "demo", 1),
-            new("Demo Mod 2", "demo", 2),
-            new("Demo Mod 3", "demo", 3),
-            new("Demo Mod 4", "demo", 4),
+            new("Demo Mod 1", 1),
+            new("Demo Mod 2", 2),
+            new("Demo Mod 3", 3),
+            new("Demo Mod 4", 4),
         };
         private static List<CrashReportModel>? _crashReports;
 
@@ -42,7 +42,7 @@ namespace BUTR.Site.NexusMods.Client.Models
                 var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, r)));
                 foreach (var cr in contents)
                 {
-                    var report = new CrashReportModel(cr.Id, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html");
+                    var report = new CrashReportModel(cr.Id, cr.GameVersion, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html", cr.Modules.Select(x => x.Id).ToArray(), CrashReportStatus.New, string.Empty);
                     crm.Add(report);
                     yield return report;
 

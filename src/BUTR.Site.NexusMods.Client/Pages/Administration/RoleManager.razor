@@ -1,0 +1,79 @@
+﻿@attribute [Authorize(Roles = ApplicationRoles.Administrator)]
+@page "/role-manager"
+
+@inject INotificationService _notificationService
+@inject IRoleProvider _roleProvider
+
+<Container>
+    <Row Flex="Flex.JustifyContent.Center">
+        <Column ColumnSize="ColumnSize.Is6.OnDesktop.IsAuto.OnMobile">
+            <Card Margin="Margin.Is5.OnDesktop.Is3.OnMobile" Border="Border.Is0.Rounded" Shadow="Shadow.Small">
+                <CardHeader>
+                    <CardTitle Size="4" Margin="Margin.Is0">Set User Role</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <Form>
+                        <Field>
+                            <FieldLabel>User Id</FieldLabel>
+                            <FieldBody>
+                                <NumericEdit TValue="uint" @bind-Value="@_model.UserId" EnableStep="false"/>
+                            </FieldBody>
+                        </Field>
+                        <Field>
+                            <FieldLabel>Role</FieldLabel>
+                            <FieldBody>
+                                <Select @bind-SelectedValue="@_model.Role" TValue="string">
+                                    <SelectItem Value="@ApplicationRoles.User">@nameof(ApplicationRoles.User)</SelectItem>
+                                    <SelectItem Value="@ApplicationRoles.Moderator">@nameof(ApplicationRoles.Moderator)</SelectItem>
+                                    <SelectItem Value="@ApplicationRoles.Administrator">@nameof(ApplicationRoles.Administrator)</SelectItem>
+                                </Select>
+                            </FieldBody>
+                        </Field>
+                        <Field>
+                            <Button Block Color="Color.Primary" Type="@ButtonType.Submit" Clicked="@OnSubmit" PreventDefaultOnSubmit>
+                                Login
+                            </Button>
+                        </Field>
+                    </Form>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+@code {
+
+    private sealed record SetRoleModel
+    {
+        public uint UserId { get; set; } = default!;
+        public string Role { get; set; } = default!;
+    }
+
+    private readonly SetRoleModel _model = new() { UserId = 0, Role = ApplicationRoles.User };
+
+    private async Task OnSubmit()
+    {
+        try
+        {
+            if (await _roleProvider.SetRole(_model.UserId, _model.Role))
+            {
+                await _notificationService.Success(
+                    $"Assigned '{_model.Role}' to user with id '{_model.UserId}'!",
+                    "Success!");
+            }
+            else
+            {
+                await _notificationService.Error(
+                    $"Failed to assign '{_model.Role}' to user with id '{_model.UserId}'!",
+                    "Error!");
+            }
+        }
+        catch
+        {
+            await _notificationService.Error(
+                $"Failed to assign '{_model.Role}' to user with id '{_model.UserId}'!",
+                "Error!");
+        }
+    }
+
+}

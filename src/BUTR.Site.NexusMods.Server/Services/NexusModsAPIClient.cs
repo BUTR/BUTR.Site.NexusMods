@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services
 {
-    public class NexusModsAPIClient
+    public sealed class NexusModsAPIClient
     {
         private readonly HttpClient _httpClient;
         private readonly IDistributedCache _cache;

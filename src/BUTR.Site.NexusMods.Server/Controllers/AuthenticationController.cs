@@ -1,12 +1,12 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Authentication.NexusMods.Services;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Services.Database;
 using BUTR.Site.NexusMods.Shared.Helpers;
-using BUTR.Site.NexusMods.Shared.Models;
-using BUTR.Site.NexusMods.Shared.Models.API;
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,22 +18,22 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers
 {
     [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
-    public class AuthenticationController : ControllerBase
+    public sealed class AuthenticationController : ControllerBase
     {
         private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
-        private readonly RoleProvider _roleProvider;
+        private readonly UserRoleProvider _userRole;
         private readonly ITokenGenerator _tokenGenerator;
 
         public AuthenticationController(
             ILogger<AuthenticationController> logger,
             NexusModsAPIClient nexusModsAPIClient,
-            RoleProvider roleProvider,
+            UserRoleProvider userRoleProvider,
             ITokenGenerator tokenGenerator)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _nexusModsAPIClient = nexusModsAPIClient ?? throw new ArgumentNullException(nameof(nexusModsAPIClient));
-            _roleProvider = roleProvider ?? throw new ArgumentNullException(nameof(roleProvider));
+            _userRole = userRoleProvider ?? throw new ArgumentNullException(nameof(userRoleProvider));
             _tokenGenerator = tokenGenerator ?? throw new ArgumentNullException(nameof(tokenGenerator));
         }
 
@@ -50,7 +50,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             if (await _nexusModsAPIClient.ValidateAPIKey(apiKey) is not { } validateResponse)
                 return StatusCode(StatusCodes.Status401Unauthorized, new StandardResponse("Invalid NexusMods API Key!"));
 
-            var role = (await _roleProvider.FindAsync(validateResponse.UserId))?.Role ?? ApplicationRoles.User;
+            var role = (await _userRole.FindAsync((int) validateResponse.UserId))?.Role ?? ApplicationRoles.User;
             return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
             {
                 UserId = validateResponse.UserId,
@@ -61,22 +61,36 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 IsPremium = validateResponse.IsPremium,
                 APIKey = validateResponse.Key,
                 Role = role
-            }), GetProfile(HttpContext)));
+            }), HttpContext.GetProfile(role)));
         }
 
-        [HttpGet("Profile")]
+        [HttpGet("Validate")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(ProfileModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(JwtTokenResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public ActionResult Profile() => StatusCode(StatusCodes.Status200OK, GetProfile(HttpContext));
+        public async Task<ActionResult> Validate()
+        {
+            if (await _nexusModsAPIClient.ValidateAPIKey(HttpContext.GetAPIKey()) is not { } validateResponse)
+                return StatusCode(StatusCodes.Status401Unauthorized, new StandardResponse("Invalid NexusMods API Key!"));
 
-        private static ProfileModel GetProfile(HttpContext context) => new(
-            context.GetUserId(),
-            context.GetName(),
-            context.GetEMail(),
-            context.GetProfileUrl(),
-            context.GetIsPremium(),
-            context.GetIsSupporter(),
-            context.GetRole());
+            var role = (await _userRole.FindAsync((int) validateResponse.UserId))?.Role ?? ApplicationRoles.User;
+            if (role != HttpContext.GetRole())
+            {
+                return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
+                {
+                    UserId = validateResponse.UserId,
+                    Name = validateResponse.Name,
+                    EMail = validateResponse.Email,
+                    ProfileUrl = validateResponse.ProfileUrl,
+                    IsSupporter = validateResponse.IsSupporter,
+                    IsPremium = validateResponse.IsPremium,
+                    APIKey = validateResponse.Key,
+                    Role = role
+                }), HttpContext.GetProfile(role)));
+            }
+
+            var token = await HttpContext.GetTokenAsync(ButrNexusModsAuthSchemeConstants.AuthScheme);
+            return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(token, HttpContext.GetProfile(HttpContext.GetRole())));
+        }
     }
 }

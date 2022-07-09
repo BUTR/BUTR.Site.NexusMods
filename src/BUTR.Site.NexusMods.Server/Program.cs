@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server
 {
-    public class Program
+    public static class Program
     {
         public static Task Main(string[] args) => CreateHostBuilder(args).Build().RunAsync();
 

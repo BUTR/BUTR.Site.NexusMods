@@ -1,4 +1,5 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
+using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Http;
@@ -7,6 +8,15 @@ namespace BUTR.Site.NexusMods.Server.Extensions
 {
     public static class HttpContextExtensions
     {
+        public static ProfileModel GetProfile(this HttpContext context, string role) => new(
+            context.GetUserId(),
+            context.GetName(),
+            context.GetEMail(),
+            context.GetProfileUrl(),
+            context.GetIsPremium(),
+            context.GetIsSupporter(),
+            role);
+        
         public static int GetUserId(this HttpContext context) =>
             int.TryParse(context.User.FindFirst(ButrNexusModsClaimTypes.UserId)?.Value ?? string.Empty, out var val) ? val : -1;
 

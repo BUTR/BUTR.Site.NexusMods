@@ -21,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		..\.github\workflows\frontend.yml = ..\.github\workflows\frontend.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BUTR.Site.NexusMods.ServerClient", "BUTR.Site.NexusMods.ServerClient\BUTR.Site.NexusMods.ServerClient.csproj", "{26AE4C2C-03BF-44B1-872F-8FD1573C9E90}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{273F664A-847C-429B-8A7D-FA83FCE8C2E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{273F664A-847C-429B-8A7D-FA83FCE8C2E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{273F664A-847C-429B-8A7D-FA83FCE8C2E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26AE4C2C-03BF-44B1-872F-8FD1573C9E90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26AE4C2C-03BF-44B1-872F-8FD1573C9E90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26AE4C2C-03BF-44B1-872F-8FD1573C9E90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26AE4C2C-03BF-44B1-872F-8FD1573C9E90}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -49,6 +55,7 @@ Global
 		{273F664A-847C-429B-8A7D-FA83FCE8C2E1} = {C161254D-1B6E-48DE-9F26-EFC403F74F11}
 		{C161254D-1B6E-48DE-9F26-EFC403F74F11} = {49388931-B9B2-47AE-98F2-8701623F1F1E}
 		{08B0089B-DF7C-4F13-841A-0277239D5CEE} = {49388931-B9B2-47AE-98F2-8701623F1F1E}
+		{26AE4C2C-03BF-44B1-872F-8FD1573C9E90} = {C161254D-1B6E-48DE-9F26-EFC403F74F11}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5CC1A63D-E570-4BEB-8282-0BD9B24B5C5C}

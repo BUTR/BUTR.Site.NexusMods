@@ -23,7 +23,7 @@
                                 .Replace("\r\r", "\r")
                                 .Replace("\r\n\r\n", "\r\n")
                                 .Trim()
-                                .Trim(new [] { '\r', '\n', '\r'}))
+                                .Trim('\r', '\n', '\r'))
                             </Small>
                         </Text>
                     </Field>
@@ -60,9 +60,9 @@
     </CardHeader>
     <CardBody>
         <DataGrid @ref="_dataGridRef"
-                  TItem="CrashReportModel"
+                  TItem="CrashReportModel?"
                   Data="@_entries"
-                  SelectedRowChanged="SelectDeselect"
+                  SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
                   ReadData="@OnReadData"
                   TotalItems="@_pagingMetadata.TotalCount"
                   CurrentPage="@_pagingMetadata.CurrentPage"
@@ -71,9 +71,17 @@
                   ShowPager
                   Responsive>
             <DataGridColumns>
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="GameVersion" Sortable="false" />
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Sortable="false" >
+                    <DisplayTemplate>@(context.InvolvedModules.FirstOrDefault())</DisplayTemplate>
+                </DataGridColumn>
                 <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Type" Sortable="false" />
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date" Sortable="false" />
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" Sortable="false" />
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date" Sortable="false" >
+                    <DisplayTemplate>@(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" Sortable="false" >
+                    <DisplayTemplate>@(context.Status.GetDisplayName())</DisplayTemplate>
+                </DataGridColumn>
                 <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Comment)" Caption="Comment" Sortable="false" />
             </DataGridColumns>
             <ButtonRowTemplate>
@@ -91,8 +99,8 @@
 @code {
 
     private CrashReportModel? _entry;
-    private List<CrashReportModel> _entries = new();
-    private PagingMetadata _pagingMetadata = new() { CurrentPage = 1 };
+    private ICollection<CrashReportModel> _entries = new List<CrashReportModel>();
+    private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) { CurrentPage = 1 };
 
     private Modal _modalRef = default!;
     private DataGrid<CrashReportModel?> _dataGridRef = default!;
@@ -116,23 +124,6 @@
         }
     }
 
-    private void SelectDeselect(CrashReportModel model)
-    {
-        if (_entry != model)
-        {
-            _entry = model;
-        }
-        else if (_entry is not null)
-        {
-            _dataGridRef.SelectedRow = null;
-            _entry = null;
-        }
-        else
-        {
-            _entry = model;
-        }
-    }
-
     private async Task OnClick(CrashReportModel report)
     {
         await _jsRuntime.InvokeVoidAsync("open", report.Url, "_blank");
@@ -143,15 +134,16 @@
         var response = await _crashReportProvider.GetCrashReports(_pagingMetadata.CurrentPage, ct);
         if (response is not null)
         {
-            _entries = await response.Items.ToListAsync(ct);
+            _entries = response.Items;
             _pagingMetadata = response.Metadata;
         }
     }
 
-    private async Task OnReadData(DataGridReadDataEventArgs<CrashReportModel> e)
+    private async Task OnReadData(DataGridReadDataEventArgs<CrashReportModel?> e)
     {
         if (!e.CancellationToken.IsCancellationRequested)
         {
+            _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page };
             await GetCrashReports(e.CancellationToken);
         }
     }

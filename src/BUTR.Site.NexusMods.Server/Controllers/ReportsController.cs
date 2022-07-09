@@ -11,10 +11,8 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers
 {
-
-
     [ApiController, Route("api/v1/[controller]"), AllowAnonymous]
-    public class ReportsController : ControllerBase
+    public sealed class ReportsController : ControllerBase
     {
         private readonly ILogger _logger;
         private readonly CrashReporterClient _crashReporterClient;
@@ -25,9 +23,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             _crashReporterClient = crashReporterClient ?? throw new ArgumentNullException(nameof(crashReporterClient));
         }
 
-        [HttpGet("{id}.html")]
+        [HttpGet("Get/{id}.html")]
         [Produces("text/html")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<ActionResult> GetAll(string id, CancellationToken ct) =>
             StatusCode(StatusCodes.Status200OK, await _crashReporterClient.GetCrashReportAsync(id, ct));
     }

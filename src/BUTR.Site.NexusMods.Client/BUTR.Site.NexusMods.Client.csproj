@@ -11,15 +11,15 @@
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
     <PackageReference Include="Blazored.SessionStorage" Version="2.2.0" />
-    <PackageReference Include="Blazorise.Bootstrap5" Version="0.9.5.5" />
-    <PackageReference Include="Blazorise.Components" Version="0.9.5.5" />
-    <PackageReference Include="Blazorise.DataGrid" Version="0.9.5.5" />
-    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.5.5" />
-    <PackageReference Include="Blazorise.Snackbar" Version="0.9.5.5" />
-    <PackageReference Include="CsvHelper" Version="27.2.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.1" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="6.0.1" />
+    <PackageReference Include="Blazorise.Bootstrap5" Version="1.0.5" />
+    <PackageReference Include="Blazorise.Components" Version="1.0.5" />
+    <PackageReference Include="Blazorise.DataGrid" Version="1.0.5" />
+    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.0.5" />
+    <PackageReference Include="Blazorise.Snackbar" Version="1.0.5" />
+    <PackageReference Include="CsvHelper" Version="28.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.6" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="6.0.6" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0" />
@@ -37,7 +37,8 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\BUTR.Site.NexusMods.ServerClient\BUTR.Site.NexusMods.ServerClient.csproj" />
     <ProjectReference Include="..\BUTR.Site.NexusMods.Shared\BUTR.Site.NexusMods.Shared.csproj" />
   </ItemGroup>
- 
+
 </Project>

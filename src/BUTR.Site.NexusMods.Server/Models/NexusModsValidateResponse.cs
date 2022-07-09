@@ -2,7 +2,7 @@
 
 namespace BUTR.Site.NexusMods.Server.Models
 {
-    public record NexusModsValidateResponse
+    public sealed record NexusModsValidateResponse
     {
         [JsonPropertyName("user_id")]
         public uint UserId { get; set; } = default!;

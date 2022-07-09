@@ -3,9 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace BUTR.Site.NexusMods.Server.Models
 {
-    public record NexusModsModInfoResponse
+    public sealed record NexusModsModInfoResponse
     {
-        public record NexusModsUser
+        public sealed record NexusModsUser
         {
             [JsonPropertyName("member_id")]
             public int MemberId { get; set; } = default!;
@@ -17,7 +17,7 @@ namespace BUTR.Site.NexusMods.Server.Models
             public string Name { get; set; } = default!;
         }
 
-        public record NexusModsEndorsement
+        public sealed record NexusModsEndorsement
         {
             [JsonPropertyName("endorse_status")]
             public string EndorseStatus { get; set; } = default!;

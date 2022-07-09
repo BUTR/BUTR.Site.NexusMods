@@ -1,0 +1,12 @@
+﻿@attribute [AllowAnonymous]
+@inject NavigationManager _navigationManager
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (_navigationManager.Uri.EndsWith("logout"))
+            _navigationManager.NavigateTo("/login");
+        else
+            _navigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(_navigationManager.ToBaseRelativePath(_navigationManager.Uri))}");
+    }
+}

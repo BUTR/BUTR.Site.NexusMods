@@ -21,7 +21,7 @@
         </Fields>
         <Field>
             <DataGrid @ref="_dataGridRef"
-                      TItem="LocalizationString"
+                      TItem="LocalizationString?"
                       Data="@_entries"
                       SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
                       SelectionMode="DataGridSelectionMode.Single"

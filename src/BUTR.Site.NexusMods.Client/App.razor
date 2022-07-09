@@ -1,8 +1,3 @@
-@using Microsoft.Extensions.Logging
-@using Microsoft.AspNetCore.Components.WebAssembly.Services
-@using System.Reflection
-
-@inject NavigationManager _navigationManager
 @inject LazyAssemblyLoader _assemblyLoader
 @inject ILogger<App> _logger
 
@@ -15,33 +10,17 @@
                         <Spinner/>
                     </Authorizing>
                     <NotAuthorized>
-                        @if (context.User.Identity?.IsAuthenticated != true)
-                        {
-                            if (_navigationManager.Uri.EndsWith("logout"))
-                            {
-                                _navigationManager.NavigateTo("login");
-                            }
-                            else
-                            {
-                                _navigationManager.NavigateTo($"login?returnUrl={Uri.EscapeDataString(_navigationManager.Uri)}");
-                            }
-                        }
-                        else
-                        {
-                            <p>You are not authorized to access this resource.</p>
-                        }
+                        <LoginRedirect />
                     </NotAuthorized>
                 </AuthorizeRouteView>
             </Found>
             <NotFound>
                 <LayoutView Layout="@typeof(DefaultLayout)">
-                    @{
-                        _navigationManager.NavigateTo("");
-                    }
+                    <RootRedirect/>
                 </LayoutView>
             </NotFound>
         </Router>
-        <NotificationAlert Location="NotificationLocation.Left" />
+        <NotificationAlert Location="NotificationLocation.Start" />
     </CascadingAuthenticationState>
 </Blazorise.ThemeProvider>
 

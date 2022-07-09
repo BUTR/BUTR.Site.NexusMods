@@ -8,33 +8,51 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Client.Services
 {
-    public sealed class SimpleAuthenticationStateProvider : AuthenticationStateProvider
+    public sealed class SimpleAuthenticationStateProvider : AuthenticationStateProvider, IDisposable
     {
-        private static readonly ClaimsPrincipal _anonymous = new(new ClaimsIdentity());
-        private static readonly ClaimsPrincipal _authenticated = new(new ClaimsIdentity(Array.Empty<Claim>(), "NexusMods"));
+        private static readonly ClaimsPrincipal _anonymous = new(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, ApplicationRoles.Anonymous) }));
+        private static readonly ClaimsPrincipal _user = new(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, ApplicationRoles.User) }, "NexusMods"));
+        private static readonly ClaimsPrincipal _moderator = new(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, ApplicationRoles.Moderator) }, "NexusMods"));
         private static readonly ClaimsPrincipal _administrator = new(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, ApplicationRoles.Administrator) }, "NexusMods"));
 
-        private readonly IProfileProvider _profileProvider;
+        private readonly ITokenContainer _tokenContainer;
+        private readonly IAuthenticationProvider _authenticationProvider;
+        private Task<AuthenticationState> _task;
 
-        public SimpleAuthenticationStateProvider(IProfileProvider profileProvider)
+        public SimpleAuthenticationStateProvider(ITokenContainer tokenContainer, IAuthenticationProvider authenticationProvider)
         {
-            _profileProvider = profileProvider ?? throw new ArgumentNullException(nameof(profileProvider));
+            _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
+            _authenticationProvider = authenticationProvider ?? throw new ArgumentNullException(nameof(authenticationProvider));
+            _tokenContainer.OnTokenChanged += ResetAuthenticationState;
+            _task = GetAuthenticationStateInternalAsync();
         }
 
-        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+        public override Task<AuthenticationState> GetAuthenticationStateAsync() => _task;
+
+        private async Task<AuthenticationState> GetAuthenticationStateInternalAsync()
         {
-            if (await _profileProvider.GetProfileAsync() is not { } profile)
+            if (await _authenticationProvider.ValidateAsync() is not { } profile)
                 return new AuthenticationState(_anonymous);
 
+            if (string.Equals(profile.Role, ApplicationRoles.Moderator, StringComparison.Ordinal))
+                return new AuthenticationState(_moderator);
+            
             if (string.Equals(profile.Role, ApplicationRoles.Administrator, StringComparison.Ordinal))
                 return new AuthenticationState(_administrator);
 
-            return new AuthenticationState(_authenticated);
+            return new AuthenticationState(_user);
         }
 
-        public void Notify()
+        private void ResetAuthenticationState()
         {
-            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            _task = GetAuthenticationStateInternalAsync();
+            NotifyAuthenticationStateChanged(_task);
+        }
+
+        public void Dispose()
+        {
+            _tokenContainer.OnTokenChanged -= ResetAuthenticationState;
+            _task.Dispose();
         }
     }
 }

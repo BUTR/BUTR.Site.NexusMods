@@ -27,7 +27,6 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
             gameDomain = split[0];
             modId = modIdInt;
             return true;
-
         }
     }
 }

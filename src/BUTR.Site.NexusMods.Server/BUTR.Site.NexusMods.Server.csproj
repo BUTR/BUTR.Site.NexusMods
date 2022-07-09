@@ -13,17 +13,30 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aragas.Extensions.Options.FluentValidation" Version="1.0.0.8" />
+    <PackageReference Include="Aragas.Extensions.Options.FluentValidation" Version="1.0.0.10" />
     <PackageReference Include="BUTR.Authentication.NexusMods" Version="1.0.0.1" />
-    <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="3.0.3.2" />
-    <PackageReference Include="Npgsql" Version="6.0.3" />
+    <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="3.1.2" />
+    <PackageReference Include="Npgsql" Version="6.0.5" />
     <PackageReference Include="Polly" Version="7.2.3" />
     <PackageReference Include="RateLimiter" Version="2.2.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BUTR.Site.NexusMods.Shared\BUTR.Site.NexusMods.Shared.csproj" />
   </ItemGroup>
+
+  <Target Name="_ResolveCopyLocalNuGetPkgXmls" AfterTargets="ResolveReferences">
+    <ItemGroup>
+      <!-- Copy XML files from all PackageReferences to output dir -->
+      <ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->'%(RootDir)%(Directory)%(Filename).xml')" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)'!='' and Exists('%(RootDir)%(Directory)%(Filename).xml')" />
+    </ItemGroup>
+  </Target>
+  
+  <Target Name="GenerateOpenApi" Condition="$(DOTNET_RUNNING_IN_CONTAINER) != true" AfterTargets="PostBuildEvent">
+    <Exec Command="dotnet new tool-manifest --force" />
+    <Exec Command="dotnet tool install --local Swashbuckle.AspNetCore.Cli --version 6.1.4" />
+    <Exec Command="dotnet swagger tofile --output ../swagger.json $(OutputPath)$(AssemblyName).dll v1" />
+  </Target>
 
 </Project>

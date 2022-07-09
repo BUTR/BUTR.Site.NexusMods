@@ -30,7 +30,7 @@
         </Fields>
         <Field>
             <DataGrid @ref="_dataGridRef"
-                      TItem="StringEntry"
+                      TItem="StringEntry?"
                       Data="@_entries"
                       SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
                       SelectionMode="DataGridSelectionMode.Single"

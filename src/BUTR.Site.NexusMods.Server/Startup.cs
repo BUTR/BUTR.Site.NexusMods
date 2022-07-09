@@ -18,7 +18,10 @@ using Microsoft.OpenApi.Models;
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -26,9 +29,10 @@ using System.Text.Unicode;
 
 namespace BUTR.Site.NexusMods.Server
 {
-    public class Startup
+    public sealed class Startup
     {
         private const string ConnectionStringsSectionName = "ConnectionStrings";
+        private const string CrashReporterSectionName = "CrashReporter";
         private const string UrlsSectionName = "Urls";
         private const string JwtSectionName = "Jwt";
 
@@ -54,10 +58,12 @@ namespace BUTR.Site.NexusMods.Server
             var userAgent = $"{_assemblyName?.Name ?? "ERROR"} v{_assemblyName?.Version?.ToString() ?? "ERROR"}";
 
             var connectionStringSection = _configuration.GetSection(ConnectionStringsSectionName);
+            var crashReporterSection = _configuration.GetSection(CrashReporterSectionName);
             var urlsSection = _configuration.GetSection(UrlsSectionName);
             var jwtSection = _configuration.GetSection(JwtSectionName);
 
             services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>(connectionStringSection);
+            services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>(crashReporterSection);
             services.AddValidatedOptionsWithHttp<ServiceUrlsOptions, ServiceUrlsOptionsValidator>(urlsSection);
             services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>(jwtSection);
 
@@ -69,22 +75,26 @@ namespace BUTR.Site.NexusMods.Server
             });
             services.AddHttpClient<CrashReporterClient>().ConfigureHttpClient((sp, client) =>
             {
-                var opts = sp.GetRequiredService<IOptions<ServiceUrlsOptions>>().Value;
-                client.BaseAddress = new Uri(opts.CrashReporter);
+                var opts = sp.GetRequiredService<IOptions<CrashReporterOptions>>().Value;
+                client.BaseAddress = new Uri(opts.Endpoint);
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                    "Basic",
+                    Convert.ToBase64String(Encoding.ASCII.GetBytes($"{opts.Username}:{opts.Password}")));
             });
 
             services.AddSingleton<SeederProvider>();
             services.AddSingleton<MainConnectionProvider>();
-            services.AddSingleton<ModsProvider>();
-            services.AddSingleton<ModListProvider>();
+            services.AddSingleton<CrashReportFileProvider>();
             services.AddSingleton<CrashReportsProvider>();
             services.AddSingleton<UserCrashReportsProvider>();
-            services.AddSingleton<RoleProvider>();
+            services.AddSingleton<UserAllowedModsProvider>();
+            services.AddSingleton<UserRoleProvider>();
+            services.AddSingleton<NexusModsModProvider>();
+            services.AddSingleton<ModNexusModsManualLinkProvider>();
 
             services.AddHostedService<SeederService>();
-
-            //services.AddServerCore(_configuration, JwtSectionName);
+            services.AddHostedService<CrashReportHandler>();
 
             services.AddNexusModsDefaultServices();
 
@@ -132,8 +142,14 @@ namespace BUTR.Site.NexusMods.Server
                 opt.DescribeAllParametersInCamelCase();
                 opt.SupportNonNullableReferenceTypes();
 
-                var xmlFilename = $"{_assemblyName?.Name ?? "ERROR"}.xml";
-                opt.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+                var currentAssembly = Assembly.GetExecutingAssembly();
+                var xmlFilePaths = currentAssembly.GetReferencedAssemblies()
+                    .Append(currentAssembly.GetName())
+                    .Select(x => Path.Combine(Path.GetDirectoryName(currentAssembly.Location)!, $"{x.Name}.xml"))
+                    .Where(File.Exists)
+                    .ToList();
+                foreach (var xmlFilePath in xmlFilePaths)
+                    opt.IncludeXmlComments(xmlFilePath);
             });
 
             services.AddCors(options =>

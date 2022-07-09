@@ -1,8 +1,8 @@
-﻿using BUTR.Site.NexusMods.Shared.Models;
+﻿using BUTR.Site.NexusMods.Server.Models.API;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database
 {
-    public record UserCrashReportTableEntry
+    public sealed record UserCrashReportTableEntry
     {
         public int UserId { get; set; } = default!;
 

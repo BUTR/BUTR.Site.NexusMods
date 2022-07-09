@@ -36,9 +36,9 @@
     </CardHeader>
     <CardBody>
         <DataGrid @ref="_dataGridRef"
-                  TItem="ModModel"
+                  TItem="ModModel?"
                   Data="@_entries"
-                  SelectedRowChanged="SelectDeselect"
+                  SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
                   ReadData="@OnReadData"
                   TotalItems="@_pagingMetadata.TotalCount"
                   CurrentPage="@_pagingMetadata.CurrentPage"
@@ -49,7 +49,7 @@
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name" Sortable="false"/>
             </DataGridColumns>
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(async () => await OnClick(_entry!))">
+                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(async () => await OnClick(_entry))">
                     Open Page
                 </Button>
                 <Button Color="Color.Danger" Disabled="@(_entry is null)" Clicked="@(async () => await OnDelete(context))">
@@ -77,31 +77,15 @@
     private LinkModModel _model = new();
 
     private ModModel? _entry;
-    private List<ModModel> _entries = new();
-    private PagingMetadata _pagingMetadata = new() { CurrentPage = 1 };
+    private ICollection<ModModel> _entries = new List<ModModel>();
+    private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) { CurrentPage = 1 };
 
     private DataGrid<ModModel?> _dataGridRef = default!;
 
-    private void SelectDeselect(ModModel model)
+    private async Task OnClick(ModModel? mod)
     {
-        if (_entry != model)
-        {
-            _entry = model;
-        }
-        else if (_entry is not null)
-        {
-            _dataGridRef.SelectedRow = null;
-            _entry = null;
-        }
-        else
-        {
-            _entry = model;
-        }
-    }
-
-    private async Task OnClick(ModModel mod)
-    {
-        await _jsRuntime.InvokeVoidAsync("open", mod.Url, "_blank");
+        if (mod is not null)
+            await _jsRuntime.InvokeVoidAsync("open", mod.Url, "_blank");
     }
 
     private async void OnSubmit()
@@ -123,34 +107,38 @@
         if (!ModsUtils.TryParse(model.ModUrl, out var gameDomain, out var modId))
             return false;
 
-        return await _modProvider.LinkMod(gameDomain, modId.Value);
+        return await _modProvider.LinkMod(modId.Value);
     }
 
     private async Task<bool> DoUnlinkMod(ModModel model)
     {
-        return await _modProvider.UnlinkMod(model.GameDomain, model.ModId);
+        if (model.ModId is { } modId)
+            return await _modProvider.UnlinkMod(modId);
+        
+        return false;
     }
 
     private async Task GetMods(CancellationToken ct = default)
     {
         if (await _modProvider.GetMods(_pagingMetadata.CurrentPage, ct) is { } response)
         {
-            _entries = await response.Items.ToListAsync(ct);
+            _entries = response.Items;
             _pagingMetadata = response.Metadata;
         }
     }
 
-    private async Task OnReadData(DataGridReadDataEventArgs<ModModel> e)
+    private async Task OnReadData(DataGridReadDataEventArgs<ModModel?> e)
     {
         if (!e.CancellationToken.IsCancellationRequested)
         {
+            _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page };
             await GetMods(e.CancellationToken);
         }
     }
 
-    private async Task OnDelete(ButtonRowContext<ModModel> context)
+    private async Task OnDelete(ButtonRowContext<ModModel?> context)
     {
-        if (await DoUnlinkMod(context.DeleteCommand.Item))
+        if (context.DeleteCommand.Item is not null && await DoUnlinkMod(context.DeleteCommand.Item))
         {
             await context.DeleteCommand.Clicked.InvokeAsync();
         }

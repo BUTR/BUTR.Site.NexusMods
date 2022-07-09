@@ -10,14 +10,12 @@ namespace BUTR.Site.NexusMods.Server.Options
     {
         public ServiceUrlsOptionsValidator(HttpClient client)
         {
-            RuleFor(x => x.NexusMods).NotEmpty().IsUri().IsUriAvailable(client);
-            RuleFor(x => x.CrashReporter).NotEmpty().IsUri().IsUriAvailable(client);
+            RuleFor(x => x.NexusMods).NotEmpty().IsUri();
         }
     }
 
-    public record ServiceUrlsOptions
+    public sealed record ServiceUrlsOptions
     {
         public string NexusMods { get; init; } = default!;
-        public string CrashReporter { get; init; } = default!;
     }
 }

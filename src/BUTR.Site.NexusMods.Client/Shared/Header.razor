@@ -29,22 +29,52 @@
                     <BarItem>
                         <BarLink To="crash-reports-viewer">Crash Reports</BarLink>
                     </BarItem>
-                    <AuthorizeView Context="context2" Roles="@($"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")">
-                        <Authorized>
-                            <BarItem>
-                                <BarLink To="role-manager">Role Manager</BarLink>
-                            </BarItem>
-                        </Authorized>
-                    </AuthorizeView>
                 </Authorized>
             </AuthorizeView>
         </BarStart>
 
         <BarEnd>
+            <AuthorizeView Context="context2" Roles="@($"{ApplicationRoles.Moderator}")">
+                <Authorized>
+                    <BarItem>
+                        <BarDropdown RightAligned>
+                            <BarDropdownToggle>Moderation</BarDropdownToggle>
+                            <BarDropdownMenu Background="Background.Dark">
+                                <BarDropdownItem Background="Background.Dark">
+                                    <BarLink To="manual-mod-link">Manual Mod Link</BarLink>
+                                </BarDropdownItem>
+                                <BarDropdownItem Background="Background.Dark">
+                                    <BarLink To="allow-user-mod">Allow User Mod</BarLink>
+                                </BarDropdownItem>
+                            </BarDropdownMenu>
+                        </BarDropdown>
+                    </BarItem>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView Context="context3" Roles="@($"{ApplicationRoles.Administrator}")">
+                <Authorized>
+                    <BarItem>
+                        <BarDropdown RightAligned>
+                            <BarDropdownToggle>Administration</BarDropdownToggle>
+                            <BarDropdownMenu Background="Background.Dark">
+                                <BarDropdownItem Background="Background.Dark">
+                                    <BarLink To="role-manager">Role Manager</BarLink>
+                                </BarDropdownItem>
+                                <BarDropdownItem Background="Background.Dark">
+                                    <BarLink To="manual-mod-link">Manual Mod Link</BarLink>
+                                </BarDropdownItem>
+                                <BarDropdownItem Background="Background.Dark">
+                                    <BarLink To="allow-user-mod">Allow User Mod</BarLink>
+                                </BarDropdownItem>
+                            </BarDropdownMenu>
+                        </BarDropdown>
+                    </BarItem>
+                </Authorized>
+            </AuthorizeView>
             <BarItem>
-                <BarDropdown>
+                <BarDropdown RightAligned>
                     <BarDropdownToggle>Tools</BarDropdownToggle>
-                    <BarDropdownMenu Background="Background.Dark" RightAligned>
+                    <BarDropdownMenu Background="Background.Dark">
                         <BarDropdownItem Background="Background.Dark">
                             <BarLink To="localization-parser">Localization Parser</BarLink>
                         </BarDropdownItem>
@@ -60,13 +90,13 @@
             <AuthorizeView>
                 <Authorized>
                     <BarItem>
-                        <BarDropdown>
+                        <BarDropdown RightAligned>
                             <BarDropdownToggle>
                                 <Figure Margin="Margin.Is0" Size="FigureSize.Is32x32">
-                                    <FigureImage Margin="Margin.Is0" Source="@(_user?.ProfileUrl ?? FallabckIcon)" Border="Border.RoundedCircle" AlternateText="BUTR Logo"/>
+                                    <FigureImage Margin="Margin.Is0" Source="@(_user?.ProfileUrl ?? FallabackIcon)" Border="Border.RoundedCircle" AlternateText="BUTR Logo"/>
                                 </Figure>
                             </BarDropdownToggle>
-                            <BarDropdownMenu Background="Background.Dark" RightAligned>
+                            <BarDropdownMenu Background="Background.Dark">
                                 <BarDropdownItem Background="Background.Dark">
                                     <BarLink To="profile">My Profile</BarLink>
                                 </BarDropdownItem>
@@ -91,25 +121,32 @@
 
 @code {
 
-    private const string FallabckIcon = "images/default_profile.webp";
+    private const string FallabackIcon = "images/default_profile.webp";
     private ProfileModel? _user;
 
     protected override async Task OnInitializedAsync()
     {
         _authenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
-
-        _user = await _profileProvider.GetProfileAsync();
+        
+        var state = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        await OnStateAsync(state);
 
         await base.OnInitializedAsync();
     }
 
-    private void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> stateTask)
     {
-        _profileProvider.GetProfileAsync().ContinueWith(profile =>
+        stateTask.ContinueWith(async task => await OnStateAsync(await task));
+    }
+
+    private async Task OnStateAsync(AuthenticationState state)
+    {
+        if (state.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role) is { } claim && claim.Value !=  ApplicationRoles.Anonymous)
         {
-            _user = profile.Result;
+            var profile = await _profileProvider.GetProfileAsync();
+            _user = profile;
             StateHasChanged();
-        });
+        }
     }
 
     public ValueTask DisposeAsync()

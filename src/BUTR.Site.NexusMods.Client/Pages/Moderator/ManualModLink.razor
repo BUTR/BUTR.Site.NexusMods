@@ -1,0 +1,153 @@
+﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")]
+@page "/manual-mod-link"
+
+@inject INotificationService _notificationService
+@inject IModProvider _modProvider
+
+<Card Margin="Margin.Is4">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Manual Mod Link</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Form>
+            <Field>
+                <FieldLabel>Mod Id</FieldLabel>
+                <FieldBody>
+                    <TextEdit Role="@TextRole.Text" @bind-Text="@_model.ModId" />
+                </FieldBody>
+            </Field>
+            <Field>
+                <FieldLabel>NexusMods Url</FieldLabel>
+                <FieldBody>
+                    <TextEdit Role="@TextRole.Url" @bind-Text="@_model.NexusModsUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1"/>
+                </FieldBody>
+            </Field>
+            <Field>
+                <Button Color="Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSubmit" PreventDefaultOnSubmit>
+                     <LoadingTemplate>
+                        Linking...
+                    </LoadingTemplate>
+                    <ChildContent>
+                        Link
+                    </ChildContent>
+                </Button>
+            </Field>
+        </Form>
+    </CardBody>
+</Card>
+
+<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Manual Mod Links</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <DataGrid @ref="_dataGridRef"
+                  TItem="ModNexusModsManualLinkModel?"
+                  Data="@_entries"
+                  SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
+                  ReadData="@OnReadData"
+                  TotalItems="@_pagingMetadata.TotalCount"
+                  CurrentPage="@_pagingMetadata.CurrentPage"
+                  PageSize="@_pagingMetadata.PageSize"
+                  ShowPager
+                  Responsive>
+            <DataGridColumns>
+                <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.ModId)" Caption="Mod Id" Sortable="false"/>
+                <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.NexusModsId)" Caption="NexusMods Id" Sortable="false"/>
+            </DataGridColumns>
+            <ButtonRowTemplate>
+                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(async () => await OnDisallow(context))">
+                    Unlink
+                </Button>
+            </ButtonRowTemplate>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@code {
+
+    private sealed record ManualLinkModel
+    {
+        public string ModId { get; set; } = default!;
+        public string NexusModsUrl { get; set; } = default!;
+    }
+
+    private bool _isLoading;
+
+    private readonly ManualLinkModel _model = new() { ModId = string.Empty, NexusModsUrl = string.Empty };
+
+    private ModNexusModsManualLinkModel? _entry;
+    private ICollection<ModNexusModsManualLinkModel> _entries = new List<ModNexusModsManualLinkModel>();
+    private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) { CurrentPage = 1 };
+
+    private DataGrid<ModNexusModsManualLinkModel?> _dataGridRef = default!;
+    
+    private async Task OnSubmit()
+    {
+        _isLoading = true;
+
+        try
+        {
+            if (await DoManualLink(_model))
+            {
+                await _notificationService.Success(
+                    $"Linked '{_model.ModId}' to mod '{_model.NexusModsUrl}'!",
+                    "Success!");
+                await GetManualLinks();
+            }
+            else
+            {
+                await _notificationService.Error(
+                    $"Failed to link '{_model.ModId}' to mod '{_model.NexusModsUrl}'!",
+                    "Error!");
+            }
+        }
+        catch
+        {
+            await _notificationService.Error(
+                $"Failed to link '{_model.ModId}' to mod '{_model.NexusModsUrl}'!",
+                "Error!");
+        }
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task GetManualLinks(CancellationToken ct = default)
+    {
+        if (await _modProvider.GetManualLinks(_pagingMetadata.CurrentPage, ct) is { } response)
+        {
+            _entries = response.Items;
+            _pagingMetadata = response.Metadata;
+        }
+    }
+
+    private async Task OnReadData(DataGridReadDataEventArgs<ModNexusModsManualLinkModel?> e)
+    {
+        if (!e.CancellationToken.IsCancellationRequested)
+        {
+            _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page };
+            await GetManualLinks(e.CancellationToken);
+        }
+    }
+
+    private async Task OnDisallow(ButtonRowContext<ModNexusModsManualLinkModel?> context)
+    {
+        if (context.DeleteCommand.Item is not null && await DoManualUnlink(context.DeleteCommand.Item))
+        {
+            await context.DeleteCommand.Clicked.InvokeAsync();
+        }
+    }
+    
+    private async Task<bool> DoManualLink(ManualLinkModel model)
+    {
+        if (!ModsUtils.TryParse(_model.NexusModsUrl, out _, out var nexusModsId))
+            return false;
+        
+        return await _modProvider.ManualLink(model.ModId, nexusModsId.Value);
+    }
+    private async Task<bool> DoManualUnlink(ModNexusModsManualLinkModel model)
+    {
+        return await _modProvider.ManualUnlink(model.ModId);
+    }
+}

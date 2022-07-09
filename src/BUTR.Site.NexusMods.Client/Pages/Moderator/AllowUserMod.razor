@@ -1,0 +1,199 @@
+﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")]
+@page "/allow-user-mod"
+
+@inject INotificationService _notificationService
+@inject IModProvider _modProvider
+
+<Modal ShowBackdrop @ref="_modalRef">
+    <ModalContent Size="ModalSize.ExtraLarge" Centered>
+        <ModalHeader>
+            <ModalTitle>Remove Allowed Mod Id</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            @if (@_entry is not null)
+            {
+                <Form>
+                    <Field>
+                        <FieldLabel>Mod Id to Remove</FieldLabel>
+                        <FieldBody>
+                            <Select TValue="string" @bind-SelectedValue="@_modIdToDelete">
+                                @foreach (var allowedModId in _entry.AllowedModIds)
+                                {
+                                    <SelectItem Value="@allowedModId">@allowedModId</SelectItem>
+                                }
+                            </Select>
+                        </FieldBody>
+                    </Field>
+                </Form> 
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@(async () => await @HideModal(false))">Cancel</Button>
+            <Button Color="Color.Primary" Clicked="@(async () => await @HideModal(true))">Done</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Card Margin="Margin.Is4">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Allow User Mod</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Form>
+            <Field>
+                <FieldLabel>User Id</FieldLabel>
+                <FieldBody>
+                    <NumericEdit TValue="uint" @bind-Value="@_model.UserId" EnableStep="false"/>
+                </FieldBody>
+            </Field>
+            <Field>
+                <FieldLabel>Mod Id</FieldLabel>
+                <FieldBody>
+                    <TextEdit Role="@TextRole.Text" @bind-Text="@_model.ModId" />
+                </FieldBody>
+            </Field>
+            <Field>
+                <Button Color="Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSubmit" PreventDefaultOnSubmit>
+                     <LoadingTemplate>
+                        Allowing...
+                    </LoadingTemplate>
+                    <ChildContent>
+                        Allow
+                    </ChildContent>
+                </Button>
+            </Field>
+        </Form>
+    </CardBody>
+</Card>
+<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Allowed User Mods</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <DataGrid @ref="_dataGridRef"
+                  TItem="UserAllowedModsModel?"
+                  Data="@_entries"
+                  SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
+                  ReadData="@OnReadData"
+                  TotalItems="@_pagingMetadata.TotalCount"
+                  CurrentPage="@_pagingMetadata.CurrentPage"
+                  PageSize="@_pagingMetadata.PageSize"
+                  ShowPager
+                  Responsive>
+            <DataGridColumns>
+                <DataGridColumn TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.UserId)" Caption="User Id" Sortable="false" />
+                <DataGridColumn TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.AllowedModIds)" Caption="Allowed Mod Ids" Sortable="false" >
+                    <DisplayTemplate>@(string.Join(", ", context.AllowedModIds))</DisplayTemplate>
+                </DataGridColumn>
+            </DataGridColumns>
+            <ButtonRowTemplate>
+                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(async () => await OnDisallow(context))">
+                    Disallow
+                </Button>
+            </ButtonRowTemplate>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@code {
+
+    private sealed record AllowUserModel
+    {
+        public uint UserId { get; set; } = default!;
+        public string ModId { get; set; } = default!;
+    }
+    
+    private bool _isLoading;
+
+    private readonly AllowUserModel _model = new() { UserId = 0, ModId = string.Empty };
+
+    private UserAllowedModsModel? _entry;
+    private ICollection<UserAllowedModsModel> _entries = new List<UserAllowedModsModel>();
+    private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) { CurrentPage = 1 };
+    private string? _modIdToDelete;
+
+    private Modal _modalRef = default!;
+    private DataGrid<UserAllowedModsModel?> _dataGridRef = default!;
+
+    private async Task ShowModal() => await _modalRef.Show();
+
+    private async Task HideModal(bool save)
+    {
+        await _modalRef.Hide();
+        if (save && _entry is not null && _modIdToDelete is not null)
+        {
+            if (await _modProvider.DisallowUserMod(_entry.UserId, _modIdToDelete))
+            {
+                await _notificationService.Success($"Disallowed succesfully!", "Success!");
+                await GetAllowUserMods();
+            }
+            else
+            {
+                await _notificationService.Error($"Failed to disallow!", "Error!");
+            }
+        }
+    }
+    private async Task OnSubmit()
+    {
+        try
+        {
+            if (await DoUserAllowMod(_model))
+            {
+                await _notificationService.Success(
+                    $"Assigned '{_model.ModId}' to user with id '{_model.UserId}'!",
+                    "Success!");
+                await GetAllowUserMods();
+            }
+            else
+            {
+                await _notificationService.Error(
+                    $"Failed to assign '{_model.ModId}' to user with id '{_model.UserId}'!",
+                    "Error!");
+            }
+        }
+        catch
+        {
+            await _notificationService.Error(
+                $"Failed to assign '{_model.ModId}' to user with id '{_model.UserId}'!",
+                "Error!");
+        }
+    }
+
+    private async Task GetAllowUserMods(CancellationToken ct = default)
+    {
+        if (await _modProvider.GetAllowUserMods(_pagingMetadata.CurrentPage, ct) is { } response)
+        {
+            _entries = response.Items;
+            _pagingMetadata = response.Metadata;
+        }
+    }
+
+    private async Task OnReadData(DataGridReadDataEventArgs<UserAllowedModsModel?> e)
+    {
+        if (!e.CancellationToken.IsCancellationRequested)
+        {
+            _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page };
+            await GetAllowUserMods(e.CancellationToken);
+        }
+    }
+    
+    private async Task OnDisallow(ButtonRowContext<UserAllowedModsModel?> context)
+    {
+        if (context.DeleteCommand.Item is not null && await DoUserDisallowMod(context.DeleteCommand.Item))
+        {
+            //await context.DeleteCommand.Clicked.InvokeAsync();
+        }
+    }
+    
+    private async Task<bool> DoUserAllowMod(AllowUserModel model)
+    {
+        return await _modProvider.AllowUserMod((int) model.UserId, model.ModId);
+    }
+    private async Task<bool> DoUserDisallowMod(UserAllowedModsModel model)
+    {
+        await ShowModal();
+        return true;
+    }
+
+}

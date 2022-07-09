@@ -1,0 +1,79 @@
+﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Anonymous}")]
+@page "/login"
+
+@inject NavigationManager _navigationManager
+@inject IAuthenticationProvider _authenticationProvider
+
+<Container>
+    <Row Flex="Flex.JustifyContent.Center">
+        <Column ColumnSize="ColumnSize.Is6.OnDesktop.IsAuto.OnMobile">
+            <Card Margin="Margin.Is5.OnDesktop.Is3.OnMobile" Border="Border.Is0.Rounded" Shadow="Shadow.Small">
+                <CardBody>
+                    <Heading Padding="Padding.Is3" Size="HeadingSize.Is5" TextAlignment="TextAlignment.Center" TextWeight="TextWeight.Light">Sign In</Heading>
+                    <Divider/>
+                    <Row Margin="Margin.Is2">
+                        <Button Block
+                                Border="Border.RoundedPill"
+                                TextTransform="TextTransform.Uppercase"
+                                Padding="Padding.Is3"
+                                TextWeight="TextWeight.Bold"
+                                Color="Color.Primary"
+                                Clicked="@OnDemoLogin">
+                            Demo
+                        </Button>
+                    </Row>
+                    <Row Margin="Margin.Is2">
+                        <Button Block
+                                Border="Border.RoundedPill"
+                                TextTransform="TextTransform.Uppercase"
+                                Padding="Padding.Is3"
+                                TextWeight="TextWeight.Bold"
+                                Style="@ButtonNexusModsStyle"
+                                TextColor="TextColor.White"
+                                Type="@ButtonType.Link"
+                                To="@NexusModsSSOUrl">
+                            Log In via NexusMods SSO
+                        </Button>
+                    </Row>
+                    <Row Margin="Margin.Is2">
+                        <Button Block
+                                Border="Border.RoundedPill"
+                                TextTransform="TextTransform.Uppercase"
+                                Padding="Padding.Is3"
+                                TextWeight="TextWeight.Bold"
+                                Style="@ButtonNexusModsStyle"
+                                TextColor="TextColor.White"
+                                Type="@ButtonType.Link"
+                                To="@NexusModsTokenUrl">
+                            Log In via NexusMods Token
+                        </Button>
+                    </Row>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+@code {
+    
+    private static string ButtonNexusModsStyle = $"background-color: #db8e34;";
+
+    [Parameter]
+    public bool DemoLoginEnabled { get; set; } = true;
+    [Parameter]
+    public bool SSOLoginEnabled { get; set; } = true;
+    [Parameter]
+    public bool RawTokenLoginEnabled { get; set; } = true;
+
+    private string NexusModsSSOUrl => $"login-nexusmods-sso{new Uri(_navigationManager.Uri).Query}";
+    private string NexusModsTokenUrl => $"login-nexusmods-token{new Uri(_navigationManager.Uri).Query}";
+
+    private async void OnDemoLogin()
+    {
+        if (await _authenticationProvider.AuthenticateAsync("", "demo") is not null)
+        {
+            _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "");
+        }
+    }
+
+}

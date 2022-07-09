@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <Target Name="GenerateOpenApi" AfterTargets="PreBuildEvent">
+    <Exec Command="dotnet new tool-manifest --force" />
+    <Exec Command="dotnet tool install --local NSwag.ConsoleCore --version 13.16.1" />
+    <Exec Command="dotnet nswag openapi2csclient ^
+      /input:../swagger.json /classname:&quot;{controller}Client&quot; /namespace:$(RootNamespace) /output:Clients.g.cs ^
+      /InjectHttpClient:true /UseBaseUrl:false /GenerateClientInterfaces:true ^
+      /RequiredPropertiesMustBeDefined:true /GenerateNullableReferenceTypes:true ^
+      /ClassStyle:Record /GenerateNativeRecords:true /TemplateDirectory:Templates ^
+      /OperationGenerationMode:MultipleClientsFromFirstTagAndPathSegments /JsonLibrary:SystemTextJson" />
+  </Target>
+
+  <ItemGroup>
+    <!-- Soft link so we always have the latest version of swagger.json -->
+    <ProjectReference Include="..\BUTR.Site.NexusMods.Server\BUTR.Site.NexusMods.Server.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>
