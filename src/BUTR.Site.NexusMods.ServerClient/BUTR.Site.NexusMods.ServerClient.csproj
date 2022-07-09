@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <Target Name="GenerateOpenApi" AfterTargets="PreBuildEvent">
+  <Target Name="GenerateOpenApi" AfterTargets="BeforeBuild">
     <ItemGroup>
       <ExecPreprocessArgs Include="/input:../swagger.json /classname:&quot;{controller}Client&quot; /namespace:$(RootNamespace) /output:Clients.g.cs"/>
       <ExecPreprocessArgs Include="/InjectHttpClient:true /UseBaseUrl:false /GenerateClientInterfaces:true"/>
