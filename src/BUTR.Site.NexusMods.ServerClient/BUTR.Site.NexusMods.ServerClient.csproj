@@ -7,14 +7,17 @@
   </PropertyGroup>
 
   <Target Name="GenerateOpenApi" AfterTargets="PreBuildEvent">
+    <ItemGroup>
+      <ExecPreprocessArgs Include="/input:../swagger.json /classname:&quot;{controller}Client&quot; /namespace:$(RootNamespace) /output:Clients.g.cs"/>
+      <ExecPreprocessArgs Include="/InjectHttpClient:true /UseBaseUrl:false /GenerateClientInterfaces:true"/>
+      <ExecPreprocessArgs Include="/RequiredPropertiesMustBeDefined:true /GenerateNullableReferenceTypes:true"/>
+      <ExecPreprocessArgs Include="/ClassStyle:Record /GenerateNativeRecords:true /TemplateDirectory:Templates"/>
+      <ExecPreprocessArgs Include="/OperationGenerationMode:MultipleClientsFromFirstTagAndPathSegments /JsonLibrary:SystemTextJson"/>
+    </ItemGroup>
+    
     <Exec Command="dotnet new tool-manifest --force" />
     <Exec Command="dotnet tool install --local NSwag.ConsoleCore --version 13.16.1" />
-    <Exec Command="dotnet nswag openapi2csclient ^
-      /input:../swagger.json /classname:&quot;{controller}Client&quot; /namespace:$(RootNamespace) /output:Clients.g.cs ^
-      /InjectHttpClient:true /UseBaseUrl:false /GenerateClientInterfaces:true ^
-      /RequiredPropertiesMustBeDefined:true /GenerateNullableReferenceTypes:true ^
-      /ClassStyle:Record /GenerateNativeRecords:true /TemplateDirectory:Templates ^
-      /OperationGenerationMode:MultipleClientsFromFirstTagAndPathSegments /JsonLibrary:SystemTextJson" />
+    <Exec Command="dotnet nswag openapi2csclient @(ExecPreprocessArgs, ' ')" />
   </Target>
 
   <ItemGroup>
