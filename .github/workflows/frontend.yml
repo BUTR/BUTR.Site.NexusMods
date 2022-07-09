@@ -30,7 +30,11 @@ jobs:
         github-token: ${{secrets.GITHUB_TOKEN}}
 
     - name: Publish with dotnet
-      run: dotnet publish src/BUTR.Site.NexusMods.Client/BUTR.Site.NexusMods.Client.csproj --configuration Release --output build
+      run: >-
+        dotnet build src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj --configuration Release;
+        dotnet build src/BUTR.Site.NexusMods.ServerClient/BUTR.Site.NexusMods.ServerClient.csproj --configuration Release;
+        dotnet build src/BUTR.Site.NexusMods.Client/BUTR.Site.NexusMods.Client.csproj --configuration Release;
+        dotnet publish src/BUTR.Site.NexusMods.Client/BUTR.Site.NexusMods.Client.csproj --configuration Release --output build;
     
     - name: Change base href in index.html
       run: sed -i 's/<base href="\/" \/>/<base href="\/BUTR.Site.NexusMods\/" \/>/g' build/wwwroot/index.html
