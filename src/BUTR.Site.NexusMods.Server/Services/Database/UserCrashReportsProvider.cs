@@ -75,7 +75,7 @@ WHERE
                 result.CrashReport = await CrashReportsProvider.CreateCrashReportFromReaderAsync(reader, ct);
                 return result;
             }
-            
+
             return null;
         }
 
@@ -95,7 +95,7 @@ WHERE
                 result.CrashReport = await CrashReportsProvider.CreateCrashReportFromReaderAsync(reader, ct);
                 return result;
             }
-            
+
             return null;
         }
 

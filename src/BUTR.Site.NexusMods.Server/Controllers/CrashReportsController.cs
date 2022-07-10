@@ -102,7 +102,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         public async Task<ActionResult> Update([FromBody] CrashReportModel updatedCrashReport)
         {
             var userId = HttpContext.GetUserId();
-            
+
             if (await _userCrashReports.FindAsync(userId, updatedCrashReport.Id) is { } entry)
             {
                 await _userCrashReports.UpsertAsync(entry with { Status = updatedCrashReport.Status, Comment = updatedCrashReport.Comment });

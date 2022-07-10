@@ -21,7 +21,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
         }
-        
+
         public async Task<CrashReportModelPagingResponse?> GetCrashReports(int page, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);

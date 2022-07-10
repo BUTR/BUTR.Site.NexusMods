@@ -92,7 +92,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
                 return new ModNexusModsManualLinkModelPagingResponse(new List<ModNexusModsManualLinkModel>(), new PagingMetadata(1, 1, 10, 1));
-                        
+
             try
             {
                 return await _modClient.ManuallinkpaginatedAsync(page, 10, ct);
@@ -100,14 +100,14 @@ namespace BUTR.Site.NexusMods.Client.Services
             catch (Exception)
             {
                 return new ModNexusModsManualLinkModelPagingResponse(new List<ModNexusModsManualLinkModel>(), new PagingMetadata(1, 1, 10, 1));
-            } 
+            }
         }
         public async Task<bool> ManualLink(string modId, int nexusModsId, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
                 return true;
-            
+
             try
             {
                 await _modClient.ManuallinkAsync(modId, nexusModsId, ct);
@@ -116,14 +116,14 @@ namespace BUTR.Site.NexusMods.Client.Services
             catch (Exception)
             {
                 return false;
-            } 
+            }
         }
         public async Task<bool> ManualUnlink(string modId, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
                 return true;
-            
+
             try
             {
                 await _modClient.ManualunlinkAsync(modId, ct);
@@ -132,7 +132,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             catch (Exception)
             {
                 return false;
-            } 
+            }
         }
 
         /// <inheritdoc />
@@ -141,7 +141,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
                 return new UserAllowedModsModelPagingResponse(new List<UserAllowedModsModel>(), new PagingMetadata(1, 1, 10, 1));
-                        
+
             try
             {
                 return await _modClient.AllowmodpaginatedAsync(page, 10, ct);
@@ -149,14 +149,14 @@ namespace BUTR.Site.NexusMods.Client.Services
             catch (Exception)
             {
                 return new UserAllowedModsModelPagingResponse(new List<UserAllowedModsModel>(), new PagingMetadata(1, 1, 10, 1));
-            } 
+            }
         }
         public async Task<bool> AllowUserMod(int userId, string modId, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
                 return true;
-            
+
             try
             {
                 await _modClient.AllowmodAsync(userId, modId, ct);
@@ -172,7 +172,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
                 return true;
-            
+
             try
             {
                 await _modClient.DisallowmodAsync(userId, modId, ct);
