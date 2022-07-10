@@ -44,7 +44,7 @@ namespace BUTR.Site.NexusMods.Client.Services
         {
             await _tokenContainer.SetTokenAsync(null, ct);
         }
-        
+
         public async Task<ProfileModel?> ValidateAsync(CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);

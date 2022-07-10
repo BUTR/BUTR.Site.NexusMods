@@ -27,7 +27,7 @@ namespace BUTR.Site.NexusMods.Server.Services
         private readonly CrashReportsProvider _provider;
 
         public CrashReportHandler(
-            ILogger<CrashReportHandler> logger, IOptions<CrashReporterOptions> options, 
+            ILogger<CrashReportHandler> logger, IOptions<CrashReporterOptions> options,
             CrashReporterClient client, CrashReportFileProvider fileProvider, CrashReportsProvider provider)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -36,7 +36,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             _fileProvider = fileProvider ?? throw new ArgumentNullException(nameof(fileProvider));
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
         }
-        
+
         /// <inheritdoc />
         protected override async Task ExecuteAsync(CancellationToken ct)
         {
@@ -76,7 +76,7 @@ namespace BUTR.Site.NexusMods.Server.Services
         private async IAsyncEnumerable<FileNameDate> MissingFilenames([EnumeratorCancellation] CancellationToken ct)
         {
             var filenames = await _client.GetCrashReportNamesAsync(ct);
-            for (var skip = 0; skip < filenames.Count; skip+= 1000)
+            for (var skip = 0; skip < filenames.Count; skip += 1000)
             {
                 var take = filenames.Count - skip >= 1000 ? 1000 : filenames.Count - skip;
                 var missingFilenames = await _fileProvider.FindMissingFilenames(filenames.Skip(skip).Take(take).ToArray(), ct).ToArrayAsync(ct);

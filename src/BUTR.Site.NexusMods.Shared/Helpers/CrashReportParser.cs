@@ -103,7 +103,7 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
                 GetModuleSubModules(GetRange(lines, "SubModules", new[] { "Additional Assemblies" }))
             );
         }
-        
+
         private static InvolvedModule ParseInvolvedModule(HtmlNode node)
         {
             var id = node.ChildNodes.FirstOrDefault(x => x.Name == "a")?.InnerText.Trim() ?? string.Empty;

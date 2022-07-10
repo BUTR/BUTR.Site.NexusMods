@@ -20,7 +20,7 @@ namespace BUTR.Site.NexusMods.Client.Extensions
                     if (sb.Length != 0 && previousChar != ' ')
                     {
                         sb.Append(' ');
-                    }           
+                    }
                 }
 
                 sb.Append(c);

@@ -9,7 +9,7 @@ namespace BUTR.Site.NexusMods.Client.Services
     public sealed class LocalStorageTokenContainer : ITokenContainer
     {
         public event Action? OnTokenChanged;
-        
+
         private readonly ILocalStorageService _localStorage;
 
         public LocalStorageTokenContainer(ILocalStorageService localStorage)

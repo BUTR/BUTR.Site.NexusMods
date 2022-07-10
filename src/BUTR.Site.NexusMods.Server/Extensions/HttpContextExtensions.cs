@@ -16,7 +16,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             context.GetIsPremium(),
             context.GetIsSupporter(),
             role);
-        
+
         public static int GetUserId(this HttpContext context) =>
             int.TryParse(context.User.FindFirst(ButrNexusModsClaimTypes.UserId)?.Value ?? string.Empty, out var val) ? val : -1;
 

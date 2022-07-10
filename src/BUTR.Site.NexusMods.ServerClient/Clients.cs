@@ -10,7 +10,7 @@ namespace BUTR.Site.NexusMods.ServerClient
             _settings = new Lazy<JsonSerializerOptions>(options);
         }
     }
-    
+
     public partial class CrashReportsClient
     {
         public CrashReportsClient(HttpClient client, JsonSerializerOptions options) : this(client)
@@ -34,7 +34,7 @@ namespace BUTR.Site.NexusMods.ServerClient
             _settings = new Lazy<JsonSerializerOptions>(options);
         }
     }
-    
+
     public partial class UserClient
     {
         public UserClient(HttpClient client, JsonSerializerOptions options) : this(client)
@@ -42,7 +42,7 @@ namespace BUTR.Site.NexusMods.ServerClient
             _settings = new Lazy<JsonSerializerOptions>(options);
         }
     }
-    
+
     public partial record CrashReportModel
     {
         [JsonIgnore]
@@ -51,13 +51,13 @@ namespace BUTR.Site.NexusMods.ServerClient
         [JsonIgnore]
         public string ExceptionHtml => Exception.Replace("\r", "<br/>").Replace("\r\n", "<br/>");
     }
-    
+
     public partial record ModModel
     {
         [JsonIgnore]
         public string Url => $"https://nexusmods.com/mountandblade2bannerlord/mods/{ModId}";
     }
-    
+
     public partial record ProfileModel
     {
         [JsonIgnore]

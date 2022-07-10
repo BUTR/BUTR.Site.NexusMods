@@ -42,7 +42,7 @@ OFFSET
 LIMIT
     @limit
 ;";
-        
+
         /// <summary>
         /// @modId
         /// </summary>
@@ -65,7 +65,7 @@ ON CONFLICT ON CONSTRAINT mod_nexus_mods_manual_link_pkey
 DO UPDATE SET nexusmods_id = @nexusModsId
 RETURNING *
 ;";
-        
+
         private readonly ILogger _logger;
         private readonly MainConnectionProvider _connectionProvider;
 
@@ -86,7 +86,7 @@ RETURNING *
             {
                 return await CreateModNexusModsManualLinkFromReaderAsync(reader, ct);
             }
-            
+
             return null;
         }
 
@@ -102,7 +102,7 @@ RETURNING *
             {
                 return await CreateModNexusModsManualLinkFromReaderAsync(reader, ct);
             }
-            
+
             return null;
         }
 
@@ -133,7 +133,7 @@ RETURNING *
             var result = await GetAllMods(reader, ct).ToListAsync(ct);
             return (count, result);
         }
-        
+
         private static async Task<ModNexusModsManualLinkTableEntry> CreateModNexusModsManualLinkFromReaderAsync(DbDataReader reader, CancellationToken ct = default)
         {
             var modId = await reader.GetNullableStringAsync("mod_id", ct);

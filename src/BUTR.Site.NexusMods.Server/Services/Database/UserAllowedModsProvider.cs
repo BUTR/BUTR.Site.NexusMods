@@ -43,7 +43,7 @@ OFFSET
 LIMIT
     @limit
 ;";
-        
+
         /// <summary>
         /// @userId
         /// </summary>
@@ -88,7 +88,7 @@ RETURNING *
             {
                 return await CreateUserAllowedModsFromReaderAsync(reader, ct);
             }
-            
+
             return null;
         }
 
@@ -104,7 +104,7 @@ RETURNING *
             {
                 return await CreateUserAllowedModsFromReaderAsync(reader, ct);
             }
-            
+
             return null;
         }
 
@@ -135,7 +135,7 @@ RETURNING *
             var result = await GetAllMods(reader, ct).ToListAsync(ct);
             return (count, result);
         }
-        
+
         private static async Task<UserAllowedModsTableEntry> CreateUserAllowedModsFromReaderAsync(DbDataReader reader, CancellationToken ct = default)
         {
             var userId = await reader.GetNullableInt32Async("user_id", ct);
