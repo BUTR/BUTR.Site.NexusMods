@@ -5,8 +5,8 @@
     protected override void OnInitialized()
     {
         if (_navigationManager.Uri.EndsWith("logout"))
-            _navigationManager.NavigateTo("/login");
+            _navigationManager.NavigateTo($"{_navigationManager.BaseUri}login");
         else
-            _navigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(_navigationManager.ToBaseRelativePath(_navigationManager.Uri))}");
+            _navigationManager.NavigateTo($"{_navigationManager.BaseUri}login?returnUrl={Uri.EscapeDataString(_navigationManager.ToBaseRelativePath(_navigationManager.Uri))}");
     }
 }
