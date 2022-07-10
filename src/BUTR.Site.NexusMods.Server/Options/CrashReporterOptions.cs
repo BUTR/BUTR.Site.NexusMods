@@ -1,4 +1,4 @@
-using Aragas.Extensions.Options.FluentValidation.Extensions;
+﻿using Aragas.Extensions.Options.FluentValidation.Extensions;
 
 using FluentValidation;
 
@@ -15,7 +15,7 @@ namespace BUTR.Site.NexusMods.Server.Options
             RuleFor(x => x.Password).NotEmpty();
         }
     }
-    
+
     public sealed record CrashReporterOptions
     {
         public string Endpoint { get; init; } = default!;

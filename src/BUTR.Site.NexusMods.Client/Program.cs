@@ -47,7 +47,7 @@ namespace BUTR.Site.NexusMods.Client
 
             return factory(httpClient, opt.Value);
         }
-        
+
         private static IHttpClientBuilder ConfigureBackend(this IHttpClientBuilder builder, string userAgent) => builder.ConfigureHttpClient((sp, client) =>
         {
             var backendOptions = sp.GetRequiredService<IOptions<BackendOptions>>().Value;
@@ -88,8 +88,8 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddTransient<AssetsDelegatingHandler>();
                 services.AddTransient<AuthenticationInjectionDelegatingHandler>();
                 services.AddTransient<AuthenticationAnd401DelegatingHandler>();
-                
-                services.AddTransient<IAuthenticationClient, AuthenticationClient>(sp => ConfigureClient(sp, (http, opt) => new AuthenticationClient(http, opt), "BackendAuthentication"));         
+
+                services.AddTransient<IAuthenticationClient, AuthenticationClient>(sp => ConfigureClient(sp, (http, opt) => new AuthenticationClient(http, opt), "BackendAuthentication"));
                 services.AddTransient<IUserClient, UserClient>(sp => ConfigureClient(sp, (http, opt) => new UserClient(http, opt)));
                 services.AddTransient<ICrashReportsClient, CrashReportsClient>(sp => ConfigureClient(sp, (http, opt) => new CrashReportsClient(http, opt)));
                 services.AddTransient<IModClient, ModClient>(sp => ConfigureClient(sp, (http, opt) => new ModClient(http, opt)));
@@ -103,7 +103,7 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddScoped<ICrashReportProvider, DefaultCrashReportProvider>();
 
                 services.AddScoped<ITokenContainer, LocalStorageTokenContainer>();
-                
+
                 services.AddScoped<StorageCache>();
 
                 services.AddTransient<BrotliDecompressorService>();

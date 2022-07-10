@@ -23,7 +23,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
     public sealed class ModController : ControllerBase
     {
         public sealed record ModQuery(int ModId);
-        
+
         public sealed record PaginatedQuery(int Page, int PageSize);
 
         public sealed record ManualLinkQuery(string ModId, int NexusModsId);
@@ -193,7 +193,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         {
             if (await _modNexusModsManualLink.FindAsync(query.ModId) is not { } entry)
                 entry = new ModNexusModsManualLinkTableEntry { ModId = query.ModId, NexusModsId = 0 };
-            
+
             if (await _modNexusModsManualLink.UpsertAsync(entry with { NexusModsId = query.NexusModsId }) is not null)
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Linked successful!"));
 
@@ -210,13 +210,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         {
             if (await _modNexusModsManualLink.FindAsync(query.ModId) is null)
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Mod Id was not linked!"));
-            
+
             if (await _modNexusModsManualLink.UpsertAsync(new ModNexusModsManualLinkTableEntry { ModId = query.ModId, NexusModsId = 0 }) is not null)
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Unlinked successful!"));
 
             return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to unlink!"));
         }
-        
+
         [HttpGet("ManualLinkPaginated")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(PagingResponse<ModNexusModsManualLinkModel>), StatusCodes.Status200OK)]
@@ -283,7 +283,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to disallowed!"));
         }
-        
+
         [HttpGet("AllowModPaginated")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(PagingResponse<UserAllowedModsModel>), StatusCodes.Status200OK)]

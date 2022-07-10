@@ -36,7 +36,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             if (string.Equals(profile.Role, ApplicationRoles.Moderator, StringComparison.Ordinal))
                 return new AuthenticationState(_moderator);
-            
+
             if (string.Equals(profile.Role, ApplicationRoles.Administrator, StringComparison.Ordinal))
                 return new AuthenticationState(_administrator);
 
