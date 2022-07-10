@@ -28,11 +28,4 @@
     </ItemGroup>
   </Target>
 
-  <ItemGroup>
-    <!-- Soft link so we always have the latest version of swagger.json -->
-    <ProjectReference Include="..\BUTR.Site.NexusMods.Server\BUTR.Site.NexusMods.Server.csproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-
 </Project>
