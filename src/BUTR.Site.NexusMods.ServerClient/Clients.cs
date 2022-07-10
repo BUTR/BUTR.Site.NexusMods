@@ -8,7 +8,6 @@ namespace BUTR.Site.NexusMods.ServerClient
         public AuthenticationClient(HttpClient client, JsonSerializerOptions options) : this(client)
         {
             _settings = new Lazy<JsonSerializerOptions>(options);
-            ReadResponseAsString = true;
         }
     }
     
