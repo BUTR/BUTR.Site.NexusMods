@@ -2,13 +2,14 @@
 
 using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Authentication.NexusMods.Extensions;
+using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
-using BUTR.Site.NexusMods.Server.Services.Database;
 
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -83,17 +84,8 @@ namespace BUTR.Site.NexusMods.Server
                     Convert.ToBase64String(Encoding.ASCII.GetBytes($"{opts.Username}:{opts.Password}")));
             });
 
-            services.AddSingleton<SeederProvider>();
-            services.AddSingleton<MainConnectionProvider>();
-            services.AddSingleton<CrashReportFileProvider>();
-            services.AddSingleton<CrashReportsProvider>();
-            services.AddSingleton<UserCrashReportsProvider>();
-            services.AddSingleton<UserAllowedModsProvider>();
-            services.AddSingleton<UserRoleProvider>();
-            services.AddSingleton<NexusModsModProvider>();
-            services.AddSingleton<ModNexusModsManualLinkProvider>();
+            services.AddDbContext<AppDbContext>(x => x.UseNpgsql(_configuration.GetConnectionString("Main")));
 
-            services.AddHostedService<SeederService>();
             services.AddHostedService<CrashReportHandler>();
 
             services.AddNexusModsDefaultServices();

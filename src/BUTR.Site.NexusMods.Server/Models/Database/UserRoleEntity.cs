@@ -1,6 +1,6 @@
 ﻿namespace BUTR.Site.NexusMods.Server.Models.Database
 {
-    public sealed record UserRoleTableEntry
+    public sealed record UserRoleEntity : IEntity
     {
         public int UserId { get; set; } = default!;
 

@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database
 {
-    public sealed record CrashReportTableEntry
+    public sealed record CrashReportEntity : IEntity
     {
         public Guid Id { get; set; } = default!;
 
@@ -13,14 +14,14 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
 
         public DateTime CreatedAt { get; set; } = default!;
 
-        public ImmutableArray<string> ModIds { get; set; } = default!;
+        public string[] ModIds { get; set; } = default!;
 
-        public ImmutableArray<string> InvolvedModIds { get; set; } = default!;
+        public string[] InvolvedModIds { get; set; } = default!;
 
-        public ImmutableArray<int> ModNexusModsIds { get; set; } = default!;
+        public int[] ModNexusModsIds { get; set; } = default!;
 
         public string Url { get; set; } = default!;
 
-        public ImmutableArray<UserCrashReportTableEntry> UserCrashReports { get; set; } = default!;
+        public ICollection<UserCrashReportEntity> UserCrashReports { get; set; } = default!;
     }
 }

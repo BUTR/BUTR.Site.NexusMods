@@ -1,6 +1,6 @@
 ﻿namespace BUTR.Site.NexusMods.Server.Models.Database
 {
-    public sealed record ModNexusModsManualLinkTableEntry
+    public sealed record ModNexusModsManualLinkEntity : IEntity
     {
         public string ModId { get; set; } = default!;
 

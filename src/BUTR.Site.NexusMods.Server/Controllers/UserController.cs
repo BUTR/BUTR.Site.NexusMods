@@ -1,8 +1,8 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
+using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
-using BUTR.Site.NexusMods.Server.Services.Database;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
@@ -22,19 +22,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         public sealed record SetRoleBody(uint UserId, string Role);
         public sealed record RemoveRoleBody(uint UserId);
 
-        public sealed record AddAllowedModBody(uint UserId, string ModId);
-        public sealed record RemoveAllowedModBody(uint UserId, string ModId);
-
-
         private readonly ILogger _logger;
-        private readonly UserRoleProvider _userRoleProvider;
-        private readonly UserAllowedModsProvider _userAllowedModsProvider;
+        private readonly AppDbContext _dbContext;
 
-        public UserController(ILogger<UserController> logger, UserRoleProvider userRoleProvider, UserAllowedModsProvider userAllowedModsProvider)
+        public UserController(ILogger<UserController> logger, AppDbContext dbContext)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _userRoleProvider = userRoleProvider ?? throw new ArgumentNullException(nameof(userRoleProvider));
-            _userAllowedModsProvider = userAllowedModsProvider ?? throw new ArgumentNullException(nameof(userAllowedModsProvider));
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
 
@@ -52,10 +46,15 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> SetRole([FromBody] SetRoleBody body, CancellationToken ct)
         {
-            if (await _userRoleProvider.UpsertAsync(new UserRoleTableEntry { UserId = (int) body.UserId, Role = body.Role }, ct) is not null)
-                return StatusCode(StatusCodes.Status200OK, new StandardResponse("Upserted!"));
+            UserRoleEntity? ApplyChanges(UserRoleEntity? existing) => existing switch
+            {
+                null => new() { UserId = (int) body.UserId, Role = body.Role },
+                var entity => entity with { Role = body.Role }
+            };
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<UserRoleEntity>(x => x.UserId == body.UserId, ApplyChanges, ct))
+                return StatusCode(StatusCodes.Status200OK, new StandardResponse("Set successful!"));
 
-            return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to upsert!"));
+            return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to set!"));
         }
 
         [HttpDelete("RemoveRole")]
@@ -65,44 +64,12 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> RemoveRole([FromBody] RemoveRoleBody body, CancellationToken ct)
         {
-            if (await _userRoleProvider.FindAsync((int) body.UserId, ct) is not { } entry)
-                return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Not found!"));
-
-            if (await _userRoleProvider.DeleteAsync(entry, ct))
+            UserRoleEntity? ApplyChanges(UserRoleEntity? existing) => existing switch
+            {
+                _ => null
+            };
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<UserRoleEntity>(x => x.UserId == body.UserId, ApplyChanges, ct))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Deleted successful!"));
-
-            return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to delete!"));
-        }
-
-
-        [HttpPost("AddAllowedMod")]
-        [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
-        [Produces("application/json")]
-        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> AddAllowedMod([FromBody] AddAllowedModBody body, CancellationToken ct)
-        {
-            if (await _userAllowedModsProvider.FindAsync((int) body.UserId, ct) is not { } entry)
-                return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Not found!"));
-
-            if (await _userAllowedModsProvider.UpsertAsync(new UserAllowedModsTableEntry { UserId = (int) body.UserId, AllowedModIds = entry.AllowedModIds.Add(body.ModId) }, ct) is not null)
-                return StatusCode(StatusCodes.Status200OK, new StandardResponse("Added successful!"));
-
-            return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to upsert!"));
-        }
-
-        [HttpDelete("RemoveAllowedMod")]
-        [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
-        [Produces("application/json")]
-        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> RemoveAllowedMod([FromBody] RemoveAllowedModBody body, CancellationToken ct)
-        {
-            if (await _userAllowedModsProvider.FindAsync((int) body.UserId, ct) is not { } entry)
-                return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Not found!"));
-
-            if (await _userAllowedModsProvider.UpsertAsync(new UserAllowedModsTableEntry { UserId = (int) body.UserId, AllowedModIds = entry.AllowedModIds.Remove(body.ModId) }, ct) is not null)
-                return StatusCode(StatusCodes.Status200OK, new StandardResponse("Removed successful!"));
 
             return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to delete!"));
         }

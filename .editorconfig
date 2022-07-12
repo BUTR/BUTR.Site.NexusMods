@@ -7,6 +7,13 @@
 [*]
 indent_style = space
 
+# Microsoft .NET properties
+csharp_indent_braces = false
+csharp_new_line_before_open_brace = all
+
+# ReSharper properties
+resharper_initializer_braces = pico
+
 # Code files
 [*.{cs,vb}]
 indent_size = 4
@@ -42,7 +49,7 @@ csharp_indent_case_contents_when_block = false
 [*.cs]
 csharp_space_after_cast = true
 csharp_space_after_keywords_in_control_flow_statements = true
-csharp_space_between_parentheses =
+csharp_space_between_parentheses = 
 csharp_space_before_colon_in_inheritance_clause = true
 csharp_space_after_colon_in_inheritance_clause = true
 csharp_space_around_binary_operators = before_and_after
