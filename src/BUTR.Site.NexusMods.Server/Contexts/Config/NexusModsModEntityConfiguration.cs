@@ -1,5 +1,4 @@
 ﻿using BUTR.Site.NexusMods.Server.Models.Database;
-using BUTR.Site.NexusMods.Server.Utils;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

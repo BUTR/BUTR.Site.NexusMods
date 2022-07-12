@@ -1,6 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
-
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 using System;
 using System.Linq;

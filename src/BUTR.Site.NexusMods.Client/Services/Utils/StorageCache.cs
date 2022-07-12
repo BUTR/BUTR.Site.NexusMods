@@ -1,5 +1,4 @@
-﻿using Blazored.LocalStorage;
-using Blazored.SessionStorage;
+﻿using Blazored.SessionStorage;
 
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;

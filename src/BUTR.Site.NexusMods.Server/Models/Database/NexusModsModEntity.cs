@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-
-namespace BUTR.Site.NexusMods.Server.Models.Database
+﻿namespace BUTR.Site.NexusMods.Server.Models.Database
 {
     public sealed record NexusModsModEntity : IEntity
     {
