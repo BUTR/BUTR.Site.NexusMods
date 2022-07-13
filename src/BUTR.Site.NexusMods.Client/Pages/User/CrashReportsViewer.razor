@@ -76,8 +76,8 @@
                 <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Filterable SortField="InvolvedModIds" Sortable >
                     <DisplayTemplate>@(context.InvolvedModules.FirstOrDefault())</DisplayTemplate>
                 </DataGridColumn>
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Type" Filterable="false" Sortable="false" />
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date" SortField="CreatedAt" Sortable >
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Exception" Filterable="false" Sortable="false" />
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" SortField="CreatedAt" Sortable >
                     <DisplayTemplate>@(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
                     <FilterTemplate>
                         <DatePicker TValue="DateTime?" Placeholder="yyyy-MM-dd" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" DatesChanged="@(range => OnDatesChanged(range, context))"/>
