@@ -94,7 +94,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             }
 
             var token = Request.Headers["Authorization"].ToString().Replace(ButrNexusModsAuthSchemeConstants.AuthScheme, "").Trim();
-            return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(Request.Headers["Authorization"], HttpContext.GetProfile(HttpContext.GetRole())));
+            return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(token, HttpContext.GetProfile(HttpContext.GetRole())));
         }
     }
 }
