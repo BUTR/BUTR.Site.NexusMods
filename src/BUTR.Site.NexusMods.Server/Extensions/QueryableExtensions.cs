@@ -1,5 +1,4 @@
 ﻿using BUTR.Site.NexusMods.Server.Models;
-using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using DynamicExpressions;
@@ -82,6 +81,12 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             if (type.IsEnum)
                 return Enum.Parse(type, rawValue);
 
+            if (type.IsArray)
+                type = type.GetElementType();
+
+            if (type.IsGenericType && type.GenericTypeArguments.Length == 1)
+                type = type.GenericTypeArguments[0];
+
             switch (Type.GetTypeCode(type))
             {
                 case TypeCode.String:
@@ -119,27 +124,12 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             return rawValue;
         }
 
-        private static object? Convert(Type type, Filtering filter) => filter.Type switch
-        {
-            FilteringType.Equal => ConvertValue(type, filter.Values.First()),
-            FilteringType.NotEquals => ConvertValue(type, filter.Values.First()),
-            FilteringType.GreaterThan => ConvertValue(type, filter.Values.First()),
-            FilteringType.GreaterThanOrEqual => ConvertValue(type, filter.Values.First()),
-            FilteringType.LessThan => ConvertValue(type, filter.Values.First()),
-            FilteringType.LessThanOrEqual => ConvertValue(type, filter.Values.First()),
-            FilteringType.Contains => filter.Values.Select(x => ConvertValue(type, x)).ToArray(),
-            FilteringType.NotContains => filter.Values.Select(x => ConvertValue(type, x)).ToArray(),
-            FilteringType.StartsWith => ConvertValue(type, filter.Values.First()),
-            FilteringType.EndsWith => ConvertValue(type, filter.Values.First()),
-            _ => ConvertValue(type, filter.Values.First())
-        };
-
         private static Expression<Func<TEntity, bool>>? GetFilteringPredicate<TEntity>(Filtering filter)
         {
             if (typeof(TEntity).GetProperty(filter.Property) is not { } propertyInfo)
                 return null;
 
-            return DynamicExpressions.DynamicExpressions.GetPredicate<TEntity>(filter.Property, Convert(filter.Type), Convert(propertyInfo.PropertyType, filter));
+            return DynamicExpressions.DynamicExpressions.GetPredicate<TEntity>(filter.Property, Convert(filter.Type), ConvertValue(propertyInfo.PropertyType, filter.Value));
         }
 
         public static IQueryable<TEntity> WithFilter<TEntity>(this IQueryable<TEntity> queryable, IEnumerable<Filtering> filters)

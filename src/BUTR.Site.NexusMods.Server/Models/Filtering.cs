@@ -4,7 +4,6 @@
     {
         public string Property { get; set; } = default!;
         public FilteringType Type { get; set; } = default!;
-        public FilteringCondition Condition { get; set; } = default!;
-        public string[] Values { get; set; } = default!;
+        public string Value { get; set; } = default!;
     }
 }
