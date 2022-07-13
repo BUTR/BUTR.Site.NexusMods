@@ -72,7 +72,7 @@
                   Filterable
                   Responsive>
             <DataGridColumns>
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="GameVersion" Filterable SortField="GameVersion" Sortable />
+                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="Game Version" Filterable SortField="GameVersion" Sortable />
                 <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Filterable SortField="InvolvedModIds" Sortable >
                     <DisplayTemplate>@(context.InvolvedModules.FirstOrDefault())</DisplayTemplate>
                 </DataGridColumn>
