@@ -1,10 +1,21 @@
-﻿using System;
+﻿using Blazorise;
+
+using BUTR.Site.NexusMods.ServerClient;
+
+using System;
 using System.Text;
 
 namespace BUTR.Site.NexusMods.Client.Extensions
 {
     public static class EnumExtension
     {
+        public static SortingType ToSortingType(this SortDirection sortDirection) => sortDirection switch
+        {
+            SortDirection.Ascending => SortingType.Ascending,
+            SortDirection.Descending => SortingType.Descending,
+            _ => SortingType.Descending
+        };
+
         public static string GetDisplayName<T>(this T @enum) where T : Enum
         {
             var sb = new StringBuilder();

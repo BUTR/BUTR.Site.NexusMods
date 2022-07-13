@@ -21,7 +21,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
         public async Task<string?> AuthenticateAsync(string apiKey, string type, CancellationToken ct = default)
         {
-            if (type?.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
+            if (type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
                 await _tokenContainer.SetTokenAsync(new Token(type, string.Empty), ct);
                 return string.Empty;

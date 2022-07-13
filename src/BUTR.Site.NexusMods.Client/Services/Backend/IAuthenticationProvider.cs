@@ -7,7 +7,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 {
     public interface IAuthenticationProvider
     {
-        Task<string?> AuthenticateAsync(string apiKey, string? type = null, CancellationToken ct = default);
+        Task<string?> AuthenticateAsync(string apiKey, string type, CancellationToken ct = default);
         Task DeauthenticateAsync(CancellationToken ct = default);
         Task<ProfileModel?> ValidateAsync(CancellationToken ct = default);
     }

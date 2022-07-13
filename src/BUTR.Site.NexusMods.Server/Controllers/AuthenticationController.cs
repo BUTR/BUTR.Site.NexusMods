@@ -69,7 +69,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [HttpGet("Validate")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(JwtTokenResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> Validate()
         {
             if (await _nexusModsAPIClient.ValidateAPIKey(HttpContext.GetAPIKey()) is not { } validateResponse)
@@ -93,6 +94,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             }
 
             var token = await HttpContext.GetTokenAsync(ButrNexusModsAuthSchemeConstants.AuthScheme);
+            if (token is null)
+                return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Invalid generated token!"));
+
             return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(token, HttpContext.GetProfile(HttpContext.GetRole())));
         }
     }

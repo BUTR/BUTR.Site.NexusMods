@@ -16,7 +16,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts.Config
             builder.Property(p => p.Status).HasColumnName("status").IsRequired();
             builder.Property(p => p.Comment).HasColumnName("comment").IsRequired();
             builder.Property<Guid>("crash_report_id").IsRequired();
-            builder.HasOne(p => p.CrashReport).WithMany(x => x.UserCrashReports).HasForeignKey("crash_report_id").HasConstraintName("FK_user_crash_report_entity_crash_report_entity_crash_report_id").OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(p => p.CrashReport).WithMany().HasForeignKey("crash_report_id").HasConstraintName("FK_user_crash_report_entity_crash_report_entity_crash_report_id").OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

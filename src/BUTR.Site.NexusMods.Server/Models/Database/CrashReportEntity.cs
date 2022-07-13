@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database
 {
@@ -20,7 +19,5 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
         public int[] ModNexusModsIds { get; set; } = default!;
 
         public string Url { get; set; } = default!;
-
-        public ICollection<UserCrashReportEntity> UserCrashReports { get; set; } = default!;
     }
 }

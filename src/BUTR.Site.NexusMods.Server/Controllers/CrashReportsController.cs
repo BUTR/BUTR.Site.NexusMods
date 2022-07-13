@@ -1,6 +1,7 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Shared.Helpers;
@@ -12,8 +13,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,7 +25,23 @@ namespace BUTR.Site.NexusMods.Server.Controllers
     [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
     public sealed class CrashReportsController : ControllerBase
     {
-        public sealed record CrashReportsQuery(uint Page, uint PageSize);
+        public sealed record CrashReportsPaginated(uint Page, uint PageSize, List<Filtering>? Filters, List<Sorting>? Sotings);
+
+        private sealed record UserCrashReportView
+        {
+            public Guid Id { get; init; } = default!;
+            public string GameVersion { get; init; } = default!;
+            public string Exception { get; init; } = default!;
+            public DateTime CreatedAt { get; init; } = default!;
+            public string[] ModIds { get; init; } = default!;
+            public string[] InvolvedModIds { get; init; } = default!;
+            public int[] ModNexusModsIds { get; init; } = default!;
+            public string Url { get; init; } = default!;
+
+            public int UserId { get; init; } = default!;
+            public CrashReportStatus Status { get; init; } = default!;
+            public string Comment { get; init; } = default!;
+        }
 
         private readonly ILogger _logger;
         private readonly AppDbContext _dbContext;
@@ -33,60 +52,58 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-        [HttpGet("Paginated")]
+        [HttpPost("Paginated")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(PagingResponse<CrashReportModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> Paginated([FromQuery] CrashReportsQuery query)
+        public async Task<ActionResult> Paginated([FromBody] CrashReportsPaginated query)
         {
             var page = query.Page;
             var pageSize = Math.Max(Math.Min(query.PageSize, 50), 10);
+            var filters = query.Filters ?? Enumerable.Empty<Filtering>();
+            var sortings = query.Sotings is null || query.Sotings.Count == 0
+                ? new List<Sorting> { new() { Property = nameof(CrashReportEntity.CreatedAt), Type = SortingType.Descending } }
+                : query.Sotings;
 
-            if (User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator))
-                return await ForAdministrator(page, pageSize);
+            IQueryable<UserCrashReportView> DbQueryBase(Expression<Func<CrashReportEntity, bool>> predicate)
+            {
+                return _dbContext.Set<CrashReportEntity>()
+                    .Where(predicate)
+                    .GroupJoin(_dbContext.Set<UserCrashReportEntity>(), cre => cre.Id, ucr => ucr.CrashReport.Id, (cre, ucr) => new { cre, ucr })
+                    .SelectMany(x => x.ucr.DefaultIfEmpty(), (cre, ucr) => new { cre.cre, ucr })
+                    .Select(x => new UserCrashReportView
+                    {
+                        Id = x.cre.Id,
+                        GameVersion = x.cre.GameVersion,
+                        Exception = x.cre.Exception,
+                        CreatedAt = x.cre.CreatedAt,
+                        ModIds = x.cre.ModIds,
+                        InvolvedModIds = x.cre.InvolvedModIds,
+                        ModNexusModsIds = x.cre.ModNexusModsIds,
+                        Url = x.cre.Url,
+                        UserId = x.ucr != null ? x.ucr.UserId : -1,
+                        Status = x.ucr != null ? x.ucr.Status : CrashReportStatus.New,
+                        Comment = x.ucr != null ? x.ucr.Comment : string.Empty,
+                    })
+                    .WithFilter(filters)
+                    .WithSort(sortings);
+            }
 
-            return await ForUser(HttpContext.GetUserId(), page, pageSize);
-        }
+            var userId = HttpContext.GetUserId();
+            var dbQuery = User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator)
+                ? DbQueryBase(x => true)
+                : DbQueryBase(x => _dbContext.Set<NexusModsModEntity>().Any(y => x.ModNexusModsIds.Contains(y.ModId)) ||
+                                   _dbContext.Set<ModNexusModsManualLinkEntity>().Any(y => x.ModIds.Contains(y.ModId)) ||
+                                   _dbContext.Set<UserAllowedModsEntity>().Any(y => y.UserId == userId && x.ModIds.Any(z => y.AllowedModIds.Contains(z))));
 
-        private async Task<ObjectResult> ForAdministrator(uint page, uint pageSize)
-        {
-            var dbQuery = _dbContext.Set<CrashReportEntity>()
-                .OrderByDescending(x => x.CreatedAt)
-                .Include(x => x.UserCrashReports);
-
-            var paginated = await dbQuery.PaginatedAsync<CrashReportEntity>(page, pageSize, CancellationToken.None);
+            var paginated = await dbQuery.PaginatedAsync<UserCrashReportView>(page, pageSize, CancellationToken.None);
 
             return StatusCode(StatusCodes.Status200OK, new PagingResponse<CrashReportModel>
             {
-                Items = paginated.Items.Select(cr => new CrashReportModel(cr.Id, cr.GameVersion, cr.Exception, cr.CreatedAt, cr.Url, cr.InvolvedModIds.ToImmutableArray())
+                Items = paginated.Items.Select(x => new CrashReportModel(x.Id, x.GameVersion, x.Exception, x.CreatedAt, x.Url, x.InvolvedModIds.ToImmutableArray())
                 {
-                    Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
-                    Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
-                }).ToAsyncEnumerable(),
-                Metadata = paginated.Metadata
-            });
-        }
-        private async Task<ObjectResult> ForUser(int userId, uint page, uint pageSize)
-        {
-            var dbQuery =
-                (from cre in _dbContext.Set<CrashReportEntity>()
-                 from nmm in _dbContext.Set<NexusModsModEntity>().Where(x => cre.ModNexusModsIds.Contains(x.ModId)).DefaultIfEmpty()
-                 from umi in _dbContext.Set<UserAllowedModsEntity>().Where(x => cre.ModIds.Any(y => x.UserId == userId && x.AllowedModIds.Contains(y))).DefaultIfEmpty()
-                 from mnm in _dbContext.Set<ModNexusModsManualLinkEntity>().Where(x => cre.ModIds.Contains(x.ModId)).DefaultIfEmpty()
-                 where nmm != null || umi != null || mnm != null
-                 select cre)
-                .Distinct()
-                .OrderByDescending(x => x.CreatedAt)
-                .Include(x => x.UserCrashReports);
-
-            var paginated = await dbQuery.PaginatedAsync<CrashReportEntity>(page, pageSize, CancellationToken.None);
-
-            return StatusCode(StatusCodes.Status200OK, new PagingResponse<CrashReportModel>
-            {
-                Items = paginated.Items.Select(cr => new CrashReportModel(cr.Id, cr.GameVersion, cr.Exception, cr.CreatedAt, cr.Url, cr.InvolvedModIds.ToImmutableArray())
-                {
-                    Status = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Status : CrashReportStatus.New,
-                    Comment = cr.UserCrashReports.Any() ? cr.UserCrashReports.First().Comment : string.Empty
+                    Status = x.Status,
+                    Comment = x.Comment
                 }).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
             });
@@ -103,7 +120,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             UserCrashReportEntity? ApplyChanges(UserCrashReportEntity? existing) => existing switch
             {
-                null => null,
+                null => new UserCrashReportEntity
+                {
+                    CrashReport = new() { Id = updatedCrashReport.Id },
+                    UserId = userId,
+                    Status = updatedCrashReport.Status,
+                    Comment = updatedCrashReport.Comment
+                },
                 var entity => entity with { Status = updatedCrashReport.Status, Comment = updatedCrashReport.Comment }
             };
             var set = _dbContext.Set<UserCrashReportEntity>().Include(x => x.CrashReport);

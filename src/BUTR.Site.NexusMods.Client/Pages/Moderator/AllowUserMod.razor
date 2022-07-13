@@ -18,9 +18,12 @@
                         <FieldLabel>Mod Id to Remove</FieldLabel>
                         <FieldBody>
                             <Select TValue="string" @bind-SelectedValue="@_modIdToDelete">
-                                @foreach (var allowedModId in _entry.AllowedModIds)
-                                {
-                                    <SelectItem Value="@allowedModId">@allowedModId</SelectItem>
+                                @{
+                                    _modIdToDelete = _entry.AllowedModIds.First();
+                                    foreach (var allowedModId in _entry.AllowedModIds)
+                                    {
+                                        <SelectItem Value="@allowedModId">@allowedModId</SelectItem>
+                                    }
                                 }
                             </Select>
                         </FieldBody>

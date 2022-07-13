@@ -1,10 +1,17 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.API;
+using BUTR.Site.NexusMods.Server.Models.Database;
+
+using DynamicExpressions;
 
 using Microsoft.EntityFrameworkCore;
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,7 +31,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
                     PageSize = pageSize,
                     CurrentPage = page,
                     TotalCount = (uint) count,
-                    TotalPages = (uint) Math.Floor((double) count / (double) pageSize),
+                    TotalPages = (uint) Math.Floor((double) count / (double) pageSize)
                 }
             };
         }
@@ -41,7 +48,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
                     PageSize = pageSize,
                     CurrentPage = page,
                     TotalCount = (uint) count,
-                    TotalPages = (uint) Math.Floor((double) count / (double) pageSize),
+                    TotalPages = (uint) Math.Floor((double) count / (double) pageSize)
                 }
             };
         }
@@ -52,6 +59,120 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             await foreach (var element in source.AsAsyncEnumerable().WithCancellation(ct))
                 builder.Add(element);
             return builder.ToImmutable();
+        }
+
+
+        private static FilterOperator Convert(FilteringType filteringType) => filteringType switch
+        {
+            FilteringType.Equal => FilterOperator.Equals,
+            FilteringType.NotEquals => FilterOperator.DoesntEqual,
+            FilteringType.GreaterThan => FilterOperator.GreaterThan,
+            FilteringType.GreaterThanOrEqual => FilterOperator.GreaterThanOrEqual,
+            FilteringType.LessThan => FilterOperator.LessThan,
+            FilteringType.LessThanOrEqual => FilterOperator.LessThanOrEqual,
+            FilteringType.Contains => FilterOperator.Contains,
+            FilteringType.NotContains => FilterOperator.NotContains,
+            FilteringType.StartsWith => FilterOperator.StartsWith,
+            FilteringType.EndsWith => FilterOperator.EndsWith,
+            _ => throw new ArgumentOutOfRangeException(nameof(filteringType), filteringType, null)
+        };
+
+        private static object? ConvertValue(Type type, string rawValue)
+        {
+            if (type.IsEnum)
+                return Enum.Parse(type, rawValue);
+
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.String:
+                    return rawValue;
+                case TypeCode.Byte:
+                    return byte.Parse(rawValue);
+                case TypeCode.SByte:
+                    return sbyte.Parse(rawValue);
+                case TypeCode.UInt16:
+                    return ushort.Parse(rawValue);
+                case TypeCode.UInt32:
+                    return uint.Parse(rawValue);
+                case TypeCode.UInt64:
+                    return ulong.Parse(rawValue);
+                case TypeCode.Int16:
+                    return short.Parse(rawValue);
+                case TypeCode.Int32:
+                    return int.Parse(rawValue);
+                case TypeCode.Int64:
+                    return long.Parse(rawValue);
+                case TypeCode.Decimal:
+                    return decimal.Parse(rawValue);
+                case TypeCode.Double:
+                    return double.Parse(rawValue);
+                case TypeCode.Single:
+                    return float.Parse(rawValue);
+                case TypeCode.Boolean:
+                    return bool.Parse(rawValue);
+                case TypeCode.Char:
+                    return rawValue[0];
+                case TypeCode.DateTime:
+                    return DateTime.SpecifyKind(DateTime.Parse(rawValue, null, DateTimeStyles.RoundtripKind), DateTimeKind.Utc);
+            }
+
+            return rawValue;
+        }
+
+        private static object? Convert(Type type, Filtering filter) => filter.Type switch
+        {
+            FilteringType.Equal => ConvertValue(type, filter.Values.First()),
+            FilteringType.NotEquals => ConvertValue(type, filter.Values.First()),
+            FilteringType.GreaterThan => ConvertValue(type, filter.Values.First()),
+            FilteringType.GreaterThanOrEqual => ConvertValue(type, filter.Values.First()),
+            FilteringType.LessThan => ConvertValue(type, filter.Values.First()),
+            FilteringType.LessThanOrEqual => ConvertValue(type, filter.Values.First()),
+            FilteringType.Contains => filter.Values.Select(x => ConvertValue(type, x)).ToArray(),
+            FilteringType.NotContains => filter.Values.Select(x => ConvertValue(type, x)).ToArray(),
+            FilteringType.StartsWith => ConvertValue(type, filter.Values.First()),
+            FilteringType.EndsWith => ConvertValue(type, filter.Values.First()),
+            _ => ConvertValue(type, filter.Values.First())
+        };
+
+        private static Expression<Func<TEntity, bool>>? GetFilteringPredicate<TEntity>(Filtering filter)
+        {
+            if (typeof(TEntity).GetProperty(filter.Property) is not { } propertyInfo)
+                return null;
+
+            return DynamicExpressions.DynamicExpressions.GetPredicate<TEntity>(filter.Property, Convert(filter.Type), Convert(propertyInfo.PropertyType, filter));
+        }
+
+        public static IQueryable<TEntity> WithFilter<TEntity>(this IQueryable<TEntity> queryable, IEnumerable<Filtering> filters)
+        {
+            foreach (var filter in filters.Select(GetFilteringPredicate<TEntity>).OfType<Expression<Func<TEntity, bool>>>())
+                queryable = queryable.Where(filter);
+
+            return queryable;
+        }
+
+        private static Expression<Func<TEntity, object>>? GetOrderPredicate<TEntity>(Sorting sorting)
+        {
+            if (typeof(TEntity).GetProperty(sorting.Property) is null)
+                return null;
+
+            return DynamicExpressions.DynamicExpressions.GetPropertyGetter<TEntity>(sorting.Property);
+        }
+
+        public static IQueryable<TEntity> WithSort<TEntity>(this IQueryable<TEntity> queryable, IEnumerable<Sorting> sortings)
+        {
+            IOrderedQueryable<TEntity>? ordered = null;
+            foreach (var (sorting, predicate) in sortings.Select(x => (x, GetOrderPredicate<TEntity>(x))))
+            {
+                if (predicate is null)
+                    continue;
+
+                if (ordered is null)
+                    ordered = sorting.Type == SortingType.Ascending ? queryable.OrderBy(predicate) : queryable.OrderByDescending(predicate);
+                else
+                    ordered = sorting.Type == SortingType.Ascending ? ordered.ThenBy(predicate) : ordered.ThenByDescending(predicate);
+            }
+
+            return ordered ?? queryable;
         }
     }
 }

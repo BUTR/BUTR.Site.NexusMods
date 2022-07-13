@@ -23,7 +23,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             {
                 return await _localStorage.GetItemAsync<Token>("token");
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 await _localStorage.RemoveItemAsync("token");
                 return null;

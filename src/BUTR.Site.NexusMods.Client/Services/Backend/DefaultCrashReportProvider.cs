@@ -2,6 +2,7 @@
 using BUTR.Site.NexusMods.ServerClient;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -22,7 +23,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
         }
 
-        public async Task<CrashReportModelPagingResponse?> GetCrashReports(int page, CancellationToken ct = default)
+        public async Task<CrashReportModelPagingResponse?> GetCrashReports(int page, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
@@ -33,13 +34,14 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                return await _crashReportsClient.PaginatedAsync(page, 10, ct);
+                return await _crashReportsClient.PaginatedAsync(new CrashReportsPaginated(page, 10, filterings, sortings), ct);
             }
             catch (Exception)
             {
                 return null;
             }
         }
+
         public async Task<bool> UpdateCrashReport(CrashReportModel crashReport, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
