@@ -93,11 +93,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 }), HttpContext.GetProfile(role)));
             }
 
-            var token = await HttpContext.GetTokenAsync(ButrNexusModsAuthSchemeConstants.AuthScheme);
-            if (token is null)
-                return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Invalid generated token!"));
-
-            return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(token, HttpContext.GetProfile(HttpContext.GetRole())));
+            var token = Request.Headers["Authorization"].ToString().Replace(ButrNexusModsAuthSchemeConstants.AuthScheme, "").Trim();
+            return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(Request.Headers["Authorization"], HttpContext.GetProfile(HttpContext.GetRole())));
         }
     }
 }
