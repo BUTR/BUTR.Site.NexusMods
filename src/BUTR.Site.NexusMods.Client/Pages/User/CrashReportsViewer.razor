@@ -70,21 +70,61 @@
                   SelectionMode="DataGridSelectionMode.Single"
                   ShowPager
                   Filterable
+                  CustomFilter="@OnCustomFilter"
+                  Sortable 
                   Responsive>
             <DataGridColumns>
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="Game Version" Filterable SortField="GameVersion" Sortable />
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Filterable SortField="InvolvedModIds" Sortable >
-                    <DisplayTemplate>@(context.InvolvedModules.FirstOrDefault())</DisplayTemplate>
+                <DataGridColumn TItem="CrashReportModel"
+                                Field="@nameof(CrashReportModel.GameVersion)"
+                                Caption="Game Version" Filterable
+                                SortField="@nameof(EntityFields.GameVersion)">
+                    <DisplayTemplate>
+                        @(context.GameVersion)
+                    </DisplayTemplate>
                 </DataGridColumn>
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Exception" Filterable="false" Sortable="false" />
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" SortField="CreatedAt" Sortable >
-                    <DisplayTemplate>@(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
+                
+                <DataGridColumn TItem="CrashReportModel"
+                                Field="@nameof(CrashReportModel.InvolvedModules)"
+                                Caption="Top Involved Module"
+                                SortField="@nameof(EntityFields.InvolvedModIds)">
+                    <DisplayTemplate>
+                        @(context.InvolvedModules.FirstOrDefault())
+                    </DisplayTemplate>
+                </DataGridColumn>
+                
+                <DataGridColumn TItem="CrashReportModel"
+                                Field="@nameof(CrashReportModel.Type)"
+                                Caption="Exception"
+                                Filterable="false"
+                                Sortable="false">
+                    <DisplayTemplate>
+                        @(context.Type)
+                    </DisplayTemplate>
+                </DataGridColumn>
+                
+                <DataGridColumn TItem="CrashReportModel"
+                                Field="@nameof(CrashReportModel.Date)"
+                                Caption="Date (UTC)"
+                                SortField="@nameof(EntityFields.CreatedAt)" >
+                    <DisplayTemplate>
+                        @(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))
+                    </DisplayTemplate>
                     <FilterTemplate>
-                        <DatePicker TValue="DateTime?" Placeholder="yyyy-MM-dd" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" DatesChanged="@(range => OnDatesChanged(range, context))"/>
+                        <DatePicker TValue="DateTime?"
+                                    Placeholder="yyyy-MM-dd"
+                                    InputMode="DateInputMode.Date"
+                                    SelectionMode="DateInputSelectionMode.Range"
+                                    DatesChanged="@(range => OnDatesChanged(range, context))"/>
                     </FilterTemplate>
                 </DataGridColumn>
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" SortField="Status" Sortable  >
-                    <DisplayTemplate>@(context.Status.GetDisplayName())</DisplayTemplate>
+                
+                <DataGridColumn TItem="CrashReportModel"
+                                Field="@nameof(CrashReportModel.Status)"
+                                Caption="Status"
+                                SortField="@nameof(EntityFields.Status)" >
+                    <DisplayTemplate>
+                        @(context.Status.GetDisplayName())
+                    </DisplayTemplate>
                     <FilterTemplate>
                         <Select TValue="string" SelectedValueChanged="@(value => { OnStatusChanged(value, context); })">
                             <SelectItem Value="@string.Empty">Any</SelectItem>
@@ -95,8 +135,25 @@
                         </Select>
                     </FilterTemplate>
                 </DataGridColumn>
-                <DataGridColumn TItem="CrashReportModel" Field="@nameof(CrashReportModel.Comment)" Caption="Comment" Filterable SortField="Comment" Sortable />
+                
+                <DataGridColumn TItem="CrashReportModel"
+                                Field="@nameof(CrashReportModel.Comment)"
+                                Caption="Comment"
+                                SortField="@nameof(EntityFields.Comment)">
+                    <DisplayTemplate>
+                        @(context.Comment)
+                    </DisplayTemplate>
+                </DataGridColumn>
             </DataGridColumns>
+            
+            <EmptyTemplate>
+                No result!
+            </EmptyTemplate>
+            
+            <LoadingTemplate>
+                <Progress @ref="_progressRef" Color="Color.Primary" Value="@_progress" Max="100" />
+            </LoadingTemplate>
+            
             <ButtonRowTemplate>
                 <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@ShowModal">
                     Check
@@ -111,12 +168,16 @@
 
 @code {
 
+    private enum EntityFields { GameVersion, InvolvedModIds, CreatedAt, Status, Comment }
+    
     private CrashReportModel? _entry;
     private ICollection<CrashReportModel> _entries = new List<CrashReportModel>();
     private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) {CurrentPage = 1};
+    private int _progress;
 
     private Modal _modalRef = default!;
     private DataGrid<CrashReportModel?> _dataGridRef = default!;
+    private Progress _progressRef = default!;
 
     private async Task ShowModal() => await _modalRef.Show();
 
@@ -144,6 +205,7 @@
 
     private async Task GetCrashReports(ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
+        await using var progress = ProgressUtils.DoProgress(x => _progress = x, () => _progress, () => InvokeAsync(StateHasChanged));
         var response = await _crashReportProvider.GetCrashReports(_pagingMetadata.CurrentPage, filterings, sortings, ct);
         if (response is not null)
         {
@@ -223,4 +285,6 @@
     {
         context.TriggerFilterChange(status);  
     }
+    
+    private static bool OnCustomFilter(CrashReportModel model) => true;
 }

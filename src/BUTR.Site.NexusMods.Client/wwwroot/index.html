@@ -1,8 +1,8 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BUTR.CrashReportViewer</title>
     <base href="/" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -20,8 +20,18 @@
 </head>
     <body>
         <div id="app">
-            <div class="spinner-loading">
-                <div class="spinner-loader"></div>
+            <div class="loader-outer">
+                <div class="loader-middle">
+                    <div class="loader-inner">
+                        <h2>Loading...</h2>
+                        <div class="progress mt-2" style="height: 2em;">
+                            <div id="progressbar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 10%; background-color: #204066;"></div>
+                        </div>
+                        <div>
+                            <span id="progressLabel" class="text-muted">Downloading file list</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="blazor-error-ui">
@@ -33,21 +43,45 @@
         <script src="_framework/blazor.webassembly.js" autostart="false"></script>
         <script type="module">
             import { BrotliDecode } from './js/decode.min.js';
+            let loadedCount = 0;
+            let totalCount = 0;
             Blazor.start({
                 loadBootResource: function (type, name, defaultUri, integrity) {
-                    if (type !== 'dotnetjs' && location.hostname !== 'localhost') {
-                        return (async function () {
-                            const response = await fetch(defaultUri + '.br', { cache: 'no-cache' });
-                            if (!response.ok) {
-                                throw new Error(response.statusText);
-                            }
+                    if (type === 'dotnetjs') {
+                        return defaultUri;
+                    }
+
+                    const withoutCompression = location.hostname === 'localhost';
+                    
+                    totalCount++;
+                    
+                    return (async function () {
+                        if (name === "blazor.boot.json"){
+                            return await fetch(defaultUri, {cache: 'no-cache'});
+                        }
+
+                        let response = await fetch(withoutCompression ? defaultUri : `${defaultUri}.br`, {cache: 'no-cache'});
+                        if (!response.ok) {
+                            throw new Error(response.statusText);
+                        }
+
+                        if (!withoutCompression) {
                             const originalResponseBuffer = await response.arrayBuffer();
                             const originalResponseArray = new Int8Array(originalResponseBuffer);
                             const decompressedResponseArray = BrotliDecode(originalResponseArray);
                             const contentType = type === 'dotnetwasm' ? 'application/wasm' : 'application/octet-stream';
-                            return new Response(decompressedResponseArray, { headers: { 'content-type': contentType } });
-                        })();
-                    }
+                            response = new Response(decompressedResponseArray, {headers: {'content-type': contentType}});
+                        }
+
+                        loadedCount++;
+                        const percentLoaded = 10 + (loadedCount * 90.0) / totalCount;
+                        const progressbar = document.getElementById('progressbar');
+                        progressbar.style.width = `${percentLoaded}%`;
+                        const progressLabel = document.getElementById('progressLabel');
+                        progressLabel.innerText = `Downloading ${loadedCount}/${totalCount}: ${name}`;
+
+                        return response;
+                    })();
                 }
             });
         </script>
