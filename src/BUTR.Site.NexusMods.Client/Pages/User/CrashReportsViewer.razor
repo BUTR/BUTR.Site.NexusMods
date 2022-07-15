@@ -69,6 +69,8 @@
                   PageSize="@_pagingMetadata.PageSize"
                   SelectionMode="DataGridSelectionMode.Single"
                   ShowPager
+                  ShowPageSizes
+                  PageSizes="@(new [] { 5, 10, 25, 50 })"
                   Filterable
                   CustomFilter="@OnCustomFilter"
                   Sortable 
@@ -172,7 +174,7 @@
     
     private CrashReportModel? _entry;
     private ICollection<CrashReportModel> _entries = new List<CrashReportModel>();
-    private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) {CurrentPage = 1};
+    private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) { CurrentPage = 1, PageSize = 10 };
     private int _progress;
 
     private Modal _modalRef = default!;
@@ -206,7 +208,7 @@
     private async Task GetCrashReports(ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
         await using var progress = ProgressUtils.DoProgress(x => _progress = x, () => _progress, () => InvokeAsync(StateHasChanged));
-        var response = await _crashReportProvider.GetCrashReports(_pagingMetadata.CurrentPage, filterings, sortings, ct);
+        var response = await _crashReportProvider.GetCrashReports(_pagingMetadata.CurrentPage, _pagingMetadata.PageSize, filterings, sortings, ct);
         if (response is not null)
         {
             _entries = response.Items;
@@ -224,7 +226,7 @@
                 .Select(x => new Sorting(x.SortField, x.SortDirection.ToSortingType()))
                 .ToArray();
             var filterings = GetFilters(e.Columns).ToArray();
-            _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page };
+            _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page, PageSize = e.PageSize };
             await GetCrashReports(filterings, sortings, e.CancellationToken);
         }
     }

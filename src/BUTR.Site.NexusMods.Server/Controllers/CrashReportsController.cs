@@ -59,7 +59,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         public async Task<ActionResult> Paginated([FromBody] CrashReportsPaginated query)
         {
             var page = query.Page;
-            var pageSize = Math.Max(Math.Min(query.PageSize, 50), 10);
+            var pageSize = Math.Max(Math.Min(query.PageSize, 50), 5);
             var filters = query.Filters ?? Enumerable.Empty<Filtering>();
             var sortings = query.Sotings is null || query.Sotings.Count == 0
                 ? new List<Sorting> { new() { Property = nameof(CrashReportEntity.CreatedAt), Type = SortingType.Descending } }

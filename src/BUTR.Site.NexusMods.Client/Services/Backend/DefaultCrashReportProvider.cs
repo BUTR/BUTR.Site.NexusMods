@@ -23,18 +23,18 @@ namespace BUTR.Site.NexusMods.Client.Services
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
         }
 
-        public async Task<CrashReportModelPagingResponse?> GetCrashReports(int page, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
+        public async Task<CrashReportModelPagingResponse?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
                 var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-                return new CrashReportModelPagingResponse(crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / 10d), 10, crashReports.Count));
+                return new CrashReportModelPagingResponse(crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / pageSize), pageSize, crashReports.Count));
             }
 
             try
             {
-                return await _crashReportsClient.PaginatedAsync(new CrashReportsPaginated(page, 10, filterings, sortings), ct);
+                return await _crashReportsClient.PaginatedAsync(new CrashReportsPaginated(page, pageSize, filterings, sortings), ct);
             }
             catch (Exception)
             {
