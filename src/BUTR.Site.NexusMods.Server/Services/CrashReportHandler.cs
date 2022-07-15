@@ -91,9 +91,10 @@ namespace BUTR.Site.NexusMods.Server.Services
         private async IAsyncEnumerable<FileNameDate> MissingFilenames(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
         {
             var mapping = dbContext.Model.FindEntityType(typeof(CrashReportFileEntity));
-            if (mapping is null || mapping.GetTableName() is not { } table || mapping.GetSchema() is not { } schema)
+            if (mapping is null || mapping.GetTableName() is not { } table)
                 yield break;
 
+            var schema = mapping.GetSchema();
             var tableName = mapping.GetSchemaQualifiedTableName();
             var storeObjectIdentifier = StoreObjectIdentifier.Table(table, schema);
             var filenameName = mapping.GetProperty(nameof(CrashReportFileEntity.Filename)).GetColumnName(storeObjectIdentifier);
