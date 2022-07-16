@@ -49,17 +49,6 @@ namespace BUTR.Site.NexusMods.Server.Services
 
                 await foreach (var (report, date) in MissingFilenames(dbContext, ct))
                 {
-                    var foundExisting = await dbContext.Set<CrashReportEntity>().Where(x => x.Id == report.Id).Select(x => x.Id).CountAsync(ct) > 0;
-                    if (foundExisting)
-                    {
-                        CrashReportIgnoredFilesEntity? ApplyChanges(CrashReportIgnoredFilesEntity? existing) => existing switch
-                        {
-                            null => new() { Filename = report.Id2 },
-                        };
-                        await dbContext.AddUpdateRemoveAndSaveAsync<CrashReportIgnoredFilesEntity>(x => x.Filename == report.Id2, ApplyChanges, ct);
-                        continue;
-                    }
-
                     var crashReportEntity = new CrashReportEntity
                     {
                         Id = report.Id,
@@ -130,7 +119,19 @@ WHERE
                 foreach (var missing in await _client.GetCrashReportDatesAsync(missingFilenames, ct))
                 {
                     var reportStr = await _client.GetCrashReportAsync(missing.Filename, ct);
-                    yield return (CrashReportParser.Parse(missing.Filename, reportStr), missing.Date);
+                    var report = CrashReportParser.Parse(missing.Filename, reportStr);
+                    var foundExisting = await dbContext.Set<CrashReportEntity>().Where(x => x.Id == report.Id).Select(x => x.Id).CountAsync(ct) > 0;
+                    if (string.IsNullOrEmpty(reportStr) || string.IsNullOrEmpty(report.GameVersion) || foundExisting)
+                    {
+                        CrashReportIgnoredFilesEntity? ApplyChanges(CrashReportIgnoredFilesEntity? existing) => existing switch
+                        {
+                            null => new() { Filename = missing.Filename, Id = report.Id },
+                        };
+                        await dbContext.AddUpdateRemoveAndSaveAsync<CrashReportIgnoredFilesEntity>(x => x.Filename == missing.Filename, ApplyChanges, ct);
+                        continue;
+                    }
+
+                    yield return (report, missing.Date);
                 }
             }
         }
