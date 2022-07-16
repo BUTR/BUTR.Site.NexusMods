@@ -78,11 +78,14 @@
             <DataGridColumns>
                 <DataGridColumn TItem="CrashReportModel"
                                 Field="@nameof(CrashReportModel.GameVersion)"
-                                Caption="Game Version" Filterable
+                                Caption="Game Version"
                                 SortField="@nameof(EntityFields.GameVersion)">
                     <DisplayTemplate>
                         @(context.GameVersion)
                     </DisplayTemplate>
+                    <FilterTemplate>
+                        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
+                    </FilterTemplate>
                 </DataGridColumn>
                 
                 <DataGridColumn TItem="CrashReportModel"
@@ -92,6 +95,19 @@
                     <DisplayTemplate>
                         @(context.InvolvedModules.FirstOrDefault())
                     </DisplayTemplate>
+                    <FilterTemplate>
+                        <Autocomplete TItem="string"
+                                      TValue="string"
+                                      Data="@_autocomplete"
+                                      TextField="@(x => x)"
+                                      ValueField="@(x => x)"
+                                      SelectedText="@_selectedAutoCompleteText"
+                                      SelectedValue="@_selectedSearchValue"
+                                      Debounce="true" DebounceInterval="500"
+                                      SelectedValueChanged="@(x => { _selectedSearchValue = x; _selectedAutoCompleteText = x; context.TriggerFilterChange(x); })"
+                                      SearchChanged="@SearchFilterChangedAsync">
+                        </Autocomplete>
+                    </FilterTemplate>
                 </DataGridColumn>
                 
                 <DataGridColumn TItem="CrashReportModel"
@@ -102,6 +118,9 @@
                     <DisplayTemplate>
                         @(context.Type)
                     </DisplayTemplate>
+                    <FilterTemplate>
+                        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
+                    </FilterTemplate>
                 </DataGridColumn>
                 
                 <DataGridColumn TItem="CrashReportModel"
@@ -145,6 +164,9 @@
                     <DisplayTemplate>
                         @(context.Comment)
                     </DisplayTemplate>
+                    <FilterTemplate>
+                        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
+                    </FilterTemplate>
                 </DataGridColumn>
             </DataGridColumns>
             
@@ -176,6 +198,9 @@
     private ICollection<CrashReportModel> _entries = new List<CrashReportModel>();
     private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) { CurrentPage = 1, PageSize = 10 };
     private int _progress;
+    private ICollection<string> _autocomplete;
+    private string _selectedSearchValue;
+    private string _selectedAutoCompleteText;
 
     private Modal _modalRef = default!;
     private DataGrid<CrashReportModel?> _dataGridRef = default!;
@@ -259,6 +284,13 @@
                 }
             }
         }
+    }
+    
+    private async Task SearchFilterChangedAsync(string filter)
+    {
+        _selectedAutoCompleteText = filter;
+        if (filter.Length >= 3)
+            _autocomplete = await _crashReportProvider.AutocompleteModId(filter);
     }
 
     private static void OnDatesChanged(IReadOnlyList<DateTime?>? range, FilterContext<CrashReportModel> context)

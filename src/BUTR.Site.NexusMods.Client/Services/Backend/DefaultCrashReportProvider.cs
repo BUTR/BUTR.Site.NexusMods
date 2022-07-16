@@ -42,6 +42,26 @@ namespace BUTR.Site.NexusMods.Client.Services
             }
         }
 
+        /// <inheritdoc />
+        public async Task<ICollection<string>> AutocompleteModId(string modId, CancellationToken ct = default)
+        {
+            var token = await _tokenContainer.GetTokenAsync(ct);
+            if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
+                return crashReports.SelectMany(x => x.InvolvedModules).Where(x => x.StartsWith(modId)).ToArray();
+            }
+
+            try
+            {
+                return await _crashReportsClient.AutocompleteAsync(modId, ct);
+            }
+            catch (Exception)
+            {
+                return Array.Empty<string>();
+            }
+        }
+
         public async Task<bool> UpdateCrashReport(CrashReportModel crashReport, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
