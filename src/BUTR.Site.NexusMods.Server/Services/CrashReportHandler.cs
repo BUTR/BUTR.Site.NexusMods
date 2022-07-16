@@ -47,19 +47,26 @@ namespace BUTR.Site.NexusMods.Server.Services
                 await using var scope = _scopeFactory.CreateAsyncScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                var missings = await MissingFilenames(dbContext, ct).ToHashSetAsync(ct);
-                foreach (var (filename, date) in missings)
+                await foreach (var (report, date) in MissingFilenames(dbContext, ct))
                 {
-                    var reportStr = await _client.GetCrashReportAsync(filename, ct);
-                    var report = CrashReportParser.Parse(filename, reportStr);
+                    var foundExisting = await dbContext.Set<CrashReportEntity>().Where(x => x.Id == report.Id).Select(x => x.Id).CountAsync(ct) > 0;
+                    if (foundExisting)
+                    {
+                        CrashReportIgnoredFilesEntity? ApplyChanges(CrashReportIgnoredFilesEntity? existing) => existing switch
+                        {
+                            null => new() { Filename = report.Id2 },
+                        };
+                        await dbContext.AddUpdateRemoveAndSaveAsync<CrashReportIgnoredFilesEntity>(x => x.Filename == report.Id2, ApplyChanges, ct);
+                        continue;
+                    }
 
                     var crashReportEntity = new CrashReportEntity
                     {
                         Id = report.Id,
-                        Url = new Uri(new Uri(_options.Endpoint), $"{filename}.html").ToString(),
+                        Url = new Uri(new Uri(_options.Endpoint), $"{report.Id2}.html").ToString(),
                         GameVersion = report.GameVersion,
                         Exception = report.Exception,
-                        CreatedAt = filename.Length == 8 ? DateTime.UnixEpoch : date,
+                        CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date,
                         ModIds = report.Modules.Select(x => x.Id).ToImmutableArray().AsArray(),
                         InvolvedModIds = report.InvolvedModules.Select(x => x.Id).ToImmutableArray().AsArray(),
                         ModNexusModsIds = report.Modules
@@ -88,7 +95,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             }
         }
 
-        private async IAsyncEnumerable<FileNameDate> MissingFilenames(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
+        private async IAsyncEnumerable<(CrashRecord, DateTime)> MissingFilenames(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
         {
             var mapping = dbContext.Model.FindEntityType(typeof(CrashReportFileEntity));
             if (mapping is null || mapping.GetTableName() is not { } table)
@@ -100,6 +107,10 @@ namespace BUTR.Site.NexusMods.Server.Services
             var filenameName = mapping.GetProperty(nameof(CrashReportFileEntity.Filename)).GetColumnName(storeObjectIdentifier);
 
             var filenames = await _client.GetCrashReportNamesAsync(ct);
+
+            var ignored = dbContext.Set<CrashReportIgnoredFilesEntity>().AsNoTracking().Select(x => x.Filename).ToHashSet();
+            filenames.ExceptWith(ignored);
+
             for (var skip = 0; skip < filenames.Count; skip += 1000)
             {
                 var take = filenames.Count - skip >= 1000 ? 1000 : filenames.Count - skip;
@@ -118,7 +129,8 @@ WHERE
                 var missingFilenames = await query.ToImmutableArrayAsync(ct);
                 foreach (var missing in await _client.GetCrashReportDatesAsync(missingFilenames, ct))
                 {
-                    yield return missing;
+                    var reportStr = await _client.GetCrashReportAsync(missing.Filename, ct);
+                    yield return (CrashReportParser.Parse(missing.Filename, reportStr), missing.Date);
                 }
             }
         }
