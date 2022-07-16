@@ -286,10 +286,10 @@
         }
     }
     
-    private async Task SearchFilterChangedAsync(string filter)
+    private async Task SearchFilterChangedAsync(string? filter)
     {
-        _selectedAutoCompleteText = filter;
-        if (filter.Length >= 3)
+        _selectedAutoCompleteText = filter ?? string.Empty;
+        if (filter is not null && filter.Length >= 3)
             _autocomplete = await _crashReportProvider.AutocompleteModId(filter);
     }
 
