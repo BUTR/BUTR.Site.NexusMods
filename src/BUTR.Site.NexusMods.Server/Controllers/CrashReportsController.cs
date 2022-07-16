@@ -95,7 +95,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var userId = HttpContext.GetUserId();
             var dbQuery = User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator)
                 ? DbQueryBase(x => true)
-                : DbQueryBase(x => _dbContext.Set<NexusModsModEntity>().Any(y => x.ModNexusModsIds.Contains(y.ModId)) ||
+                : DbQueryBase(x => _dbContext.Set<NexusModsModEntity>().Any(y => y.UserIds.Contains(userId) && x.ModNexusModsIds.Contains(y.ModId)) ||
                                    _dbContext.Set<ModNexusModsManualLinkEntity>().Any(y => x.ModIds.Contains(y.ModId)) ||
                                    _dbContext.Set<UserAllowedModsEntity>().Any(y => y.UserId == userId && x.ModIds.Any(z => y.AllowedModIds.Contains(z))));
 
