@@ -12,13 +12,13 @@
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            @if (@_entry is not null)
+            @if (_datagridValue is not null)
             {
                 <Form>
                     <Field>
                         <Text Style="white-space:break-spaces; word-break:break-all;" >
                             <Small>
-                                @(_entry.Exception
+                                @(_datagridValue.Exception
                                 .Replace("\n\n", "\n")
                                 .Replace("\r\r", "\r")
                                 .Replace("\r\n\r\n", "\r\n")
@@ -30,7 +30,7 @@
                     <Field>
                         <FieldLabel>Status</FieldLabel>
                         <FieldBody>
-                           <Select TValue="CrashReportStatus" @bind-SelectedValue="@_entry.Status">
+                           <Select TValue="CrashReportStatus" @bind-SelectedValue="@_datagridValue.Status">
                                 @foreach (var crs in Enum.GetValues<CrashReportStatus>())
                                 {
                                     <SelectItem Value="@crs">@crs.GetDisplayName()</SelectItem>
@@ -41,7 +41,7 @@
                     <Field>
                         <FieldLabel>Comment</FieldLabel>
                         <FieldBody Width="Width.Is25">
-                            <MemoEdit AutoSize @bind-Text="@_entry.Comment" />
+                            <MemoEdit AutoSize @bind-Text="@_datagridValue.Comment" />
                         </FieldBody>
                     </Field>
                 </Form> 
@@ -59,14 +59,14 @@
         <CardTitle Size="4" Margin="Margin.Is0">Crash Reports</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGrid @ref="_dataGridRef"
+        <DataGrid @ref="_datagridRef"
                   TItem="CrashReportModel?"
-                  Data="@_entries"
-                  SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
+                  Data="@_datagridValues"
+                  SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _datagridValue, ref _datagridRef))"
                   ReadData="@OnReadData"
-                  TotalItems="@_pagingMetadata.TotalCount"
-                  CurrentPage="@_pagingMetadata.CurrentPage"
-                  PageSize="@_pagingMetadata.PageSize"
+                  TotalItems="@_datagridPaging.TotalCount"
+                  CurrentPage="@_datagridPaging.CurrentPage"
+                  PageSize="@_datagridPaging.PageSize"
                   SelectionMode="DataGridSelectionMode.Single"
                   ShowPager
                   ShowPageSizes
@@ -98,13 +98,14 @@
                     <FilterTemplate>
                         <Autocomplete TItem="string"
                                       TValue="string"
-                                      Data="@_autocomplete"
+                                      Data="@_autocompleteValues"
                                       TextField="@(x => x)"
                                       ValueField="@(x => x)"
-                                      SelectedText="@_selectedAutoCompleteText"
-                                      SelectedValue="@_selectedSearchValue"
-                                      Debounce="true" DebounceInterval="500"
-                                      SelectedValueChanged="@(x => { _selectedSearchValue = x; _selectedAutoCompleteText = x; context.TriggerFilterChange(x); })"
+                                      SelectedText="@_autocompleteText"
+                                      SelectedValue="@_autocompleteValue"
+                                      Debounce="true"
+                                      DebounceInterval="500"
+                                      SelectedValueChanged="@(x => { _autocompleteValue = x; _autocompleteText = x; context.TriggerFilterChange(x); })"
                                       SearchChanged="@SearchFilterChangedAsync">
                         </Autocomplete>
                     </FilterTemplate>
@@ -165,7 +166,7 @@
                         @(context.Comment)
                     </DisplayTemplate>
                     <FilterTemplate>
-                        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
+                        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500"  />
                     </FilterTemplate>
                 </DataGridColumn>
             </DataGridColumns>
@@ -175,16 +176,12 @@
             </EmptyTemplate>
             
             <LoadingTemplate>
-                <Progress @ref="_progressRef" Color="Color.Primary" Value="@_progress" Max="100" />
+                <Progress @ref="_progressRef" Color="Color.Primary" Value="@_progressValue" Max="100"></Progress>
             </LoadingTemplate>
             
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@ShowModal">
-                    Check
-                </Button>
-                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(() => OnClick(_entry!))">
-                    Open HTML
-                </Button>
+                <Button Color="Color.Primary" Disabled="@(_datagridValue is null)" Clicked="@ShowModal">Check</Button>
+                <Button Color="Color.Primary" Disabled="@(_datagridValue is null)" Clicked="@(() => OnClick(_datagridValue!))">Open HTML</Button>
             </ButtonRowTemplate>
         </DataGrid>
     </CardBody>
@@ -193,17 +190,19 @@
 @code {
 
     private enum EntityFields { GameVersion, InvolvedModIds, CreatedAt, Status, Comment }
+
+    private CrashReportModel? _datagridValue;
+    private ICollection<CrashReportModel> _datagridValues = default!;
+    private PagingMetadata _datagridPaging = new(1, 0, 10, 0);
+
+    private int _progressValue = default!;
     
-    private CrashReportModel? _entry;
-    private ICollection<CrashReportModel> _entries = new List<CrashReportModel>();
-    private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) { CurrentPage = 1, PageSize = 10 };
-    private int _progress;
-    private ICollection<string> _autocomplete;
-    private string _selectedSearchValue;
-    private string _selectedAutoCompleteText;
+    private string _autocompleteText = default!;
+    private string _autocompleteValue = default!;
+    private ICollection<string> _autocompleteValues = default!;
 
     private Modal _modalRef = default!;
-    private DataGrid<CrashReportModel?> _dataGridRef = default!;
+    private DataGrid<CrashReportModel?> _datagridRef = default!;
     private Progress _progressRef = default!;
 
     private async Task ShowModal() => await _modalRef.Show();
@@ -211,9 +210,9 @@
     private async Task HideModal(bool save)
     {
         await _modalRef.Hide();
-        if (save && _entry is not null)
+        if (save && _datagridValue is not null)
         {
-            var updatedCrashReport = _entry with { };
+            var updatedCrashReport = _datagridValue with { };
             if (await _crashReportProvider.UpdateCrashReport(updatedCrashReport))
             {
                 await _notificationService.Success($"Saved Crash Report!", "Success!");
@@ -230,14 +229,14 @@
         await _jsRuntime.InvokeVoidAsync("open", report.Url, "_blank");
     }
 
-    private async Task GetCrashReports(ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
+    private async Task GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
-        await using var progress = ProgressUtils.DoProgress(x => _progress = x, () => _progress, () => InvokeAsync(StateHasChanged));
-        var response = await _crashReportProvider.GetCrashReports(_pagingMetadata.CurrentPage, _pagingMetadata.PageSize, filterings, sortings, ct);
+        await using var progress = ProgressUtils.DoProgress(x => _progressValue = x, () => _progressValue, () => InvokeAsync(StateHasChanged));
+        var response = await _crashReportProvider.GetCrashReports(page, pageSize, filterings, sortings, ct);
         if (response is not null)
         {
-            _entries = response.Items;
-            _pagingMetadata = response.Metadata;
+            _datagridValues = response.Items;
+            _datagridPaging = response.Metadata;
         }
     }
 
@@ -251,8 +250,7 @@
                 .Select(x => new Sorting(x.SortField, x.SortDirection.ToSortingType()))
                 .ToArray();
             var filterings = GetFilters(e.Columns).ToArray();
-            _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page, PageSize = e.PageSize };
-            await GetCrashReports(filterings, sortings, e.CancellationToken);
+            await GetCrashReports(e.Page, e.PageSize, filterings, sortings);
         }
     }
 
@@ -288,9 +286,9 @@
     
     private async Task SearchFilterChangedAsync(string? filter)
     {
-        _selectedAutoCompleteText = filter ?? string.Empty;
+        _autocompleteText = filter ?? string.Empty;
         if (filter is not null && filter.Length >= 3)
-            _autocomplete = await _crashReportProvider.AutocompleteModId(filter);
+            _autocompleteValues = await _crashReportProvider.AutocompleteModId(filter);
     }
 
     private static void OnDatesChanged(IReadOnlyList<DateTime?>? range, FilterContext<CrashReportModel> context)

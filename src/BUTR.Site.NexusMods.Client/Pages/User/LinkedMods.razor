@@ -112,10 +112,7 @@
 
     private async Task<bool> DoUnlinkMod(ModModel model)
     {
-        if (model.ModId is { } modId)
-            return await _modProvider.UnlinkMod(modId);
-        
-        return false;
+        return await _modProvider.UnlinkMod(model.ModId);
     }
 
     private async Task GetMods(CancellationToken ct = default)
