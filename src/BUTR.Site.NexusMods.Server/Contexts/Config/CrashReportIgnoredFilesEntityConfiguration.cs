@@ -11,6 +11,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts.Config
         {
             builder.ToTable("crash_report_ignored_files").HasKey(p => p.Filename).HasName("crash_report_ignored_files_pkey");
             builder.Property(p => p.Filename).HasColumnName("filename").IsRequired();
+            builder.Property(p => p.Id).HasColumnName("id").IsRequired();
         }
     }
 }
