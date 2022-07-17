@@ -12,6 +12,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts.Config
             builder.ToTable("nexusmods_exposed_mods_entity").HasKey(p => p.NexusModsModId).HasName("nexusmods_exposed_mods_entity_pkey");
             builder.Property(p => p.NexusModsModId).HasColumnName("nexusmods_mod_id").ValueGeneratedNever().IsRequired();
             builder.Property(p => p.ModIds).HasColumnName("mod_ids").IsRequired();
+            builder.Property(p => p.LastCheckedDate).HasColumnName("_last_checked_date").ValueGeneratedOnAddOrUpdate().IsRequired();
         }
     }
 }
