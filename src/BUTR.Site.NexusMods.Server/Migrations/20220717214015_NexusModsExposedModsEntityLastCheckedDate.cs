@@ -10,7 +10,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<DateTime>(
-                name: "_last_checked_date",
+                name: "last_checked_date",
                 table: "nexusmods_exposed_mods_entity",
                 type: "timestamp with time zone",
                 nullable: false,
@@ -20,7 +20,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "_last_checked_date",
+                name: "last_checked_date",
                 table: "nexusmods_exposed_mods_entity");
         }
     }

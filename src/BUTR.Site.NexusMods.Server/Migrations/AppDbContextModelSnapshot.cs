@@ -128,7 +128,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                     b.Property<DateTime>("LastCheckedDate")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("_last_checked_date");
+                        .HasColumnName("last_checked_date");
 
                     b.Property<string[]>("ModIds")
                         .IsRequired()
