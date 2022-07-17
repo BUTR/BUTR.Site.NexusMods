@@ -139,8 +139,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 var exposedModIds = await _nexusModsInfo.GetModIds("mountandblade2bannerlord", modInfo.ModId, apiKey).Distinct().ToImmutableArrayAsync();
                 NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
                 {
-                    null => new() { NexusModsModId = modInfo.ModId, ModIds = exposedModIds.AsArray() },
-                    var entity => entity with { ModIds = entity.ModIds.AsImmutableArray().AddRange(exposedModIds).AsArray() }
+                    null => new() { NexusModsModId = modInfo.ModId, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
+                    var entity => entity with { ModIds = entity.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(entity.ModIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
                 };
                 if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges2))
                     return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to link!"));
