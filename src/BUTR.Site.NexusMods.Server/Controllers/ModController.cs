@@ -136,7 +136,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             if (HttpContext.GetIsPremium())
             {
-                var exposedModIds = await _nexusModsInfo.GetModIds("mountandblade2bannerlord", modInfo.ModId, apiKey).ToImmutableArrayAsync();
+                var exposedModIds = await _nexusModsInfo.GetModIds("mountandblade2bannerlord", modInfo.ModId, apiKey).Distinct().ToImmutableArrayAsync();
                 NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
                 {
                     null => new() { NexusModsModId = modInfo.ModId, ModIds = exposedModIds.AsArray() },
