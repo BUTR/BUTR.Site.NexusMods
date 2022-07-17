@@ -18,7 +18,7 @@ namespace BUTR.Site.NexusMods.Server.Services
     public class NexusModsInfo
     {
         [XmlRoot("Module")]
-        private record SubModuleXml
+        public record SubModuleXml
         {
             public record IdValue
             {
