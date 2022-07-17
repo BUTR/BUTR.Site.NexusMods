@@ -36,12 +36,14 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
         private readonly AppDbContext _dbContext;
+        private readonly NexusModsInfo _nexusModsInfo;
 
-        public ModController(ILogger<ModController> logger, NexusModsAPIClient nexusModsAPIClient, AppDbContext dbContext)
+        public ModController(ILogger<ModController> logger, NexusModsAPIClient nexusModsAPIClient, AppDbContext dbContext, NexusModsInfo nexusModsInfo)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _nexusModsAPIClient = nexusModsAPIClient ?? throw new ArgumentNullException(nameof(nexusModsAPIClient));
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _nexusModsInfo = nexusModsInfo ?? throw new ArgumentNullException(nameof(nexusModsInfo));
         }
 
 
@@ -77,13 +79,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             var dbQuery = _dbContext.Set<NexusModsModEntity>()
                 .Where(y => y.UserIds.Contains(userIds))
-                .OrderBy(x => x.ModId);
+                .OrderBy(x => x.NexusModsModId);
 
             var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
 
             return StatusCode(StatusCodes.Status200OK, new PagingResponse<ModModel>
             {
-                Items = paginated.Items.Select(m => new ModModel(m.Name, m.ModId)).ToAsyncEnumerable(),
+                Items = paginated.Items.Select(m => new ModModel(m.Name, m.NexusModsModId)).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
             });
         }
@@ -109,7 +111,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 null => null,
                 var entity => entity with { Name = modInfo.Name }
             };
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModEntity>(x => x.ModId == query.ModId, ApplyChanges))
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Updated successful!"));
 
             return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to link the mod!"));
@@ -132,13 +134,25 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             if (userId != modInfo.User.MemberId)
                 return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("User does not have access to the mod!"));
 
+            if (HttpContext.GetIsPremium())
+            {
+                var exposedModIds = await _nexusModsInfo.GetModIds("mountandblade2bannerlord", modInfo.ModId, apiKey).ToImmutableArrayAsync();
+                NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
+                {
+                    null => new() { NexusModsModId = modInfo.ModId, ModIds = exposedModIds.AsArray() },
+                    var entity => entity with { ModIds = entity.ModIds.AsImmutableArray().AddRange(exposedModIds).AsArray() }
+                };
+                if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges2))
+                    return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to link!"));
+            }
+
             NexusModsModEntity? ApplyChanges(NexusModsModEntity? existing) => existing switch
             {
-                null => new() { Name = modInfo.Name, ModId = modInfo.ModId, UserIds = ImmutableArray.Create<int>(userId).AsArray() },
+                null => new() { Name = modInfo.Name, NexusModsModId = modInfo.ModId, UserIds = ImmutableArray.Create<int>(userId).AsArray() },
                 var entity when entity.UserIds.Contains(userId) => entity,
                 var entity => entity with { UserIds = ImmutableArray.Create<int>(userId).AsArray() }
             };
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModEntity>(x => x.ModId == query.ModId, ApplyChanges))
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Linked successful!"));
 
             return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to link!"));
@@ -160,7 +174,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 var entity when !entity.UserIds.Contains(userId) => entity,
                 var entity => entity with { UserIds = entity.UserIds.AsImmutableArray().Remove(userId).AsArray() }
             };
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModEntity>(x => x.ModId == query.ModId, ApplyChanges))
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Unlinked successful!"));
 
             return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to unlink!"));

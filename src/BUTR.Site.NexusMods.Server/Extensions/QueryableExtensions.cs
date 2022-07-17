@@ -52,6 +52,14 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             };
         }
 
+        public static async Task<ImmutableArray<TSource>> ToImmutableArrayAsync<TSource>(this IAsyncEnumerable<TSource> source, CancellationToken ct = default)
+        {
+            var builder = ImmutableArray.CreateBuilder<TSource>();
+            await foreach (var element in source.AsAsyncEnumerable().WithCancellation(ct))
+                builder.Add(element);
+            return builder.ToImmutable();
+        }
+
         public static async Task<ImmutableArray<TSource>> ToImmutableArrayAsync<TSource>(this IQueryable<TSource> source, CancellationToken ct = default)
         {
             var builder = ImmutableArray.CreateBuilder<TSource>();

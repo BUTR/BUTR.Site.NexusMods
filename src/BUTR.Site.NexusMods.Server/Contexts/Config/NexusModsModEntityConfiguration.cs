@@ -9,8 +9,8 @@ namespace BUTR.Site.NexusMods.Server.Contexts.Config
     {
         protected override void ConfigureModel(EntityTypeBuilder<NexusModsModEntity> builder)
         {
-            builder.ToTable("nexusmods_mod_entity").HasKey(p => p.ModId).HasName("nexusmods_mod_entity_pkey");
-            builder.Property(p => p.ModId).HasColumnName("mod_id").ValueGeneratedNever().IsRequired();
+            builder.ToTable("nexusmods_mod_entity").HasKey(p => p.NexusModsModId).HasName("nexusmods_mod_entity_pkey");
+            builder.Property(p => p.NexusModsModId).HasColumnName("nexusmods_mod_id").ValueGeneratedNever().IsRequired();
             builder.Property(p => p.Name).HasColumnName("name").IsRequired();
             builder.Property(p => p.UserIds).HasColumnName("user_ids") /*.HasConversion<ImmutableArrayToArrayConverter<int>>()*/.IsRequired();
         }

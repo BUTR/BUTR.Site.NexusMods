@@ -74,6 +74,10 @@ namespace BUTR.Site.NexusMods.Server
                 client.BaseAddress = new Uri(opts.NexusMods);
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
+            services.AddHttpClient<NexusModsInfo>().ConfigureHttpClient((sp, client) =>
+            {
+                client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+            });
             services.AddHttpClient<CrashReporterClient>().ConfigureHttpClient((sp, client) =>
             {
                 var opts = sp.GetRequiredService<IOptions<CrashReporterOptions>>().Value;

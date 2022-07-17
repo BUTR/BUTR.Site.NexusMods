@@ -14,6 +14,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts
 
             modelBuilder.ApplyConfiguration(new UserRoleEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserAllowedModsEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new NexusModsExposedModsEntityConfiguration());
             modelBuilder.ApplyConfiguration(new NexusModsModEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ModNexusModsManualLinkEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserCrashReportEntityConfiguration());

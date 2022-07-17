@@ -11,7 +11,7 @@ namespace BUTR.Site.NexusMods.Client.Services
         Task<CrashReportModelPagingResponse?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default);
 
         Task<ICollection<string>> AutocompleteModId(string modId, CancellationToken ct = default);
-        
+
         Task<bool> UpdateCrashReport(CrashReportModel crashReport, CancellationToken ct = default);
     }
 }

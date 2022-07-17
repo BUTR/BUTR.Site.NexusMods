@@ -34,7 +34,7 @@ namespace BUTR.Site.NexusMods.Client.Utils
             return AsyncDisposable.Create(async () =>
             {
                 cts.Cancel();
-                await Task.WhenAny(task);;
+                await Task.WhenAny(task);
                 task.Dispose();
                 cts.Dispose();
             });

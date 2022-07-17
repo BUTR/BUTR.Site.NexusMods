@@ -59,14 +59,22 @@ namespace BUTR.Site.NexusMods.Server.Services
             }
         }
 
-        public async Task<NexusModsModInfoResponse?> GetMod(string gameDomain, int modId, string apiKey)
+        public Task<NexusModsModInfoResponse?> GetMod(string gameDomain, int modId, string apiKey) =>
+            GetCachedWithTimeLimit<NexusModsModInfoResponse?>($"/v1/games/{gameDomain}/mods/{modId}.json", apiKey);
+
+        public Task<NexusModsModFilesResponse?> GetModFileInfos(string gameDomain, int modId, string apiKey) =>
+            GetCachedWithTimeLimit<NexusModsModFilesResponse?>($"/v1/games/{gameDomain}/mods/{modId}/files.json?category=main", apiKey);
+
+        public Task<NexusModsDownloadLinkResponse[]> GetModFileLinks(string gameDomain, int modId, int fileId, string apiKey) =>
+            GetCachedWithTimeLimit<NexusModsDownloadLinkResponse[]>($"/v1/games/{gameDomain}/mods/{modId}/files/{fileId}/download_link.json", apiKey);
+
+        private async Task<TResponse?> GetCachedWithTimeLimit<TResponse>(string url, string apiKey) where TResponse : class?
         {
             try
             {
-                var key = $"{gameDomain}:{modId}";
-                if (await _cache.GetStringAsync(key) is { } modJson)
+                if (await _cache.GetStringAsync(url) is { } json)
                 {
-                    return string.IsNullOrEmpty(modJson) ? null : JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, _jsonSerializerOptions);
+                    return string.IsNullOrEmpty(json) ? null : JsonSerializer.Deserialize<TResponse>(json, _jsonSerializerOptions);
                 }
 
                 try
@@ -74,25 +82,25 @@ namespace BUTR.Site.NexusMods.Server.Services
                     await _lock.WaitAsync();
                     await _timeLimiter;
 
-                    var request = new HttpRequestMessage(HttpMethod.Get, $"/v1/games/{gameDomain}/mods/{modId}.json");
+                    var request = new HttpRequestMessage(HttpMethod.Get, url);
                     request.Headers.Add("apikey", apiKey);
                     request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     var response = await _httpClient.SendAsync(request);
                     _timeLimiter = ParseResponseLimits(response);
                     if (!response.IsSuccessStatusCode)
                     {
-                        await _cache.SetStringAsync(key, "", _expiration);
+                        await _cache.SetStringAsync(url, "", _expiration);
                         return null;
                     }
-                    modJson = await response.Content.ReadAsStringAsync();
-                    var mod = JsonSerializer.Deserialize<NexusModsModInfoResponse>(modJson, _jsonSerializerOptions);
+                    json = await response.Content.ReadAsStringAsync();
+                    var mod = JsonSerializer.Deserialize<TResponse>(json, _jsonSerializerOptions);
                     if (mod is null)
                     {
-                        await _cache.SetStringAsync(key, "", _expiration);
+                        await _cache.SetStringAsync(url, "", _expiration);
                         return null;
                     }
 
-                    await _cache.SetStringAsync(key, modJson, _expiration);
+                    await _cache.SetStringAsync(url, json, _expiration);
                     return response.IsSuccessStatusCode ? mod : null;
                 }
                 finally
