@@ -122,6 +122,5 @@ namespace BUTR.Site.NexusMods.Server.Utils
         public override void Write(byte[] buffer, int offset, int count) { }
 
         public override void Flush() { }
-
     }
 }

@@ -1,6 +1,7 @@
 ﻿using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BUTR.Site.NexusMods.Server.Contexts.Config
@@ -12,7 +13,8 @@ namespace BUTR.Site.NexusMods.Server.Contexts.Config
             builder.ToTable("nexusmods_exposed_mods_entity").HasKey(p => p.NexusModsModId).HasName("nexusmods_exposed_mods_entity_pkey");
             builder.Property(p => p.NexusModsModId).HasColumnName("nexusmods_mod_id").ValueGeneratedNever().IsRequired();
             builder.Property(p => p.ModIds).HasColumnName("mod_ids").IsRequired();
-            builder.Property(p => p.LastCheckedDate).HasColumnName("last_checked_date").ValueGeneratedOnAddOrUpdate().IsRequired();
+            builder.Property(p => p.LastCheckedDate).HasColumnName("last_checked_date").IsRequired()
+                .ValueGeneratedOnAddOrUpdate().Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Save);
         }
     }
 }
