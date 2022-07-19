@@ -7,7 +7,7 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
         public int NexusModsModId { get; set; } = default!;
 
         public string[] ModIds { get; set; } = default!;
-        
+
         public DateTime LastCheckedDate { get; set; } = default!;
     }
 }
