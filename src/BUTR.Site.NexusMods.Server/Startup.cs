@@ -3,6 +3,9 @@
 using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Authentication.NexusMods.Extensions;
 using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Http.Logging;
+using BUTR.Site.NexusMods.Server.Jobs;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 
@@ -12,14 +15,19 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 
+using Quartz;
+
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
@@ -34,7 +42,7 @@ namespace BUTR.Site.NexusMods.Server
     {
         private const string ConnectionStringsSectionName = "ConnectionStrings";
         private const string CrashReporterSectionName = "CrashReporter";
-        private const string UrlsSectionName = "Urls";
+        private const string NexusModsSectionName = "NexusMods";
         private const string JwtSectionName = "Jwt";
 
         private static JsonSerializerOptions Configure(JsonSerializerOptions opt)
@@ -56,26 +64,26 @@ namespace BUTR.Site.NexusMods.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var userAgent = $"{_assemblyName?.Name ?? "ERROR"} v{_assemblyName?.Version?.ToString() ?? "ERROR"}";
+            var userAgent = $"{_assemblyName?.Name ?? "ERROR"} v{_assemblyName?.Version?.ToString() ?? "ERROR"} (github.com/BUTR)";
 
             var connectionStringSection = _configuration.GetSection(ConnectionStringsSectionName);
             var crashReporterSection = _configuration.GetSection(CrashReporterSectionName);
-            var urlsSection = _configuration.GetSection(UrlsSectionName);
+            var nexusModsSection = _configuration.GetSection(NexusModsSectionName);
             var jwtSection = _configuration.GetSection(JwtSectionName);
 
             services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>(connectionStringSection);
             services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>(crashReporterSection);
-            services.AddValidatedOptionsWithHttp<ServiceUrlsOptions, ServiceUrlsOptionsValidator>(urlsSection);
+            services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>(nexusModsSection);
             services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>(jwtSection);
 
-            services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((sp, client) =>
+            services.AddHttpClient(string.Empty).ConfigureHttpClient((sp, client) =>
             {
-                var opts = sp.GetRequiredService<IOptions<ServiceUrlsOptions>>().Value;
-                client.BaseAddress = new Uri(opts.NexusMods);
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
-            services.AddHttpClient<NexusModsInfo>().ConfigureHttpClient((sp, client) =>
+            services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((sp, client) =>
             {
+                var opts = sp.GetRequiredService<IOptions<NexusModsOptions>>().Value;
+                client.BaseAddress = new Uri(opts.Endpoint);
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
             services.AddHttpClient<CrashReporterClient>().ConfigureHttpClient((sp, client) =>
@@ -88,11 +96,20 @@ namespace BUTR.Site.NexusMods.Server
                     Convert.ToBase64String(Encoding.ASCII.GetBytes($"{opts.Username}:{opts.Password}")));
             });
 
+            services.AddQuartz(opt =>
+            {
+                opt.UseMicrosoftDependencyInjectionJobFactory();
+
+                opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
+            });
+
             services.AddDbContext<AppDbContext>(x => x.UseNpgsql(_configuration.GetConnectionString("Main")));
 
-            services.AddHostedService<CrashReportHandler>();
-
             services.AddNexusModsDefaultServices();
+
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IHttpMessageHandlerBuilderFilter, SyncLoggingHttpMessageHandlerBuilderFilter>());
+            services.AddTransient<NexusModsInfo>();
 
             services.AddAuthentication(ButrNexusModsAuthSchemeConstants.AuthScheme).AddNexusMods(options =>
             {

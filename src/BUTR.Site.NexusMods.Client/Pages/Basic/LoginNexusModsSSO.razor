@@ -117,7 +117,7 @@
                     {
                         await _sessionStorage.SetItemAsync("sso_token", response.Data.ConnectionToken);
                         var uuid = await _sessionStorage.GetItemAsync<Guid>("sso_uuid");
-                        var applicationSlug = "vortex";
+                        const string applicationSlug = "butr";
                         _url = $"https://www.nexusmods.com/sso?id={uuid}&application={applicationSlug}";
                         _selectedStep = "ButtonClick";
                         StateHasChanged();

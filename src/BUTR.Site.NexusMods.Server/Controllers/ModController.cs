@@ -57,13 +57,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var userId = HttpContext.GetUserId();
             var apiKey = HttpContext.GetAPIKey();
 
-            if (await _nexusModsAPIClient.GetMod(gameDomain, modId, apiKey) is not { } modInfo)
+            if (await _nexusModsAPIClient.GetModAsync(gameDomain, modId, apiKey) is not { } modInfo)
                 return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Mod not found!"));
 
-            if (userId != modInfo.User.MemberId)
+            if (userId != modInfo.User.Id)
                 return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("User does not have access to the mod!"));
 
-            return StatusCode(StatusCodes.Status200OK, new ModModel(modInfo.Name, modInfo.ModId));
+            return StatusCode(StatusCodes.Status200OK, new ModModel(modInfo.Name, modInfo.Id));
         }
 
         [HttpGet("Paginated")]
@@ -100,10 +100,10 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var userId = HttpContext.GetUserId();
             var apiKey = HttpContext.GetAPIKey();
 
-            if (await _nexusModsAPIClient.GetMod("mountandblade2bannerlord", query.ModId, apiKey) is not { } modInfo)
+            if (await _nexusModsAPIClient.GetModAsync("mountandblade2bannerlord", query.ModId, apiKey) is not { } modInfo)
                 return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Mod not found!"));
 
-            if (userId != modInfo.User.MemberId)
+            if (userId != modInfo.User.Id)
                 return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("User does not have access to the mod!"));
 
             NexusModsModEntity? ApplyChanges(NexusModsModEntity? existing) => existing switch
@@ -128,18 +128,18 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var userId = HttpContext.GetUserId();
             var apiKey = HttpContext.GetAPIKey();
 
-            if (await _nexusModsAPIClient.GetMod("mountandblade2bannerlord", query.ModId, apiKey) is not { } modInfo)
+            if (await _nexusModsAPIClient.GetModAsync("mountandblade2bannerlord", query.ModId, apiKey) is not { } modInfo)
                 return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Mod not found!"));
 
-            if (userId != modInfo.User.MemberId)
+            if (userId != modInfo.User.Id)
                 return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("User does not have access to the mod!"));
 
             if (HttpContext.GetIsPremium())
             {
-                var exposedModIds = await _nexusModsInfo.GetModIds("mountandblade2bannerlord", modInfo.ModId, apiKey).Distinct().ToImmutableArrayAsync();
+                var exposedModIds = await _nexusModsInfo.GetModIdsAsync("mountandblade2bannerlord", modInfo.Id, apiKey).Distinct().ToImmutableArrayAsync();
                 NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
                 {
-                    null => new() { NexusModsModId = modInfo.ModId, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
+                    null => new() { NexusModsModId = modInfo.Id, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
                     var entity => entity with { ModIds = entity.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(entity.ModIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
                 };
                 if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges2))
@@ -148,7 +148,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             NexusModsModEntity? ApplyChanges(NexusModsModEntity? existing) => existing switch
             {
-                null => new() { Name = modInfo.Name, NexusModsModId = modInfo.ModId, UserIds = ImmutableArray.Create<int>(userId).AsArray() },
+                null => new() { Name = modInfo.Name, NexusModsModId = modInfo.Id, UserIds = ImmutableArray.Create<int>(userId).AsArray() },
                 var entity when entity.UserIds.Contains(userId) => entity,
                 var entity => entity with { UserIds = ImmutableArray.Create<int>(userId).AsArray() }
             };

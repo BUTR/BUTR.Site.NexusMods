@@ -90,7 +90,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
                 return Enum.Parse(type, rawValue);
 
             if (type.IsArray)
-                type = type.GetElementType();
+                type = type.GetElementType()!;
 
             if (type.IsGenericType && type.GenericTypeArguments.Length == 1)
                 type = type.GenericTypeArguments[0];

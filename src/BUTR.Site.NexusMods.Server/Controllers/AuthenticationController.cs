@@ -48,7 +48,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             if (apiKey is null)
                 return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("API Key not found!"));
 
-            if (await _nexusModsAPIClient.ValidateAPIKey(apiKey) is not { } validateResponse)
+            if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey) is not { } validateResponse)
                 return StatusCode(StatusCodes.Status401Unauthorized, new StandardResponse("Invalid NexusMods API Key!"));
 
             var roleEntity = await _dbContext.FirstOrDefaultAsync<UserRoleEntity>(x => x.UserId == validateResponse.UserId);
@@ -73,7 +73,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> Validate()
         {
-            if (await _nexusModsAPIClient.ValidateAPIKey(HttpContext.GetAPIKey()) is not { } validateResponse)
+            if (await _nexusModsAPIClient.ValidateAPIKeyAsync(HttpContext.GetAPIKey()) is not { } validateResponse)
                 return StatusCode(StatusCodes.Status401Unauthorized, new StandardResponse("Invalid NexusMods API Key!"));
 
             var roleEntity = await _dbContext.FirstOrDefaultAsync<UserRoleEntity>(x => x.UserId == validateResponse.UserId);

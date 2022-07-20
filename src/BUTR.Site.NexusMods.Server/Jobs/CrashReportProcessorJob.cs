@@ -1,18 +1,18 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
-using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
+using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using Npgsql;
+
+using Quartz;
 
 using System;
 using System.Collections.Generic;
@@ -22,65 +22,54 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Services
+namespace BUTR.Site.NexusMods.Server.Jobs
 {
-    public sealed class CrashReportHandler : BackgroundService
+    [DisallowConcurrentExecution]
+    public class CrashReportProcessorJob : IJob
     {
         private readonly ILogger _logger;
         private readonly CrashReporterOptions _options;
         private readonly CrashReporterClient _client;
-        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly AppDbContext _dbContext;
 
-        public CrashReportHandler(ILogger<CrashReportHandler> logger, IOptions<CrashReporterOptions> options, CrashReporterClient client, IServiceScopeFactory scopeFactory)
+        public CrashReportProcessorJob(ILogger<CrashReportProcessorJob> logger, IOptions<CrashReporterOptions> options, CrashReporterClient client, AppDbContext dbContext)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options.Value ?? throw new ArgumentNullException(nameof(options));
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-        /// <inheritdoc />
-        protected override async Task ExecuteAsync(CancellationToken ct)
+        public async Task Execute(IJobExecutionContext context)
         {
-            while (!ct.IsCancellationRequested)
+            await foreach (var (report, date) in MissingFilenames(_dbContext, context.CancellationToken))
             {
-                await using var scope = _scopeFactory.CreateAsyncScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                await foreach (var (report, date) in MissingFilenames(dbContext, ct))
+                var crashReportEntity = new CrashReportEntity
                 {
-                    var crashReportEntity = new CrashReportEntity
-                    {
-                        Id = report.Id,
-                        Url = new Uri(new Uri(_options.Endpoint), $"{report.Id2}.html").ToString(),
-                        GameVersion = report.GameVersion,
-                        Exception = report.Exception,
-                        CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date,
-                        ModIds = report.Modules.Select(x => x.Id).ToImmutableArray().AsArray(),
-                        InvolvedModIds = report.InvolvedModules.Select(x => x.Id).ToImmutableArray().AsArray(),
-                        ModNexusModsIds = report.Modules
-                            .Select(x => ModsUtils.TryParse(x.Url, out _, out var modId) ? modId.GetValueOrDefault(-1) : -1)
-                            .Where(x => x != -1)
-                            .ToImmutableArray().AsArray(),
-                    };
-                    CrashReportEntity? ApplyChangesCrashReportEntity(CrashReportEntity? existing) => existing switch
-                    {
-                        _ => crashReportEntity,
-                    };
-                    await dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == report.Id, ApplyChangesCrashReportEntity, ct);
+                    Id = report.Id,
+                    Url = new Uri(new Uri(_options.Endpoint), $"{report.Id2}.html").ToString(),
+                    GameVersion = report.GameVersion,
+                    Exception = report.Exception,
+                    CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date,
+                    ModIds = report.Modules.Select(x => x.Id).ToImmutableArray().AsArray(),
+                    InvolvedModIds = report.InvolvedModules.Select(x => x.Id).ToImmutableArray().AsArray(),
+                    ModNexusModsIds = report.Modules
+                        .Select(x => ModsUtils.TryParse(x.Url, out _, out var modId) ? modId.GetValueOrDefault(-1) : -1)
+                        .Where(x => x != -1)
+                        .ToImmutableArray().AsArray(),
+                };
 
-                    CrashReportFileEntity? ApplyChangesCrashReportFileEntity(CrashReportFileEntity? existing) => existing switch
-                    {
-                        _ => new CrashReportFileEntity
-                        {
-                            Filename = report.Id2,
-                            CrashReport = crashReportEntity
-                        },
-                    };
-                    await dbContext.AddUpdateRemoveAndSaveAsync<CrashReportFileEntity>(x => x.Filename == report.Id2, ApplyChangesCrashReportFileEntity, ct);
-                }
+                CrashReportEntity? ApplyChangesCrashReportEntity(CrashReportEntity? existing) => existing switch
+                {
+                    _ => crashReportEntity,
+                };
+                await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == report.Id, ApplyChangesCrashReportEntity, context.CancellationToken);
 
-                await Task.Delay(TimeSpan.FromHours(1), ct);
+                CrashReportFileEntity? ApplyChangesCrashReportFileEntity(CrashReportFileEntity? existing) => existing switch
+                {
+                    _ => new CrashReportFileEntity { Filename = report.Id2, CrashReport = crashReportEntity },
+                };
+                await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportFileEntity>(x => x.Filename == report.Id2, ApplyChangesCrashReportFileEntity, context.CancellationToken);
             }
         }
 
@@ -126,6 +115,7 @@ WHERE
                         CrashReportIgnoredFilesEntity? ApplyChanges(CrashReportIgnoredFilesEntity? existing) => existing switch
                         {
                             null => new() { Filename = missing.Filename, Id = report.Id },
+                            var entity => entity,
                         };
                         await dbContext.AddUpdateRemoveAndSaveAsync<CrashReportIgnoredFilesEntity>(x => x.Filename == missing.Filename, ApplyChanges, ct);
                         continue;

@@ -1,104 +1,24 @@
-﻿using System;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace BUTR.Site.NexusMods.Server.Models
 {
-    public sealed record NexusModsModInfoResponse
+    public record NexusModsModInfoResponse(
+        [property: JsonPropertyName("name")] string Name,
+        [property: JsonPropertyName("picture_url")] string PictureUrl,
+        [property: JsonPropertyName("mod_id")] int Id,
+        [property: JsonPropertyName("version")] string Version,
+        [property: JsonPropertyName("created_timestamp")] long CreatedTimestamp,
+        [property: JsonPropertyName("updated_timestamp")] long UpdatedTimestamp,
+        [property: JsonPropertyName("author")] string Author,
+        [property: JsonPropertyName("uploaded_by")] string UploadedBy,
+        [property: JsonPropertyName("status")] string Status,
+        [property: JsonPropertyName("available")] bool Available,
+        [property: JsonPropertyName("user")] NexusModsModInfoResponse.UserModel User
+    )
     {
-        public sealed record NexusModsUser
-        {
-            [JsonPropertyName("member_id")]
-            public int MemberId { get; set; } = default!;
-
-            [JsonPropertyName("member_group_id")]
-            public int MemberGroupId { get; set; } = default!;
-
-            [JsonPropertyName("name")]
-            public string Name { get; set; } = default!;
-        }
-
-        public sealed record NexusModsEndorsement
-        {
-            [JsonPropertyName("endorse_status")]
-            public string EndorseStatus { get; set; } = default!;
-
-            [JsonPropertyName("timestamp")]
-            public object Timestamp { get; set; } = default!;
-
-            [JsonPropertyName("version")]
-            public object Version { get; set; } = default!;
-        }
-
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = default!;
-
-        [JsonPropertyName("summary")]
-        public string Summary { get; set; } = default!;
-
-        [JsonPropertyName("description")]
-        public string Description { get; set; } = default!;
-
-        [JsonPropertyName("picture_url")]
-        public string PictureUrl { get; set; } = default!;
-
-        [JsonPropertyName("uid")]
-        public long Uid { get; set; } = default!;
-
-        [JsonPropertyName("mod_id")]
-        public int ModId { get; set; } = default!;
-
-        [JsonPropertyName("game_id")]
-        public int GameId { get; set; } = default!;
-
-        [JsonPropertyName("allow_rating")]
-        public bool AllowRating { get; set; } = default!;
-
-        [JsonPropertyName("domain_name")]
-        public string DomainName { get; set; } = default!;
-
-        [JsonPropertyName("category_id")]
-        public int CategoryId { get; set; } = default!;
-
-        [JsonPropertyName("version")]
-        public string Version { get; set; } = default!;
-
-        [JsonPropertyName("endorsement_count")]
-        public int EndorsementCount { get; set; } = default!;
-
-        [JsonPropertyName("created_timestamp")]
-        public int CreatedTimestamp { get; set; } = default!;
-
-        [JsonPropertyName("created_time")]
-        public DateTime CreatedTime { get; set; } = default!;
-
-        [JsonPropertyName("updated_timestamp")]
-        public int UpdatedTimestamp { get; set; } = default!;
-
-        [JsonPropertyName("updated_time")]
-        public DateTime UpdatedTime { get; set; } = default!;
-
-        [JsonPropertyName("author")]
-        public string Author { get; set; } = default!;
-
-        [JsonPropertyName("uploaded_by")]
-        public string UploadedBy { get; set; } = default!;
-
-        [JsonPropertyName("uploaded_users_profile_url")]
-        public string UploadedUsersProfileUrl { get; set; } = default!;
-
-        [JsonPropertyName("contains_adult_content")]
-        public bool ContainsAdultContent { get; set; } = default!;
-
-        [JsonPropertyName("status")]
-        public string Status { get; set; } = default!;
-
-        [JsonPropertyName("available")]
-        public bool Available { get; set; } = default!;
-
-        [JsonPropertyName("user")]
-        public NexusModsUser User { get; set; } = default!;
-
-        [JsonPropertyName("endorsement")]
-        public NexusModsEndorsement Endorsement { get; set; } = default!;
+        public record UserModel(
+            [property: JsonPropertyName("member_id")] int Id,
+            [property: JsonPropertyName("name")] string Name
+        );
     }
 }

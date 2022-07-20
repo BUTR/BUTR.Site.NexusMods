@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Utils
 {
@@ -16,7 +17,23 @@ namespace BUTR.Site.NexusMods.Server.Utils
 
     public sealed class HttpRangeStream : Stream
     {
-        public event EventHandler<RangeDownloadedEventArgs> RangeDownloaded;
+        public static HttpRangeStream? Create(Uri url, HttpClient httpClient, int bufferSize = 16 * 1024)
+        {
+            var request = new HttpRequestMessage
+            {
+                RequestUri = url,
+                Method = HttpMethod.Head
+            };
+            var response = httpClient.Send(request);
+            var length = response.Content.Headers.ContentLength ?? 0;
+
+            if (response.Headers.AcceptRanges.All(x => x != "bytes"))
+                return null;
+
+            return new HttpRangeStream(url, httpClient, bufferSize, length);
+        }
+
+        public event EventHandler<RangeDownloadedEventArgs>? RangeDownloaded;
 
         public override bool CanRead => true;
         public override bool CanSeek => true;
@@ -27,100 +44,122 @@ namespace BUTR.Site.NexusMods.Server.Utils
         private readonly Uri _url;
         private readonly HttpClient _httpClient;
 
-        private readonly byte[] _buffer = new byte[1024 * 512];
-        private long _bufferStartPosition = -1;
+        private readonly IMemoryOwner<byte> _dowloadedDataBufferOwnner;
+        private readonly Memory<byte> _dowloadedDataBuffer;
+        private long _downloadedDataBufferStartPosition = -1;
 
-        public HttpRangeStream(Uri url, HttpClient httpClient)
+        private HttpRangeStream(Uri url, HttpClient httpClient, int bufferSize, long length)
         {
             _url = url;
             _httpClient = httpClient;
+            _dowloadedDataBufferOwnner = MemoryPool<byte>.Shared.Rent(bufferSize);
+            _dowloadedDataBuffer = _dowloadedDataBufferOwnner.Memory;
+            Length = length;
+        }
 
-            var request = new HttpRequestMessage
+        private int Read(Span<byte> buffer, long from, long to)
+        {
+            var toRead = to - from;
+            using var request = new HttpRequestMessage
             {
                 RequestUri = _url,
-                Method = HttpMethod.Head
+                Method = HttpMethod.Get,
+                Headers =
+                {
+                    Range = new RangeHeaderValue(from, to)
+                },
             };
-            var response = _httpClient.Send(request);
-            Length = response.Content.Headers.ContentLength ?? 0;
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            try
+            {
+                using var response = _httpClient.Send(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+                using var stream = response.Content.ReadAsStream();
+
+                var read = 0;
+                while (read < toRead)
+                {
+                    var currRead = stream.Read(buffer.Slice(read));
+                    if (currRead == 0)
+                        return read;
+                    read += currRead;
+                }
+
+                return read;
+            }
+            catch (Exception e) when (e is OperationCanceledException)
+            {
+                return 0;
+            }
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        private void RefillDowloadedDataBufferFromPosition()
         {
-            if (_bufferStartPosition == -1 || (_bufferStartPosition >= Position + count && _bufferStartPosition >= Position + count))
+            var min = Position;
+            var max = Math.Min(Position + _dowloadedDataBuffer.Length, Length);
+            var toRead = max - min;
+
+            var read = 0;
+            while (read < toRead)
             {
-                var request = new HttpRequestMessage
-                {
-                    RequestUri = _url,
-                    Method = HttpMethod.Get,
-                    Headers =
-                    {
-                        Range = new RangeHeaderValue(Position, Position + _buffer.Length)
-                    }
-                };
-                var response = _httpClient.Send(request);
-                var stream = response.Content.ReadAsStream();
-                var read = stream.Read(_buffer, 0, _buffer.Length);
-                _bufferStartPosition = Position;
+                var span = _dowloadedDataBuffer.Span.Slice(read);
+                read += Read(span, min + read, max);
             }
 
-            _buffer.AsSpan((int) (Position - _bufferStartPosition), count).CopyTo(buffer.AsSpan(offset, count));
-            Position += count;
+            _downloadedDataBufferStartPosition = Position;
+        }
 
+        public override int Read(byte[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+
+        public override int Read(Span<byte> buffer)
+        {
+            var count = buffer.Length;
+            var internalBuffer = _dowloadedDataBuffer.Span;
+            while (!buffer.IsEmpty)
+            {
+                var downloadedDataConsumed = Position - _downloadedDataBufferStartPosition;
+                var downloadedDataAvailable = _dowloadedDataBuffer.Length - downloadedDataConsumed;
+
+                var isDownloadedDataAvailable = _downloadedDataBufferStartPosition >= 0 && downloadedDataAvailable > 0;
+                var isPositionBeforeDownloadedData = Position < _downloadedDataBufferStartPosition;
+                var isPositionAfterDownloadedData = Position >= _downloadedDataBufferStartPosition + _dowloadedDataBuffer.Length;
+                if (!isDownloadedDataAvailable || isPositionBeforeDownloadedData || isPositionAfterDownloadedData)
+                {
+                    RefillDowloadedDataBufferFromPosition();
+                    continue;
+                }
+
+                var downloadedDataAvailableToCopy = Math.Min((int) downloadedDataAvailable, buffer.Length);
+                internalBuffer.Slice((int) downloadedDataConsumed, downloadedDataAvailableToCopy).CopyTo(buffer);
+                Position += downloadedDataAvailableToCopy;
+                buffer = buffer.Slice(downloadedDataAvailableToCopy);
+            }
             return count;
         }
 
-        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public override long Seek(long offset, SeekOrigin origin) => origin switch
         {
-            if (_bufferStartPosition == -1 || (_bufferStartPosition >= Position + count && _bufferStartPosition >= Position + count))
-            {
-                var request = new HttpRequestMessage
-                {
-                    RequestUri = _url,
-                    Method = HttpMethod.Get,
-                    Headers =
-                    {
-                        Range = new RangeHeaderValue(Position, Position + _buffer.Length)
-                    }
-                };
-                var response = await _httpClient.SendAsync(request, cancellationToken);
-                var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-                var read = await stream.ReadAsync(_buffer, 0, _buffer.Length, cancellationToken);
-                _bufferStartPosition = Position;
-                RangeDownloaded?.Invoke(this, new RangeDownloadedEventArgs { Offset = Position, Length = _buffer.Length });
-            }
+            SeekOrigin.Begin => Position = offset,
+            SeekOrigin.Current => Position += offset,
+            SeekOrigin.End => Position = Length - offset,
+            _ => Position
+        };
 
-            _buffer.AsSpan((int) (Position - _bufferStartPosition), count).CopyTo(buffer.AsSpan(offset, count));
-            Position += count;
+        public override void SetLength(long value) => throw new NotSupportedException();
 
-            return count;
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException("Stream dowsn't support write operations!");
+
+        public override void Flush()
+        {
+            _downloadedDataBufferStartPosition = -1;
+            _dowloadedDataBuffer.Span.Clear();
         }
 
-        public override long Seek(long offset, SeekOrigin origin)
+        protected override void Dispose(bool disposing)
         {
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
-                    Position = offset;
-                    if (_bufferStartPosition >= offset || _bufferStartPosition + _buffer.Length <= offset)
-                        _bufferStartPosition = -1;
-                    break;
-                case SeekOrigin.Current:
-                    Position += offset;
-                    _bufferStartPosition = -1;
-                    break;
-                case SeekOrigin.End:
-                    Position = Length - offset;
-                    _bufferStartPosition = -1;
-                    break;
-            }
+            _dowloadedDataBufferOwnner.Dispose();
 
-            return Position;
+            base.Dispose(disposing);
         }
-
-        public override void SetLength(long value) { }
-
-        public override void Write(byte[] buffer, int offset, int count) { }
-
-        public override void Flush() { }
     }
 }

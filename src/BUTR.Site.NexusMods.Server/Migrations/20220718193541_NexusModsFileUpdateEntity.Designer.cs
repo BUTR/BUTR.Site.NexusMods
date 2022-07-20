@@ -3,6 +3,7 @@ using System;
 using BUTR.Site.NexusMods.Server.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BUTR.Site.NexusMods.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220718193541_NexusModsFileUpdateEntity")]
+    partial class NexusModsFileUpdateEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,6 +128,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnName("nexusmods_mod_id");
 
                     b.Property<DateTime>("LastCheckedDate")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_checked_date");
 
@@ -147,6 +150,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnName("nexusmods_mod_id");
 
                     b.Property<DateTime>("LastCheckedDate")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_checked_date");
 

@@ -1,4 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Utils;
 
 using ComposableAsync;
 
@@ -23,10 +24,7 @@ namespace BUTR.Site.NexusMods.Server.Services
         private readonly HttpClient _httpClient;
         private readonly IDistributedCache _cache;
         private readonly JsonSerializerOptions _jsonSerializerOptions;
-        private readonly DistributedCacheEntryOptions _expiration = new()
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-        };
+        private readonly DistributedCacheEntryOptions _expiration = new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) };
         private readonly SemaphoreSlim _lock = new(1, 1);
         private TimeLimiter _timeLimiter = TimeLimiter.GetFromMaxCountByInterval(30, TimeSpan.FromSeconds(1));
 
@@ -37,7 +35,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
         }
 
-        public async Task<NexusModsValidateResponse?> ValidateAPIKey(string apiKey)
+        public async Task<NexusModsValidateResponse?> ValidateAPIKeyAsync(string apiKey)
         {
             try
             {
@@ -59,16 +57,48 @@ namespace BUTR.Site.NexusMods.Server.Services
             }
         }
 
-        public Task<NexusModsModInfoResponse?> GetMod(string gameDomain, int modId, string apiKey) =>
-            GetCachedWithTimeLimit<NexusModsModInfoResponse?>($"/v1/games/{gameDomain}/mods/{modId}.json", apiKey);
+        public Task<NexusModsModInfoResponse?> GetModAsync(string gameDomain, int modId, string apiKey) =>
+            GetCachedWithTimeLimitAsync<NexusModsModInfoResponse?>($"/v1/games/{gameDomain}/mods/{modId}.json", apiKey);
 
-        public Task<NexusModsModFilesResponse?> GetModFileInfos(string gameDomain, int modId, string apiKey) =>
-            GetCachedWithTimeLimit<NexusModsModFilesResponse?>($"/v1/games/{gameDomain}/mods/{modId}/files.json?category=main", apiKey);
+        public Task<NexusModsModFilesResponse?> GetModFileInfosAsync(string gameDomain, int modId, string apiKey) =>
+            GetCachedWithTimeLimitAsync<NexusModsModFilesResponse?>($"/v1/games/{gameDomain}/mods/{modId}/files.json?category=main", apiKey);
 
-        public Task<NexusModsDownloadLinkResponse[]> GetModFileLinks(string gameDomain, int modId, int fileId, string apiKey) =>
-            GetCachedWithTimeLimit<NexusModsDownloadLinkResponse[]>($"/v1/games/{gameDomain}/mods/{modId}/files/{fileId}/download_link.json", apiKey);
+        public Task<NexusModsDownloadLinkResponse[]?> GetModFileLinksAsync(string gameDomain, int modId, int fileId, string apiKey) =>
+            GetCachedWithTimeLimitAsync<NexusModsDownloadLinkResponse[]>($"/v1/games/{gameDomain}/mods/{modId}/files/{fileId}/download_link.json", apiKey);
 
-        private async Task<TResponse?> GetCachedWithTimeLimit<TResponse>(string url, string apiKey) where TResponse : class?
+        public async Task<NexusModsUpdatedModsResponse[]?> GetAllModUpdatesAsync(string gameDomain, string apiKey)
+        {
+            try
+            {
+                await _lock.WaitAsync();
+                await _timeLimiter;
+
+                var request = new HttpRequestMessage(HttpMethod.Get, $"/v1/games/{gameDomain}/mods/updated.json?period=1w");
+                request.Headers.Add("apikey", apiKey);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var response = await _httpClient.SendAsync(request);
+                _timeLimiter = ParseResponseLimits(response);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var mod = JsonSerializer.Deserialize<NexusModsUpdatedModsResponse[]>(json, _jsonSerializerOptions);
+                if (mod is null)
+                {
+                    return null;
+                }
+
+                return response.IsSuccessStatusCode ? mod : null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        private async Task<TResponse?> GetCachedWithTimeLimitAsync<TResponse>(string url, string apiKey) where TResponse : class?
         {
             try
             {
@@ -114,7 +144,6 @@ namespace BUTR.Site.NexusMods.Server.Services
             }
         }
 
-
         private static TimeLimiter ParseResponseLimits(HttpResponseMessage response)
         {
             // A 429 status code can also be served by nginx if the client sends more than 30 requests per second.
@@ -128,7 +157,9 @@ namespace BUTR.Site.NexusMods.Server.Services
             var hourlyRemaining = int.TryParse(response.Headers.GetValues("X-RL-Hourly-Remaining").FirstOrDefault(), out var hourlyRemainingVal) ? hourlyRemainingVal : 0;
             var hourlyReset = DateTime.TryParse(response.Headers.GetValues("X-RL-Hourly-Reset").FirstOrDefault(), out var hourlyResetVal) ? hourlyResetVal : DateTime.UtcNow;
             var hourlyTimeLeft = hourlyReset - DateTime.UtcNow;
-            var hourlyRemainingConstraint = new CountByIntervalAwaitableConstraint(hourlyRemaining, hourlyTimeLeft);
+            var hourlyRemainingConstraint = hourlyRemaining == 0
+                ? (IAwaitableConstraint) new BlockUntilDateConstraint(hourlyReset)
+                : (IAwaitableConstraint) new CountByIntervalAwaitableConstraint(hourlyRemaining, hourlyTimeLeft);
 
 
             var dailyLimit = int.TryParse(response.Headers.GetValues("X-RL-Daily-Limit").FirstOrDefault(), out var dailyLimitVal) ? dailyLimitVal : 0;
@@ -137,7 +168,9 @@ namespace BUTR.Site.NexusMods.Server.Services
             var dailyRemaining = int.TryParse(response.Headers.GetValues("X-RL-Daily-Remaining").FirstOrDefault(), out var dailyRemainingVal) ? dailyRemainingVal : 0;
             var dailyReset = DateTime.TryParse(response.Headers.GetValues("X-RL-Daily-Reset").FirstOrDefault(), out var dailyResetVal) ? dailyResetVal : DateTime.UtcNow;
             var dailyTimeLeft = dailyReset - DateTime.UtcNow;
-            var dailyRemainingConstraint = new CountByIntervalAwaitableConstraint(dailyRemaining, dailyTimeLeft);
+            var dailyRemainingConstraint = dailyRemaining == 0
+                ? (IAwaitableConstraint) new BlockUntilDateConstraint(dailyReset)
+                : (IAwaitableConstraint) new CountByIntervalAwaitableConstraint(dailyRemaining, dailyTimeLeft);
 
 
             return TimeLimiter.Compose(constraint, hourlyLimitConstraint, hourlyRemainingConstraint, dailyLimitConstraint, dailyRemainingConstraint);
