@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
 
-namespace BUTR.Site.NexusMods.Server
+namespace BUTR.Site.NexusMods.Server.Utils.Http.Logging
 {
     /// <summary>
     /// Handles logging of the lifecycle for an HTTP request within a log scope.

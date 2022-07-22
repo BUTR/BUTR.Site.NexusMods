@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Text;
 
-namespace BUTR.Site.NexusMods.Server
+namespace BUTR.Site.NexusMods.Server.Utils.Http.Logging
 {
     internal sealed class HttpHeadersLogValue : IReadOnlyList<KeyValuePair<string, object>>
     {

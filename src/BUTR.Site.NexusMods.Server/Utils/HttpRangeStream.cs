@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -15,9 +16,20 @@ namespace BUTR.Site.NexusMods.Server.Utils
         public long Length { get; set; }
     }
 
+    public sealed record HttpRangeOptions
+    {
+        public int BufferSize { get; init; } = 16 * 1024;
+    }
+    
     public sealed class HttpRangeStream : Stream
     {
-        public static HttpRangeStream? Create(Uri url, HttpClient httpClient, int bufferSize = 16 * 1024)
+        public static HttpRangeStream? CreateOrDefault(Uri url, HttpClient httpClient, HttpRangeOptions options)
+        {
+            TryCreate(url, httpClient, options, out var httpRangeStream);
+            return httpRangeStream;
+        }
+        
+        public static bool TryCreate(Uri url, HttpClient httpClient, HttpRangeOptions options, [NotNullWhen(true)] out HttpRangeStream? httpRangeStream)
         {
             var request = new HttpRequestMessage
             {
@@ -28,9 +40,13 @@ namespace BUTR.Site.NexusMods.Server.Utils
             var length = response.Content.Headers.ContentLength ?? 0;
 
             if (response.Headers.AcceptRanges.All(x => x != "bytes"))
-                return null;
+            {
+                httpRangeStream = null;
+                return false;
+            }
 
-            return new HttpRangeStream(url, httpClient, bufferSize, length);
+            httpRangeStream = new HttpRangeStream(url, httpClient, options.BufferSize, length);
+            return true;
         }
 
         public event EventHandler<RangeDownloadedEventArgs>? RangeDownloaded;
@@ -44,8 +60,8 @@ namespace BUTR.Site.NexusMods.Server.Utils
         private readonly Uri _url;
         private readonly HttpClient _httpClient;
 
-        private readonly IMemoryOwner<byte> _dowloadedDataBufferOwnner;
-        private readonly Memory<byte> _dowloadedDataBuffer;
+        private IMemoryOwner<byte> _dowloadedDataBufferOwnner;
+        private Memory<byte> _dowloadedDataBuffer;
         private long _downloadedDataBufferStartPosition = -1;
 
         private HttpRangeStream(Uri url, HttpClient httpClient, int bufferSize, long length)
@@ -147,7 +163,7 @@ namespace BUTR.Site.NexusMods.Server.Utils
 
         public override void SetLength(long value) => throw new NotSupportedException();
 
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException("Stream dowsn't support write operations!");
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException("Stream doesn't support write operations!");
 
         public override void Flush()
         {
@@ -155,9 +171,20 @@ namespace BUTR.Site.NexusMods.Server.Utils
             _dowloadedDataBuffer.Span.Clear();
         }
 
+        public void SetBufferSize(int bufferSize)
+        {
+            _dowloadedDataBufferOwnner.Dispose();
+
+            _dowloadedDataBufferOwnner = MemoryPool<byte>.Shared.Rent(bufferSize);
+            _dowloadedDataBuffer = _dowloadedDataBufferOwnner.Memory;
+
+            _downloadedDataBufferStartPosition = -1;
+        }
+        
         protected override void Dispose(bool disposing)
         {
             _dowloadedDataBufferOwnner.Dispose();
+            _dowloadedDataBuffer = Memory<byte>.Empty;
 
             base.Dispose(disposing);
         }

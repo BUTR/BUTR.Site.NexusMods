@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BUTR.Site.NexusMods.Server.Utils.Npgsql;
+
+using Microsoft.EntityFrameworkCore;
 
 using System;
 using System.Linq;
@@ -72,5 +74,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
         {
             return dbContext.Set<TEntity>().FirstOrDefaultAsync(predicate, ct);
         }
+        
+        public static IQueryable<T> Prepare<T>(this IQueryable<T> query) => query.TagWith(PrepareCommandInterceptor.Tag);
     }
 }

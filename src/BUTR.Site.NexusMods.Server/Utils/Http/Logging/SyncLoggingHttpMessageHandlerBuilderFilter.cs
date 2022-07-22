@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 
 using System;
 
-namespace BUTR.Site.NexusMods.Server.Http.Logging
+namespace BUTR.Site.NexusMods.Server.Utils.Http.Logging
 {
     internal sealed class SyncLoggingHttpMessageHandlerBuilderFilter : IHttpMessageHandlerBuilderFilter
     {

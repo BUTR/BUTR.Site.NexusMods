@@ -1,18 +1,18 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Utils;
 
 using SharpCompress.Archives;
-using SharpCompress.Archives.Rar;
-using SharpCompress.Archives.SevenZip;
-using SharpCompress.Archives.Zip;
+using SharpCompress.Common;
+using SharpCompress.Readers;
 
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace BUTR.Site.NexusMods.Server.Services
@@ -41,6 +41,52 @@ namespace BUTR.Site.NexusMods.Server.Services
             _apiClient = apiClient;
         }
 
+
+
+        public async IAsyncEnumerable<string> GetModIdsAsync(string gameDomain, int modId, string apiKey)
+        {
+            const int DefaultBufferSize = 1024 * 16;
+            const int LargeBufferSize = 1024 * 1024 * 5;
+            
+            var fileInfos = await _apiClient.GetModFileInfosAsync(gameDomain, modId, apiKey);
+            foreach (var fileInfo in fileInfos?.Files ?? Array.Empty<NexusModsModFilesResponse.File>())
+            {
+                if (!await HasSubModuleXml(fileInfo)) continue;
+
+                var downloadLinks = await _apiClient.GetModFileLinksAsync(gameDomain, modId, fileInfo.Id, apiKey) ?? Array.Empty<NexusModsDownloadLinkResponse>();
+                foreach (var downloadLink in downloadLinks)
+                {
+                    var uri = new Uri(downloadLink.Url);
+                    
+                    await using var httpStream = HttpRangeStream.CreateOrDefault(uri, _httpClient, new HttpRangeOptions { BufferSize = DefaultBufferSize });
+                    if (httpStream is null) continue;
+
+                    using var archive = ArchiveExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
+                    if (archive is null) continue;
+
+                    if (archive.IsSolid)
+                    {
+                        httpStream.SetBufferSize(LargeBufferSize);
+                        using var reader = ReaderExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
+                        if (reader is null) continue;
+                        await foreach (var id in GetModIdsFromReaderAsync(reader))
+                            yield return id;
+                        continue;
+                    }
+                    
+                    if (archive.Type == ArchiveType.SevenZip)
+                        httpStream.SetBufferSize(LargeBufferSize);
+                    
+                    if (archive.Type == ArchiveType.Rar)
+                        httpStream.SetBufferSize(LargeBufferSize);
+
+                    await foreach (var id in GetModIdsFromArchiveAsync(archive))
+                        yield return id;
+                }
+            }
+        }
+        
+        
         private static bool ContainsSubModuleFile(IReadOnlyList<NexusModsModFileContentResponse.ContentEntry> entries)
         {
             if (entries is null)
@@ -55,71 +101,67 @@ namespace BUTR.Site.NexusMods.Server.Services
             }
             return false;
         }
-
-        public async IAsyncEnumerable<string> GetModIdsAsync(string gameDomain, int modId, string apiKey)
+        
+        private static async IAsyncEnumerable<string> GetModIdsFromReaderAsync(IReader reader)
         {
-            var fileInfos = await _apiClient.GetModFileInfosAsync(gameDomain, modId, apiKey);
-            foreach (var fileInfo in fileInfos?.Files ?? Array.Empty<NexusModsModFilesResponse.File>())
+            while (reader.MoveToNextEntry())
             {
-                try
-                {
-                    var content = await _httpClient.GetFromJsonAsync<NexusModsModFileContentResponse>(fileInfo.ContentPreviewUrl);
-                    if (content is null) continue;
-                    if (!ContainsSubModuleFile(content.Children)) continue;
-                }
-                catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
-                {
-                    continue;
-                }
+                if (reader.Entry.IsDirectory) continue;
+                
+                if (!reader.Entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
+                
+                
+                await using var stream = reader.OpenEntryStream();
+                if (GetSubModuleId(stream) is not { } id) continue;
 
+                yield return id;
+                break;
+            }
+        }
+        
+        private static async IAsyncEnumerable<string> GetModIdsFromArchiveAsync(IArchive archive)
+        {
+            foreach (var entry in archive.Entries)
+            {
+                if (entry.IsDirectory) continue;
+                
+                if (!entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
 
-                var downloadLinks = await _apiClient.GetModFileLinksAsync(gameDomain, modId, fileInfo.Id, apiKey) ?? Array.Empty<NexusModsDownloadLinkResponse>();
-                foreach (var downloadLink in downloadLinks)
-                {
-                    var extension = Path.GetExtension(fileInfo.FileName);
-                    var uri = new Uri(downloadLink.Url);
+                await using var stream = entry.OpenEntryStream();
+                if (GetSubModuleId(stream) is not { } id) continue;
+                
+                yield return id;
+                break;
+            }
+        }
 
-                    await using var httpStream = extension switch
-                    {
-                        // 7z files do not support Stream seeking because of LZMA and require to download
-                        // the whole file section and read-skip the content until we hit the needed position
-                        // Because of that, we need a bigger buffer to make fewer requests
-                        ".7z" => HttpRangeStream.Create(uri, _httpClient, 1024 * 1024 * 5),
-                        ".rar" => HttpRangeStream.Create(uri, _httpClient, 1024 * 4),
-                        ".zip" => HttpRangeStream.Create(uri, _httpClient, 1024 * 4),
-                        _ => null,
-                    };
-                    if (httpStream is null) continue;
-
-                    using IArchive? archive = extension switch
-                    {
-                        ".7z" => SevenZipArchive.Open(httpStream),
-                        ".rar" => RarArchive.Open(httpStream),
-                        ".zip" => ZipArchive.Open(httpStream),
-                        _ => null,
-                    };
-                    if (archive is null) continue;
-
-                    var subModule = archive.Entries.FirstOrDefault(x => x.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase));
-                    if (subModule is null) continue;
-
-                    string id;
-                    try
-                    {
-                        await using var entryStream = subModule.OpenEntryStream();
-                        using var reader = new StreamReader(entryStream);
-                        var serializer = new XmlSerializer(typeof(SubModuleXml));
-                        if (serializer.Deserialize(reader) is not SubModuleXml result) continue;
-                        id = result.Id.Value;
-                    }
-                    catch (Exception)
-                    {
-                        id = "ERROR";
-                    }
-
-                    yield return id;
-                    break;
-                }
+        private async Task<bool> HasSubModuleXml(NexusModsModFilesResponse.File fileInfo)
+        {
+            try
+            {
+                var content = await _httpClient.GetFromJsonAsync<NexusModsModFileContentResponse>(fileInfo.ContentPreviewUrl);
+                if (content is null) return false;
+                if (!ContainsSubModuleFile(content.Children)) return false;
+            }
+            catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
+            {
+                return false;
+            }
+            return true;
+        }
+        
+        private static string? GetSubModuleId(Stream stream)
+        {
+            try
+            {
+                using var streamReader = new StreamReader(stream);
+                var serializer = new XmlSerializer(typeof(SubModuleXml));
+                if (serializer.Deserialize(streamReader) is not SubModuleXml result) return null;
+                return result.Id.Value;
+            }
+            catch (Exception)
+            {
+                return "ERROR";
             }
         }
     }

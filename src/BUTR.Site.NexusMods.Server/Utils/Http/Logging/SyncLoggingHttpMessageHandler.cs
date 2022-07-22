@@ -5,16 +5,15 @@ using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
-using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server
+namespace BUTR.Site.NexusMods.Server.Utils.Http.Logging
 {
     /// <summary>
     /// Handles logging of the lifecycle for an HTTP request.
     /// </summary>
     public class SyncLoggingHttpMessageHandler : DelegatingHandler
     {
-        private ILogger _logger;
+        private readonly ILogger _logger;
         private readonly HttpClientFactoryOptions? _options;
 
         private static readonly Func<string, bool> _shouldNotRedactHeaderValue = (header) => false;
@@ -47,13 +46,13 @@ namespace BUTR.Site.NexusMods.Server
 
             HttpResponseMessage Core(HttpRequestMessage request, CancellationToken cancellationToken)
             {
-                Func<string, bool> shouldRedactHeaderValue = _options?.ShouldRedactHeaderValue ?? _shouldNotRedactHeaderValue;
+                var shouldRedactHeaderValue = _options?.ShouldRedactHeaderValue ?? _shouldNotRedactHeaderValue;
 
                 // Not using a scope here because we always expect this to be at the end of the pipeline, thus there's
                 // not really anything to surround.
                 Log.RequestStart(_logger, request, shouldRedactHeaderValue);
                 var stopwatch = Stopwatch.StartNew();
-                HttpResponseMessage response = base.Send(request, cancellationToken);
+                var response = base.Send(request, cancellationToken);
                 Log.RequestEnd(_logger, response, stopwatch.Elapsed, shouldRedactHeaderValue);
 
                 return response;
