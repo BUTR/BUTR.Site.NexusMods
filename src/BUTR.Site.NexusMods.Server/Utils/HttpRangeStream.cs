@@ -20,7 +20,7 @@ namespace BUTR.Site.NexusMods.Server.Utils
     {
         public int BufferSize { get; init; } = 16 * 1024;
     }
-    
+
     public sealed class HttpRangeStream : Stream
     {
         public static HttpRangeStream? CreateOrDefault(Uri url, HttpClient httpClient, HttpRangeOptions options)
@@ -28,7 +28,7 @@ namespace BUTR.Site.NexusMods.Server.Utils
             TryCreate(url, httpClient, options, out var httpRangeStream);
             return httpRangeStream;
         }
-        
+
         public static bool TryCreate(Uri url, HttpClient httpClient, HttpRangeOptions options, [NotNullWhen(true)] out HttpRangeStream? httpRangeStream)
         {
             var request = new HttpRequestMessage
@@ -180,7 +180,7 @@ namespace BUTR.Site.NexusMods.Server.Utils
 
             _downloadedDataBufferStartPosition = -1;
         }
-        
+
         protected override void Dispose(bool disposing)
         {
             _dowloadedDataBufferOwnner.Dispose();
