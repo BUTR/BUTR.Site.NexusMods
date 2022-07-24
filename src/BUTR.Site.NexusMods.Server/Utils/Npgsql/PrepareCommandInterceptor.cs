@@ -11,7 +11,7 @@ namespace BUTR.Site.NexusMods.Server.Utils.Npgsql
     public class PrepareCommandInterceptor : DbCommandInterceptor
     {
         public const string Tag = "Prepare";
-        
+
         public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
         {
             Prepare(command);
