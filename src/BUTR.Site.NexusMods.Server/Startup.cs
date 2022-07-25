@@ -103,7 +103,7 @@ namespace BUTR.Site.NexusMods.Server
                 opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
             });
 
-            services.AddDbContext<AppDbContext>(x => x.UseNpgsql(_configuration.GetConnectionString("Main")).AddPrepareInterceptorr());
+            services.AddDbContext<AppDbContext>(x => x.UseNpgsql(_configuration.GetConnectionString("Main"), opt => opt.EnableRetryOnFailure()).AddPrepareInterceptorr());
 
             services.AddNexusModsDefaultServices();
 

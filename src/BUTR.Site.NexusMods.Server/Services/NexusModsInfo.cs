@@ -64,7 +64,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                     using var archive = ArchiveExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
                     if (archive is null) continue;
 
-                    if (archive.IsSolid)
+                    if (archive.IsSolid && archive.Type == ArchiveType.Rar)
                     {
                         httpStream.SetBufferSize(LargeBufferSize);
                         using var reader = ReaderExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
@@ -108,8 +108,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             {
                 if (reader.Entry.IsDirectory) continue;
                 
-                if (!reader.Entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
-                
+                if (!Path.GetFileName(reader.Entry.Key).Equals("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
                 
                 await using var stream = reader.OpenEntryStream();
                 if (GetSubModuleId(stream) is not { } id) continue;
@@ -125,7 +124,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             {
                 if (entry.IsDirectory) continue;
                 
-                if (!entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
+                if (!Path.GetFileName(entry.Key).Equals("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
 
                 await using var stream = entry.OpenEntryStream();
                 if (GetSubModuleId(stream) is not { } id) continue;
