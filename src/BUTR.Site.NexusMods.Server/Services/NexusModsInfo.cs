@@ -47,7 +47,7 @@ namespace BUTR.Site.NexusMods.Server.Services
         {
             const int DefaultBufferSize = 1024 * 16;
             const int LargeBufferSize = 1024 * 1024 * 5;
-            
+
             var fileInfos = await _apiClient.GetModFileInfosAsync(gameDomain, modId, apiKey);
             foreach (var fileInfo in fileInfos?.Files ?? Array.Empty<NexusModsModFilesResponse.File>())
             {
@@ -57,7 +57,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                 foreach (var downloadLink in downloadLinks)
                 {
                     var uri = new Uri(downloadLink.Url);
-                    
+
                     await using var httpStream = HttpRangeStream.CreateOrDefault(uri, _httpClient, new HttpRangeOptions { BufferSize = DefaultBufferSize });
                     if (httpStream is null) continue;
 
@@ -73,10 +73,10 @@ namespace BUTR.Site.NexusMods.Server.Services
                             yield return id;
                         continue;
                     }
-                    
+
                     if (archive.Type == ArchiveType.SevenZip)
                         httpStream.SetBufferSize(LargeBufferSize);
-                    
+
                     if (archive.Type == ArchiveType.Rar)
                         httpStream.SetBufferSize(LargeBufferSize);
 
@@ -85,8 +85,8 @@ namespace BUTR.Site.NexusMods.Server.Services
                 }
             }
         }
-        
-        
+
+
         private static bool ContainsSubModuleFile(IReadOnlyList<NexusModsModFileContentResponse.ContentEntry> entries)
         {
             if (entries is null)
@@ -101,15 +101,16 @@ namespace BUTR.Site.NexusMods.Server.Services
             }
             return false;
         }
-        
+
         private static async IAsyncEnumerable<string> GetModIdsFromReaderAsync(IReader reader)
         {
             while (reader.MoveToNextEntry())
             {
                 if (reader.Entry.IsDirectory) continue;
-                
-                if (!Path.GetFileName(reader.Entry.Key).Equals("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
-                
+
+                if (!reader.Entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
+
+
                 await using var stream = reader.OpenEntryStream();
                 if (GetSubModuleId(stream) is not { } id) continue;
 
@@ -117,18 +118,18 @@ namespace BUTR.Site.NexusMods.Server.Services
                 break;
             }
         }
-        
+
         private static async IAsyncEnumerable<string> GetModIdsFromArchiveAsync(IArchive archive)
         {
             foreach (var entry in archive.Entries)
             {
                 if (entry.IsDirectory) continue;
-                
-                if (!Path.GetFileName(entry.Key).Equals("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
+
+                if (!entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
 
                 await using var stream = entry.OpenEntryStream();
                 if (GetSubModuleId(stream) is not { } id) continue;
-                
+
                 yield return id;
                 break;
             }
@@ -148,7 +149,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             }
             return true;
         }
-        
+
         private static string? GetSubModuleId(Stream stream)
         {
             try

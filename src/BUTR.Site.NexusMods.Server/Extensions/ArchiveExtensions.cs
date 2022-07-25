@@ -14,7 +14,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             TryOpen(stream, options, out var archive);
             return archive;
         }
-        
+
         public static bool TryOpen(Stream stream, ReaderOptions options, [NotNullWhen(true)] out IArchive? archive)
         {
             try
@@ -29,7 +29,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             }
         }
     }
-    
+
     public static class ReaderExtensions
     {
         public static IReader? OpenOrDefault(Stream stream, ReaderOptions options)
@@ -37,7 +37,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             TryOpen(stream, options, out var archive);
             return archive;
         }
-        
+
         public static bool TryOpen(Stream stream, ReaderOptions options, [NotNullWhen(true)] out IReader? archive)
         {
             try

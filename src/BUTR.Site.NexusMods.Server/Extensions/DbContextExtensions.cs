@@ -74,7 +74,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
         {
             return dbContext.Set<TEntity>().FirstOrDefaultAsync(predicate, ct);
         }
-        
+
         public static IQueryable<T> Prepare<T>(this IQueryable<T> query) => query.TagWith(PrepareCommandInterceptor.Tag);
     }
 }
