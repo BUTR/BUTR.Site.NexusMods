@@ -12,8 +12,12 @@ namespace BUTR.Site.NexusMods.Server.Contexts
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.HasPostgresExtension("hstore");
+
             modelBuilder.ApplyConfiguration(new UserRoleEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new UserMetadataEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserAllowedModsEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new NexusModsArticleEntityConfiguration());
             modelBuilder.ApplyConfiguration(new NexusModsExposedModsEntityConfiguration());
             modelBuilder.ApplyConfiguration(new NexusModsFileUpdateEntityConfiguration());
             modelBuilder.ApplyConfiguration(new NexusModsModEntityConfiguration());

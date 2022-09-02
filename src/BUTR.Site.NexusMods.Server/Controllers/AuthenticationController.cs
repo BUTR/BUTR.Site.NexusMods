@@ -7,7 +7,6 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -53,7 +52,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             var roleEntity = await _dbContext.FirstOrDefaultAsync<UserRoleEntity>(x => x.UserId == validateResponse.UserId);
             var role = roleEntity?.Role ?? ApplicationRoles.User;
-            return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
+            var metadataEntity = await _dbContext.FirstOrDefaultAsync<UserMetadataEntity>(x => x.UserId == validateResponse.UserId);
+            var metadata = metadataEntity?.Metadata ?? new();
+            var generatedToken = await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
             {
                 UserId = validateResponse.UserId,
                 Name = validateResponse.Name,
@@ -62,25 +63,29 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 IsSupporter = validateResponse.IsSupporter,
                 IsPremium = validateResponse.IsPremium,
                 APIKey = validateResponse.Key,
-                Role = role
-            }), HttpContext.GetProfile(role)));
+                Role = role,
+                Metadata = metadata
+            });
+            return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role)));
         }
 
-        [HttpGet("Validate")]
+        [HttpGet("Validate"), AllowAnonymous]
         [Produces("application/json")]
         [ProducesResponseType(typeof(JwtTokenResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> Validate()
         {
-            if (await _nexusModsAPIClient.ValidateAPIKeyAsync(HttpContext.GetAPIKey()) is not { } validateResponse)
+            if (HttpContext.GetAPIKey() is not { } apikey || string.IsNullOrEmpty(apikey) || await _nexusModsAPIClient.ValidateAPIKeyAsync(apikey) is not { } validateResponse)
                 return StatusCode(StatusCodes.Status401Unauthorized, new StandardResponse("Invalid NexusMods API Key!"));
 
             var roleEntity = await _dbContext.FirstOrDefaultAsync<UserRoleEntity>(x => x.UserId == validateResponse.UserId);
             var role = roleEntity?.Role ?? ApplicationRoles.User;
-            if (role != HttpContext.GetRole())
+            var metadataEntity = await _dbContext.FirstOrDefaultAsync<UserMetadataEntity>(x => x.UserId == validateResponse.UserId);
+            var metadata = metadataEntity?.Metadata ?? new();
+            if (role != HttpContext.GetRole() || metadata != HttpContext.GetMetadata())
             {
-                return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
+                var generatedToken = await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
                 {
                     UserId = validateResponse.UserId,
                     Name = validateResponse.Name,
@@ -89,8 +94,10 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                     IsSupporter = validateResponse.IsSupporter,
                     IsPremium = validateResponse.IsPremium,
                     APIKey = validateResponse.Key,
-                    Role = role
-                }), HttpContext.GetProfile(role)));
+                    Role = role,
+                    Metadata = metadata
+                });
+                return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role)));
             }
 
             var token = Request.Headers["Authorization"].ToString().Replace(ButrNexusModsAuthSchemeConstants.AuthScheme, "").Trim();

@@ -11,6 +11,7 @@ namespace BUTR.Site.NexusMods.Server.Options
         public NexusModsOptionsValidator(HttpClient client)
         {
             RuleFor(x => x.Endpoint).NotEmpty().IsUri();
+            RuleFor(x => x.APIEndpoint).NotEmpty().IsUri();
             RuleFor(x => x.ApiKey).NotEmpty();
         }
     }
@@ -18,6 +19,7 @@ namespace BUTR.Site.NexusMods.Server.Options
     public sealed record NexusModsOptions
     {
         public string Endpoint { get; init; } = default!;
+        public string APIEndpoint { get; init; } = default!;
         public string ApiKey { get; init; } = default!;
     }
 }

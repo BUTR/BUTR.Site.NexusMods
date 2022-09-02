@@ -19,5 +19,8 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
         public int[] ModNexusModsIds { get; set; } = default!;
 
         public string Url { get; set; } = default!;
+
+        public CrashReportEntity() { }
+        public CrashReportEntity(Guid id) => Id = id;
     }
 }

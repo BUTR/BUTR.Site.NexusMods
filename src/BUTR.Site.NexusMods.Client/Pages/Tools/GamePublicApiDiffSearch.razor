@@ -1,0 +1,75 @@
+﻿@attribute [AllowAnonymous]
+@page "/game-public-api-diff-search"
+
+@implements IAsyncDisposable
+
+@inject IGamePublicApiDiffClient _gamePublicApiClient
+@inject DiffService _diffService
+
+<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Public API Diff</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <TextEdit Role="@TextRole.Search" Debounce="true" DebounceInterval="500" TextChanged="OnSearch"></TextEdit>
+        <Divider/>
+        <Accordion>
+            @foreach (var diffContent in _diffs)
+            {
+                <Collapse Border="Border.Is0" Visible="@diffContent.Visible">
+                    <CollapseHeader>
+                        <Text Italic @onclick="@(() => diffContent.Visible = !diffContent.Visible)">@diffContent.Title</Text>
+                    </CollapseHeader>
+                    <CollapseBody>
+                        <Diff DiffContent="@diffContent.Content"></Diff>
+                    </CollapseBody>
+                </Collapse>
+                <Divider Margin="Margin.Is0"/>
+            }
+        </Accordion>
+    </CardBody>
+</Card>
+
+@code {
+
+    public sealed record DiffContent(string Title, string Content)
+    {
+        public bool Visible { get; set; }
+    }
+
+    private List<DiffContent> _diffs = new();
+
+    private async Task OnSearch(string str)
+    {
+        var diffs = await _gamePublicApiClient.SearchAsync(new[]
+        {
+            new TextSearchFiltering(TextSearchFilteringType.And, str)
+        });
+        _diffs = diffs.Select(content =>
+        {
+            var title = GetDiffTitle(content);
+            return new DiffContent(title, content);
+        }).ToList();
+    }
+
+    private static string GetDiffTitle(string content)
+    {
+        var oldFile = string.Empty;
+        var newFile = string.Empty;
+
+        using var reader = new StringReader(content);
+        while (reader.ReadLine() is { } line)
+        {
+            if (line.StartsWith("---")) oldFile = line[4..];
+            if (line.StartsWith("+++")) newFile = line[4..];
+        }
+        return $"{oldFile} -> {newFile}";
+        //return content[..content.IndexOf(Environment.NewLine, StringComparison.Ordinal)][11..];
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _diffService.Deinitialize();
+    }
+
+}

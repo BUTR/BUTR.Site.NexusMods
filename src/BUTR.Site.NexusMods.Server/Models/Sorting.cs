@@ -1,8 +1,8 @@
 ﻿namespace BUTR.Site.NexusMods.Server.Models
 {
-    public sealed class Sorting
+    public sealed record Sorting
     {
-        public string Property { get; set; } = default!;
-        public SortingType Type { get; set; } = default!;
+        public string Property { get; init; } = default!;
+        public SortingType Type { get; init; } = default!;
     }
 }

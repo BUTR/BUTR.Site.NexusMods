@@ -19,13 +19,28 @@
 
 @code {
 
+    private sealed class Container
+    {
+        private readonly Func<Task> _action;
+        public Container(Func<Task> action) => _action = action;
+
+        [JSInvokable("OnLoad")]
+        public Task OnLoad() => _action();
+
+        [JSInvokable("OnError")]
+        public Task OnError() => Task.CompletedTask;
+    }
+
     private IJSObjectReference _module = default!;
 
     protected override async Task OnInitializedAsync()
     {
         _module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "../js/swagger.js");
 
-        await _module.InvokeVoidAsync("init", "#swagger-ui", _backendOptions.Value.Endpoint);
+        await _module.InvokeVoidAsync("init", DotNetObjectReference.Create(new Container(async () =>
+        {
+            await _module.InvokeVoidAsync("render", "#swagger-ui", _backendOptions.Value.Endpoint);
+        })));
 
         await base.OnInitializedAsync();
     }

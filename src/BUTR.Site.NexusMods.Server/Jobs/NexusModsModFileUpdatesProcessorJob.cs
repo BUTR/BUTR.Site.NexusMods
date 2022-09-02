@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Jobs
 {
     [DisallowConcurrentExecution]
-    public class NexusModsModFileUpdatesProcessorJob : IJob
+    public sealed class NexusModsModFileUpdatesProcessorJob : IJob
     {
         private readonly ILogger _logger;
         private readonly NexusModsOptions _options;

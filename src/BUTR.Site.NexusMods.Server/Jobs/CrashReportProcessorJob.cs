@@ -25,7 +25,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Jobs
 {
     [DisallowConcurrentExecution]
-    public class CrashReportProcessorJob : IJob
+    public sealed class CrashReportProcessorJob : IJob
     {
         private readonly ILogger _logger;
         private readonly CrashReporterOptions _options;

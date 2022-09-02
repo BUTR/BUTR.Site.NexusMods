@@ -1,8 +1,8 @@
 ﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Anonymous}")]
 @page "/login"
 
-@inject NavigationManager _navigationManager
-@inject IAuthenticationProvider _authenticationProvider
+@inject NavigationManager _navigationManager;
+@inject IAuthenticationProvider _authenticationProvider;
 
 <Container>
     <Row Flex="Flex.JustifyContent.Center">
@@ -55,8 +55,8 @@
 </Container>
 
 @code {
-    
-    private static string ButtonNexusModsStyle = $"background-color: #db8e34;";
+
+    private static readonly string ButtonNexusModsStyle = $"background-color: #db8e34;";
 
     [Parameter]
     public bool DemoLoginEnabled { get; set; } = true;
@@ -64,6 +64,7 @@
     public bool SSOLoginEnabled { get; set; } = true;
     [Parameter]
     public bool RawTokenLoginEnabled { get; set; } = true;
+
 
     private string NexusModsSSOUrl => $"login-nexusmods-sso{new Uri(_navigationManager.Uri).Query}";
     private string NexusModsTokenUrl => $"login-nexusmods-token{new Uri(_navigationManager.Uri).Query}";

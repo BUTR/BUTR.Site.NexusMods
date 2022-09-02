@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Microsoft.JSInterop;
 
 using System;
 using System.Net.Http;
@@ -95,6 +96,8 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddTransient<IModClient, ModClient>(sp => ConfigureClient(sp, (http, opt) => new ModClient(http, opt)));
                 services.AddTransient<IReportsClient, ReportsClient>(sp => ConfigureClient(sp, (http, opt) => new ReportsClient(http, opt)));
                 services.AddTransient<IUserClient, UserClient>(sp => ConfigureClient(sp, (http, opt) => new UserClient(http, opt)));
+                services.AddTransient<IGamePublicApiDiffClient, GamePublicApiDiffClient>(sp => ConfigureClient(sp, (http, opt) => new GamePublicApiDiffClient(http, opt)));
+                services.AddTransient<IGameSourceDiffClient, GameSourceDiffClient>(sp => ConfigureClient(sp, (http, opt) => new GameSourceDiffClient(http, opt)));
 
                 services.AddScoped<IAuthenticationProvider, DefaultAuthenticationProvider>();
                 services.AddScoped<IProfileProvider, DefaultProfileProvider>();
@@ -108,6 +111,7 @@ namespace BUTR.Site.NexusMods.Client
 
                 services.AddTransient<BrotliDecompressorService>();
                 services.AddTransient<DownloadFileService>();
+                services.AddScoped<DiffService>();
 
                 services.AddBlazoredLocalStorage();
                 services.AddBlazoredSessionStorage();
@@ -122,6 +126,8 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddBootstrap5Providers();
                 services.AddFontAwesomeIcons();
                 services.Replace(ServiceDescriptor.Scoped<ITextLocalizerService, InvariantTextLocalizerService>());
+
+                services.AddSingleton<IJSInProcessRuntime>(sp => (IJSInProcessRuntime) sp.GetRequiredService<IJSRuntime>());
             });
     }
 }

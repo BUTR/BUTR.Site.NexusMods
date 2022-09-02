@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -23,9 +22,6 @@
     <Exec Command="dotnet tool install --local NSwag.ConsoleCore --version 13.16.1" />
     <Exec Command="dotnet nswag openapi2csclient @(ExecPreprocessArgs, ' ')" />
 
-    <ItemGroup>
-      <Compile Include="Clients.g.cs" />
-    </ItemGroup>
   </Target>
 
 </Project>

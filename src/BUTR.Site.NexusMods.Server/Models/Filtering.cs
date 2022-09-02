@@ -1,9 +1,9 @@
 ﻿namespace BUTR.Site.NexusMods.Server.Models
 {
-    public sealed class Filtering
+    public sealed record Filtering
     {
-        public string Property { get; set; } = default!;
-        public FilteringType Type { get; set; } = default!;
-        public string Value { get; set; } = default!;
+        public string Property { get; init; } = default!;
+        public FilteringType Type { get; init; } = default!;
+        public string Value { get; init; } = default!;
     }
 }

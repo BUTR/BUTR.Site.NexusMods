@@ -4,18 +4,24 @@ using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Http;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace BUTR.Site.NexusMods.Server.Extensions
 {
     public static class HttpContextExtensions
     {
-        public static ProfileModel GetProfile(this HttpContext context, string role) => new(
-            context.GetUserId(),
-            context.GetName(),
-            context.GetEMail(),
-            context.GetProfileUrl(),
-            context.GetIsPremium(),
-            context.GetIsSupporter(),
-            role);
+        public static ProfileModel GetProfile(this HttpContext context, string role) => new()
+        {
+            UserId = context.GetUserId(),
+            Name = context.GetName(),
+            Email = context.GetEMail(),
+            ProfileUrl = context.GetProfileUrl(),
+            IsPremium = context.GetIsPremium(),
+            IsSupporter = context.GetIsSupporter(),
+            Role = role,
+        };
 
         public static int GetUserId(this HttpContext context) =>
             int.TryParse(context.User.FindFirst(ButrNexusModsClaimTypes.UserId)?.Value ?? string.Empty, out var val) ? val : -1;
@@ -40,5 +46,11 @@ namespace BUTR.Site.NexusMods.Server.Extensions
 
         public static string GetRole(this HttpContext context) =>
             context.User.FindFirst(ButrNexusModsClaimTypes.Role)?.Value ?? ApplicationRoles.User;
+
+        public static Dictionary<string, string> GetMetadata(this HttpContext context) =>
+            context.User.FindFirst(ButrNexusModsClaimTypes.Metadata)?.Value.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(kv => kv.Split('='))
+                .Where(split => split.Length == 2)
+                .ToDictionary(split => split[0], split => split[1]) ?? new();
     }
 }

@@ -44,7 +44,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> SetRole([FromBody] SetRoleBody body, CancellationToken ct)
+        public async Task<ActionResult> SetRole([FromQuery] SetRoleBody body, CancellationToken ct)
         {
             UserRoleEntity? ApplyChanges(UserRoleEntity? existing) => existing switch
             {
@@ -62,7 +62,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> RemoveRole([FromBody] RemoveRoleBody body, CancellationToken ct)
+        public async Task<ActionResult> RemoveRole([FromQuery] RemoveRoleBody body, CancellationToken ct)
         {
             UserRoleEntity? ApplyChanges(UserRoleEntity? existing) => existing switch
             {

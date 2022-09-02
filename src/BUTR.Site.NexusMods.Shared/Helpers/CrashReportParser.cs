@@ -9,25 +9,49 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Shared.Helpers
 {
-    public record CrashRecord(Guid Id, string GameVersion, string Exception, ImmutableArray<Module> Modules, ImmutableArray<InvolvedModule> InvolvedModules, string Id2);
-    public record ModuleDependencyMetadatas(string Type, string ModuleId);
-    public record ModuleSubModule(string Name, string DLLName, string SubModuleClassType, ImmutableArray<KeyValuePair<string, string>> Tags);
-    public record Module(
-        string Id,
-        string Name,
-        string Alias,
-        string Version,
-        string IsOfficial,
-        string IsSingleplayer,
-        string IsMultiplayer,
-        string Url,
-        ImmutableList<ModuleDependencyMetadatas> DependencyMetadatas,
-        ImmutableList<ModuleSubModule> SubModules
-    );
-    public record InvolvedModule(
-        string Id,
-        string Stacktrace
-    );
+    public record CrashRecord
+    {
+        public Guid Id { get; init; }
+        public string GameVersion { get; init; }
+        public string Exception { get; init; }
+        public ImmutableArray<Module> Modules { get; init; }
+        public ImmutableArray<InvolvedModule> InvolvedModules { get; init; }
+        public string Id2 { get; init; }
+    }
+
+    public record ModuleDependencyMetadatas
+    {
+        public string Type { get; init; }
+        public string ModuleId { get; init; }
+    }
+
+    public record ModuleSubModule
+    {
+        public string Name { get; init; }
+        public string DLLName { get; init; }
+        public string SubModuleClassType { get; init; }
+        public ImmutableArray<KeyValuePair<string, string>> Tags { get; init; }
+    }
+
+    public sealed record Module
+    {
+        public string Id { get; init; }
+        public string Name { get; init; }
+        public string Alias { get; init; }
+        public string Version { get; init; }
+        public string IsOfficial { get; init; }
+        public string IsSingleplayer { get; init; }
+        public string IsMultiplayer { get; init; }
+        public string Url { get; init; }
+        public ImmutableList<ModuleDependencyMetadatas> DependencyMetadatas { get; init; }
+        public ImmutableList<ModuleSubModule> SubModules { get; init; }
+    }
+
+    public record InvolvedModule
+    {
+        public string Id { get; init; }
+        public string Stacktrace { get; init; }
+    }
 
     public static class CrashReportParser
     {
@@ -53,7 +77,15 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
             var involvedModules = document.SelectSingleNode("descendant::div[@id=\"involved-modules\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseInvolvedModule).ToImmutableArray() ?? ImmutableArray<InvolvedModule>.Empty;
             //var assemblies = document.SelectSingleNode("descendant::div[@id=\"assemblies\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();
             //var harmonyPatches = document.SelectSingleNode("descendant::div[@id=\"harmony-patches\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();
-            return new CrashRecord(Guid.TryParse(id, out var val) ? val : Guid.Empty, gameVersion, exception, installedModules, involvedModules, id2);
+            return new CrashRecord
+            {
+                Id = Guid.TryParse(id, out var val) ? val : Guid.Empty,
+                GameVersion = gameVersion,
+                Exception = exception,
+                Modules = installedModules,
+                InvolvedModules = involvedModules,
+                Id2 = id2,
+            };
         }
 
         private static Module ParseModule(HtmlNode node)
@@ -67,41 +99,44 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
                 .ToImmutableList();
 
             static ImmutableList<ModuleDependencyMetadatas> GetModuleDependencyMetadatas(ImmutableList<string> lines) => lines
-                .Select(sml => new ModuleDependencyMetadatas(
-                    sml.StartsWith("Load Before") ? "Load Before" : sml.StartsWith("Load After") ? "Load After" : "ERROR",
-                    sml.Replace("Load Before", "").Replace("Load After", "").Trim()
-                ))
+                .Select(sml => new ModuleDependencyMetadatas
+                {
+                    Type = sml.StartsWith("Load Before") ? "Load Before" : sml.StartsWith("Load After") ? "Load After" : "ERROR",
+                    ModuleId = sml.Replace("Load Before", "").Replace("Load After", "").Trim()
+                })
                 .ToImmutableList();
 
             static ImmutableList<ModuleSubModule> GetModuleSubModules(ImmutableList<string> lines) => lines
                 .Select((item, index) => new { Item = item, Index = index })
                 .Where(o => !o.Item.Contains(':') && !o.Item.Contains(".dll"))
                 .Select(o => lines.Skip(o.Index + 1).TakeWhile(l => l.Contains(':') || l.Contains(".dll")).ToImmutableList())
-                .Select(sml => new ModuleSubModule(
-                    sml.FirstOrDefault(l => l.StartsWith("Name:"))?.Split("Name:").Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
-                    sml.FirstOrDefault(l => l.StartsWith("DLLName:"))?.Split("DLLName:").Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
-                    sml.FirstOrDefault(l => l.StartsWith("SubModuleClassType:"))?.Split("SubModuleClassType:").Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
-                    sml.SkipWhile(l => !l.StartsWith("Tags:")).Skip(1).TakeWhile(l => !l.StartsWith("Assemblies:")).Select(l =>
+                .Select(sml => new ModuleSubModule
+                {
+                    Name = sml.FirstOrDefault(l => l.StartsWith("Name:"))?.Split("Name:").Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
+                    DLLName = sml.FirstOrDefault(l => l.StartsWith("DLLName:"))?.Split("DLLName:").Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
+                    SubModuleClassType = sml.FirstOrDefault(l => l.StartsWith("SubModuleClassType:"))?.Split("SubModuleClassType:").Skip(1).FirstOrDefault()?.Trim() ?? string.Empty,
+                    Tags = sml.SkipWhile(l => !l.StartsWith("Tags:")).Skip(1).TakeWhile(l => !l.StartsWith("Assemblies:")).Select(l =>
                     {
                         var split = l.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                         return new KeyValuePair<string, string>(split[0], split[1]);
                     }).ToImmutableArray()
-                ))
+                })
                 .ToImmutableList();
 
             var lines = node.InnerText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToImmutableList();
-            return new Module(
-                GetField(lines, "Id"),
-                GetField(lines, "Name"),
-                GetField(lines, "Alias"),
-                GetField(lines, "Version"),
-                GetField(lines, "Official"),
-                GetField(lines, "Singleplayer"),
-                GetField(lines, "Multiplayer"),
-                GetField(lines, "Url"),
-                GetModuleDependencyMetadatas(GetRange(lines, "Dependency Metadatas", new[] { "SubModules", "Additional Assemblies", "Url" })),
-                GetModuleSubModules(GetRange(lines, "SubModules", new[] { "Additional Assemblies" }))
-            );
+            return new Module
+            {
+                Id = GetField(lines, "Id"),
+                Name = GetField(lines, "Name"),
+                Alias = GetField(lines, "Alias"),
+                Version = GetField(lines, "Version"),
+                IsOfficial = GetField(lines, "Official"),
+                IsSingleplayer = GetField(lines, "Singleplayer"),
+                IsMultiplayer = GetField(lines, "Multiplayer"),
+                Url =  GetField(lines, "Url"),
+                DependencyMetadatas = GetModuleDependencyMetadatas(GetRange(lines, "Dependency Metadatas", new[] { "SubModules", "Additional Assemblies", "Url" })),
+                SubModules = GetModuleSubModules(GetRange(lines, "SubModules", new[] { "Additional Assemblies" }))
+            };
         }
 
         private static InvolvedModule ParseInvolvedModule(HtmlNode node)
@@ -113,7 +148,11 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
                 return x.InnerText;
             }) ?? Enumerable.Empty<string>());
 
-            return new InvolvedModule(id, lines);
+            return new InvolvedModule
+            {
+                Id = id,
+                Stacktrace = lines
+            };
         }
     }
 }

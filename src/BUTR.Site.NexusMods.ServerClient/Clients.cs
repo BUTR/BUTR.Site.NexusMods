@@ -1,4 +1,7 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace BUTR.Site.NexusMods.ServerClient
@@ -38,6 +41,23 @@ namespace BUTR.Site.NexusMods.ServerClient
     public partial class UserClient
     {
         public UserClient(HttpClient client, JsonSerializerOptions options) : this(client)
+        {
+            _settings = new Lazy<JsonSerializerOptions>(options);
+        }
+    }
+
+    public partial class GamePublicApiDiffClient
+    {
+        public GamePublicApiDiffClient(HttpClient client, JsonSerializerOptions options) : this(client)
+        {
+            _settings = new Lazy<JsonSerializerOptions>(options);
+        }
+    }
+
+
+    public partial class GameSourceDiffClient
+    {
+        public GameSourceDiffClient(HttpClient client, JsonSerializerOptions options) : this(client)
         {
             _settings = new Lazy<JsonSerializerOptions>(options);
         }

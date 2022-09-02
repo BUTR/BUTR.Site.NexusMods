@@ -1,0 +1,204 @@
+﻿@attribute [AllowAnonymous]
+@page "/game-public-api-diff"
+
+@implements IAsyncDisposable
+
+@inject IGamePublicApiDiffClient _gamePublicApiClient
+@inject DiffService _diffService
+
+<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Public API Diff</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <TreeView TNode="Node"
+                  Nodes="Nodes"
+                  GetChildNodes="GetChildNodes"
+                  HasChildNodes="@(node => node.Type is NodeType.Root or NodeType.Directory or NodeType.File)"
+                  SelectedNode="@SelectedNode"
+                  SelectedNodeChanged="@(_ => SelectedNode = null)"
+                  ExpandedNodesChanged="@(ExpandedNodesChanged)">
+            <NodeContent>
+                @context.Path.Replace(".diff", ".dll")
+
+                @if (context.Type == NodeType.File && context.Visible)
+                {
+                    @if (context.Content.Count == 0)
+                    {
+                        <Spinner/>
+                    }
+                    else
+                    {
+                        <Accordion>
+                            @foreach (var diffContent in context.Content)
+                            {
+                                <Collapse Border="Border.Is0" Visible="@diffContent.Visible">
+                                    <CollapseHeader>
+                                        <Text Italic @onclick="@(() => diffContent.Visible = !diffContent.Visible)">@diffContent.Title</Text>
+                                    </CollapseHeader>
+                                    <CollapseBody>
+                                        <Diff DiffContent="@diffContent.Content"></Diff>
+                                    </CollapseBody>
+                                </Collapse>
+                                <Divider Margin="Margin.Is0"/>
+                            }
+                        </Accordion>
+                    }
+                }
+            </NodeContent>
+        </TreeView>
+    </CardBody>
+</Card>
+
+@code {
+
+    private enum NodeType { Root, Directory, File }
+
+    private sealed record DiffContent(string Title, string Content)
+    {
+        public bool Visible { get; set; }
+    }
+
+    private sealed record Node
+    {
+        public Node? Parent { get; init; }
+        public List<Node> Children { get; } = new();
+
+        public NodeType Type { get; init; }
+        public string Path { get; init; } = string.Empty;
+        public ICollection<DiffContent> Content { get; set; } = Array.Empty<DiffContent>();
+        public bool Visible { get; set; }
+    }
+
+    private List<Node> Nodes = new();
+    private Node? SelectedNode;
+    private IList<Node> CurrentExpandedNodes = new List<Node>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var availableDiffs = await _gamePublicApiClient.ListAsync();
+        Nodes.AddRange(availableDiffs.Select(x => new Node
+        {
+            Type = NodeType.Root,
+            Path = x,
+            Visible = true,
+        }));
+
+        await _diffService.Initialize();
+
+        await base.OnInitializedAsync();
+    }
+
+    private static void FillNode(Node parent, IEnumerable<string> filePaths)
+    {
+        foreach (var filePath in filePaths)
+        {
+            var filePathNormalized = filePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            var root = Path.GetPathRoot(filePath) is var str && str == Path.DirectorySeparatorChar.ToString() ? string.Empty : str;
+            var components = (string.IsNullOrEmpty(root) ? filePathNormalized : filePathNormalized.Replace(root, "")).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            var node = parent;
+            foreach (var component in components.Skip(1).WithMetadata())
+            {
+                if (node.Children.FirstOrDefault(x => x.Path == component.Value) is not { } componentNode)
+                    node.Children.Add(componentNode = new Node { Parent = node, Type = component.IsLast ? NodeType.File : NodeType.Directory, Path = component.Value });
+                node = componentNode;
+            }
+        }
+    }
+
+    private IEnumerable<Node> GetChildNodes(Node node)
+    {
+        static string GetPath(Node node)
+        {
+            var path = node.Path;
+            var currentNode = node;
+            while (currentNode.Parent is { } parentNode)
+            {
+                path = $"{parentNode.Path}/{path}";
+                currentNode = parentNode;
+            }
+            return path;
+        }
+
+        switch (node.Type)
+        {
+            case NodeType.Root:
+                {
+                    if (node.Children.Count == 0)
+                    {
+                        _gamePublicApiClient.TreeflatAsync(GetPath(node)).ContinueWith(async x =>
+                        {
+                            FillNode(node, await x);
+                            StateHasChanged();
+                        });
+                    }
+                    return node.Children;
+                }
+            case NodeType.Directory:
+                {
+                    return node.Children;
+                }
+            case NodeType.File:
+                {
+                    if (node.Content.Count == 0)
+                    {
+                        _gamePublicApiClient.GetAsync(GetPath(node)).ContinueWith(x =>
+                        {
+                            node.Content = x.Result
+                                .Select(content =>
+                                {
+                                    var title = GetDiffTitle(content);
+                                    return new DiffContent(title, content);
+                                }).ToList();
+                            StateHasChanged();
+                        });
+                    }
+                    return Array.Empty<Node>();
+                }
+            default:
+                {
+                    return Array.Empty<Node>();
+                }
+        }
+    }
+
+    private static string GetDiffTitle(string content)
+    {
+        var oldFile = string.Empty;
+        var newFile = string.Empty;
+
+        using var reader = new StringReader(content);
+        while (reader.ReadLine() is { } line)
+        {
+            if (line.StartsWith("---")) oldFile = line[4..];
+            if (line.StartsWith("+++")) newFile = line[4..];
+        }
+        return $"{oldFile} -> {newFile}";
+        //return content[..content.IndexOf(Environment.NewLine, StringComparison.Ordinal)][11..];
+    }
+
+    private void ExpandedNodesChanged(IList<Node> nodes)
+    {
+        var addedNodes = nodes.Except(CurrentExpandedNodes);
+        var removedNodes = CurrentExpandedNodes.Except(nodes);
+
+        foreach (var node in addedNodes)
+        {
+            if (node.Type == NodeType.Root) continue;
+            node.Visible = true;
+        }
+        foreach (var node in removedNodes)
+        {
+            if (node.Type == NodeType.Root) continue;
+            node.Visible = false;
+        }
+        CurrentExpandedNodes = nodes.ToList();
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        await _diffService.Deinitialize();
+    }
+
+}

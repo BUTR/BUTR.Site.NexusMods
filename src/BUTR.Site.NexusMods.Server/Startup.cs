@@ -12,6 +12,7 @@ using BUTR.Site.NexusMods.Server.Utils.Http.Logging;
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,7 @@ using Quartz;
 
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -79,10 +81,16 @@ namespace BUTR.Site.NexusMods.Server
             {
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
-            services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((sp, client) =>
+            services.AddHttpClient<NexusModsClient>().ConfigureHttpClient((sp, client) =>
             {
                 var opts = sp.GetRequiredService<IOptions<NexusModsOptions>>().Value;
                 client.BaseAddress = new Uri(opts.Endpoint);
+                client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+            });
+            services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((sp, client) =>
+            {
+                var opts = sp.GetRequiredService<IOptions<NexusModsOptions>>().Value;
+                client.BaseAddress = new Uri(opts.APIEndpoint);
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
             services.AddHttpClient<CrashReporterClient>().ConfigureHttpClient((sp, client) =>
@@ -110,6 +118,7 @@ namespace BUTR.Site.NexusMods.Server
 
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IHttpMessageHandlerBuilderFilter, SyncLoggingHttpMessageHandlerBuilderFilter>());
             services.AddTransient<NexusModsInfo>();
+            services.AddSingleton<DiffProvider>();
 
             services.AddAuthentication(ButrNexusModsAuthSchemeConstants.AuthScheme).AddNexusMods(options =>
             {
@@ -122,6 +131,20 @@ namespace BUTR.Site.NexusMods.Server
             {
                 options.LowercaseUrls = true;
             });
+            services.AddResponseCompression(options =>
+            {
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+            });
+            services.Configure<BrotliCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Fastest;
+            });
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.SmallestSize;
+            });
+
             services.AddSwaggerGen(opt =>
             {
                 opt.SwaggerDoc("v1", new OpenApiInfo
@@ -194,6 +217,8 @@ namespace BUTR.Site.NexusMods.Server
                 app.UseCors("Development");
             }
 
+            app.UseResponseCompression();
+
             app.UseSwagger(opt =>
             {
                 opt.RouteTemplate = "/api/{documentName}/swagger.json";
@@ -206,6 +231,7 @@ namespace BUTR.Site.NexusMods.Server
 
             app.UseRouting();
             app.UseAuthorization();
+            app.UseMetadata();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

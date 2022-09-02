@@ -103,8 +103,14 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             return StatusCode(StatusCodes.Status200OK, new PagingResponse<CrashReportModel>
             {
-                Items = paginated.Items.Select(x => new CrashReportModel(x.Id, x.GameVersion, x.Exception, x.CreatedAt, x.Url, x.InvolvedModIds.ToImmutableArray())
+                Items = paginated.Items.Select(x => new CrashReportModel
                 {
+                    Id = x.Id,
+                    GameVersion = x.GameVersion,
+                    Exception = x.Exception,
+                    Date = x.CreatedAt,
+                    Url = x.Url,
+                    InvolvedModules = x.InvolvedModIds.ToImmutableArray(),
                     Status = x.Status,
                     Comment = x.Comment
                 }).ToAsyncEnumerable(),
@@ -155,7 +161,7 @@ WHERE
             {
                 null => new UserCrashReportEntity
                 {
-                    CrashReport = new() { Id = updatedCrashReport.Id },
+                    CrashReport = new(updatedCrashReport.Id),
                     UserId = userId,
                     Status = updatedCrashReport.Status,
                     Comment = updatedCrashReport.Comment

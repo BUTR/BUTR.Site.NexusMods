@@ -11,13 +11,13 @@
 else
 {
     <Container>
-        <Card Margin="Margin.Is4" Shadow="Shadow.Small">
+        <Card Margin="@Margin.Is4" Shadow="@Shadow.Small">
             <CardHeader>
-                <CardTitle Size="4" Margin="Margin.Is0">Profile</CardTitle>
+                <CardTitle Size="@(4)" Margin="@Margin.Is0">Profile</CardTitle>
             </CardHeader>
             <CardBody>
                 @* Mobile *@
-                <Div Display="Display.Block.OnMobile.None.OnDesktop">
+                <Div Display="@Display.Block.OnMobile.None.OnDesktop">
                     <Row>
                         @ProfilePrimary(_user)
                     </Row>
@@ -27,9 +27,9 @@ else
                 </Div>
 
                 @* Desktop *@
-                <Div Display="Display.Block.OnDesktop.None.OnMobile">
-                    <Row Gutter="(5, 5)">
-                        <Column ColumnSize="ColumnSize.Is4">
+                <Div Display="@Display.Block.OnDesktop.None.OnMobile">
+                    <Row @ref="@_gutterRow">
+                        <Column ColumnSize="@ColumnSize.Is4">
                             @ProfilePrimary(_user)
                         </Column>
                         <Column>
@@ -44,48 +44,61 @@ else
 
 @code {
 
-        private RenderFragment ProfilePrimary(ProfileModel user) =>
-    @<Card Shadow="Shadow.Small">
-        <CardBody TextAlignment="TextAlignment.Center">
-            <CardImage Width="Width.Is50" Source="@user.ProfileUrl.Replace(@"{BASE}", _navigationManager.BaseUri)" Border="Border.RoundedCircle" Alt="Profile Image" />
-            <CardTitle Size="5"><Blazorise.Link To="@user.Url">@user.Name</Blazorise.Link></CardTitle>
-            <CardText TextColor="TextColor.Secondary">@user.Role</CardText>
-            @if (user.IsPremium)
-            {
-                <CardText TextColor="TextColor.Secondary">Premium</CardText>
-            }
-            @if (user.IsSupporter)
-            {
-                <CardText TextColor="TextColor.Secondary">Supporter</CardText>
-            }
-        </CardBody>
-    </Card>;
+    private static readonly (int Horizontal, int Vertical) _gutter = (5, 5);
 
-        private RenderFragment ProfileSecondary(ProfileModel user) =>
-    @<Card Shadow="Shadow.Small">
-        <CardBody>
-            <Row>
-                <Column ColumnSize="ColumnSize.Is3" TextWeight="TextWeight.Bold">Id</Column>
-                <Column ColumnSize="ColumnSize.Is9" TextColor="TextColor.Secondary">@user.UserId</Column>
-            </Row>
-            <Divider />
-            <Row>
-                <Column ColumnSize="ColumnSize.Is3" TextWeight="TextWeight.Bold">Name</Column>
-                <Column ColumnSize="ColumnSize.Is9" TextColor="TextColor.Secondary">@user.Name</Column>
-            </Row>
-            <Divider />
-            <Row>
-                <Column ColumnSize="ColumnSize.Is3" TextWeight="TextWeight.Bold">Email</Column>
-                <Column ColumnSize="ColumnSize.Is9" TextColor="TextColor.Secondary">@user.Email</Column>
-            </Row>
-        </CardBody>
-    </Card>;
-    
+    private RenderFragment ProfilePrimary(ProfileModel user) =>
+        @<Card Shadow="@Shadow.Small">
+            <CardBody TextAlignment="@TextAlignment.Center">
+                <CardImage Width="@Width.Is50" Source="@user.ProfileUrl.Replace(@"{BASE}", _navigationManager.BaseUri)" Border="@Border.RoundedCircle" Alt="@("Profile Image")"/>
+                <CardTitle Size="@(5)"><Blazorise.Link To="@user.Url">@user.Name</Blazorise.Link></CardTitle>
+                <CardText TextColor="@TextColor.Secondary">@user.Role</CardText>
+                @if (user.IsPremium)
+                {
+                    <CardText TextColor="@TextColor.Secondary">Premium</CardText>
+                }
+                @if (user.IsSupporter)
+                {
+                    <CardText TextColor="@TextColor.Secondary">Supporter</CardText>
+                }
+            </CardBody>
+        </Card>;
+
+    private RenderFragment ProfileSecondary(ProfileModel user) =>
+        @<Card Shadow="@Shadow.Small">
+            <CardBody>
+                <Row>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Id</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.UserId</Column>
+                </Row>
+                <Divider/>
+                <Row>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Name</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.Name</Column>
+                </Row>
+                <Divider/>
+                <Row>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Email</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.Email</Column>
+                </Row>
+            </CardBody>
+        </Card>;
+
     private ProfileModel? _user;
+    private Row? _gutterRow;
 
     protected override async Task OnInitializedAsync()
     {
         _user = await _profileProvider.GetProfileAsync();
+        if (_gutterRow is not null)
+            _gutterRow.Gutter = (5,5);
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (_gutterRow is not null)
+            _gutterRow.Gutter = (5,5);
+
+        return Task.CompletedTask;
     }
 
 }
