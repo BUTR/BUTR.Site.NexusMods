@@ -18,6 +18,10 @@
       <ExecPreprocessArgs Include="/OperationGenerationMode:MultipleClientsFromFirstTagAndPathSegments /JsonLibrary:SystemTextJson" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Include="Clients.g.cs" />
+    </ItemGroup>
+
     <Exec Command="dotnet new tool-manifest --force" />
     <Exec Command="dotnet tool install --local NSwag.ConsoleCore --version 13.17.0" />
     <Exec Command="dotnet nswag openapi2csclient @(ExecPreprocessArgs, ' ')" />
