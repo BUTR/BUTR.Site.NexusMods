@@ -13,8 +13,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
     [ApiController, Route("api/v1/[controller]")]
     public sealed class GamePublicApiDiffController: ControllerBase
     {
-        //private const string basePath = "/public-api-diff";
-        private const string basePath = "D:\\Git\\BUTR.Site.NexusMods\\diff\\";
+        private const string basePath = "/public-api-diff";
+        //private const string basePath = "D:\\Git\\BUTR.Site.NexusMods\\diff\\";
 
         private readonly ILogger _logger;
         private readonly DiffProvider _diffProvider;

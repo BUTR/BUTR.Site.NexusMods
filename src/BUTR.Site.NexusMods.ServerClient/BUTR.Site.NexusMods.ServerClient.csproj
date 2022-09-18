@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <Exec Command="dotnet new tool-manifest --force" />
-    <Exec Command="dotnet tool install --local NSwag.ConsoleCore --version 13.16.1" />
+    <Exec Command="dotnet tool install --local NSwag.ConsoleCore --version 13.17.0" />
     <Exec Command="dotnet nswag openapi2csclient @(ExecPreprocessArgs, ' ')" />
 
   </Target>
