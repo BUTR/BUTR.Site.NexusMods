@@ -29,6 +29,7 @@
     <PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
   </ItemGroup>
 
+  <!--
   <ItemGroup>
     <BlazorWebAssemblyLazyLoad Include="CsvHelper.dll" Visible="false" />
     <BlazorWebAssemblyLazyLoad Include="Mono.Cecil.dll" Visible="false" />
@@ -36,6 +37,7 @@
     <BlazorWebAssemblyLazyLoad Include="Mono.Cecil.Pdb.dll" Visible="false" />
     <BlazorWebAssemblyLazyLoad Include="Mono.Cecil.Rocks.dll" Visible="false" />
   </ItemGroup>
+  -->
 
   <ItemGroup>
     <ProjectReference Include="..\BUTR.Site.NexusMods.ServerClient\BUTR.Site.NexusMods.ServerClient.csproj" />
