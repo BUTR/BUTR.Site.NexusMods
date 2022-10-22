@@ -79,7 +79,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             [JSInvokable("OnLoad")]
             public Task OnLoad() => _action();
 
-           [JSInvokable("OnError")]
+            [JSInvokable("OnError")]
             public Task OnError() => Task.CompletedTask;
         }
 

@@ -135,7 +135,7 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
                 IsOfficial = GetField(lines, "Official"),
                 IsSingleplayer = GetField(lines, "Singleplayer"),
                 IsMultiplayer = GetField(lines, "Multiplayer"),
-                Url =  GetField(lines, "Url"),
+                Url = GetField(lines, "Url"),
                 DependencyMetadatas = GetModuleDependencyMetadatas(GetRange(lines, "Dependency Metadatas", new[] { "SubModules", "Additional Assemblies", "Url" })),
                 SubModules = GetModuleSubModules(GetRange(lines, "SubModules", new[] { "Additional Assemblies" }))
             };

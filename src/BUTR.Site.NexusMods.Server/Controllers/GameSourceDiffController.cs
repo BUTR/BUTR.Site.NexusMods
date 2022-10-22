@@ -14,7 +14,7 @@ using System.Threading;
 namespace BUTR.Site.NexusMods.Server.Controllers
 {
     [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme), Metadata("MB2B")]
-    public sealed class GameSourceDiffController: ControllerBase
+    public sealed class GameSourceDiffController : ControllerBase
     {
         private const string basePath = "/public-api-diff";
         //private const string basePath = "D:\\Git\\BUTR.Site.NexusMods\\diff\\";
