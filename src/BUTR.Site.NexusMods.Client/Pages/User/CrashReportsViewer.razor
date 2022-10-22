@@ -276,7 +276,7 @@
             }
             else if (columnInfo.SearchValue is string str)
             {
-                if (columnInfo.SortField == "Status")
+                if (columnInfo.SortField is "Status" or "Version")
                 {
                     yield return new Filtering(columnInfo.SortField, FilteringType.Equal, str);
                 }
