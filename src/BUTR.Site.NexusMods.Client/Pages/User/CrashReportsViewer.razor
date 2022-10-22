@@ -269,20 +269,20 @@
     {
         foreach (var columnInfo in columnInfos)
         {
-            if (columnInfo.SortField == "CreatedAt" && columnInfo.SearchValue is string[] dates)
+            if (columnInfo.SortField is "CreatedAt" && columnInfo.SearchValue is string[] dates)
             {
                 yield return new Filtering(columnInfo.SortField, FilteringType.GreaterThanOrEqual, dates[0]);
                 yield return new Filtering(columnInfo.SortField, FilteringType.LessThanOrEqual, dates[1]);
             }
             else if (columnInfo.SearchValue is string str)
             {
-                if (columnInfo.SortField is "Status" or "Version")
+                if (columnInfo.SortField is "Status" or "Version" && !string.IsNullOrEmpty(str))
                 {
                     yield return new Filtering(columnInfo.SortField, FilteringType.Equal, str);
                 }
                 else if (str.Length >= 3)
                 {
-                    if (columnInfo.SortField == "InvolvedModIds")
+                    if (columnInfo.SortField is "InvolvedModIds")
                     {
                         yield return new Filtering(columnInfo.SortField, FilteringType.Contains, str);
                     }
