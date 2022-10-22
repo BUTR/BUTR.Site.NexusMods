@@ -6,6 +6,8 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
     {
         public Guid Id { get; set; } = default!;
 
+        public int Version { get; set; } = default!;
+
         public string GameVersion { get; set; } = default!;
 
         public string Exception { get; set; } = default!;

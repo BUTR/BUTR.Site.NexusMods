@@ -48,6 +48,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                 {
                     Id = report.Id,
                     Url = new Uri(new Uri(_options.Endpoint), $"{report.Id2}.html").ToString(),
+                    Version = report.Version,
                     GameVersion = report.GameVersion,
                     Exception = report.Exception,
                     CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date,
@@ -73,7 +74,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             }
         }
 
-        private async IAsyncEnumerable<(CrashRecord, DateTime)> MissingFilenames(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
+        private async IAsyncEnumerable<(CrashReport, DateTime)> MissingFilenames(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
         {
             var mapping = dbContext.Model.FindEntityType(typeof(CrashReportFileEntity));
             if (mapping is null || mapping.GetTableName() is not { } table)

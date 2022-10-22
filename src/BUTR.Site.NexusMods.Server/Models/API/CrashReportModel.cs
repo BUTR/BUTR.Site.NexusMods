@@ -6,6 +6,7 @@ namespace BUTR.Site.NexusMods.Server.Models.API
     public sealed record CrashReportModel
     {
         public Guid Id { get; init; }
+        public int Version { get; init; }
         public string GameVersion { get; init; }
         public string Exception { get; init; }
         public DateTime Date { get; init; }

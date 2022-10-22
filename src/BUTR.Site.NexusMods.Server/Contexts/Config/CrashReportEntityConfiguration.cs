@@ -11,6 +11,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts.Config
         {
             builder.ToTable("crash_report_entity").HasKey(p => p.Id).HasName("crash_report_entity_pkey");
             builder.Property(p => p.Id).HasColumnName("id").ValueGeneratedOnAdd().IsRequired();
+            builder.Property(p => p.Version).HasColumnName("version").IsRequired();
             builder.Property(p => p.GameVersion).HasColumnName("game_version").IsRequired();
             builder.Property(p => p.Exception).HasColumnName("exception").IsRequired();
             builder.Property(p => p.CreatedAt).HasColumnName("created_at").IsRequired();

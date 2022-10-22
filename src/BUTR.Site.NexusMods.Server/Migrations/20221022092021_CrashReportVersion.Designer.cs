@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BUTR.Site.NexusMods.Server.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BUTR.Site.NexusMods.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221022092021_CrashReportVersion")]
+    partial class CrashReportVersion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,8 +68,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnName("url");
 
                     b.Property<int>("Version")
-                        .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id")
                         .HasName("crash_report_entity_pkey");

@@ -123,6 +123,17 @@
                         <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
                     </FilterTemplate>
                 </DataGridColumn>
+
+                <DataGridColumn TItem="CrashReportModel"
+                                Field="@nameof(CrashReportModel.Version)"
+                                Caption="Version">
+                    <DisplayTemplate>
+                        @(context.Version)
+                    </DisplayTemplate>
+                    <FilterTemplate>
+                        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
+                    </FilterTemplate>
+                </DataGridColumn>
                 
                 <DataGridColumn TItem="CrashReportModel"
                                 Field="@nameof(CrashReportModel.Date)"

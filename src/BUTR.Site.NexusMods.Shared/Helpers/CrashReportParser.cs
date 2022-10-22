@@ -9,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Shared.Helpers
 {
-    public record CrashRecord
+    public record CrashReport
     {
         public Guid Id { get; init; }
+        public int Version { get; init; }
         public string GameVersion { get; init; }
         public string Exception { get; init; }
         public ImmutableArray<Module> Modules { get; init; }
@@ -55,14 +56,14 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
 
     public static class CrashReportParser
     {
-        public static async Task<CrashRecord> ParseUrl(HttpClient client, string id)
+        public static async Task<CrashReport> ParseUrl(HttpClient client, string id)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{id}.html");
             var response = await client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
             return Parse(id, content);
         }
-        public static CrashRecord Parse(string id2, string content)
+        public static CrashReport Parse(string id2, string content)
         {
             var html = new HtmlDocument();
             html.LoadHtml(content);
@@ -77,9 +78,10 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
             var involvedModules = document.SelectSingleNode("descendant::div[@id=\"involved-modules\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseInvolvedModule).ToImmutableArray() ?? ImmutableArray<InvolvedModule>.Empty;
             //var assemblies = document.SelectSingleNode("descendant::div[@id=\"assemblies\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();
             //var harmonyPatches = document.SelectSingleNode("descendant::div[@id=\"harmony-patches\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();
-            return new CrashRecord
+            return new CrashReport
             {
                 Id = Guid.TryParse(id, out var val) ? val : Guid.Empty,
+                Version = version,
                 GameVersion = gameVersion,
                 Exception = exception,
                 Modules = installedModules,

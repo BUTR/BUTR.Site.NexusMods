@@ -33,6 +33,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         private sealed record UserCrashReportView
         {
             public Guid Id { get; init; } = default!;
+            public int Version { get; init; } = default!;
             public string GameVersion { get; init; } = default!;
             public string Exception { get; init; } = default!;
             public DateTime CreatedAt { get; init; } = default!;
@@ -106,6 +107,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 Items = paginated.Items.Select(x => new CrashReportModel
                 {
                     Id = x.Id,
+                    Version = x.Version,
                     GameVersion = x.GameVersion,
                     Exception = x.Exception,
                     Date = x.CreatedAt,
