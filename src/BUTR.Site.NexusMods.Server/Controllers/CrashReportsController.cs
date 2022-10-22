@@ -78,6 +78,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                     .Select(x => new UserCrashReportView
                     {
                         Id = x.cre.Id,
+                        Version = x.cre.Version,
                         GameVersion = x.cre.GameVersion,
                         Exception = x.cre.Exception,
                         CreatedAt = x.cre.CreatedAt,
