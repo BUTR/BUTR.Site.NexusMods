@@ -276,9 +276,22 @@
             }
             else if (columnInfo.SearchValue is string str)
             {
-                if (columnInfo.SortField is "Status" or "Version" && !string.IsNullOrEmpty(str))
+                if (columnInfo.SortField is "Status" && !string.IsNullOrEmpty(str))
                 {
                     yield return new Filtering(columnInfo.SortField, FilteringType.Equal, str);
+                }
+                else if (columnInfo.SortField is "Version" && !string.IsNullOrEmpty(str))
+                {
+                    if (str.StartsWith(">"))
+                        yield return new Filtering(columnInfo.SortField, FilteringType.GreaterThan, str.Substring(1));
+                    else if (str.StartsWith(">="))
+                        yield return new Filtering(columnInfo.SortField, FilteringType.GreaterThanOrEqual, str.Substring(2));
+                    else if (str.StartsWith("<"))
+                        yield return new Filtering(columnInfo.SortField, FilteringType.LessThan, str.Substring(1));
+                    else if (str.StartsWith("<="))
+                        yield return new Filtering(columnInfo.SortField, FilteringType.LessThanOrEqual, str.Substring(2));
+                    else
+                        yield return new Filtering(columnInfo.SortField, FilteringType.Equal, str);
                 }
                 else if (str.Length >= 3)
                 {
