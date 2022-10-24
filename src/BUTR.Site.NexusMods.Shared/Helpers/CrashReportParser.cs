@@ -17,7 +17,22 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
         public string Exception { get; init; }
         public ImmutableArray<Module> Modules { get; init; }
         public ImmutableArray<InvolvedModule> InvolvedModules { get; init; }
+        public ImmutableArray<EnhancedStacktraceFrame> EnhancedStacktrace { get; init; }
         public string Id2 { get; init; }
+    }
+
+    public record EnhancedStacktraceFrame
+    {
+        public string Name { get; init; }
+        public int ILOffset { get; init; }
+        public ImmutableArray<EnhancedStacktraceFrameMethod> Methods { get; init; }
+    }
+    public record EnhancedStacktraceFrameMethod
+    {
+        public string Module { get; init; }
+        public string MethodFullName { get; init; }
+        public string Method { get; init; }
+        public ImmutableArray<string> MethodParameters { get; init; }
     }
 
     public record ModuleDependencyMetadatas
@@ -40,6 +55,7 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
         public string Name { get; init; }
         public string Alias { get; init; }
         public string Version { get; init; }
+        public string IsExternal { get; init; }
         public string IsOfficial { get; init; }
         public string IsSingleplayer { get; init; }
         public string IsMultiplayer { get; init; }
@@ -66,7 +82,7 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
         public static CrashReport Parse(string id2, string content)
         {
             var html = new HtmlDocument();
-            html.LoadHtml(content);
+            html.LoadHtml(content.Replace("<filename unknown>", "NULL"));
             var document = html.DocumentNode;
 
             var id = document.SelectSingleNode("descendant::report")?.Attributes?["id"]?.Value ?? string.Empty;
@@ -76,6 +92,7 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
             var exception = document.SelectSingleNode("descendant::div[@id=\"exception\"]")?.InnerText ?? string.Empty;
             var installedModules = document.SelectSingleNode("descendant::div[@id=\"installed-modules\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseModule).ToImmutableArray() ?? ImmutableArray<Module>.Empty;
             var involvedModules = document.SelectSingleNode("descendant::div[@id=\"involved-modules\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseInvolvedModule).ToImmutableArray() ?? ImmutableArray<InvolvedModule>.Empty;
+            var enhancedStacktrace = document.SelectSingleNode("descendant::div[@id=\"enhanced-stacktrace\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseEnhancedStacktrace).ToImmutableArray() ?? ImmutableArray<EnhancedStacktraceFrame>.Empty;
             //var assemblies = document.SelectSingleNode("descendant::div[@id=\"assemblies\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();
             //var harmonyPatches = document.SelectSingleNode("descendant::div[@id=\"harmony-patches\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();
             return new CrashReport
@@ -86,6 +103,7 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
                 Exception = exception,
                 Modules = installedModules,
                 InvolvedModules = involvedModules,
+                EnhancedStacktrace = enhancedStacktrace,
                 Id2 = id2,
             };
         }
@@ -132,6 +150,7 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
                 Name = GetField(lines, "Name"),
                 Alias = GetField(lines, "Alias"),
                 Version = GetField(lines, "Version"),
+                IsExternal = GetField(lines, "External"),
                 IsOfficial = GetField(lines, "Official"),
                 IsSingleplayer = GetField(lines, "Singleplayer"),
                 IsMultiplayer = GetField(lines, "Multiplayer"),
@@ -154,6 +173,45 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
             {
                 Id = id,
                 Stacktrace = lines
+            };
+        }
+
+        private static EnhancedStacktraceFrame ParseEnhancedStacktrace(HtmlNode node)
+        {
+            var frameLine = node.ChildNodes.FirstOrDefault()?.InnerText.Trim().Replace("\r\n", string.Empty) ?? string.Empty;
+            var name = frameLine;
+            var ilOffset = int.TryParse(frameLine.Split("(IL Offset: ").Skip(1).FirstOrDefault()?.Replace(")", string.Empty).Trim(), out var ilOffsetVal) ? ilOffsetVal : -1;
+
+            var methodsBuilder = ImmutableArray.CreateBuilder<EnhancedStacktraceFrameMethod>();
+            foreach (var childNode in node.ChildNodes.FirstOrDefault(x => x.Name == "ul")?.ChildNodes ?? Enumerable.Empty<HtmlNode>())
+            {
+                var lines = childNode.InnerHtml.Trim().Split("<br>", StringSplitOptions.RemoveEmptyEntries);
+                var module = lines?.Length > 0 ? lines[0].Substring(8) : string.Empty;
+                var methodFullName = lines?.Length > 1 ? lines[1].Substring(8).Replace("::", ".") : string.Empty;
+                var idx1 = methodFullName.IndexOf("(", StringComparison.Ordinal);
+                var idx2 = idx1 != -1 ? methodFullName.Substring(0, idx1).LastIndexOf(" ", StringComparison.Ordinal) : -1;
+                var method = idx2 != -1 ? methodFullName.Substring(idx2 + 1) : string.Empty;
+                var methodSplit = method.Split("(");
+                var parameters = methodSplit.Length > 1
+                    ? methodSplit[1].Trim(')').Split(" ", StringSplitOptions.RemoveEmptyEntries)
+                        .Where((_, i) => i % 2 == 0)
+                        .Select(x => x.Trim(','))
+                        .ToImmutableArray()
+                    : ImmutableArray<string>.Empty;
+                methodsBuilder.Add(new EnhancedStacktraceFrameMethod
+                {
+                    Module = module,
+                    MethodFullName = methodFullName,
+                    Method = methodSplit[0].Replace("::", "."),
+                    MethodParameters = parameters
+                });
+            }
+
+            return new EnhancedStacktraceFrame
+            {
+                Name = name,
+                ILOffset = ilOffset,
+                Methods = methodsBuilder.ToImmutable(),
             };
         }
     }
