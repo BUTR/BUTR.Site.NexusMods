@@ -17,6 +17,7 @@
     <PackageReference Include="BUTR.Authentication.NexusMods" Version="1.0.0.4" />
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="3.1.2" />
     <PackageReference Include="DynamicExpressions.NET" Version="1.1.0" />
+    <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.7" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
     <PackageReference Include="Npgsql" Version="6.0.6" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.6" />
