@@ -31,14 +31,14 @@ namespace BUTR.Site.NexusMods.Server.Utils
         private static CSharpDecompiler CreateDecompiler(PEFile module)
         {
             var resolver = new UniversalAssemblyResolver(module.Name, false, module.DetectTargetFrameworkId());
-            var decompiler = new CSharpDecompiler(module, resolver, new DecompilerSettings()) {CancellationToken = CancellationToken.None};
+            var decompiler = new CSharpDecompiler(module, resolver, new DecompilerSettings()) { CancellationToken = CancellationToken.None };
             return decompiler;
         }
 
         private static void WriteCode(TextWriter output, DecompilerSettings settings, SyntaxTree syntaxTree)
         {
-            syntaxTree.AcceptVisitor(new InsertParenthesesVisitor {InsertParenthesesForReadability = true});
-            TokenWriter tokenWriter = new TextWriterTokenWriter(output) {IndentationString = settings.CSharpFormattingOptions.IndentationString};
+            syntaxTree.AcceptVisitor(new InsertParenthesesVisitor { InsertParenthesesForReadability = true });
+            TokenWriter tokenWriter = new TextWriterTokenWriter(output) { IndentationString = settings.CSharpFormattingOptions.IndentationString };
             tokenWriter = TokenWriter.WrapInWriterThatSetsLocationsInAST(tokenWriter);
             syntaxTree.AcceptVisitor(new CSharpOutputVisitor(tokenWriter, settings.CSharpFormattingOptions));
         }
@@ -63,7 +63,7 @@ namespace BUTR.Site.NexusMods.Server.Utils
                     WriteCode(csharpOutput, new DecompilerSettings(), st);
                     var mapping = decompiler.CreateSequencePoints(st).FirstOrDefault(kvp => (kvp.Key.MoveNextMethod ?? kvp.Key.Method)?.MetadataToken == handle);
                     sequencePoints = mapping.Value ?? (IList<ICSharpCode.Decompiler.DebugInfo.SequencePoint>) EmptyList<ICSharpCode.Decompiler.DebugInfo.SequencePoint>.Instance;
-                    codeLines = csharpOutput.ToString().Split(new[] {Environment.NewLine}, StringSplitOptions.None);
+                    codeLines = csharpOutput.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
                     base.Disassemble(module, handle);
                 }
                 finally
