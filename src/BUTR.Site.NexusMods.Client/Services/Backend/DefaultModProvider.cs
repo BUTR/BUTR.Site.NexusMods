@@ -3,6 +3,7 @@ using BUTR.Site.NexusMods.ServerClient;
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,7 +47,7 @@ namespace BUTR.Site.NexusMods.Client.Services
                 var mods = await DemoUser.GetMods().ToListAsync(ct);
                 if (mods.Find(m => m.ModId == nexusModsId) is null)
                 {
-                    mods.Add(new($"Demo Mod {nexusModsId}", nexusModsId));
+                    mods.Add(new($"Demo Mod {nexusModsId}", nexusModsId, ImmutableArray<int>.Empty));
                     return true;
                 }
 

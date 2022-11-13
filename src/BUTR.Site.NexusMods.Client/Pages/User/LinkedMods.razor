@@ -47,6 +47,7 @@
                   Responsive>
             <DataGridColumns>
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name" Sortable="false"/>
+                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.AllowedUserIds)" Caption="Allowed User Ids" Sortable="false"/>
             </DataGridColumns>
             <ButtonRowTemplate>
                 <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(async () => await OnClick(_entry))">

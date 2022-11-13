@@ -3,6 +3,7 @@ using BUTR.Site.NexusMods.Shared.Helpers;
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -14,10 +15,10 @@ namespace BUTR.Site.NexusMods.Client.Models
         private static readonly ProfileModel _profile = new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true, ApplicationRoles.User);
         private static readonly List<ModModel> _mods = new()
         {
-            new("Demo Mod 1", 1),
-            new("Demo Mod 2", 2),
-            new("Demo Mod 3", 3),
-            new("Demo Mod 4", 4),
+            new("Demo Mod 1", 1, ImmutableArray<int>.Empty),
+            new("Demo Mod 2", 2, ImmutableArray<int>.Empty),
+            new("Demo Mod 3", 3, ImmutableArray<int>.Empty),
+            new("Demo Mod 4", 4, ImmutableArray<int>.Empty),
         };
         private static List<CrashReportModel>? _crashReports;
 
