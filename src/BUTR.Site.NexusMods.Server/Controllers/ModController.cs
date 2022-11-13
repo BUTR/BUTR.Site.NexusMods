@@ -63,15 +63,18 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             if (userId != modInfo.User.Id)
                 return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("User does not have access to the mod!"));
 
+            /*
             var allowedUserIds = await _dbContext.Set<NexusModsModEntity>()
+                .Where(x => x.NexusModsModId == modInfo.Id)
                 .SelectMany(x => _dbContext.Set<UserAllowedModsEntity>(), (x, y) => new {x, y})
                 .Join(_dbContext.Set<ModNexusModsManualLinkEntity>(), x => x.x.NexusModsModId, z => z.NexusModsId, (x, z) => new {x, z})
                 .Where(x => x.x.x.UserIds.Contains(userId))
                 .Where(x => x.x.y.AllowedModIds.Contains(x.z.ModId))
                 .Select(x => x.x.y.UserId)
                 .ToImmutableArrayAsync(ct);
+            */
 
-            return StatusCode(StatusCodes.Status200OK, new ModModel(modInfo.Name, modInfo.Id, allowedUserIds));
+            return StatusCode(StatusCodes.Status200OK, new ModModel(modInfo.Name, modInfo.Id, ImmutableArray<int>.Empty));
         }
 
         [HttpGet("Paginated")]
@@ -90,6 +93,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 .OrderBy(x => x.NexusModsModId);
             var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
 
+            /*
             var allowedUserIds = await _dbContext.Set<NexusModsModEntity>()
                 .SelectMany(x => _dbContext.Set<UserAllowedModsEntity>(), (x, y) => new {x, y})
                 .Join(_dbContext.Set<ModNexusModsManualLinkEntity>(), x => x.x.NexusModsModId, z => z.NexusModsId, (x, z) => new {x, z})
@@ -97,10 +101,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 .Where(x => x.x.y.AllowedModIds.Contains(x.z.ModId))
                 .Select(x => x.x.y.UserId)
                 .ToImmutableArrayAsync(ct);
+            */
 
             return StatusCode(StatusCodes.Status200OK, new PagingResponse<ModModel>
             {
-                Items = paginated.Items.Select(m => new ModModel(m.Name, m.NexusModsModId, allowedUserIds)).ToAsyncEnumerable(),
+                Items = paginated.Items.Select(m => new ModModel(m.Name, m.NexusModsModId, ImmutableArray<int>.Empty)).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
             });
         }
