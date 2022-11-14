@@ -23,11 +23,15 @@
                 <DataGridColumn TItem="ArticleModel" Field="@nameof(ArticleModel.Id)" Caption="Id" Sortable="false"/>
                 <DataGridColumn TItem="ArticleModel" Field="@nameof(ArticleModel.Title)" Caption="Title" Sortable="false"/>
                 <DataGridColumn TItem="ArticleModel" Field="@nameof(ArticleModel.AuthorName)" Caption="Author" Sortable="false"/>
-                <DataGridColumn TItem="ArticleModel" Field="@nameof(ArticleModel.CreateDate)" Caption="Date" Sortable="false"/>
+                <DataGridColumn TItem="ArticleModel" Field="@nameof(ArticleModel.CreateDate)" Caption="Date (UTC)"Sortable="false">
+                    <DisplayTemplate>
+                        @(context.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"))
+                    </DisplayTemplate>
+                </DataGridColumn>
             </DataGridColumns>
             <ButtonRowTemplate>
                 <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(async () => await OnClick(_entry))">
-                    Open Page
+                    Open Article
                 </Button>
             </ButtonRowTemplate>
         </DataGrid>
