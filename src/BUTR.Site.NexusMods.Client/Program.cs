@@ -98,6 +98,7 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddTransient<IUserClient, UserClient>(sp => ConfigureClient(sp, (http, opt) => new UserClient(http, opt)));
                 services.AddTransient<IGamePublicApiDiffClient, GamePublicApiDiffClient>(sp => ConfigureClient(sp, (http, opt) => new GamePublicApiDiffClient(http, opt)));
                 services.AddTransient<IGameSourceDiffClient, GameSourceDiffClient>(sp => ConfigureClient(sp, (http, opt) => new GameSourceDiffClient(http, opt)));
+                services.AddTransient<IArticlesClient, ArticlesClient>(sp => ConfigureClient(sp, (http, opt) => new ArticlesClient(http, opt)));
 
                 services.AddScoped<IAuthenticationProvider, DefaultAuthenticationProvider>();
                 services.AddScoped<IProfileProvider, DefaultProfileProvider>();

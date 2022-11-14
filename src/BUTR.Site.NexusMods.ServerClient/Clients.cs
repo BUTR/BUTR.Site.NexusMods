@@ -63,6 +63,14 @@ namespace BUTR.Site.NexusMods.ServerClient
         }
     }
 
+    public partial class ArticlesClient
+    {
+        public ArticlesClient(HttpClient client, JsonSerializerOptions options) : this(client)
+        {
+            _settings = new Lazy<JsonSerializerOptions>(options);
+        }
+    }
+
     public partial record CrashReportModel
     {
         [JsonIgnore]
@@ -82,5 +90,14 @@ namespace BUTR.Site.NexusMods.ServerClient
     {
         [JsonIgnore]
         public string? Url => UserId != -1 ? $"https://nexusmods.com/users/{UserId}" : null;
+    }
+
+    public partial record ArticleModel
+    {
+        [JsonIgnore]
+        public string Url => $"https://nexusmods.com/mountandblade2bannerlord/articles/{Id}";
+
+        [JsonIgnore]
+        public string AuthorUrl => $"https://nexusmods.com/users/{AuthorId}";
     }
 }

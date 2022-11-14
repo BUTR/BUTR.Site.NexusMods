@@ -32,11 +32,13 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             const string gameDomain = "mountandblade2bannerlord";
             const int notFoundArticlesTreshold = 20;
 
+            var ct = context.CancellationToken;
+
             var articleId = 0;
             var notFoundArticles = 0;
-            while (true)
+            while (!ct.IsCancellationRequested)
             {
-                var articleDocument = await _client.GetArticleAsync(gameDomain, articleId);
+                var articleDocument = await _client.GetArticleAsync(gameDomain, articleId, ct);
                 if (articleDocument is null) continue;
 
 
@@ -85,7 +87,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                         Title = title
                     }
                 };
-                await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsArticleEntity>(x => x.ArticleId == articleId, ApplyChanges, context.CancellationToken);
+                await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsArticleEntity>(x => x.ArticleId == articleId, ApplyChanges, ct);
             }
         }
     }

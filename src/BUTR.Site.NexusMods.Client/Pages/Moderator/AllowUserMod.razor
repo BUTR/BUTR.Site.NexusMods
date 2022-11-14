@@ -113,7 +113,7 @@
 
     private UserAllowedModsModel? _entry;
     private ICollection<UserAllowedModsModel> _entries = new List<UserAllowedModsModel>();
-    private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) { CurrentPage = 1 };
+    private PagingMetadata _pagingMetadata = new(1, 0, 10, 0);
     private string? _modIdToDelete;
 
     private Modal _modalRef = default!;

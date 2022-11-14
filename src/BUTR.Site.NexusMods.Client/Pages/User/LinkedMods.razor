@@ -86,15 +86,9 @@
 
     private ModModel? _entry;
     private ICollection<ModModel> _entries = new List<ModModel>();
-    private PagingMetadata _pagingMetadata = new(0, 0, 0, 0) { CurrentPage = 1 };
+    private PagingMetadata _pagingMetadata = new(1, 0, 10, 0);
 
     private DataGrid<ModModel?> _dataGridRef = default!;
-
-    private async Task OnClick(ModModel? mod)
-    {
-        if (mod is not null)
-            await _jsRuntime.InvokeVoidAsync("open", mod.Url, "_blank");
-    }
 
     private async void OnSubmit()
     {
@@ -139,6 +133,12 @@
             _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page };
             await GetMods(e.CancellationToken);
         }
+    }
+
+    private async Task OnClick(ModModel? mod)
+    {
+        if (mod is not null)
+            await _jsRuntime.InvokeVoidAsync("open", mod.Url, "_blank");
     }
 
     private async Task OnDelete(ButtonRowContext<ModModel?> context)

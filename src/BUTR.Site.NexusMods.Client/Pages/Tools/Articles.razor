@@ -1,0 +1,69 @@
+﻿@attribute [Authorize]
+@page "/articles"
+
+@inject IArticlesClient _articlesClient
+@inject IJSRuntime _jsRuntime;
+
+<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Linked Mods</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <DataGrid @ref="_dataGridRef"
+                  TItem="ArticleModel?"
+                  Data="@_entries"
+                  SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
+                  ReadData="@OnReadData"
+                  TotalItems="@_pagingMetadata.TotalCount"
+                  CurrentPage="@_pagingMetadata.CurrentPage"
+                  PageSize="@_pagingMetadata.PageSize"
+                  ShowPager
+                  Responsive>
+            <DataGridColumns>
+                <DataGridColumn TItem="ArticleModel" Field="@nameof(ArticleModel.Id)" Caption="Id" Sortable="false"/>
+                <DataGridColumn TItem="ArticleModel" Field="@nameof(ArticleModel.Title)" Caption="Title" Sortable="false"/>
+                <DataGridColumn TItem="ArticleModel" Field="@nameof(ArticleModel.AuthorName)" Caption="Author" Sortable="false"/>
+                <DataGridColumn TItem="ArticleModel" Field="@nameof(ArticleModel.CreateDate)" Caption="Date" Sortable="false"/>
+            </DataGridColumns>
+            <ButtonRowTemplate>
+                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(async () => await OnClick(_entry))">
+                    Open Page
+                </Button>
+            </ButtonRowTemplate>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@code {
+
+    private ArticleModel? _entry;
+    private ICollection<ArticleModel> _entries = new List<ArticleModel>();
+    private PagingMetadata _pagingMetadata = new(1, 0, 50, 0);
+
+    private DataGrid<ArticleModel?> _dataGridRef = default!;
+
+    private async Task GetArticles(CancellationToken ct = default)
+    {
+        if (await _articlesClient.PaginatedAsync(_pagingMetadata.CurrentPage, _pagingMetadata.PageSize, ct) is { } response)
+        {
+            _entries = response.Items;
+            _pagingMetadata = response.Metadata;
+        }
+    }
+
+    private async Task OnReadData(DataGridReadDataEventArgs<ArticleModel?> e)
+    {
+        if (!e.CancellationToken.IsCancellationRequested)
+        {
+            _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page };
+            await GetArticles(e.CancellationToken);
+        }
+    }
+
+    private async Task OnClick(ArticleModel? mod)
+    {
+        if (mod is not null)
+            await _jsRuntime.InvokeVoidAsync("open", mod.Url, "_blank");
+    }
+
+}
