@@ -28,13 +28,13 @@
             <DataGridPaging @ref="_dataGridRef" TItem="BaseLocalizationString" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
                 <DataGridColumns>
                     <DataGridCommandColumn TItem="BaseLocalizationString" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
-                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Assembly)" Caption="@nameof(BaseLocalizationString.Assembly)" Sortable="false"/>
-                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Text)" Caption="@nameof(BaseLocalizationString.Text)" Editable Sortable="false">
+                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Assembly)" Caption="@nameof(BaseLocalizationString.Assembly)"/>
+                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Text)" Caption="@nameof(BaseLocalizationString.Text)" Editable>
                         <EditTemplate>
                             <TextEdit Text="@((string) context.CellValue)" TextChanged="@(v => OnEdit(context, v))"/>
                         </EditTemplate>
                     </DataGridColumn>
-                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Location)" Caption="@nameof(BaseLocalizationString.Location)" Sortable="false"/>
+                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Location)" Caption="@nameof(BaseLocalizationString.Location)"/>
                 </DataGridColumns>
             </DataGridPaging>
             <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>

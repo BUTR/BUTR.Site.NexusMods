@@ -61,19 +61,19 @@
     <CardBody>
         <DataGridPaging @ref="_datagridPagingRef" TItem="CrashReportModel" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable>
             <DataGridColumns>
-                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="Game Version" SortField="@nameof(EntityFields.GameVersion)"/>
-                <DataGridColumnTextAutocomplete TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" SortField="@nameof(EntityFields.InvolvedModIds)" GetAutocompleteValues="GetAutocompleteValues">
+                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="Game Version" Sortable SortField="@nameof(EntityFields.GameVersion)"/>
+                <DataGridColumnTextAutocomplete TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Sortable SortField="@nameof(EntityFields.InvolvedModIds)" GetAutocompleteValues="GetAutocompleteValues">
                     <DisplayTemplate>@(context.InvolvedModules.FirstOrDefault())</DisplayTemplate>
                 </DataGridColumnTextAutocomplete>
-                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Exception" Filterable="false" Sortable="false"/>
-                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Version)" Caption="Version" SortField="@nameof(EntityFields.Version)"/>
-                <DataGridColumnDateTime TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" SortField="@nameof(EntityFields.CreatedAt)">
+                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Exception"/>
+                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Version)" Caption="Version" Sortable SortField="@nameof(EntityFields.Version)"/>
+                <DataGridColumnDateTime TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" Sortable SortField="@nameof(EntityFields.CreatedAt)">
                     <DisplayTemplate>@(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
                 </DataGridColumnDateTime>
-                <DataGridColumnEnum TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" SortField="@nameof(EntityFields.Status)" >
+                <DataGridColumnEnum TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" Sortable SortField="@nameof(EntityFields.Status)" >
                     <DisplayTemplate>@(context.Status.GetDisplayName())</DisplayTemplate>
                 </DataGridColumnEnum>
-                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Comment)" Caption="Comment" SortField="@nameof(EntityFields.Comment)"/>
+                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Comment)" Caption="Comment" Sortable SortField="@nameof(EntityFields.Comment)"/>
             </DataGridColumns>
 
             <ButtonRowTemplate>

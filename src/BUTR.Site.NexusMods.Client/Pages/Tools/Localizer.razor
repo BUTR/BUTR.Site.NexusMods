@@ -32,9 +32,9 @@
             <DataGridPaging @ref="_dataGridRef" TItem="StringEntry" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
                 <DataGridColumns>
                     <DataGridCommandColumn TItem="StringEntry" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
-                    <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Id)" Caption="@nameof(StringEntry.Id)" Sortable="false"/>
-                    <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Original)" Caption="@nameof(StringEntry.Original)" Sortable="false"/>
-                    <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Translation)" Caption="@nameof(StringEntry.Translation)" Sortable="false" Editable>
+                    <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Id)" Caption="@nameof(StringEntry.Id)"/>
+                    <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Original)" Caption="@nameof(StringEntry.Original)"/>
+                    <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Translation)" Caption="@nameof(StringEntry.Translation)" Editable>
                         <EditTemplate>
                             <TextEdit Text="@((string) context.CellValue)" TextChanged="@(v => context.CellValue = v)"/>
                         </EditTemplate>

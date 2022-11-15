@@ -72,8 +72,8 @@
     <CardBody>
         <DataGridPaging @ref="_dataGridRef" TItem="UserAllowedModsModel" GetItems="GetAllowUserMods">
             <DataGridColumns>
-                <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.UserId)" Caption="User Id" Sortable="false" />
-                <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.AllowedModIds)" Caption="Allowed Mod Ids" Sortable="false" >
+                <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.UserId)" Caption="User Id"/>
+                <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.AllowedModIds)" Caption="Allowed Mod Ids">
                     <DisplayTemplate>@(string.Join(", ", context.AllowedModIds))</DisplayTemplate>
                 </DataGridColumnText>
             </DataGridColumns>

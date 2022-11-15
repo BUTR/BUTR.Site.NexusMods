@@ -43,8 +43,8 @@
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef" TItem="ModNexusModsManualLinkModel" GetItems="GetManualLinks">
             <DataGridColumns>
-                <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.ModId)" Caption="Mod Id" Sortable="false"/>
-                <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.NexusModsId)" Caption="NexusMods Id" Sortable="false"/>
+                <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.ModId)" Caption="Mod Id"/>
+                <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.NexusModsId)" Caption="NexusMods Id"/>
             </DataGridColumns>
             <ButtonRowTemplate>
                 <Button Color="Color.Primary" Disabled="@(_dataGridRef.Value is null)" Clicked="@(async () => await OnDisallow(context))">Unlink</Button>

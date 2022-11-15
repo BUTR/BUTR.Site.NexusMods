@@ -33,8 +33,8 @@
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef" TItem="ModModel" GetItems="GetMods">
             <DataGridColumns>
-                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name" Sortable="false"/>
-                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.AllowedUserIds)" Caption="Allowed User Ids" Sortable="false">
+                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name"/>
+                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.AllowedUserIds)" Caption="Allowed User Ids">
                     <DisplayTemplate>@(string.Join(", ", context.AllowedUserIds))</DisplayTemplate>
                 </DataGridColumn>
             </DataGridColumns>
