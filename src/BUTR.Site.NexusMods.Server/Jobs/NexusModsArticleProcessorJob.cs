@@ -88,6 +88,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                     }
                 };
                 await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsArticleEntity>(x => x.ArticleId == articleId, ApplyChanges, ct);
+                articleId++;
             }
         }
     }
