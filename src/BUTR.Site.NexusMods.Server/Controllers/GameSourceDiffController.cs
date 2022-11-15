@@ -17,7 +17,6 @@ namespace BUTR.Site.NexusMods.Server.Controllers
     public sealed class GameSourceDiffController : ControllerBase
     {
         private const string basePath = "/public-api-diff";
-        //private const string basePath = "D:\\Git\\BUTR.Site.NexusMods\\diff\\";
 
         private readonly ILogger _logger;
         private readonly DiffProvider _diffProvider;
