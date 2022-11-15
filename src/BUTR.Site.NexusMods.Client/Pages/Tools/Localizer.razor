@@ -29,16 +29,7 @@
             </Field>
         </Fields>
         <Field>
-            <DataGrid @ref="_dataGridRef"
-                      TItem="StringEntry?"
-                      Data="@_entries"
-                      SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
-                      SelectionMode="DataGridSelectionMode.Single"
-                      Editable
-                      EditMode="DataGridEditMode.Inline"
-                      Resizable
-                      ResizeMode="TableResizeMode.Header"
-                      Responsive>
+            <DataGridPaging @ref="_dataGridRef" TItem="StringEntry" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
                 <DataGridColumns>
                     <DataGridCommandColumn TItem="StringEntry" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
                     <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Id)" Caption="@nameof(StringEntry.Id)" Sortable="false"/>
@@ -49,13 +40,9 @@
                         </EditTemplate>
                     </DataGridColumn>
                 </DataGridColumns>
-            </DataGrid>
-            <Button Color="Color.Primary" Disabled="@(_entries.Count <= 0)" Clicked="@(OnClear)">
-                Clear
-            </Button>
-            <Button Color="Color.Primary" Disabled="@(_entries.Count <= 0)" Clicked="@(OnExport)">
-                Export as XML
-            </Button>
+            </DataGridPaging>
+            <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
+            <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnExport)">Export as XML</Button>
         </Field>
     </CardBody>
 </Card>
@@ -83,10 +70,8 @@
     private record StringEntry(string Id, string Original, string Translation);
 
     private string _language = string.Empty;
-    private StringEntry? _entry;
-    private readonly List<StringEntry> _entries = new();
 
-    private DataGrid<StringEntry?> _dataGridRef = default!;
+    private DataGridPaging<StringEntry?> _dataGridRef = default!;
 
     private async Task OnFileSelected(FileChangedEventArgs e)
     {
@@ -101,7 +86,7 @@
 
     private Task OnClear()
     {
-        _entries.Clear();
+        _dataGridRef.Values.Clear();
         return Task.CompletedTask;
     }
 
@@ -130,7 +115,7 @@
         var stringsElement = doc.CreateElement(string.Empty, "strings", string.Empty);
         baseElement.AppendChild(stringsElement);
 
-        foreach (var entry in _entries)
+        foreach (var entry in _dataGridRef.Values)
         {
             var stringElement = doc.CreateElement(string.Empty, "string", string.Empty);
             stringElement.SetAttribute("id", entry.Id);
@@ -166,7 +151,7 @@
 
             var blob = metadata.GetBlobReader(constant.Value);
             if (blob.ReadConstant(constant.TypeCode) is string text && !string.IsNullOrEmpty(text) && LocalizationUtils.TryParseTranslationString(text, out var id, out var content))
-                _entries.Add(new(id, content, "-"));
+                _dataGridRef.Values.Add(new(id, content, "-"));
         }
 
         foreach (var methodDefinitionHandle in metadata.MethodDefinitions)
@@ -197,7 +182,7 @@
                 }
                 if (!string.IsNullOrEmpty(text) && LocalizationUtils.TryParseTranslationString(text, out var id, out var content))
                 {
-                    _entries.Add(new(id, content, "-"));
+                    _dataGridRef.Values.Add(new(id, content, "-"));
                 }
                 break;
             }

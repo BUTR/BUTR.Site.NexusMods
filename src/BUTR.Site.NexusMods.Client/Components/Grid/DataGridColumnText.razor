@@ -1,0 +1,32 @@
+﻿@typeparam TItem
+
+<DataGridColumn TItem="TItem" Field="@Field" Caption="@Caption" Filterable="@Filterable" SortField="@SortField" Sortable="@Sortable" DisplayTemplate="@DisplayTemplate" @attributes="@AdditionalAttributes">
+    <FilterTemplate>
+        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
+    </FilterTemplate>
+</DataGridColumn>
+
+@code {
+
+    [Parameter]
+    public string Field { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Caption { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Filterable { get; set; } = false;
+
+    [Parameter]
+    public string SortField { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Sortable { get; set; } = false;
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> AdditionalAttributes { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem> DisplayTemplate { get; set; }
+
+}

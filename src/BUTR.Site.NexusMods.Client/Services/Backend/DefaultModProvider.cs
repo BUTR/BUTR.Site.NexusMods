@@ -21,18 +21,18 @@ namespace BUTR.Site.NexusMods.Client.Services
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
         }
 
-        public async Task<ModModelPagingResponse?> GetMods(int page, CancellationToken ct = default)
+        public async Task<ModModelPagingResponse?> GetMods(int page, int pageSize, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
                 var mods = await DemoUser.GetMods().ToListAsync(ct);
-                return new ModModelPagingResponse(mods, new PagingMetadata(1, (int) Math.Ceiling((double) mods.Count / 10d), 10, mods.Count));
+                return new ModModelPagingResponse(mods, new PagingMetadata(1, (int) Math.Ceiling((double) mods.Count / (double) pageSize), pageSize, mods.Count));
             }
 
             try
             {
-                return await _modClient.PaginatedAsync(page, 10, ct);
+                return await _modClient.PaginatedAsync(page, pageSize, ct);
             }
             catch (Exception)
             {
@@ -88,19 +88,19 @@ namespace BUTR.Site.NexusMods.Client.Services
         }
 
         /// <inheritdoc />
-        public async Task<ModNexusModsManualLinkModelPagingResponse?> GetManualLinks(int page, CancellationToken ct = default)
+        public async Task<ModNexusModsManualLinkModelPagingResponse?> GetManualLinks(int page, int pageSize, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
-                return new ModNexusModsManualLinkModelPagingResponse(new List<ModNexusModsManualLinkModel>(), new PagingMetadata(1, 1, 10, 1));
+                return new ModNexusModsManualLinkModelPagingResponse(new List<ModNexusModsManualLinkModel>(), new PagingMetadata(1, 1, pageSize, 1));
 
             try
             {
-                return await _modClient.ManuallinkpaginatedAsync(page, 10, ct);
+                return await _modClient.ManuallinkpaginatedAsync(page, pageSize, ct);
             }
             catch (Exception)
             {
-                return new ModNexusModsManualLinkModelPagingResponse(new List<ModNexusModsManualLinkModel>(), new PagingMetadata(1, 1, 10, 1));
+                return new ModNexusModsManualLinkModelPagingResponse(new List<ModNexusModsManualLinkModel>(), new PagingMetadata(1, 1, pageSize, 1));
             }
         }
         public async Task<bool> ManualLink(string modId, int nexusModsId, CancellationToken ct = default)
@@ -137,19 +137,19 @@ namespace BUTR.Site.NexusMods.Client.Services
         }
 
         /// <inheritdoc />
-        public async Task<UserAllowedModsModelPagingResponse?> GetAllowUserMods(int page, CancellationToken ct = default)
+        public async Task<UserAllowedModsModelPagingResponse?> GetAllowUserMods(int page, int pageSize, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
-                return new UserAllowedModsModelPagingResponse(new List<UserAllowedModsModel>(), new PagingMetadata(1, 1, 10, 1));
+                return new UserAllowedModsModelPagingResponse(new List<UserAllowedModsModel>(), new PagingMetadata(1, 1, pageSize, 1));
 
             try
             {
-                return await _modClient.AllowmodpaginatedAsync(page, 10, ct);
+                return await _modClient.AllowmodpaginatedAsync(page, pageSize, ct);
             }
             catch (Exception)
             {
-                return new UserAllowedModsModelPagingResponse(new List<UserAllowedModsModel>(), new PagingMetadata(1, 1, 10, 1));
+                return new UserAllowedModsModelPagingResponse(new List<UserAllowedModsModel>(), new PagingMetadata(1, 1, pageSize, 1));
             }
         }
         public async Task<bool> AllowUserMod(int userId, string modId, CancellationToken ct = default)

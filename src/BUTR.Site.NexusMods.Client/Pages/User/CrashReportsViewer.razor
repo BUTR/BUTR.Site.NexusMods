@@ -12,13 +12,13 @@
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            @if (_datagridValue is not null)
+            @if (_datagridPagingRef.Value is not null)
             {
                 <Form>
                     <Field>
                         <Text Style="white-space:break-spaces; word-break:break-all;" >
                             <Small>
-                                @(_datagridValue.Exception
+                                @(_datagridPagingRef.Value.Exception
                                 .Replace("\n\n", "\n")
                                 .Replace("\r\r", "\r")
                                 .Replace("\r\n\r\n", "\r\n")
@@ -30,7 +30,7 @@
                     <Field>
                         <FieldLabel>Status</FieldLabel>
                         <FieldBody>
-                           <Select TValue="CrashReportStatus" @bind-SelectedValue="@_datagridValue.Status">
+                           <Select TValue="CrashReportStatus" @bind-SelectedValue="@_datagridPagingRef.Value.Status">
                                 @foreach (var crs in Enum.GetValues<CrashReportStatus>())
                                 {
                                     <SelectItem Value="@crs">@crs.GetDisplayName()</SelectItem>
@@ -41,7 +41,7 @@
                     <Field>
                         <FieldLabel>Comment</FieldLabel>
                         <FieldBody Width="Width.Is25">
-                            <MemoEdit AutoSize @bind-Text="@_datagridValue.Comment" />
+                            <MemoEdit AutoSize @bind-Text="@_datagridPagingRef.Value.Comment" />
                         </FieldBody>
                     </Field>
                 </Form> 
@@ -59,171 +59,46 @@
         <CardTitle Size="4" Margin="Margin.Is0">Crash Reports</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGrid @ref="_datagridRef"
-                  TItem="CrashReportModel?"
-                  Data="@_datagridValues"
-                  SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _datagridValue, ref _datagridRef))"
-                  ReadData="@OnReadData"
-                  TotalItems="@_datagridPaging.TotalCount"
-                  CurrentPage="@_datagridPaging.CurrentPage"
-                  PageSize="@_datagridPaging.PageSize"
-                  SelectionMode="DataGridSelectionMode.Single"
-                  ShowPager
-                  ShowPageSizes
-                  PageSizes="@(new [] { 5, 10, 25, 50 })"
-                  Filterable
-                  CustomFilter="@OnCustomFilter"
-                  Sortable 
-                  Responsive>
+        <DataGridPaging @ref="_datagridPagingRef" TItem="CrashReportModel" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable>
             <DataGridColumns>
-                <DataGridColumn TItem="CrashReportModel"
-                                Field="@nameof(CrashReportModel.GameVersion)"
-                                Caption="Game Version"
-                                SortField="@nameof(EntityFields.GameVersion)">
-                    <DisplayTemplate>
-                        @(context.GameVersion)
-                    </DisplayTemplate>
-                    <FilterTemplate>
-                        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
-                    </FilterTemplate>
-                </DataGridColumn>
-                
-                <DataGridColumn TItem="CrashReportModel"
-                                Field="@nameof(CrashReportModel.InvolvedModules)"
-                                Caption="Top Involved Module"
-                                SortField="@nameof(EntityFields.InvolvedModIds)">
-                    <DisplayTemplate>
-                        @(context.InvolvedModules.FirstOrDefault())
-                    </DisplayTemplate>
-                    <FilterTemplate>
-                        <Autocomplete TItem="string"
-                                      TValue="string"
-                                      Data="@_autocompleteValues"
-                                      TextField="@(x => x)"
-                                      ValueField="@(x => x)"
-                                      SelectedText="@_autocompleteText"
-                                      SelectedValue="@_autocompleteValue"
-                                      Debounce="true"
-                                      DebounceInterval="500"
-                                      SelectedValueChanged="@(x => { _autocompleteValue = x; _autocompleteText = x; context.TriggerFilterChange(x); })"
-                                      SearchChanged="@SearchFilterChangedAsync">
-                        </Autocomplete>
-                    </FilterTemplate>
-                </DataGridColumn>
-                
-                <DataGridColumn TItem="CrashReportModel"
-                                Field="@nameof(CrashReportModel.Type)"
-                                Caption="Exception"
-                                Filterable="false"
-                                Sortable="false">
-                    <DisplayTemplate>
-                        @(context.Type)
-                    </DisplayTemplate>
-                    <FilterTemplate>
-                        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
-                    </FilterTemplate>
-                </DataGridColumn>
-
-                <DataGridColumn TItem="CrashReportModel"
-                                Field="@nameof(CrashReportModel.Version)"
-                                Caption="Version">
-                    <DisplayTemplate>
-                        @(context.Version)
-                    </DisplayTemplate>
-                    <FilterTemplate>
-                        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
-                    </FilterTemplate>
-                </DataGridColumn>
-                
-                <DataGridColumn TItem="CrashReportModel"
-                                Field="@nameof(CrashReportModel.Date)"
-                                Caption="Date (UTC)"
-                                SortField="@nameof(EntityFields.CreatedAt)" >
-                    <DisplayTemplate>
-                        @(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))
-                    </DisplayTemplate>
-                    <FilterTemplate>
-                        <DatePicker TValue="DateTime?"
-                                    Placeholder="yyyy-MM-dd"
-                                    InputMode="DateInputMode.Date"
-                                    SelectionMode="DateInputSelectionMode.Range"
-                                    DatesChanged="@(range => OnDatesChanged(range, context))"/>
-                    </FilterTemplate>
-                </DataGridColumn>
-                
-                <DataGridColumn TItem="CrashReportModel"
-                                Field="@nameof(CrashReportModel.Status)"
-                                Caption="Status"
-                                SortField="@nameof(EntityFields.Status)" >
-                    <DisplayTemplate>
-                        @(context.Status.GetDisplayName())
-                    </DisplayTemplate>
-                    <FilterTemplate>
-                        <Select TValue="string" SelectedValueChanged="@(value => { OnStatusChanged(value, context); })">
-                            <SelectItem Value="@string.Empty">Any</SelectItem>
-                            @foreach (var crs in Enum.GetValues<CrashReportStatus>())
-                            {
-                                <SelectItem Value="@crs">@crs.GetDisplayName()</SelectItem>
-                            }
-                        </Select>
-                    </FilterTemplate>
-                </DataGridColumn>
-                
-                <DataGridColumn TItem="CrashReportModel"
-                                Field="@nameof(CrashReportModel.Comment)"
-                                Caption="Comment"
-                                SortField="@nameof(EntityFields.Comment)">
-                    <DisplayTemplate>
-                        @(context.Comment)
-                    </DisplayTemplate>
-                    <FilterTemplate>
-                        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500"  />
-                    </FilterTemplate>
-                </DataGridColumn>
+                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="Game Version" SortField="@nameof(EntityFields.GameVersion)"/>
+                <DataGridColumnTextAutocomplete TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" SortField="@nameof(EntityFields.InvolvedModIds)" GetAutocompleteValues="GetAutocompleteValues">
+                    <DisplayTemplate>@(context.InvolvedModules.FirstOrDefault())</DisplayTemplate>
+                </DataGridColumnTextAutocomplete>
+                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Exception" Filterable="false" Sortable="false"/>
+                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Version)" Caption="Version" SortField="@nameof(EntityFields.Version)"/>
+                <DataGridColumnDateTime TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" SortField="@nameof(EntityFields.CreatedAt)">
+                    <DisplayTemplate>@(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
+                </DataGridColumnDateTime>
+                <DataGridColumnEnum TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" SortField="@nameof(EntityFields.Status)" >
+                    <DisplayTemplate>@(context.Status.GetDisplayName())</DisplayTemplate>
+                </DataGridColumnEnum>
+                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Comment)" Caption="Comment" SortField="@nameof(EntityFields.Comment)"/>
             </DataGridColumns>
-            
-            <EmptyTemplate>
-                No result!
-            </EmptyTemplate>
-            
-            <LoadingTemplate>
-                <Progress @ref="_progressRef" Color="Color.Primary" Value="@_progressValue" Max="100"></Progress>
-            </LoadingTemplate>
-            
+
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_datagridValue is null)" Clicked="@ShowModal">Check</Button>
-                <Button Color="Color.Primary" Disabled="@(_datagridValue is null)" Clicked="@(() => OnClick(_datagridValue!))">Open HTML</Button>
+                <Button Color="Color.Primary" Disabled="@(_datagridPagingRef.Value is null)" Clicked="@ShowModal">Check</Button>
+                <Button Color="Color.Primary" Disabled="@(_datagridPagingRef.Value is null)" Clicked="@(() => OnClick(_datagridPagingRef.Value))">Open HTML</Button>
             </ButtonRowTemplate>
-        </DataGrid>
+        </DataGridPaging>
     </CardBody>
 </Card>
 
 @code {
 
-    private enum EntityFields { GameVersion, InvolvedModIds, CreatedAt, Status, Comment }
-
-    private CrashReportModel? _datagridValue;
-    private ICollection<CrashReportModel> _datagridValues = default!;
-    private PagingMetadata _datagridPaging = new(1, 0, 10, 0);
-
-    private int _progressValue = default!;
-    
-    private string _autocompleteText = default!;
-    private string _autocompleteValue = default!;
-    private ICollection<string> _autocompleteValues = default!;
+    private enum EntityFields { GameVersion, Version, InvolvedModIds, CreatedAt, Status, Comment }
 
     private Modal _modalRef = default!;
-    private DataGrid<CrashReportModel?> _datagridRef = default!;
-    private Progress _progressRef = default!;
+    private DataGridPaging<CrashReportModel> _datagridPagingRef = default!;
 
     private async Task ShowModal() => await _modalRef.Show();
 
     private async Task HideModal(bool save)
     {
         await _modalRef.Hide();
-        if (save && _datagridValue is not null)
+        if (save && _datagridPagingRef.Value is not null)
         {
-            var updatedCrashReport = _datagridValue with { };
+            var updatedCrashReport = _datagridPagingRef.Value with { };
             if (await _crashReportProvider.UpdateCrashReport(updatedCrashReport))
             {
                 await _notificationService.Success($"Saved Crash Report!", "Success!");
@@ -240,47 +115,30 @@
         await _jsRuntime.InvokeVoidAsync("open", report.Url, "_blank");
     }
 
-    private async Task GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
+    private async Task<DataGridPaging<CrashReportModel>.ItemsResponse> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
-        await using var progress = ProgressUtils.DoProgress(x => _progressValue = x, () => _progressValue, () => InvokeAsync(StateHasChanged));
         var response = await _crashReportProvider.GetCrashReports(page, pageSize, filterings, sortings, ct);
-        if (response is not null)
-        {
-            _datagridValues = response.Items;
-            _datagridPaging = response.Metadata;
-        }
+        return response is not null ? new(response.Items, response.Metadata) : null;
     }
 
-    private async Task OnReadData(DataGridReadDataEventArgs<CrashReportModel?> e)
-    {
-        if (!e.CancellationToken.IsCancellationRequested)
-        {
-            var sortings = e.Columns
-                .Where(x => x.SortIndex != -1)
-                .OrderBy(x => x.SortIndex)
-                .Select(x => new Sorting(x.SortField, x.SortDirection.ToSortingType()))
-                .ToArray();
-            var filterings = GetFilters(e.Columns).ToArray();
-            await GetCrashReports(e.Page, e.PageSize, filterings, sortings);
-        }
-    }
+    private Task<ICollection<string>> GetAutocompleteValues(string filter) => _crashReportProvider.AutocompleteModId(filter);
 
-    private IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
+    private static IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
     {
         foreach (var columnInfo in columnInfos)
         {
-            if (columnInfo.SortField is "CreatedAt" && columnInfo.SearchValue is string[] dates)
+            if (columnInfo.SortField is nameof(EntityFields.CreatedAt) && columnInfo.SearchValue is string[] dates)
             {
                 yield return new Filtering(columnInfo.SortField, FilteringType.GreaterThanOrEqual, dates[0]);
                 yield return new Filtering(columnInfo.SortField, FilteringType.LessThanOrEqual, dates[1]);
             }
             else if (columnInfo.SearchValue is string str)
             {
-                if (columnInfo.SortField is "Status" && !string.IsNullOrEmpty(str))
+                if (columnInfo.SortField is nameof(EntityFields.Status) && !string.IsNullOrEmpty(str))
                 {
                     yield return new Filtering(columnInfo.SortField, FilteringType.Equal, str);
                 }
-                else if (columnInfo.SortField is "Version" && !string.IsNullOrEmpty(str))
+                else if (columnInfo.SortField is nameof(EntityFields.Version) && !string.IsNullOrEmpty(str))
                 {
                     if (str.StartsWith(">="))
                         yield return new Filtering(columnInfo.SortField, FilteringType.GreaterThanOrEqual, str.Substring(2));
@@ -295,7 +153,7 @@
                 }
                 else if (str.Length >= 3)
                 {
-                    if (columnInfo.SortField is "InvolvedModIds")
+                    if (columnInfo.SortField is nameof(EntityFields.InvolvedModIds))
                     {
                         yield return new Filtering(columnInfo.SortField, FilteringType.Contains, str);
                     }
@@ -307,40 +165,5 @@
             }
         }
     }
-    
-    private async Task SearchFilterChangedAsync(string? filter)
-    {
-        _autocompleteText = filter ?? string.Empty;
-        if (filter is not null && filter.Length >= 3)
-            _autocompleteValues = await _crashReportProvider.AutocompleteModId(filter);
-    }
 
-    private static void OnDatesChanged(IReadOnlyList<DateTime?>? range, FilterContext<CrashReportModel> context)
-    {
-        if (range is null)
-        {
-            context.TriggerFilterChange(string.Empty);
-            return;
-        }
-        
-        var dates = range.Where(x => x is not null).Select(x => x.GetValueOrDefault()).ToArray();
-
-        if (dates.Length == 1)
-        {
-            var min = dates[0].Date;
-            var max = dates[0].Date.AddDays(1).AddTicks(-1);
-            context.TriggerFilterChange(new[] {min, max}.Select(x => x.ToString("O")).ToArray());
-        }
-        else
-        {
-            context.TriggerFilterChange(dates.Select(x => x.ToString("O")).ToArray());
-        }
-    }
-    
-    private static void OnStatusChanged(string status, FilterContext<CrashReportModel> context)
-    {
-        context.TriggerFilterChange(status);  
-    }
-    
-    private static bool OnCustomFilter(CrashReportModel model) => true;
 }

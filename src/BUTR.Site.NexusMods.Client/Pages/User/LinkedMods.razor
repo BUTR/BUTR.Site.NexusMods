@@ -18,12 +18,8 @@
             </Field>
             <Field>
                 <Button Color="Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSubmit" PreventDefaultOnSubmit>
-                     <LoadingTemplate>
-                        Linking...
-                    </LoadingTemplate>
-                    <ChildContent>
-                        Link
-                    </ChildContent>
+                    <LoadingTemplate>Linking...</LoadingTemplate>
+                    <ChildContent>Link</ChildContent>
                 </Button>
             </Field>
         </Form>
@@ -35,41 +31,22 @@
         <CardTitle Size="4" Margin="Margin.Is0">Linked Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGrid @ref="_dataGridRef"
-                  TItem="ModModel?"
-                  Data="@_entries"
-                  SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
-                  ReadData="@OnReadData"
-                  TotalItems="@_pagingMetadata.TotalCount"
-                  CurrentPage="@_pagingMetadata.CurrentPage"
-                  PageSize="@_pagingMetadata.PageSize"
-                  ShowPager
-                  Responsive>
+        <DataGridPaging @ref="@_dataGridRef" TItem="ModModel" GetItems="GetMods">
             <DataGridColumns>
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name" Sortable="false"/>
-                <DataGridColumn TItem="ModModel"
-                                Field="@nameof(ModModel.AllowedUserIds)"
-                                Caption="Allowed User Ids"
-                                Sortable="false">
-                    <DisplayTemplate>
-                        @(string.Join(", ", context.AllowedUserIds))
-                    </DisplayTemplate>
+                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.AllowedUserIds)" Caption="Allowed User Ids" Sortable="false">
+                    <DisplayTemplate>@(string.Join(", ", context.AllowedUserIds))</DisplayTemplate>
                 </DataGridColumn>
             </DataGridColumns>
+
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(async () => await OnClick(_entry))">
-                    Open Page
-                </Button>
-                <Button Color="Color.Danger" Disabled="@(_entry is null)" Clicked="@(async () => await OnDelete(context))">
-                    <LoadingTemplate>
-                        Unlinking...
-                    </LoadingTemplate>
-                    <ChildContent>
-                        Unlink
-                    </ChildContent>
+                <Button Color="Color.Primary" Disabled="@(_dataGridRef.Value is null)" Clicked="@(async () => await OnClick(_dataGridRef.Value))">Open Page</Button>
+                <Button Color="Color.Danger" Disabled="@(_dataGridRef.Value is null)" Clicked="@(async () => await OnDelete(context))">
+                    <LoadingTemplate>Unlinking...</LoadingTemplate>
+                    <ChildContent>Unlink</ChildContent>
                 </Button>
             </ButtonRowTemplate>
-        </DataGrid>
+        </DataGridPaging>
     </CardBody>
 </Card>
 
@@ -84,20 +61,16 @@
 
     private LinkModModel _model = new();
 
-    private ModModel? _entry;
-    private ICollection<ModModel> _entries = new List<ModModel>();
-    private PagingMetadata _pagingMetadata = new(1, 0, 10, 0);
+    private DataGridPaging<ModModel?> _dataGridRef = default!;
 
-    private DataGrid<ModModel?> _dataGridRef = default!;
-
-    private async void OnSubmit()
+    private async Task OnSubmit()
     {
         _isLoading = true;
 
         if (await DoLinkMod(_model))
         {
             _model = new LinkModModel();
-            await GetMods();
+            await _dataGridRef.Reload();
         }
 
         _isLoading = false;
@@ -117,23 +90,8 @@
         return await _modProvider.UnlinkMod(model.ModId);
     }
 
-    private async Task GetMods(CancellationToken ct = default)
-    {
-        if (await _modProvider.GetMods(_pagingMetadata.CurrentPage, ct) is { } response)
-        {
-            _entries = response.Items;
-            _pagingMetadata = response.Metadata;
-        }
-    }
-
-    private async Task OnReadData(DataGridReadDataEventArgs<ModModel?> e)
-    {
-        if (!e.CancellationToken.IsCancellationRequested)
-        {
-            _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page };
-            await GetMods(e.CancellationToken);
-        }
-    }
+    private async Task<DataGridPaging<ModModel>.ItemsResponse> GetMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
+        await _modProvider.GetMods(page, pageSize, ct) is { } response ? new(response.Items, response.Metadata) : null;
 
     private async Task OnClick(ModModel? mod)
     {

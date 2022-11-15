@@ -1,0 +1,43 @@
+﻿@typeparam TItem
+
+<DataGridColumn TItem="TItem" Field="@Field" Caption="@Caption" Filterable="@Filterable" SortField="@SortField" Sortable="@Sortable" DisplayTemplate="@DisplayTemplate" @attributes="@AdditionalAttributes">
+    <FilterTemplate>
+        <Select TValue="string" SelectedValueChanged="@(value => { OnStatusChanged(value, context); })">
+            <SelectItem Value="@string.Empty">Any</SelectItem>
+            @foreach (var crs in Enum.GetValues<CrashReportStatus>())
+            {
+                <SelectItem Value="@crs">@crs.GetDisplayName()</SelectItem>
+            }
+        </Select>
+    </FilterTemplate>
+</DataGridColumn>
+
+@code {
+
+    [Parameter]
+    public string Field { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Caption { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Filterable { get; set; } = false;
+
+    [Parameter]
+    public string SortField { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Sortable { get; set; } = false;
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> AdditionalAttributes { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem> DisplayTemplate { get; set; }
+
+    private static void OnStatusChanged(string status, FilterContext<TItem> context)
+    {
+        context.TriggerFilterChange(status);
+    }
+
+}

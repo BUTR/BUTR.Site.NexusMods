@@ -41,26 +41,15 @@
         <CardTitle Size="4" Margin="Margin.Is0">Manual Mod Links</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGrid @ref="_dataGridRef"
-                  TItem="ModNexusModsManualLinkModel?"
-                  Data="@_entries"
-                  SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref _entry, ref _dataGridRef))"
-                  ReadData="@OnReadData"
-                  TotalItems="@_pagingMetadata.TotalCount"
-                  CurrentPage="@_pagingMetadata.CurrentPage"
-                  PageSize="@_pagingMetadata.PageSize"
-                  ShowPager
-                  Responsive>
+        <DataGridPaging @ref="@_dataGridRef" TItem="ModNexusModsManualLinkModel" GetItems="GetManualLinks">
             <DataGridColumns>
                 <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.ModId)" Caption="Mod Id" Sortable="false"/>
                 <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.NexusModsId)" Caption="NexusMods Id" Sortable="false"/>
             </DataGridColumns>
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_entry is null)" Clicked="@(async () => await OnDisallow(context))">
-                    Unlink
-                </Button>
+                <Button Color="Color.Primary" Disabled="@(_dataGridRef.Value is null)" Clicked="@(async () => await OnDisallow(context))">Unlink</Button>
             </ButtonRowTemplate>
-        </DataGrid>
+        </DataGridPaging>
     </CardBody>
 </Card>
 
@@ -76,11 +65,7 @@
 
     private readonly ManualLinkModel _model = new() { ModId = string.Empty, NexusModsUrl = string.Empty };
 
-    private ModNexusModsManualLinkModel? _entry;
-    private ICollection<ModNexusModsManualLinkModel> _entries = new List<ModNexusModsManualLinkModel>();
-    private PagingMetadata _pagingMetadata = new(1, 0, 0, 0);
-
-    private DataGrid<ModNexusModsManualLinkModel?> _dataGridRef = default!;
+    private DataGridPaging<ModNexusModsManualLinkModel> _dataGridRef = default!;
     
     private async Task OnSubmit()
     {
@@ -93,7 +78,7 @@
                 await _notificationService.Success(
                     $"Linked '{_model.ModId}' to mod '{_model.NexusModsUrl}'!",
                     "Success!");
-                await GetManualLinks();
+                await _dataGridRef.Reload();
             }
             else
             {
@@ -113,23 +98,8 @@
         StateHasChanged();
     }
 
-    private async Task GetManualLinks(CancellationToken ct = default)
-    {
-        if (await _modProvider.GetManualLinks(_pagingMetadata.CurrentPage, ct) is { } response)
-        {
-            _entries = response.Items;
-            _pagingMetadata = response.Metadata;
-        }
-    }
-
-    private async Task OnReadData(DataGridReadDataEventArgs<ModNexusModsManualLinkModel?> e)
-    {
-        if (!e.CancellationToken.IsCancellationRequested)
-        {
-            _pagingMetadata = _pagingMetadata with { CurrentPage = e.Page };
-            await GetManualLinks(e.CancellationToken);
-        }
-    }
+    private async Task<DataGridPaging<ModNexusModsManualLinkModel?>.ItemsResponse> GetManualLinks(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
+        await _modProvider.GetManualLinks(page, pageSize, ct) is { } response ? new(response.Items, response.Metadata) : null;
 
     private async Task OnDisallow(ButtonRowContext<ModNexusModsManualLinkModel?> context)
     {
