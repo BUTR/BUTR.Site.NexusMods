@@ -2,7 +2,7 @@
 
 <DataGridColumn TItem="TItem" Field="@Field" Caption="@Caption" Filterable="@Filterable" SortField="@SortField" Sortable="@Sortable" DisplayTemplate="@DisplayTemplate" @attributes="@AdditionalAttributes">
     <FilterTemplate>
-        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
+        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Placeholder="@Placeholder" Debounce="true" DebounceInterval="500" />
     </FilterTemplate>
 </DataGridColumn>
 
@@ -23,10 +23,13 @@
     [Parameter]
     public bool Sortable { get; set; } = false;
 
+    [Parameter]
+    public string Placeholder { get; set; } = "Type to find...";
+
     [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object> AdditionalAttributes { get; set; }
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     [Parameter]
-    public RenderFragment<TItem> DisplayTemplate { get; set; }
+    public RenderFragment<TItem>? DisplayTemplate { get; set; }
 
 }

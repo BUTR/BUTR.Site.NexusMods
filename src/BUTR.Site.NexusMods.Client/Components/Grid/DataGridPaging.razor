@@ -52,10 +52,10 @@
     public virtual bool Sortable { get; set; } = false;
 
     [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object> AdditionalAttributes { get; set; }
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     [Parameter]
-    public RenderFragment DataGridColumns { get; set; }
+    public RenderFragment? DataGridColumns { get; set; }
 
     [Parameter]
     public RenderFragment<ButtonRowContext<TItem>>? ButtonRowTemplate { get; set; }
@@ -64,7 +64,7 @@
     public Func<IEnumerable<DataGridColumnInfo>, IEnumerable<Filtering>>? GetFilters { get; set; }
 
     [Parameter]
-    public Func<int, int, ICollection<Filtering>, ICollection<Sorting>, CancellationToken, Task<ItemsResponse>> GetItems { get; set; }
+    public Func<int, int, ICollection<Filtering>, ICollection<Sorting>, CancellationToken, Task<ItemsResponse>>? GetItems { get; set; }
 
     public TItem? Value;
     public ICollection<TItem> Values = default!;
@@ -77,7 +77,7 @@
 
     public Task Reload() => _dataGridRef.Reload();
 
-    private async Task OnReadData(DataGridReadDataEventArgs<TItem?> e)
+    private async Task OnReadData(DataGridReadDataEventArgs<TItem> e)
     {
         if (!e.CancellationToken.IsCancellationRequested)
         {
@@ -94,12 +94,9 @@
     private async Task LoadItems(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
         await using var progress = ProgressUtils.DoProgress(x => _progressValue = x, () => _progressValue, () => InvokeAsync(StateHasChanged));
-        var response = await GetItems(page, pageSize, filterings, sortings, ct);
-        if (response is not null)
-        {
-            Values = response.Items;
-            Metadata = response.Metadata;
-        }
+        var response = (GetItems is not null ? await GetItems(page, pageSize, filterings, sortings, ct) : null) ?? new(Array.Empty<TItem>(), PagingMetadata.Empty);
+        Values = response.Items;
+        Metadata = response.Metadata;
     }
 
     private static bool OnCustomFilter(TItem model) => true;

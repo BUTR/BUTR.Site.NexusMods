@@ -30,10 +30,10 @@
     public bool Sortable { get; set; } = false;
 
     [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object> AdditionalAttributes { get; set; }
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     [Parameter]
-    public RenderFragment<TItem> DisplayTemplate { get; set; }
+    public RenderFragment<TItem>? DisplayTemplate { get; set; }
 
     private static void OnStatusChanged(string status, FilterContext<TItem> context)
     {

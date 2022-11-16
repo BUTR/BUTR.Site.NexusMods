@@ -98,7 +98,7 @@
         StateHasChanged();
     }
 
-    private async Task<DataGridPaging<ModNexusModsManualLinkModel?>.ItemsResponse> GetManualLinks(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
+    private async Task<DataGridPaging<ModNexusModsManualLinkModel>.ItemsResponse?> GetManualLinks(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
         await _modProvider.GetManualLinks(page, pageSize, ct) is { } response ? new(response.Items, response.Metadata) : null;
 
     private async Task OnDisallow(ButtonRowContext<ModNexusModsManualLinkModel?> context)

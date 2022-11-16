@@ -53,7 +53,7 @@
     private object? _currentFile; // We need to hide the type so LazyLoad can work
     private string? _currentFileName;
 
-    private DataGridPaging<BaseLocalizationString?> _dataGridRef = default!;
+    private DataGridPaging<BaseLocalizationString> _dataGridRef = default!;
 
     private async Task OnFileSelected(FileChangedEventArgs e)
     {

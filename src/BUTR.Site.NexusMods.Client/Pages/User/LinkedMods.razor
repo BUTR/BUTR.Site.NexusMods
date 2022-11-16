@@ -61,7 +61,7 @@
 
     private LinkModModel _model = new();
 
-    private DataGridPaging<ModModel?> _dataGridRef = default!;
+    private DataGridPaging<ModModel> _dataGridRef = default!;
 
     private async Task OnSubmit()
     {
@@ -90,7 +90,7 @@
         return await _modProvider.UnlinkMod(model.ModId);
     }
 
-    private async Task<DataGridPaging<ModModel>.ItemsResponse> GetMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
+    private async Task<DataGridPaging<ModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
         await _modProvider.GetMods(page, pageSize, ct) is { } response ? new(response.Items, response.Metadata) : null;
 
     private async Task OnClick(ModModel? mod)

@@ -86,7 +86,7 @@
         await _client.SendAsync(request, WebSocketMessageType.Text, true, _cancellationTokenSource.Token);
     }
 
-    async Task ReceiveLoop()
+    private async Task ReceiveLoop()
     {
         var buffer = new ArraySegment<byte>(new byte[1024]);
         var sb = new StringBuilder();

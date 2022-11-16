@@ -4,7 +4,7 @@ namespace BUTR.Site.NexusMods.Client.Utils
 {
     public static class DataGridUtils
     {
-        public static void SelectDeselect<TEntry>(TEntry? model, ref TEntry? entry, ref DataGrid<TEntry?> dataGrid) where TEntry : class
+        public static void SelectDeselect<TEntry>(TEntry? model, ref TEntry? entry, ref DataGrid<TEntry> dataGrid) where TEntry : class
         {
             if (entry != model)
             {
