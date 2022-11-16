@@ -13,7 +13,7 @@
             <DataGridColumns>
                 <DataGridColumnText TItem="ArticleModel" Field="@nameof(ArticleModel.Id)" Caption="Id" Sortable SortField="@nameof(EntityFields.ArticleId)"/>
                 <DataGridColumnText TItem="ArticleModel" Field="@nameof(ArticleModel.Title)" Caption="Title" Filterable Sortable SortField="@nameof(EntityFields.Title)"/>
-                <DataGridColumnTextAutocomplete TItem="ArticleModel" Field="@nameof(ArticleModel.AuthorName)" Caption="Author" Sortable SortField="@nameof(EntityFields.AuthorName)" GetAutocompleteValues="GetAutocompleteValues"/>
+                <DataGridColumnTextAutocomplete TItem="ArticleModel" Field="@nameof(ArticleModel.AuthorName)" Caption="Author" Filterable Sortable SortField="@nameof(EntityFields.AuthorName)" GetAutocompleteValues="GetAutocompleteValues"/>
                 <DataGridColumnDateTime TItem="ArticleModel" Field="@nameof(ArticleModel.CreateDate)" Caption="Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.CreateDate)">
                     <DisplayTemplate>@(context.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
                 </DataGridColumnDateTime>
