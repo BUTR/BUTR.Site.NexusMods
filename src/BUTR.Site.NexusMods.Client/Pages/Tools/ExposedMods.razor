@@ -34,7 +34,7 @@
     private async Task<DataGridPaging<ExposedModModel>.ItemsResponse?> GetExposedMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
         await _exposedModsClient.PaginatedAsync(new ExposedModsQuery(page, pageSize, filterings, sortings), ct) is { } response ? new(response.Items, response.Metadata) : null;
 
-    private async Task OnClick(ArticleModel? mod)
+    private async Task OnClick(ExposedModModel? mod)
     {
         if (mod is not null)
             await _jsRuntime.InvokeVoidAsync("open", mod.Url, "_blank");

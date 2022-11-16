@@ -109,6 +109,12 @@ namespace BUTR.Site.NexusMods.ServerClient
         public string AuthorUrl => $"https://nexusmods.com/users/{AuthorId}";
     }
 
+    public partial record ExposedModModel
+    {
+        [JsonIgnore]
+        public string Url => $"https://nexusmods.com/mountandblade2bannerlord/mods/{Id}";
+    }
+
     public partial record PagingMetadata
     {
         public static PagingMetadata Empty => new(1, 1, 0, 0);
