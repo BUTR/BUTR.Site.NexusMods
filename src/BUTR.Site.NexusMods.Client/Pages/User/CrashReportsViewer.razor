@@ -65,7 +65,7 @@
                 <DataGridColumnTextAutocomplete TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Filterable Sortable SortField="@nameof(EntityFields.InvolvedModIds)" GetAutocompleteValues="GetAutocompleteValues">
                     <DisplayTemplate>@(context.InvolvedModules.FirstOrDefault())</DisplayTemplate>
                 </DataGridColumnTextAutocomplete>
-                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Exception"/>
+                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Exception" Filterable Placeholder="System.NullReferenceException" Sortable SortField="@nameof(EntityFields.Exception)"/>
                 <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Version)" Caption="Version" Filterable Placeholder="1" Sortable SortField="@nameof(EntityFields.Version)"/>
                 <DataGridColumnDateTime TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.CreatedAt)">
                     <DisplayTemplate>@(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
@@ -86,7 +86,7 @@
 
 @code {
 
-    private enum EntityFields { GameVersion, Version, InvolvedModIds, CreatedAt, Status, Comment }
+    private enum EntityFields { GameVersion, Version, InvolvedModIds, Exception, CreatedAt, Status, Comment }
 
     private Modal _modalRef = default!;
     private DataGridPaging<CrashReportModel>? _datagridPagingRef;
