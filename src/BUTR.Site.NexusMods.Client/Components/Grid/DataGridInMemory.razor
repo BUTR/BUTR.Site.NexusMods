@@ -39,7 +39,7 @@
     public RenderFragment<ButtonRowContext<TItem>>? ButtonRowTemplate { get; set; }
 
     public TItem? Value;
-    public ICollection<TItem> Values = default!;
+    public ICollection<TItem> Values = new List<TItem>();
 
     private DataGrid<TItem> _dataGridRef = default!;
 
