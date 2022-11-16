@@ -50,6 +50,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 : query.Sotings;
 
             var paginated = await _dbContext.Set<NexusModsExposedModsEntity>()
+                .Where(x => x.ModIds.Length > 0)
                 .WithFilter(filters)
                 .WithSort(sortings)
                 .PaginatedAsync(page, pageSize, ct);
