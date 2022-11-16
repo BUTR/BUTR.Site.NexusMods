@@ -55,7 +55,7 @@
             }
             else if (columnInfo.SearchValue is string str)
             {
-                if (columnInfo.SortField is nameof(EntityFields.NexusModsModId))
+                if (columnInfo.SortField is nameof(EntityFields.NexusModsModId) && !string.IsNullOrEmpty(str))
                 {
                     yield return new Filtering(columnInfo.SortField, FilteringType.Equal, str);
                 }
