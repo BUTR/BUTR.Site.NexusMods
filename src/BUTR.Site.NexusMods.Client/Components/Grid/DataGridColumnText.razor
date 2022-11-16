@@ -2,16 +2,7 @@
 
 <DataGridColumn TItem="TItem" Field="@Field" Caption="@Caption" Filterable="@Filterable" SortField="@SortField" Sortable="@Sortable" DisplayTemplate="@DisplayTemplate" @attributes="@AdditionalAttributes">
     <FilterTemplate>
-        <Autocomplete TItem="string"
-                      TValue="string"
-                      Data="@_autocompleteValues"
-                      ReadData="@OnHandleReadData"
-                      TextField="@(x => x)"
-                      ValueField="@(x => x)"
-                      SelectedValueChanged="@(value => { OnStatusChanged(value, context); })"
-                      Placeholder="Search..."
-                      FreeTyping>
-        </Autocomplete>
+        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Debounce="true" DebounceInterval="500" />
     </FilterTemplate>
 </DataGridColumn>
 
@@ -37,23 +28,5 @@
 
     [Parameter]
     public RenderFragment<TItem> DisplayTemplate { get; set; }
-
-    [Parameter]
-    public Func<string, Task<ICollection<string>>> GetAutocompleteValues { get; set; }
-
-    private ICollection<string> _autocompleteValues = default!;
-
-    private async Task OnHandleReadData(AutocompleteReadDataEventArgs autocompleteReadDataEventArgs)
-    {
-        if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested && autocompleteReadDataEventArgs.SearchValue.Length >= 3)
-        {
-            _autocompleteValues = await GetAutocompleteValues(autocompleteReadDataEventArgs.SearchValue);
-        }
-    }
-
-    private static void OnStatusChanged(string status, FilterContext<TItem> context)
-    {
-        context.TriggerFilterChange(status);
-    }
 
 }
