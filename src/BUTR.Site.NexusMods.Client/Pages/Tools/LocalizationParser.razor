@@ -20,12 +20,12 @@
             </Field>
         </Fields>
         <Field>
-            <DataGridPaging @ref="_dataGridRef" TItem="LocalizationString" Resizable ResizeMode="TableResizeMode.Header">
+            <DataGridInMemory @ref="_dataGridRef" TItem="LocalizationString" Resizable ResizeMode="TableResizeMode.Header">
                 <DataGridColumns>
                     <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Assembly)" Caption="@nameof(LocalizationString.Assembly)"/>
                     <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Text)" Caption="@nameof(LocalizationString.Text)"/>
                 </DataGridColumns>
-            </DataGridPaging>
+            </DataGridInMemory>
             <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
             <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnExport)">Export as CSV</Button>
         </Field>

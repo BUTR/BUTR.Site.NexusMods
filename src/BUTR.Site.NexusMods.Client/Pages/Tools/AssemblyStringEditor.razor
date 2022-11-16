@@ -25,7 +25,7 @@
             </Field>
         </Fields>
         <Field>
-            <DataGridPaging @ref="_dataGridRef" TItem="BaseLocalizationString" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
+            <DataGridInMemory @ref="_dataGridRef" TItem="BaseLocalizationString" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
                 <DataGridColumns>
                     <DataGridCommandColumn TItem="BaseLocalizationString" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
                     <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Assembly)" Caption="@nameof(BaseLocalizationString.Assembly)"/>
@@ -36,7 +36,7 @@
                     </DataGridColumn>
                     <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Location)" Caption="@nameof(BaseLocalizationString.Location)"/>
                 </DataGridColumns>
-            </DataGridPaging>
+            </DataGridInMemory>
             <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
             <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnExport)">Export Assembly</Button>
         </Field>

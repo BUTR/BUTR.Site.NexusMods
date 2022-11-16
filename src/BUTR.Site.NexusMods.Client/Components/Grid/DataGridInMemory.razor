@@ -1,0 +1,48 @@
+﻿@typeparam TItem where TItem : class
+
+<DataGrid @ref="_dataGridRef" @attributes="@AdditionalAttributes"
+          TItem="TItem"
+          Data="@Values"
+          SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef))"
+          SelectionMode="DataGridSelectionMode.Single"
+          Responsive
+          Editable="@Editable"
+          EditMode="@EditMode"
+          Resizable="@Resizable"
+          ResizeMode="@ResizeMode"
+          DataGridColumns="@DataGridColumns"
+          ButtonRowTemplate="@ButtonRowTemplate">
+    <EmptyTemplate>
+        No result!
+    </EmptyTemplate>
+</DataGrid>
+
+@code {
+
+    [Parameter]
+    public bool Resizable { get; set; } = false;
+    [Parameter]
+    public TableResizeMode ResizeMode { get; set; }
+
+    [Parameter]
+    public bool Editable { get; set; } = false;
+    [Parameter]
+    public DataGridEditMode EditMode { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    [Parameter]
+    public RenderFragment? DataGridColumns { get; set; }
+
+    [Parameter]
+    public RenderFragment<ButtonRowContext<TItem>>? ButtonRowTemplate { get; set; }
+
+    public TItem? Value;
+    public ICollection<TItem> Values = default!;
+
+    private DataGrid<TItem> _dataGridRef = default!;
+
+    public Task Reload() => _dataGridRef.Reload();
+
+}
