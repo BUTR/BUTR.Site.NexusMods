@@ -11,7 +11,7 @@
     <CardBody>
         <DataGridPaging TItem="ExposedModModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetExposedMods" Sortable Filterable>
             <DataGridColumns>
-                <DataGridColumnText TItem="ExposedModModel" Field="@nameof(ExposedModModel.Id)" Caption="Id" Sortable SortField="@nameof(EntityFields.NexusModsModId)"/>
+                <DataGridColumnText TItem="ExposedModModel" Field="@nameof(ExposedModModel.Id)" Caption="Id" Filterable Sortable SortField="@nameof(EntityFields.NexusModsModId)"/>
                 <DataGridColumnTextAutocomplete TItem="ExposedModModel" Field="@nameof(ExposedModModel.ModIds)" Caption="Mod Id's" Filterable Sortable SortField="@nameof(EntityFields.ModIds)" GetAutocompleteValues="GetAutocompleteValues">
                     <DisplayTemplate>@(string.Join(", ", context.ModIds))</DisplayTemplate>
                 </DataGridColumnTextAutocomplete>
