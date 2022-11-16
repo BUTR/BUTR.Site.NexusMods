@@ -8,8 +8,7 @@
                       ReadData="@OnHandleReadData"
                       TextField="@(x => x)"
                       ValueField="@(x => x)"
-                      @bind-SelectedValue="@_autocompleteValue"
-                      @bind-SelectedText="@_autocompleteText"
+                      SelectedValueChanged="@(value => { OnStatusChanged(value, context); })"
                       Placeholder="Search..."
                       FreeTyping>
         </Autocomplete>
@@ -42,8 +41,6 @@
     [Parameter]
     public Func<string, Task<ICollection<string>>> GetAutocompleteValues { get; set; }
 
-    private string _autocompleteText { get; set; } = default!;
-    private string _autocompleteValue { get; set; } = default!;
     private ICollection<string> _autocompleteValues = default!;
 
     private async Task OnHandleReadData(AutocompleteReadDataEventArgs autocompleteReadDataEventArgs)
@@ -52,6 +49,11 @@
         {
             _autocompleteValues = await GetAutocompleteValues(autocompleteReadDataEventArgs.SearchValue);
         }
+    }
+
+    private static void OnStatusChanged(string status, FilterContext<TItem> context)
+    {
+        context.TriggerFilterChange(status);
     }
 
 }
