@@ -11,7 +11,7 @@
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            @if (_dataGridRef.Value is not null)
+            @if (_dataGridRef?.Value is not null)
             {
                 <Form>
                     <Field>
@@ -70,7 +70,7 @@
         <CardTitle Size="4" Margin="Margin.Is0">Allowed User Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="_dataGridRef" TItem="UserAllowedModsModel" GetItems="GetAllowUserMods">
+        <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModsModel" GetItems="GetAllowUserMods">
             <DataGridColumns>
                 <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.UserId)" Caption="User Id"/>
                 <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.AllowedModIds)" Caption="Allowed Mod Ids">
@@ -78,7 +78,7 @@
                 </DataGridColumnText>
             </DataGridColumns>
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_dataGridRef.Value is null)" Clicked="@(async () => await OnDisallow(context))">
+                <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnDisallow(context))">
                     Disallow
                 </Button>
             </ButtonRowTemplate>
@@ -101,14 +101,14 @@
     private string? _modIdToDelete;
 
     private Modal _modalRef = default!;
-    private DataGridPaging<UserAllowedModsModel> _dataGridRef = default!;
+    private DataGridPaging<UserAllowedModsModel>? _dataGridRef;
 
     private async Task ShowModal() => await _modalRef.Show();
 
     private async Task HideModal(bool save)
     {
         await _modalRef.Hide();
-        if (save && _dataGridRef.Value is not null && _modIdToDelete is not null)
+        if (save && _dataGridRef?.Value is not null && _modIdToDelete is not null)
         {
             if (await _modProvider.DisallowUserMod(_dataGridRef.Value.UserId, _modIdToDelete))
             {
@@ -130,7 +130,8 @@
                 await _notificationService.Success(
                     $"Assigned '{_model.ModId}' to user with id '{_model.UserId}'!",
                     "Success!");
-                await _dataGridRef.Reload();
+                if (_dataGridRef is not null)
+                    await _dataGridRef.Reload();
             }
             else
             {

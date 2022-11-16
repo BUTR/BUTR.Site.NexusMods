@@ -20,14 +20,14 @@
             </Field>
         </Fields>
         <Field>
-            <DataGridInMemory @ref="_dataGridRef" TItem="LocalizationString" Resizable ResizeMode="TableResizeMode.Header">
+            <DataGridInMemory @ref="@_dataGridRef" TItem="LocalizationString" Resizable ResizeMode="TableResizeMode.Header">
                 <DataGridColumns>
                     <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Assembly)" Caption="@nameof(LocalizationString.Assembly)"/>
                     <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Text)" Caption="@nameof(LocalizationString.Text)"/>
                 </DataGridColumns>
             </DataGridInMemory>
-            <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
-            <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnExport)">Export as CSV</Button>
+            <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
+            <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnExport)">Export as CSV</Button>
         </Field>
     </CardBody>
 </Card>
@@ -37,7 +37,7 @@
 
     private record LocalizationString(string Assembly, string Text);
 
-    private DataGridInMemory<LocalizationString> _dataGridRef = default!;
+    private DataGridInMemory<LocalizationString>? _dataGridRef;
 
     private async Task OnFileSelected(FileChangedEventArgs e)
     {
@@ -63,7 +63,7 @@
         {
             Delimiter = ";"
         });
-        await csv.WriteRecordsAsync(_dataGridRef.Values);
+        await csv.WriteRecordsAsync(_dataGridRef?.Values ?? Enumerable.Empty<LocalizationString>());
         await csv.FlushAsync();
         ms.Seek(0, SeekOrigin.Begin);
         await _downloadFileService.DownloadFileAsync("localization.csv", "text/csv", ms);
@@ -92,7 +92,7 @@
 
             var blob = metadata.GetBlobReader(constant.Value);
             if (blob.ReadConstant(constant.TypeCode) is string text && !string.IsNullOrEmpty(text) && LocalizationUtils.IsTranslationString(text))
-                _dataGridRef.Values.Add(new(name, text));
+                _dataGridRef?.Values.Add(new(name, text));
         }
 
         foreach (var methodDefinitionHandle in metadata.MethodDefinitions)
@@ -123,7 +123,7 @@
                 }
                 if (!string.IsNullOrEmpty(text) && LocalizationUtils.IsTranslationString(text))
                 {
-                    _dataGridRef.Values.Add(new(name, text));
+                    _dataGridRef?.Values.Add(new(name, text));
                 }
                 break;
             }

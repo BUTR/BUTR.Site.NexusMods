@@ -25,7 +25,7 @@
             </Field>
         </Fields>
         <Field>
-            <DataGridInMemory @ref="_dataGridRef" TItem="BaseLocalizationString" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
+            <DataGridInMemory @ref="@_dataGridRef" TItem="BaseLocalizationString" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
                 <DataGridColumns>
                     <DataGridCommandColumn TItem="BaseLocalizationString" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
                     <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Assembly)" Caption="@nameof(BaseLocalizationString.Assembly)"/>
@@ -37,8 +37,8 @@
                     <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Location)" Caption="@nameof(BaseLocalizationString.Location)"/>
                 </DataGridColumns>
             </DataGridInMemory>
-            <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
-            <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnExport)">Export Assembly</Button>
+            <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
+            <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnExport)">Export Assembly</Button>
         </Field>
     </CardBody>
 </Card>
@@ -53,11 +53,11 @@
     private object? _currentFile; // We need to hide the type so LazyLoad can work
     private string? _currentFileName;
 
-    private DataGridInMemory<BaseLocalizationString> _dataGridRef = default!;
+    private DataGridInMemory<BaseLocalizationString>? _dataGridRef;
 
     private async Task OnFileSelected(FileChangedEventArgs e)
     {
-        _dataGridRef.Values.Clear();
+        _dataGridRef?.Values.Clear();
         if (_currentFile is AssemblyDefinition assemblyDefinition)
             assemblyDefinition.Dispose();
         if (_currentFileStream is not null)
@@ -93,7 +93,7 @@
 
     private Task OnClear()
     {
-        _dataGridRef.Values.Clear();
+        _dataGridRef?.Values.Clear();
         return Task.CompletedTask;
     }
 
@@ -121,7 +121,7 @@
                 continue;
 
             if (fieldDefinition.Constant is string text && !string.IsNullOrEmpty(text) && !LocalizationUtils.IsTranslationString(text))
-                _dataGridRef.Values.Add(new FieldLocalizationString(name, text, fieldDefinition.FullName, fieldDefinition));
+                _dataGridRef?.Values.Add(new FieldLocalizationString(name, text, fieldDefinition.FullName, fieldDefinition));
         }
 
         foreach (var methodDefinition in assemblyDefinition.MainModule.Types.SelectMany(x => x.Methods))
@@ -132,7 +132,7 @@
             foreach (var codeInstruction in methodDefinition.Body.Instructions)
             {
                 if (codeInstruction.Operand is string text  && !string.IsNullOrEmpty(text) && !LocalizationUtils.IsTranslationString(text))
-                    _dataGridRef.Values.Add(new MethodLocalizationString(name, text, methodDefinition.FullName, methodDefinition, codeInstruction));
+                    _dataGridRef?.Values.Add(new MethodLocalizationString(name, text, methodDefinition.FullName, methodDefinition, codeInstruction));
             }
         }
 
@@ -141,7 +141,7 @@
 
     public async ValueTask DisposeAsync()
     {
-        _dataGridRef.Values.Clear();
+        _dataGridRef?.Values.Clear();
         if (_currentFile is AssemblyDefinition assemblyDefinition)
             assemblyDefinition.Dispose();
         if (_currentFileStream is not null)

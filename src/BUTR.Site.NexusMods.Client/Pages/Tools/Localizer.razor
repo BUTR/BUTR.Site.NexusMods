@@ -29,7 +29,7 @@
             </Field>
         </Fields>
         <Field>
-            <DataGridInMemory @ref="_dataGridRef" TItem="StringEntry" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
+            <DataGridInMemory @ref="@_dataGridRef" TItem="StringEntry" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
                 <DataGridColumns>
                     <DataGridCommandColumn TItem="StringEntry" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
                     <DataGridColumn TItem="StringEntry" Field="@nameof(StringEntry.Id)" Caption="@nameof(StringEntry.Id)"/>
@@ -41,8 +41,8 @@
                     </DataGridColumn>
                 </DataGridColumns>
             </DataGridInMemory>
-            <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
-            <Button Color="Color.Primary" Disabled="@(_dataGridRef.Values.Count <= 0)" Clicked="@(OnExport)">Export as XML</Button>
+            <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
+            <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnExport)">Export as XML</Button>
         </Field>
     </CardBody>
 </Card>
@@ -71,7 +71,7 @@
 
     private string _language = string.Empty;
 
-    private DataGridInMemory<StringEntry> _dataGridRef = default!;
+    private DataGridInMemory<StringEntry>? _dataGridRef;
 
     private async Task OnFileSelected(FileChangedEventArgs e)
     {
@@ -86,7 +86,7 @@
 
     private Task OnClear()
     {
-        _dataGridRef.Values.Clear();
+        _dataGridRef?.Values.Clear();
         return Task.CompletedTask;
     }
 
@@ -115,7 +115,7 @@
         var stringsElement = doc.CreateElement(string.Empty, "strings", string.Empty);
         baseElement.AppendChild(stringsElement);
 
-        foreach (var entry in _dataGridRef.Values)
+        foreach (var entry in _dataGridRef?.Values ?? Enumerable.Empty<StringEntry>())
         {
             var stringElement = doc.CreateElement(string.Empty, "string", string.Empty);
             stringElement.SetAttribute("id", entry.Id);
@@ -151,7 +151,7 @@
 
             var blob = metadata.GetBlobReader(constant.Value);
             if (blob.ReadConstant(constant.TypeCode) is string text && !string.IsNullOrEmpty(text) && LocalizationUtils.TryParseTranslationString(text, out var id, out var content))
-                _dataGridRef.Values.Add(new(id, content, "-"));
+                _dataGridRef?.Values.Add(new(id, content, "-"));
         }
 
         foreach (var methodDefinitionHandle in metadata.MethodDefinitions)
@@ -182,7 +182,7 @@
                 }
                 if (!string.IsNullOrEmpty(text) && LocalizationUtils.TryParseTranslationString(text, out var id, out var content))
                 {
-                    _dataGridRef.Values.Add(new(id, content, "-"));
+                    _dataGridRef?.Values.Add(new(id, content, "-"));
                 }
                 break;
             }

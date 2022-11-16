@@ -12,7 +12,7 @@
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            @if (_datagridPagingRef.Value is not null)
+            @if (_datagridPagingRef?.Value is not null)
             {
                 <Form>
                     <Field>
@@ -59,7 +59,7 @@
         <CardTitle Size="4" Margin="Margin.Is0">Crash Reports</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="_datagridPagingRef" TItem="CrashReportModel" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable>
+        <DataGridPaging @ref="@_datagridPagingRef" TItem="CrashReportModel" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable>
             <DataGridColumns>
                 <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="Game Version" Filterable Placeholder="v1.0.0" Sortable SortField="@nameof(EntityFields.GameVersion)"/>
                 <DataGridColumnTextAutocomplete TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Filterable Sortable SortField="@nameof(EntityFields.InvolvedModIds)" GetAutocompleteValues="GetAutocompleteValues">
@@ -77,8 +77,8 @@
             </DataGridColumns>
 
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_datagridPagingRef.Value is null)" Clicked="@ShowModal">Check</Button>
-                <Button Color="Color.Primary" Disabled="@(_datagridPagingRef.Value is null)" Clicked="@(() => OnClick(_datagridPagingRef.Value))">Open HTML</Button>
+                <Button Color="Color.Primary" Disabled="@(_datagridPagingRef?.Value is null)" Clicked="@ShowModal">Check</Button>
+                <Button Color="Color.Primary" Disabled="@(_datagridPagingRef?.Value is null)" Clicked="@(() => OnClick(_datagridPagingRef.Value))">Open HTML</Button>
             </ButtonRowTemplate>
         </DataGridPaging>
     </CardBody>
@@ -89,14 +89,14 @@
     private enum EntityFields { GameVersion, Version, InvolvedModIds, CreatedAt, Status, Comment }
 
     private Modal _modalRef = default!;
-    private DataGridPaging<CrashReportModel> _datagridPagingRef = default!;
+    private DataGridPaging<CrashReportModel>? _datagridPagingRef;
 
     private async Task ShowModal() => await _modalRef.Show();
 
     private async Task HideModal(bool save)
     {
         await _modalRef.Hide();
-        if (save && _datagridPagingRef.Value is not null)
+        if (save && _datagridPagingRef?.Value is not null)
         {
             var updatedCrashReport = _datagridPagingRef.Value with { };
             if (await _crashReportProvider.UpdateCrashReport(updatedCrashReport))

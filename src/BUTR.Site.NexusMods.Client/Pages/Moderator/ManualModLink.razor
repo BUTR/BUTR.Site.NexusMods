@@ -47,7 +47,7 @@
                 <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.NexusModsId)" Caption="NexusMods Id"/>
             </DataGridColumns>
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_dataGridRef.Value is null)" Clicked="@(async () => await OnDisallow(context))">Unlink</Button>
+                <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnDisallow(context))">Unlink</Button>
             </ButtonRowTemplate>
         </DataGridPaging>
     </CardBody>
@@ -65,7 +65,7 @@
 
     private readonly ManualLinkModel _model = new() { ModId = string.Empty, NexusModsUrl = string.Empty };
 
-    private DataGridPaging<ModNexusModsManualLinkModel> _dataGridRef = default!;
+    private DataGridPaging<ModNexusModsManualLinkModel>? _dataGridRef;
     
     private async Task OnSubmit()
     {
@@ -78,7 +78,8 @@
                 await _notificationService.Success(
                     $"Linked '{_model.ModId}' to mod '{_model.NexusModsUrl}'!",
                     "Success!");
-                await _dataGridRef.Reload();
+                if (_dataGridRef is not null)
+                    await _dataGridRef.Reload();
             }
             else
             {
