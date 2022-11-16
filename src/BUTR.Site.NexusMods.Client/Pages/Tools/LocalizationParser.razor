@@ -37,7 +37,7 @@
 
     private record LocalizationString(string Assembly, string Text);
 
-    private DataGridPaging<LocalizationString> _dataGridRef = default!;
+    private DataGridInMemory<LocalizationString> _dataGridRef = default!;
 
     private async Task OnFileSelected(FileChangedEventArgs e)
     {
