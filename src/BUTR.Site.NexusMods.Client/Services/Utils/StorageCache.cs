@@ -14,8 +14,8 @@ namespace BUTR.Site.NexusMods.Client.Services
 {
     public sealed record CacheOptions
     {
-        public required DateTimeOffset? AbsoluteExpiration { get; init; }
-        public required IChangeToken? ChangeToken { get; init; }
+        public DateTimeOffset? AbsoluteExpiration { get; init; }
+        public IChangeToken? ChangeToken { get; init; }
     }
 
     public sealed class StorageCache : IAsyncDisposable

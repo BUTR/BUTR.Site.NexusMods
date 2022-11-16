@@ -33,7 +33,7 @@
 
     private sealed record LoginModel
     {
-        public required string Input { get; set; }
+        public string Input { get; set; } = string.Empty;
     }
 
     private readonly LoginModel _model = new();
