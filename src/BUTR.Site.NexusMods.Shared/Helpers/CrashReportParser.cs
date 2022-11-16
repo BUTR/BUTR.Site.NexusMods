@@ -5,69 +5,70 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Shared.Helpers
 {
     public record CrashReport
     {
-        public Guid Id { get; init; }
-        public int Version { get; init; }
-        public string GameVersion { get; init; }
-        public string Exception { get; init; }
-        public ImmutableArray<Module> Modules { get; init; }
-        public ImmutableArray<InvolvedModule> InvolvedModules { get; init; }
-        public ImmutableArray<EnhancedStacktraceFrame> EnhancedStacktrace { get; init; }
-        public string Id2 { get; init; }
+        public required Guid Id { get; init; }
+        public required int Version { get; init; }
+        public required string GameVersion { get; init; }
+        public required string Exception { get; init; }
+        public required ImmutableArray<Module> Modules { get; init; }
+        public required ImmutableArray<InvolvedModule> InvolvedModules { get; init; }
+        public required ImmutableArray<EnhancedStacktraceFrame> EnhancedStacktrace { get; init; }
+        public required string Id2 { get; init; }
     }
 
     public record EnhancedStacktraceFrame
     {
-        public string Name { get; init; }
-        public int ILOffset { get; init; }
-        public ImmutableArray<EnhancedStacktraceFrameMethod> Methods { get; init; }
+        public required string Name { get; init; }
+        public required int ILOffset { get; init; }
+        public required ImmutableArray<EnhancedStacktraceFrameMethod> Methods { get; init; }
     }
     public record EnhancedStacktraceFrameMethod
     {
-        public string Module { get; init; }
-        public string MethodFullName { get; init; }
-        public string Method { get; init; }
-        public ImmutableArray<string> MethodParameters { get; init; }
+        public required string Module { get; init; }
+        public required string MethodFullName { get; init; }
+        public required string Method { get; init; }
+        public required ImmutableArray<string> MethodParameters { get; init; }
     }
 
     public record ModuleDependencyMetadatas
     {
-        public string Type { get; init; }
-        public string ModuleId { get; init; }
+        public required string Type { get; init; }
+        public required string ModuleId { get; init; }
     }
 
     public record ModuleSubModule
     {
-        public string Name { get; init; }
-        public string DLLName { get; init; }
-        public string SubModuleClassType { get; init; }
-        public ImmutableArray<KeyValuePair<string, string>> Tags { get; init; }
+        public required string Name { get; init; }
+        public required string DLLName { get; init; }
+        public required string SubModuleClassType { get; init; }
+        public required ImmutableArray<KeyValuePair<string, string>> Tags { get; init; }
     }
 
     public sealed record Module
     {
-        public string Id { get; init; }
-        public string Name { get; init; }
-        public string Alias { get; init; }
-        public string Version { get; init; }
-        public string IsExternal { get; init; }
-        public string IsOfficial { get; init; }
-        public string IsSingleplayer { get; init; }
-        public string IsMultiplayer { get; init; }
-        public string Url { get; init; }
-        public ImmutableList<ModuleDependencyMetadatas> DependencyMetadatas { get; init; }
-        public ImmutableList<ModuleSubModule> SubModules { get; init; }
+        public required string Id { get; init; }
+        public required string Name { get; init; }
+        public required string Alias { get; init; }
+        public required string Version { get; init; }
+        public required string IsExternal { get; init; }
+        public required string IsOfficial { get; init; }
+        public required string IsSingleplayer { get; init; }
+        public required string IsMultiplayer { get; init; }
+        public required string Url { get; init; }
+        public required ImmutableList<ModuleDependencyMetadatas> DependencyMetadatas { get; init; }
+        public required ImmutableList<ModuleSubModule> SubModules { get; init; }
     }
 
     public record InvolvedModule
     {
-        public string Id { get; init; }
-        public string Stacktrace { get; init; }
+        public required string Id { get; init; }
+        public required string Stacktrace { get; init; }
     }
 
     public static class CrashReportParser

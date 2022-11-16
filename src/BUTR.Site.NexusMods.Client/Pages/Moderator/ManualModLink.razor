@@ -57,8 +57,8 @@
 
     private sealed record ManualLinkModel
     {
-        public string ModId { get; set; } = default!;
-        public string NexusModsUrl { get; set; } = default!;
+        public required string ModId { get; set; }
+        public required string NexusModsUrl { get; set; }
     }
 
     private bool _isLoading;

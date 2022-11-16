@@ -10,19 +10,17 @@ namespace BUTR.Site.NexusMods.Client.Extensions
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            using (var enumerator = source.GetEnumerator())
+            using var enumerator = source.GetEnumerator();
+            var isFirst = true;
+            var hasNext = enumerator.MoveNext();
+            var index = 0;
+            while (hasNext)
             {
-                bool isFirst = true;
-                bool hasNext = enumerator.MoveNext();
-                int index = 0;
-                while (hasNext)
-                {
-                    T current = enumerator.Current;
-                    hasNext = enumerator.MoveNext();
-                    yield return new ElementInfo<T>(index, current, isFirst, !hasNext);
-                    isFirst = false;
-                    index++;
-                }
+                var current = enumerator.Current;
+                hasNext = enumerator.MoveNext();
+                yield return new ElementInfo<T>(index, current, isFirst, !hasNext);
+                isFirst = false;
+                index++;
             }
         }
 

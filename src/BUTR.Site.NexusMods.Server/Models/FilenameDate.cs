@@ -2,5 +2,5 @@
 
 namespace BUTR.Site.NexusMods.Server.Models
 {
-    public sealed record FileNameDate(string Filename, DateTime Date);
+    public sealed record FilenameDate(string Filename, DateTime Date);
 }

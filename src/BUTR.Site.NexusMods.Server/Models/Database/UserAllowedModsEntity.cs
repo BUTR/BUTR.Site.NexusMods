@@ -2,8 +2,8 @@
 {
     public sealed record UserAllowedModsEntity : IEntity
     {
-        public int UserId { get; set; } = default!;
+        public required int UserId { get; init; }
 
-        public string[] AllowedModIds { get; set; } = default!;
+        public required string[] AllowedModIds { get; init; }
     }
 }

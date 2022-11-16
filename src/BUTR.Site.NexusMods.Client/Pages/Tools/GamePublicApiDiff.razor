@@ -64,8 +64,8 @@
         public Node? Parent { get; init; }
         public List<Node> Children { get; } = new();
 
-        public NodeType Type { get; init; }
-        public string Path { get; init; } = string.Empty;
+        public required NodeType Type { get; init; }
+        public required string Path { get; init; }
         public ICollection<DiffContent> Content { get; set; } = Array.Empty<DiffContent>();
         public bool Visible { get; set; }
     }

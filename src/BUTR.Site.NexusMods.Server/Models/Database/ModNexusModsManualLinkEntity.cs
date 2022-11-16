@@ -2,8 +2,8 @@
 {
     public sealed record ModNexusModsManualLinkEntity : IEntity
     {
-        public string ModId { get; set; } = default!;
+        public required string ModId { get; init; }
 
-        public int NexusModsId { get; set; } = default!;
+        public required int NexusModsId { get; init; }
     }
 }

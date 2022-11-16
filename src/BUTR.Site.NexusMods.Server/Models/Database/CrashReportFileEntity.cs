@@ -2,8 +2,8 @@
 {
     public sealed record CrashReportFileEntity : IEntity
     {
-        public string Filename { get; set; } = default!;
+        public required string Filename { get; init; }
 
-        public CrashReportEntity CrashReport { get; set; } = default!;
+        public required CrashReportEntity CrashReport { get; init; }
     }
 }

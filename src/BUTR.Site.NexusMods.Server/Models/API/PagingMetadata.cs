@@ -11,9 +11,9 @@ namespace BUTR.Site.NexusMods.Server.Models.API
         [JsonIgnore]
         public bool HasNext => CurrentPage < TotalPages;
 
-        public uint CurrentPage { get; init; }
-        public uint TotalPages { get; init; }
-        public uint PageSize { get; init; }
-        public uint TotalCount { get; init; }
+        public required uint CurrentPage { get; init; }
+        public required uint TotalPages { get; init; }
+        public required uint PageSize { get; init; }
+        public required uint TotalCount { get; init; }
     }
 }

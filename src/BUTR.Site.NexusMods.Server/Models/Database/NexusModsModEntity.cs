@@ -2,10 +2,10 @@
 {
     public sealed record NexusModsModEntity : IEntity
     {
-        public int NexusModsModId { get; set; } = default!;
+        public required int NexusModsModId { get; init; }
 
-        public string Name { get; set; } = default!;
+        public required string Name { get; init; }
 
-        public int[] UserIds { get; set; } = default!;
+        public required int[] UserIds { get; init; }
     }
 }

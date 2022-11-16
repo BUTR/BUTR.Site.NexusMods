@@ -13,7 +13,7 @@ namespace BUTR.Site.NexusMods.Client.Utils
             else if (entry is not null)
             {
 #pragma warning disable BL0005
-                dataGrid.SelectedRow = null;
+                dataGrid.SelectedRow = null!;
 #pragma warning restore BL0005
                 entry = null;
             }

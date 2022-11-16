@@ -20,8 +20,7 @@ export async function deinit() {
 
 export async function render(elementId, diffString, configuration) {
     const targetElement = document.getElementById(elementId);
-    if (targetElement)
-    {
+    if (targetElement) {
         const diff2htmlUi = new window.Diff2HtmlUI(targetElement, diffString, configuration);
         diff2htmlUi.draw();
         diff2htmlUi.highlightCode();

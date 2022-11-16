@@ -4,8 +4,8 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
 {
     public sealed record UserMetadataEntity : IEntity
     {
-        public int UserId { get; set; } = default!;
+        public required int UserId { get; init; }
 
-        public Dictionary<string, string> Metadata { get; set; } = default!;
+        public required Dictionary<string, string> Metadata { get; init; }
     }
 }

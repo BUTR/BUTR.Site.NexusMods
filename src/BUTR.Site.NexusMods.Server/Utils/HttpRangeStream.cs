@@ -11,9 +11,9 @@ namespace BUTR.Site.NexusMods.Server.Utils
 {
     public class RangeDownloadedEventArgs : EventArgs
     {
-        public long Offset { get; set; }
+        public required long Offset { get; set; }
 
-        public long Length { get; set; }
+        public required long Length { get; set; }
     }
 
     public sealed record HttpRangeOptions

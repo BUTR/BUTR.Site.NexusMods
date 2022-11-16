@@ -14,6 +14,6 @@ namespace BUTR.Site.NexusMods.Server.Options
 
     public sealed record ConnectionStringsOptions
     {
-        public string Main { get; init; } = default!;
+        public required string Main { get; init; }
     }
 }

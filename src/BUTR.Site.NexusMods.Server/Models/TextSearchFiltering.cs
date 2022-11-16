@@ -2,7 +2,7 @@
 {
     public sealed record TextSearchFiltering
     {
-        public TextSearchFilteringType Type { get; init; } = default!;
-        public string Value { get; init; } = default!;
+        public required TextSearchFilteringType Type { get; init; }
+        public required string Value { get; init; }
     }
 }

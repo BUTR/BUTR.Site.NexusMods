@@ -25,11 +25,11 @@ namespace BUTR.Site.NexusMods.Server.Services
             public record IdValue
             {
                 [XmlAttribute("value")]
-                public string Value { get; init; } = default!;
+                public required string Value { get; init; }
             }
 
             [XmlElement("Id")]
-            public IdValue Id { get; init; } = default!;
+            public required IdValue Id { get; init; }
         }
 
         private readonly HttpClient _httpClient;
@@ -40,7 +40,6 @@ namespace BUTR.Site.NexusMods.Server.Services
             _httpClient = httpClient;
             _apiClient = apiClient;
         }
-
 
 
         public async IAsyncEnumerable<string> GetModIdsAsync(string gameDomain, int modId, string apiKey)

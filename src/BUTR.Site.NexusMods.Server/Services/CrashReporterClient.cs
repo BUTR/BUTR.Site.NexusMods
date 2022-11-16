@@ -23,10 +23,10 @@ namespace BUTR.Site.NexusMods.Server.Services
 
         public async Task<HashSet<string>> GetCrashReportNamesAsync(CancellationToken ct) => await _httpClient.GetFromJsonAsync<HashSet<string>>("getallfilenames", ct) ?? new HashSet<string>();
 
-        public async Task<ImmutableArray<FileNameDate>> GetCrashReportDatesAsync(ImmutableArray<string> filenames, CancellationToken ct)
+        public async Task<ImmutableArray<FilenameDate>> GetCrashReportDatesAsync(ImmutableArray<string> filenames, CancellationToken ct)
         {
             var response = await _httpClient.PostAsJsonAsync<ImmutableArray<string>>("getfilenamedates", filenames, ct);
-            return await response.Content.ReadFromJsonAsync<ImmutableArray<FileNameDate>?>(cancellationToken: ct) ?? ImmutableArray<FileNameDate>.Empty;
+            return await response.Content.ReadFromJsonAsync<ImmutableArray<FilenameDate>?>(cancellationToken: ct) ?? ImmutableArray<FilenameDate>.Empty;
         }
     }
 }

@@ -90,8 +90,8 @@
 
     private sealed record AllowUserModel
     {
-        public uint UserId { get; set; } = default!;
-        public string ModId { get; set; } = default!;
+        public required uint UserId { get; set; }
+        public required string ModId { get; set; }
     }
     
     private bool _isLoading;

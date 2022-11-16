@@ -18,8 +18,8 @@ namespace BUTR.Site.NexusMods.Server.Options
 
     public sealed record CrashReporterOptions
     {
-        public string Endpoint { get; init; } = default!;
-        public string Username { get; init; } = default!;
-        public string Password { get; init; } = default!;
+        public required string Endpoint { get; init; }
+        public required string Username { get; init; }
+        public required string Password { get; init; }
     }
 }

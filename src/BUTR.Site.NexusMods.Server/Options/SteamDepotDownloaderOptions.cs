@@ -16,11 +16,11 @@ namespace BUTR.Site.NexusMods.Server.Options
 
     public sealed record SteamDepotDownloaderOptions
     {
-        public string BinaryPath { get; set; } = default!;
-        public int AppId { get; set; } = default!;
-        public int[] Depots { get; set; } = default!;
-        public string Filelist { get; set; } = default!;
-        public string Username { get; set; } = default!;
-        public string Password { get; set; } = default!;
+        public required string BinaryPath { get; init; }
+        public required int AppId { get; init; }
+        public required int[] Depots { get; init; }
+        public required string Filelist { get; init; }
+        public required string Username { get; init; }
+        public required string Password { get; init; }
     }
 }

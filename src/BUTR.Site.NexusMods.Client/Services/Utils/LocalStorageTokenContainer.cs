@@ -21,11 +21,11 @@ namespace BUTR.Site.NexusMods.Client.Services
         {
             try
             {
-                return await _localStorage.GetItemAsync<Token>("token");
+                return await _localStorage.GetItemAsync<Token>("token", ct);
             }
             catch (Exception)
             {
-                await _localStorage.RemoveItemAsync("token");
+                await _localStorage.RemoveItemAsync("token", ct);
                 return null;
             }
         }
@@ -34,7 +34,7 @@ namespace BUTR.Site.NexusMods.Client.Services
         {
             if (token is null)
             {
-                await _localStorage.RemoveItemAsync("token");
+                await _localStorage.RemoveItemAsync("token", ct);
             }
             else
             {

@@ -43,8 +43,8 @@
 
     private sealed record SetRoleModel
     {
-        public uint UserId { get; set; } = default!;
-        public string Role { get; set; } = default!;
+        public required uint UserId { get; set; }
+        public required string Role { get; set; }
     }
 
     private readonly SetRoleModel _model = new() { UserId = 0, Role = ApplicationRoles.User };

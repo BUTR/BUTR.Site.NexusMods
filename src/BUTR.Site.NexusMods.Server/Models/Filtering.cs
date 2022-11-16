@@ -2,8 +2,8 @@
 {
     public sealed record Filtering
     {
-        public string Property { get; init; } = default!;
-        public FilteringType Type { get; init; } = default!;
-        public string Value { get; init; } = default!;
+        public required string Property { get; init; }
+        public required FilteringType Type { get; init; }
+        public required string Value { get; init; }
     }
 }

@@ -4,13 +4,13 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
 {
     public sealed record NexusModsArticleEntity : IEntity
     {
-        public int ArticleId { get; set; } = default!;
+        public required int ArticleId { get; init; }
 
-        public string Title { get; set; } = default!;
+        public required string Title { get; init; }
 
-        public int AuthorId { get; set; } = default!;
-        public string AuthorName { get; set; } = default!;
+        public required int AuthorId { get; init; }
+        public required string AuthorName { get; init; }
 
-        public DateTime CreateDate { get; set; } = default!;
+        public required DateTime CreateDate { get; init; }
     }
 }

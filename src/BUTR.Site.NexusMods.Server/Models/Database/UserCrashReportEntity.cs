@@ -4,12 +4,12 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
 {
     public sealed record UserCrashReportEntity : IEntity
     {
-        public int UserId { get; set; } = default!;
+        public required int UserId { get; init; }
 
-        public CrashReportEntity CrashReport { get; set; } = default!;
+        public required CrashReportEntity CrashReport { get; init; }
 
-        public CrashReportStatus Status { get; set; } = default!;
+        public required CrashReportStatus Status { get; init; }
 
-        public string Comment { get; set; } = default!;
+        public required string Comment { get; init; }
     }
 }

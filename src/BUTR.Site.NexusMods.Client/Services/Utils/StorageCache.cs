@@ -14,16 +14,16 @@ namespace BUTR.Site.NexusMods.Client.Services
 {
     public sealed record CacheOptions
     {
-        public DateTimeOffset? AbsoluteExpiration { get; init; }
-        public IChangeToken? ChangeToken { get; init; }
+        public required DateTimeOffset? AbsoluteExpiration { get; init; }
+        public required IChangeToken? ChangeToken { get; init; }
     }
 
     public sealed class StorageCache : IAsyncDisposable
     {
         private record EntryOptions<T>
         {
-            public T Value { get; init; } = default!;
-            public DateTimeOffset? AbsoluteExpiration { get; init; }
+            public required T Value { get; init; }
+            public required DateTimeOffset? AbsoluteExpiration { get; init; }
         }
 
         private readonly ISessionStorageService _storage;

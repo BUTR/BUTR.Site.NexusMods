@@ -120,6 +120,8 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddAuthorizationCore();
                 services.AddScoped<AuthenticationStateProvider, SimpleAuthenticationStateProvider>();
 
+                services.AddScoped<HighlightJS>();
+
                 services.AddBlazorise(options =>
                 {
                     options.Immediate = true;

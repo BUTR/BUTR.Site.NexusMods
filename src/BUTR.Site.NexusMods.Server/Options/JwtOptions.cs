@@ -13,7 +13,7 @@ namespace BUTR.Site.NexusMods.Server.Options
 
     public sealed record JwtOptions
     {
-        public string SignKey { get; set; } = default!;
-        public string EncryptionKey { get; set; } = default!;
+        public required string SignKey { get; init; }
+        public required string EncryptionKey { get; init; }
     }
 }

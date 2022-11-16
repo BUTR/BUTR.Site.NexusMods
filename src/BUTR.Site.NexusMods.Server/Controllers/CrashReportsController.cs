@@ -32,19 +32,19 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         private sealed record UserCrashReportView
         {
-            public Guid Id { get; init; } = default!;
-            public int Version { get; init; } = default!;
-            public string GameVersion { get; init; } = default!;
-            public string Exception { get; init; } = default!;
-            public DateTime CreatedAt { get; init; } = default!;
-            public string[] ModIds { get; init; } = default!;
-            public string[] InvolvedModIds { get; init; } = default!;
-            public int[] ModNexusModsIds { get; init; } = default!;
-            public string Url { get; init; } = default!;
+            public required Guid Id { get; init; }
+            public required int Version { get; init; }
+            public required string GameVersion { get; init; }
+            public required string Exception { get; init; }
+            public required DateTime CreatedAt { get; init; }
+            public required string[] ModIds { get; init; }
+            public required string[] InvolvedModIds { get; init; }
+            public required int[] ModNexusModsIds { get; init; }
+            public required string Url { get; init; }
 
-            public int UserId { get; init; } = default!;
-            public CrashReportStatus Status { get; init; } = default!;
-            public string Comment { get; init; } = default!;
+            public required int UserId { get; init; }
+            public required CrashReportStatus Status { get; init; }
+            public required string Comment { get; init; }
         }
 
         private readonly ILogger _logger;

@@ -12,14 +12,14 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             if (keySelector == null)
                 throw new ArgumentNullException(nameof(keySelector));
 
-            int start = 0;
-            int end = instance.Count - 1;
+            var start = 0;
+            var end = instance.Count - 1;
 
             while (start <= end)
             {
-                int m = (start + end) / 2;
-                TKey key = keySelector(instance[m]);
-                int result = key.CompareTo(itemKey);
+                var m = (start + end) / 2;
+                var key = keySelector(instance[m]);
+                var result = key.CompareTo(itemKey);
                 if (result == 0)
                     return m;
                 if (result < 0)

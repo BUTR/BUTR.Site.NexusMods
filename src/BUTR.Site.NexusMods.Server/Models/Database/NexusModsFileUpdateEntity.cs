@@ -4,8 +4,8 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
 {
     public sealed record NexusModsFileUpdateEntity : IEntity
     {
-        public int NexusModsModId { get; set; } = default!;
+        public required int NexusModsModId { get; init; }
 
-        public DateTime LastCheckedDate { get; set; } = default!;
+        public required DateTime LastCheckedDate { get; init; }
     }
 }

@@ -18,8 +18,8 @@ namespace BUTR.Site.NexusMods.Server.Options
 
     public sealed record NexusModsOptions
     {
-        public string Endpoint { get; init; } = default!;
-        public string APIEndpoint { get; init; } = default!;
-        public string ApiKey { get; init; } = default!;
+        public required string Endpoint { get; init; }
+        public required string APIEndpoint { get; init; }
+        public required string ApiKey { get; init; }
     }
 }

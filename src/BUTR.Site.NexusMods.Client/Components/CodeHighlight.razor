@@ -1,0 +1,24 @@
+﻿@inject HighlightJS HighlightJS
+
+<pre class="code">
+    <code @ref="@element" class="@Language">
+        @ChildContent
+    </code>
+</pre>
+
+@code {
+
+    [Parameter]
+    public string Language { get; set; } = "csharp";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private ElementReference element;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await HighlightJS.HighlightElement(element);
+    }
+
+}

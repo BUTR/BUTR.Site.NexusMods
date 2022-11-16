@@ -1,28 +1,31 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database
 {
     public sealed record CrashReportEntity : IEntity
     {
-        public Guid Id { get; set; } = default!;
+        public required Guid Id { get; init; }
 
-        public int Version { get; set; } = default!;
+        public required int Version { get; init; }
 
-        public string GameVersion { get; set; } = default!;
+        public required string GameVersion { get; init; }
 
-        public string Exception { get; set; } = default!;
+        public required string Exception { get; init; }
 
-        public DateTime CreatedAt { get; set; } = default!;
+        public required DateTime CreatedAt { get; init; }
 
-        public string[] ModIds { get; set; } = default!;
+        public required string[] ModIds { get; init; }
 
-        public string[] InvolvedModIds { get; set; } = default!;
+        public required string[] InvolvedModIds { get; init; }
 
-        public int[] ModNexusModsIds { get; set; } = default!;
+        public required int[] ModNexusModsIds { get; init; }
 
-        public string Url { get; set; } = default!;
+        public required string Url { get; init; }
 
         public CrashReportEntity() { }
+
+        [SetsRequiredMembers]
         public CrashReportEntity(Guid id) => Id = id;
     }
 }

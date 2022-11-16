@@ -2,7 +2,7 @@
 {
     public sealed record Sorting
     {
-        public string Property { get; init; } = default!;
-        public SortingType Type { get; init; } = default!;
+        public required string Property { get; init; }
+        public required SortingType Type { get; init; }
     }
 }
