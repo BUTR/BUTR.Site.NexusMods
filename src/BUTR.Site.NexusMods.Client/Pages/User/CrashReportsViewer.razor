@@ -150,7 +150,7 @@
                 }
                 else if (str.Length >= 3)
                 {
-                    if (columnInfo.SortField is nameof(EntityFields.InvolvedModIds))
+                    if (columnInfo.SortField is nameof(EntityFields.InvolvedModIds) or nameof(EntityFields.Exception))
                     {
                         yield return new Filtering(columnInfo.SortField, FilteringType.Contains, str);
                     }
