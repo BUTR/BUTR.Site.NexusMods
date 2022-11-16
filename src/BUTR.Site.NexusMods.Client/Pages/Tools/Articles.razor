@@ -47,7 +47,7 @@
     {
         foreach (var columnInfo in columnInfos)
         {
-            if (columnInfo.SortField is nameof(ArticleModel.CreateDate) && columnInfo.SearchValue is string[] dates)
+            if (columnInfo.SortField is nameof(EntityFields.CreateDate) && columnInfo.SearchValue is string[] dates)
             {
                 yield return new Filtering(columnInfo.SortField, FilteringType.GreaterThanOrEqual, dates[0]);
                 yield return new Filtering(columnInfo.SortField, FilteringType.LessThanOrEqual, dates[1]);

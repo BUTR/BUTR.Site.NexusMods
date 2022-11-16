@@ -71,6 +71,14 @@ namespace BUTR.Site.NexusMods.ServerClient
         }
     }
 
+    public partial class ExposedModsClient
+    {
+        public ExposedModsClient(HttpClient client, JsonSerializerOptions options) : this(client)
+        {
+            _settings = new Lazy<JsonSerializerOptions>(options);
+        }
+    }
+
     public partial record CrashReportModel
     {
         [JsonIgnore]
