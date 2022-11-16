@@ -12,7 +12,9 @@
         <DataGridPaging TItem="ExposedModModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetExposedMods" Sortable Filterable>
             <DataGridColumns>
                 <DataGridColumnText TItem="ExposedModModel" Field="@nameof(ExposedModModel.Id)" Caption="Id" Sortable SortField="@nameof(EntityFields.NexusModsModId)"/>
-                <DataGridColumnTextAutocomplete TItem="ExposedModModel" Field="@nameof(ExposedModModel.ModIds)" Caption="Mod Id's" Filterable Sortable SortField="@nameof(EntityFields.ModIds)" GetAutocompleteValues="GetAutocompleteValues"/>
+                <DataGridColumnTextAutocomplete TItem="ExposedModModel" Field="@nameof(ExposedModModel.ModIds)" Caption="Mod Id's" Filterable Sortable SortField="@nameof(EntityFields.ModIds)" GetAutocompleteValues="GetAutocompleteValues">
+                    <DisplayTemplate>@(string.Join(", ", context.ModIds))</DisplayTemplate>
+                </DataGridColumnTextAutocomplete>
                 <DataGridColumnDateTime TItem="ExposedModModel" Field="@nameof(ExposedModModel.LastCheckedDate)" Caption="Last Checked Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.LastCheckedDate)">
                     <DisplayTemplate>@(context.LastCheckedDate.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
                 </DataGridColumnDateTime>
@@ -53,7 +55,11 @@
             }
             else if (columnInfo.SearchValue is string str)
             {
-                if (str.Length >= 3)
+                if (columnInfo.SortField is nameof(EntityFields.ModIds))
+                {
+                    yield return new Filtering(columnInfo.SortField, FilteringType.Contains, str);
+                }
+                else
                 {
                     yield return new Filtering(columnInfo.SortField, FilteringType.StartsWith, str);
                 }
