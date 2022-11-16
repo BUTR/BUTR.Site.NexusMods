@@ -100,4 +100,9 @@ namespace BUTR.Site.NexusMods.ServerClient
         [JsonIgnore]
         public string AuthorUrl => $"https://nexusmods.com/users/{AuthorId}";
     }
+
+    public partial record PagingMetadata
+    {
+        public static PagingMetadata Empty => new(1, 1, 0, 0);
+    }
 }
