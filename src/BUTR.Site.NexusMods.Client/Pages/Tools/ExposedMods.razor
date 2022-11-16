@@ -55,13 +55,20 @@
             }
             else if (columnInfo.SearchValue is string str)
             {
-                if (columnInfo.SortField is nameof(EntityFields.ModIds))
+                if (columnInfo.SortField is nameof(EntityFields.NexusModsModId))
                 {
-                    yield return new Filtering(columnInfo.SortField, FilteringType.Contains, str);
+                    yield return new Filtering(columnInfo.SortField, FilteringType.Equal, str);
                 }
-                else
+                else if (str.Length >= 3)
                 {
-                    yield return new Filtering(columnInfo.SortField, FilteringType.StartsWith, str);
+                    if (columnInfo.SortField is nameof(EntityFields.ModIds))
+                    {
+                        yield return new Filtering(columnInfo.SortField, FilteringType.Contains, str);
+                    }
+                    else
+                    {
+                        yield return new Filtering(columnInfo.SortField, FilteringType.StartsWith, str);
+                    }
                 }
             }
         }
