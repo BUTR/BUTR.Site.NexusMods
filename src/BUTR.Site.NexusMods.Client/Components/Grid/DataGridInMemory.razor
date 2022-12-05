@@ -6,6 +6,7 @@
           SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef))"
           SelectionMode="DataGridSelectionMode.Single"
           Responsive
+          ShowPager
           Editable="@Editable"
           EditMode="@EditMode"
           Resizable="@Resizable"

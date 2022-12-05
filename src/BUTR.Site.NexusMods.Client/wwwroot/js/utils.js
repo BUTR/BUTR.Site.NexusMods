@@ -1,9 +1,8 @@
 export async function downloadFile(filename, contentType, compressedStreamReference) {
     const arrayBuffer = await compressedStreamReference.arrayBuffer();
-    const int8array = new Uint8Array(arrayBuffer);
 
     // Create the URL
-    const file = new File([int8array], filename, { type: contentType });
+    const file = new File([arrayBuffer], filename, { type: contentType });
     const exportUrl = URL.createObjectURL(file);
 
     // Create the <a> element and click on it

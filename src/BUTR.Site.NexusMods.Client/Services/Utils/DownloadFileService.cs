@@ -15,17 +15,15 @@ namespace BUTR.Site.NexusMods.Client.Services
             _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", "../js/utils.js"));
         }
 
-        public async ValueTask<Stream> DownloadFileAsync(string file, string contentType, Stream compressed)
+        public async ValueTask DownloadFileAsync(string file, string contentType, Stream compressed)
         {
             var module = await _moduleTask.Value;
-            var streamReference = await module.InvokeAsync<IJSStreamReference>("downloadFile", file, contentType, new DotNetStreamReference(compressed));
-            return await streamReference.OpenReadStreamAsync();
+            await module.InvokeVoidAsync("downloadFile", file, contentType, new DotNetStreamReference(compressed));
         }
-        public async ValueTask<Stream> DownloadFileAsync(string file, string contentType, byte[] compressed)
+        public async ValueTask DownloadFileAsync(string file, string contentType, byte[] compressed)
         {
             var module = await _moduleTask.Value;
-            var streamReference = await module.InvokeAsync<IJSStreamReference>("downloadFile", file, contentType, compressed);
-            return await streamReference.OpenReadStreamAsync();
+            await module.InvokeVoidAsync("downloadFile", file, contentType, compressed);
         }
 
         public async ValueTask DisposeAsync()

@@ -77,10 +77,10 @@
     {
         foreach (var file in e.Files)
         {
-            var ms = new MemoryStream();
+            await using var ms = new MemoryStream();
             await file.WriteToStreamAsync(ms);
             ms.Seek(0, SeekOrigin.Begin);
-            await ParseLibrary(file.Name, ms);
+            ParseLibrary(file.Name, ms);
         }
     }
 
@@ -107,7 +107,7 @@
 
         var tagsElement = doc.CreateElement(string.Empty, "tags", string.Empty);
         baseElement.AppendChild(tagsElement);
-        
+
         var languageElement = doc.CreateElement(string.Empty, "tag", string.Empty);
         languageElement.SetAttribute("language", _language);
         tagsElement.AppendChild(languageElement);
@@ -128,9 +128,8 @@
         await _downloadFileService.DownloadFileAsync("strings.xml", "application/xml", ms);
     }
 
-    private async Task ParseLibrary(string name, Stream assemblyStream)
+    private void ParseLibrary(string name, Stream assemblyStream)
     {
-        await using var _ = assemblyStream;
         using var reader = new PEReader(assemblyStream);
         var metadata = reader.GetMetadataReader();
 
@@ -162,12 +161,12 @@
                 continue;
 
             var body = reader.GetMethodBody(methodDefinition.RelativeVirtualAddress);
+            var ilReader = body.GetILReader();
             foreach (var codeInstruction in ILReader.GetInstructions(metadata, body))
             {
                 if (codeInstruction.OperandType != OperandType.InlineString)
                     continue;
 
-                var ilReader = body.GetILReader();
                 ilReader.Offset = codeInstruction.OperandOffset;
                 var metadataToken = ilReader.ReadInt32();
                 string? text;
@@ -182,9 +181,8 @@
                 }
                 if (!string.IsNullOrEmpty(text) && LocalizationUtils.TryParseTranslationString(text, out var id, out var content))
                 {
-                    _dataGridRef?.Values.Add(new(id, content, "-"));
+                    _dataGridRef?.Values.Add(new(id, content, content));
                 }
-                break;
             }
         }
     }
