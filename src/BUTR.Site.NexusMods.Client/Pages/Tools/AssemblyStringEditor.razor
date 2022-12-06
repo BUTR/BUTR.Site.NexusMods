@@ -25,16 +25,16 @@
             </Field>
         </Fields>
         <Field>
-            <DataGridInMemory @ref="@_dataGridRef" TItem="BaseLocalizationString" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
+            <DataGridInMemory @ref="@_dataGridRef" TItem="LocalizationString" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
                 <DataGridColumns>
-                    <DataGridCommandColumn TItem="BaseLocalizationString" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
-                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Assembly)" Caption="@nameof(BaseLocalizationString.Assembly)"/>
-                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Text)" Caption="@nameof(BaseLocalizationString.Text)" Editable>
+                    <DataGridCommandColumn TItem="LocalizationString" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
+                    <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Assembly)" Caption="@nameof(LocalizationString.Assembly)"/>
+                    <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Text)" Caption="@nameof(LocalizationString.Text)" Editable>
                         <EditTemplate>
                             <TextEdit Text="@((string) context.CellValue)" TextChanged="@(v => OnEdit(context, v))"/>
                         </EditTemplate>
                     </DataGridColumn>
-                    <DataGridColumn TItem="BaseLocalizationString" Field="@nameof(BaseLocalizationString.Location)" Caption="@nameof(BaseLocalizationString.Location)"/>
+                    <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Location)" Caption="@nameof(LocalizationString.Location)"/>
                 </DataGridColumns>
             </DataGridInMemory>
             <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
@@ -45,15 +45,13 @@
 
 @code {
 
-    private abstract record BaseLocalizationString(string Assembly, string Text, string Location);
-    private record FieldLocalizationString(string Assembly, string Text, string Location, FieldDefinition FieldDefinition) : BaseLocalizationString(Assembly, Text, Location);
-    private record MethodLocalizationString(string Assembly, string Text, string Location, MethodDefinition MethodDefinition, Instruction CodeInstruction) : BaseLocalizationString(Assembly, Text, Location);
+    private record LocalizationString(string Assembly, string Text, string Location, Action<string> Replace);
 
     private Stream? _currentFileStream;
     private object? _currentFile; // We need to hide the type so LazyLoad can work
     private string? _currentFileName;
 
-    private DataGridInMemory<BaseLocalizationString>? _dataGridRef;
+    private DataGridInMemory<LocalizationString>? _dataGridRef;
 
     private async Task OnFileSelected(FileChangedEventArgs e)
     {
@@ -73,20 +71,10 @@
         ParseLibrary(file.Name, ms);
     }
 
-    private Task OnEdit(CellEditContext<BaseLocalizationString> context, string value)
+    private Task OnEdit(CellEditContext<LocalizationString> context, string value)
     {
-        if (context.Item is FieldLocalizationString fieldLocalizationString)
-        {
-            fieldLocalizationString.FieldDefinition.Constant = value;
-            context.CellValue = value;
-        }
-
-        if (context.Item is MethodLocalizationString methodLocalizationString)
-        {
-            var ilProcessor = methodLocalizationString.MethodDefinition.Body.GetILProcessor();
-            ilProcessor.Replace(methodLocalizationString.CodeInstruction, Instruction.Create(methodLocalizationString.CodeInstruction.OpCode, value));
-            context.CellValue = value;
-        }
+        context.Item.Replace(value);
+        context.CellValue = value;
 
         return Task.CompletedTask;
     }
@@ -121,7 +109,7 @@
                 continue;
 
             if (fieldDefinition.Constant is string text && !string.IsNullOrEmpty(text) && !LocalizationUtils.IsTranslationString(text))
-                _dataGridRef?.Values.Add(new FieldLocalizationString(name, text, fieldDefinition.FullName, fieldDefinition));
+                _dataGridRef?.Values.Add(new LocalizationString(name, text, fieldDefinition.FullName, value => fieldDefinition.Constant = value));
         }
 
         foreach (var methodDefinition in assemblyDefinition.MainModule.Types.SelectMany(x => x.Methods))
@@ -131,8 +119,27 @@
 
             foreach (var codeInstruction in methodDefinition.Body.Instructions)
             {
-                if (codeInstruction.Operand is string text  && !string.IsNullOrEmpty(text) && !LocalizationUtils.IsTranslationString(text))
-                    _dataGridRef?.Values.Add(new MethodLocalizationString(name, text, methodDefinition.FullName, methodDefinition, codeInstruction));
+                if (codeInstruction.Operand is string text && !string.IsNullOrEmpty(text) && !LocalizationUtils.IsTranslationString(text))
+                {
+                    _dataGridRef?.Values.Add(new LocalizationString(name, text, methodDefinition.FullName, value =>
+                    {
+                        var ilProcessor = methodDefinition.Body.GetILProcessor();
+                        ilProcessor.Replace(codeInstruction, Instruction.Create(codeInstruction.OpCode, value));
+                    }));
+                }
+            }
+        }
+
+        foreach (var customAttribute in assemblyDefinition.MainModule.CustomAttributes)
+        {
+            for (var i = 0; i < customAttribute.ConstructorArguments.Count; i++)
+            {
+                var constructorArgument = customAttribute.ConstructorArguments[i];
+                if (constructorArgument.Value is string text && !string.IsNullOrEmpty(text) && !LocalizationUtils.IsTranslationString(text))
+                {
+                    _dataGridRef?.Values.Add(new LocalizationString(name, text, customAttribute.AttributeType.Name, value =>
+                        customAttribute.ConstructorArguments[i] = new CustomAttributeArgument(constructorArgument.Type, value)));
+                }
             }
         }
     }

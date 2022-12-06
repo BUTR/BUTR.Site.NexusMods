@@ -41,18 +41,21 @@
 
     private async Task OnFileSelected(FileChangedEventArgs e)
     {
+        if (_dataGridRef is null) return;
+
         foreach (var file in e.Files)
         {
             await using var ms = new MemoryStream();
             await file.WriteToStreamAsync(ms);
             ms.Seek(0, SeekOrigin.Begin);
-            ParseLibrary(file.Name, ms);
+            foreach (var entry in AssemblyReader.ParseAssemblyLocalizations(ms).Select(x => new LocalizationString(file.Name, x.Original)))
+                _dataGridRef.Values.Add(entry);
         }
     }
 
     private Task OnClear()
     {
-        _dataGridRef.Values.Clear();
+        _dataGridRef?.Values.Clear();
         return Task.CompletedTask;
     }
 
@@ -67,65 +70,6 @@
         await csv.FlushAsync();
         ms.Seek(0, SeekOrigin.Begin);
         await _downloadFileService.DownloadFileAsync("localization.csv", "text/csv", ms);
-    }
-
-    private void ParseLibrary(string name, Stream assemblyStream)
-    {
-        using var reader = new PEReader(assemblyStream);
-        var metadata = reader.GetMetadataReader();
-
-        foreach (var fieldDefinitionHandle in metadata.FieldDefinitions)
-        {
-            var fieldDefinition = metadata.GetFieldDefinition(fieldDefinitionHandle);
-
-            if (!fieldDefinition.Attributes.HasFlag(FieldAttributes.Literal))
-                continue;
-
-            var constantHandle = fieldDefinition.GetDefaultValue();
-            if (constantHandle.IsNil)
-                continue;
-
-            var constant = metadata.GetConstant(constantHandle);
-            if (constant.TypeCode != ConstantTypeCode.String)
-                continue;
-
-            var blob = metadata.GetBlobReader(constant.Value);
-            if (blob.ReadConstant(constant.TypeCode) is string text && !string.IsNullOrEmpty(text) && LocalizationUtils.IsTranslationString(text))
-                _dataGridRef?.Values.Add(new(name, text));
-        }
-
-        foreach (var methodDefinitionHandle in metadata.MethodDefinitions)
-        {
-            var methodDefinition = metadata.GetMethodDefinition(methodDefinitionHandle);
-
-            if (methodDefinition.RelativeVirtualAddress == 0)
-                continue;
-
-            var body = reader.GetMethodBody(methodDefinition.RelativeVirtualAddress);
-            var ilReader = body.GetILReader();
-            foreach (var codeInstruction in ILReader.GetInstructions(metadata, body))
-            {
-                if (codeInstruction.OperandType != OperandType.InlineString)
-                    continue;
-
-                ilReader.Offset = codeInstruction.OperandOffset;
-                var metadataToken = ilReader.ReadInt32();
-                string? text;
-                try
-                {
-                    var userString = MetadataTokens.UserStringHandle(metadataToken);
-                    text = metadata.GetUserString(userString);
-                }
-                catch (BadImageFormatException)
-                {
-                    text = null;
-                }
-                if (!string.IsNullOrEmpty(text) && LocalizationUtils.IsTranslationString(text))
-                {
-                    _dataGridRef?.Values.Add(new(name, text));
-                }
-            }
-        }
     }
 
 }
