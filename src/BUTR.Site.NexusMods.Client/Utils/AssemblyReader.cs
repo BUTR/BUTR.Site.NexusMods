@@ -73,7 +73,7 @@ namespace BUTR.Site.NexusMods.Client.Utils
                     {
                         var methodDefinition = metadata.GetMethodDefinition((MethodDefinitionHandle) customAttribute.Constructor);
                         var name = metadata.GetString(metadata.GetTypeDefinition((TypeDefinitionHandle) methodDefinition.GetDeclaringType()).Name);
-                        foreach (var text in ReadCustomAttribute(metadata, customAttribute.Value, methodDefinition.Signature))
+                        foreach (var text in ReadCustomAttribute(metadata, reader.PEHeaders.PEHeader?.Magic == PEMagic.PE32 ? 4 : 8, customAttribute.Value, methodDefinition.Signature))
                             yield return new(text, name);
                         break;
                     }
@@ -81,7 +81,7 @@ namespace BUTR.Site.NexusMods.Client.Utils
                     {
                         var memberReference = metadata.GetMemberReference((MemberReferenceHandle) customAttribute.Constructor);
                         var name = metadata.GetString(metadata.GetTypeReference((TypeReferenceHandle) memberReference.Parent).Name);
-                        foreach (var text in ReadCustomAttribute(metadata, customAttribute.Value, memberReference.Signature))
+                        foreach (var text in ReadCustomAttribute(metadata, reader.PEHeaders.PEHeader?.Magic == PEMagic.PE32 ? 4 : 8, customAttribute.Value, memberReference.Signature))
                             yield return new(text, name);
                         break;
                     }
@@ -115,10 +115,10 @@ namespace BUTR.Site.NexusMods.Client.Utils
             }
         }
 
-        private static IEnumerable<string> ReadCustomAttribute(MetadataReader metadata, BlobHandle valueBlob, BlobHandle signatureBlob)
+        private static IEnumerable<string> ReadCustomAttribute(MetadataReader metadata, int ptrSize, BlobHandle valueBlob, BlobHandle signatureBlob)
         {
             var valueReader = metadata.GetBlobReader(valueBlob);
-            if (valueReader.ReadUInt16() != 1) yield break;
+            var unknown = valueReader.ReadUInt16();
             var signatureReader = metadata.GetBlobReader(signatureBlob);
             var header = signatureReader.ReadSignatureHeader();
             var parameters = signatureReader.ReadCompressedInteger();
@@ -149,7 +149,7 @@ namespace BUTR.Site.NexusMods.Client.Utils
                         break;
                     case SignatureTypeCode.IntPtr:
                     case SignatureTypeCode.UIntPtr:
-                        valueReader.Offset += IntPtr.Size;
+                        valueReader.Offset += ptrSize;
                         break;
                     case SignatureTypeCode.String:
                     {
