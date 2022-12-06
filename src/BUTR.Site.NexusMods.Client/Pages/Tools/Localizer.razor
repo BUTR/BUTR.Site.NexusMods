@@ -82,7 +82,7 @@
             await using var ms = new MemoryStream();
             await file.WriteToStreamAsync(ms);
             ms.Seek(0, SeekOrigin.Begin);
-            foreach (var entry in AssemblyReader.ParseAssemblyLocalizations(ms).Select(x => new StringEntry(x.Id, x.Original, "-")))
+            foreach (var entry in AssemblyReader.ParseAssemblyLocalizations(ms).Select(x => new StringEntry(x.Id, x.Original, x.Original)))
                 _dataGridRef.Values.Add(entry);
         }
     }
@@ -131,7 +131,6 @@
         doc.Save(ms);
         ms.Seek(0, SeekOrigin.Begin);
         await _downloadFileService.DownloadFileAsync("strings.xml", "application/xml", ms);
-        _dataGridRef.Values = AssemblyReader.ParseAssemblyLocalizations(ms).Select(x => new StringEntry(x.Id, x.Original, "-")).ToList();
     }
 
 }

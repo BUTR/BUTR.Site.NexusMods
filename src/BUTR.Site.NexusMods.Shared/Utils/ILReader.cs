@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Reflection.Metadata;
 
-namespace BUTR.Site.NexusMods.Client.Utils
+namespace BUTR.Site.NexusMods.Shared.Utils
 {
     public record ILInstruction(int Offset, ILOpCode OpCode, OperandType OperandType, int OperandOffset);
 

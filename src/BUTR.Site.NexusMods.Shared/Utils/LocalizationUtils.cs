@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BUTR.Site.NexusMods.Client.Utils
+namespace BUTR.Site.NexusMods.Shared.Utils
 {
     public static class LocalizationUtils
     {

@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace BUTR.Site.NexusMods.Client.Utils
+namespace BUTR.Site.NexusMods.Shared.Utils
 {
     public record LocalizationEntry(string Id, string Original);
 
@@ -121,9 +121,10 @@ namespace BUTR.Site.NexusMods.Client.Utils
             var unknown = valueReader.ReadUInt16();
             var signatureReader = metadata.GetBlobReader(signatureBlob);
             var header = signatureReader.ReadSignatureHeader();
-            var parameters = signatureReader.ReadCompressedInteger();
+            var genericParameterCount = header.IsGeneric ? signatureReader.ReadCompressedInteger() : 0;
+            var parameterCount = signatureReader.ReadCompressedInteger();
             var @return = signatureReader.ReadSignatureTypeCode();
-            for (var i = 0; i < parameters; i++)
+            for (var i = 0; i < parameterCount; i++)
             {
                 switch (signatureReader.ReadSignatureTypeCode())
                 {
