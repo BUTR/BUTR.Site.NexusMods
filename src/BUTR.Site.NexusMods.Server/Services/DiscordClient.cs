@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -36,9 +37,8 @@ namespace BUTR.Site.NexusMods.Server.Services
                 Headers =
                 {
                     {"Authorization", $"Bot {_options.BotToken}"},
-                    {"Content-Type", $"application/json"}
                 },
-                Content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(metadata))
+                Content = new StringContent(JsonSerializer.Serialize(metadata), Encoding.UTF8, "application/json"),
             });
         }
         
@@ -118,9 +118,8 @@ namespace BUTR.Site.NexusMods.Server.Services
                 Headers =
                 {
                     {"Authorization", $"Bearer {accessToken}"},
-                    {"Content-Type", "application/json"}
                 },
-                Content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(new PutMetadata("BUTR", metadataJson)))
+                Content = new StringContent(JsonSerializer.Serialize(new PutMetadata("BUTR", metadataJson)), Encoding.UTF8, "application/json"),
             });
         }
     }
