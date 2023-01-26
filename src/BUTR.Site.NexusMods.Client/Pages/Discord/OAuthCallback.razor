@@ -15,7 +15,7 @@
                     <Row Margin="@Margin.Is2">
                         @if (_userInfo is not null)
                         {
-                            <Blazorise.Link To="@_userInfo.Url" Target="Target.Blank">@_userInfo.Name</Blazorise.Link><Text> was successfully linked with the BUTR Site!</Text>
+                            <Text><Blazorise.Link To="@_userInfo.Url" Target="Target.Blank">@_userInfo.Name</Blazorise.Link> was successfully linked with the BUTR Site!</Text>
                         }
                         @if (!string.IsNullOrEmpty(_message))
                         {
