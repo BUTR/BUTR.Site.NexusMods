@@ -1,0 +1,40 @@
+﻿@page "/discord-oauth-callback"
+
+@inject IDiscordClient _discordClient;
+@inject ILocalStorageService _localStorage;
+
+<Text>@_message</Text>
+
+@code {
+    
+    [Parameter]
+    public string Code { get; set; }
+    
+    [Parameter]
+    public Guid State { get; set; }
+
+    private string _message = string.Empty;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (!await _localStorage.ContainKeyAsync("discord_state"))
+        {
+            _message = "State verification failed.";
+            return;
+        }
+
+        var state = await _localStorage.GetItemAsync<Guid>("discord_state");
+        if (state != State)
+        {
+            _message = "State verification failed.";
+            return;
+        }
+
+        var tokens = await _discordClient.GetoauthtokensAsync(Code);
+        await _discordClient.UpdatemetadataAsync(new UpdateMetadataRequest(tokens.AccessToken));
+        _message = "You did it!  Now go back to Discord.";
+    }
+
+}

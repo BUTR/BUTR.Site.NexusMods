@@ -18,61 +18,48 @@ namespace BUTR.Site.NexusMods.Server.Controllers
     [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
     public sealed class DiscordController : ControllerBase
     {
-        private readonly DiscordOptions _options;
         private readonly DiscordClient _discordClient;
-        private readonly IDiscordStorage _storage;
 
-        public sealed record OauthCallbackQuery(string Code, string State);
+        public sealed record UpdateMetadataRequest(string AccessToken);
+        public sealed record DiscordOAuthUrlResponse(string Url, Guid State);
 
-        public DiscordController(IOptions<DiscordOptions> options, DiscordClient discordClient, IDiscordStorage storage)
+        public DiscordController(DiscordClient discordClient)
         {
-            _options = options.Value ?? throw new ArgumentNullException(nameof(options));
             _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
-            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
         
-        [HttpGet("LinkedRole")]
-        //[Produces("application/json")]
-        //[ProducesResponseType(typeof(PagingResponse<ExposedModModel>), StatusCodes.Status200OK)]
-        //[ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public ActionResult LinkedRole(CancellationToken ct)
+        [HttpGet("GetOAuthUrl")]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(DiscordOAuthUrlResponse), StatusCodes.Status200OK)]
+        public ActionResult GetOAuthUrl()
         {
             var (url, state) = _discordClient.GetOAuthUrl();
-            HttpContext.Response.Cookies.Append("clientState", state.ToString());
-            return Redirect(url);
+            return StatusCode(StatusCodes.Status200OK, new DiscordOAuthUrlResponse(url, state));
         }
         
-        [HttpPost("OAuthCallback")]
-        //[Produces("application/json")]
-        //[ProducesResponseType(typeof(PagingResponse<ExposedModModel>), StatusCodes.Status200OK)]
-        //[ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> OAuthCallback([FromBody] OauthCallbackQuery query, CancellationToken ct)
+        [HttpGet("GetOAuthTokens")]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(DiscordOAuthTokensResponse), StatusCodes.Status200OK)]
+        public async Task<ActionResult> GetOAuthTokens([FromQuery] string code, CancellationToken ct)
         {
-            if (!HttpContext.Request.Cookies.TryGetValue("clientState", out var state))
-                return StatusCode(StatusCodes.Status403Forbidden, "State verification failed.");
+            var tokens = await _discordClient.GetOAuthTokens(code);
+            return StatusCode(StatusCodes.Status200OK, tokens);
 
-            var tokens = await _discordClient.GetOAuthTokens(query.Code);
-
-            var userInfo = await _discordClient.GetUserInfo(tokens.AccessToken);
-            _storage.Upsert(userInfo.User.Id, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokens.ExpiresIn)));
-
-            await UpdateMetadata(userInfo.User.Id);
-            
-            return Ok();
         }
 
-
-        private async Task UpdateMetadata(int userId)
+        [HttpPost("UpdateMetadata")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult> UpdateMetadata([FromBody] UpdateMetadataRequest body)
         {
             var role = HttpContext.GetRole();
             
-            var tokens = _storage.Get(userId);
             var metadataJson = $@"{{
   ""butrmodauthor"": 1,
   ""butrmoderator"": {(role == ApplicationRoles.Moderator ? 1 : 0)},
   ""butradministrator"": {(role == ApplicationRoles.Administrator ? 1 : 0)},
 }}";
-            await _discordClient.PushMetadata(userId, tokens, metadataJson);
+            await _discordClient.PushMetadata(body.AccessToken, metadataJson);
+            return StatusCode(StatusCodes.Status200OK);
         }
     }
 }

@@ -126,7 +126,7 @@ namespace BUTR.Site.NexusMods.Server
             services.AddNexusModsDefaultServices();
 
             services.AddHostedService<DiscordLinkedRolesService>();
-            services.AddScoped<IDiscordStorage, EFDiscordStorage>();
+            services.AddScoped<IDiscordStorage, MemoryDiscordStorage>();
 
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IHttpMessageHandlerBuilderFilter, SyncLoggingHttpMessageHandlerBuilderFilter>());
             services.AddTransient<NexusModsInfo>();

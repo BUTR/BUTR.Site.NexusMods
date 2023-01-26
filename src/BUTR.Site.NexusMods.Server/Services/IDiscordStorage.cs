@@ -1,6 +1,8 @@
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
+using Microsoft.Extensions.Caching.Memory;
+
 using System;
 using System.Linq;
 
@@ -11,35 +13,24 @@ namespace BUTR.Site.NexusMods.Server.Services
         DiscordOAuthTokens? Get(int userId);
         void Upsert(int userId, DiscordOAuthTokens tokens);
     }
-    
-    public sealed class EFDiscordStorage : IDiscordStorage
+
+    public sealed class MemoryDiscordStorage : IDiscordStorage
     {
-        private readonly AppDbContext _dbContext;
+        private readonly IMemoryCache _memoryCache;
 
-        public EFDiscordStorage(AppDbContext dbContext)
+        public MemoryDiscordStorage(IMemoryCache memoryCache)
         {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
         }
-
+        
         public DiscordOAuthTokens? Get(int userId)
         {
-            if (_dbContext.Set<DiscordUserEntity>().FirstOrDefault(x => x.UserId == userId) is { } user)
-            {
-                return new DiscordOAuthTokens(user.AccessToken, user.RefreshToken, user.ExpiresAt);
-            }
-            return null;
+            return _memoryCache.Get<DiscordOAuthTokens>(userId);
         }
 
         public void Upsert(int userId, DiscordOAuthTokens tokens)
         {
-            _dbContext.Set<DiscordUserEntity>().Add(new DiscordUserEntity
-            {
-                UserId = userId,
-                AccessToken = tokens.AccessToken,
-                RefreshToken = tokens.RefreshToken,
-                ExpiresAt = tokens.ExpiresAt
-            });
-            _dbContext.SaveChanges();
+            _memoryCache.Set(userId, tokens);
         }
     }
 }

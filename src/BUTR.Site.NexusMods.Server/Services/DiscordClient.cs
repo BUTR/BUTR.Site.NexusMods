@@ -122,5 +122,16 @@ namespace BUTR.Site.NexusMods.Server.Services
                 Content = new StringContent(JsonSerializer.Serialize(new PutMetadata("BUTR", metadataJson)), Encoding.UTF8, "application/json"),
             });
         }
+        public async Task PushMetadata(string accessToken, string metadataJson)
+        {
+            using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/users/@me/applications/{_options.ClientId}/role-connection")
+            {
+                Headers =
+                {
+                    {"Authorization", $"Bearer {accessToken}"},
+                },
+                Content = new StringContent(JsonSerializer.Serialize(new PutMetadata("BUTR", metadataJson)), Encoding.UTF8, "application/json"),
+            });
+        }
     }
 }
