@@ -24,7 +24,7 @@ namespace BUTR.Site.NexusMods.Server.Services
     public sealed record UserInfo(
         [property: JsonPropertyName("user")] UserInfoUser User);
     
-    public sealed record GlobalMetadata(
+    public sealed record DiscordGlobalMetadata(
         string Key,
         string Name,
         string Description,
@@ -48,7 +48,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
 
-        public async Task SetGlobalMetadata(IReadOnlyList<GlobalMetadata> metadata)
+        public async Task SetGlobalMetadata(IReadOnlyList<DiscordGlobalMetadata> metadata)
         {
             using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/applications/{_options.ClientId}/role-connections/metadata")
             {

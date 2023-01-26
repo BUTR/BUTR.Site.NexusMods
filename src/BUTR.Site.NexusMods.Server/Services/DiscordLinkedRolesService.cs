@@ -17,7 +17,7 @@ public sealed class DiscordLinkedRolesService : BackgroundService
         
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await _client.SetGlobalMetadata(new DiscordClient.GlobalMetadata[]
+        await _client.SetGlobalMetadata(new DiscordGlobalMetadata[]
         {
             new("butrmodauthor", "BUTR Mod Author", "Linked with the BUTR Site", 7), 
             new("butrmoderator", "BUTR Moderator", "Moderator of BUTR Site", 7),
