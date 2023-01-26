@@ -79,6 +79,14 @@ namespace BUTR.Site.NexusMods.ServerClient
         }
     }
 
+    public partial class DiscordClient
+    {
+        public DiscordClient(HttpClient client, JsonSerializerOptions options) : this(client)
+        {
+            _settings = new Lazy<JsonSerializerOptions>(options);
+        }
+    }
+
     public partial record CrashReportModel
     {
         [JsonIgnore]

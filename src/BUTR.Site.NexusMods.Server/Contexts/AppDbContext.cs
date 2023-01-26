@@ -26,6 +26,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts
             modelBuilder.ApplyConfiguration(new CrashReportEntityConfiguration());
             modelBuilder.ApplyConfiguration(new CrashReportFileEntityConfiguration());
             modelBuilder.ApplyConfiguration(new CrashReportIgnoredFilesEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new DiscordUserEntityConfiguration());
         }
     }
 }

@@ -15,19 +15,20 @@
   <ItemGroup>
     <PackageReference Include="Aragas.Extensions.Options.FluentValidation" Version="1.0.0.11" />
     <PackageReference Include="BUTR.Authentication.NexusMods" Version="1.0.0.4" />
-    <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="3.1.2" />
+    <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="4.0.2" />
     <PackageReference Include="DynamicExpressions.NET" Version="1.1.0" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="8.0.0.7106-preview2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
-    <PackageReference Include="Npgsql" Version="7.0.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.2" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+    <PackageReference Include="Npgsql" Version="7.0.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.1" />
     <PackageReference Include="Polly" Version="7.2.3" />
     <PackageReference Include="Quartz" Version="3.5.0" />
     <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.5.0" />
     <PackageReference Include="Quartz.Extensions.Hosting" Version="3.5.0" />
     <PackageReference Include="RateLimiter" Version="2.2.0" />
     <PackageReference Include="SharpCompress" Version="0.32.2" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,7 +44,7 @@
   
   <Target Name="GenerateOpenApi" Condition="$(DOTNET_RUNNING_IN_CONTAINER) != true" AfterTargets="PostBuildEvent">
     <Exec Command="dotnet new tool-manifest --force" />
-    <Exec Command="dotnet tool install --local Swashbuckle.AspNetCore.Cli --version 6.1.4" />
+    <Exec Command="dotnet tool install --local Swashbuckle.AspNetCore.Cli --version 6.5.0" />
     <Exec Command="dotnet swagger tofile --output ../swagger.json $(OutputPath)$(AssemblyName).dll v1" />
   </Target>
 
