@@ -27,7 +27,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                 new(DiscordConstants.BUTRModAuthor, "BUTR Mod Author", "Linked with the BUTR Site", 7), 
                 new(DiscordConstants.BUTRModerator, "BUTR Moderator", "Moderator of BUTR Site", 7),
                 new(DiscordConstants.BUTRAdministrator, "BUTR Administrator", "Administrator of BUTR Site", 7),
-                new(DiscordConstants.BUTRLinkedMods, "Linked Mods", "Amount of linked mods required", 2),
+                new(DiscordConstants.BUTRLinkedMods, "Linked Mods", "Minimal amount of linked mods required", 2),
             });
             if (!result)
                 _logger.LogError("Failed to update Discord's global role-connection metadata!");
