@@ -28,9 +28,9 @@ namespace BUTR.Site.NexusMods.Server.Services
     
     public sealed class DiscordClient
     {
-        private sealed record PutMetadata(
+        private sealed record PutMetadata<T>(
             [property: JsonPropertyName("platform_name")] string PlatformName,
-            [property: JsonPropertyName("metadata")] string Metadata);
+            [property: JsonPropertyName("metadata")] T Metadata);
         
         public sealed record DiscordOAuthTokensResponse(
             [property: JsonPropertyName("access_token")] string AccessToken,
@@ -126,7 +126,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             return await JsonSerializer.DeserializeAsync<DiscordUserInfo>(await response.Content.ReadAsStreamAsync());
         }
         
-        public async Task PushMetadata(int userId, DiscordOAuthTokens tokens, string metadataJson)
+        public async Task PushMetadata<T>(int userId, DiscordOAuthTokens tokens, T metadata)
         {
             var accessToken = await GetAccessToken(userId, tokens);
 
@@ -136,10 +136,10 @@ namespace BUTR.Site.NexusMods.Server.Services
                 {
                     {"Authorization", $"Bearer {accessToken}"},
                 },
-                Content = new StringContent(JsonSerializer.Serialize(new PutMetadata("BUTR", metadataJson)), Encoding.UTF8, "application/json"),
+                Content = new StringContent(JsonSerializer.Serialize(new PutMetadata<T>("BUTR", metadata)), Encoding.UTF8, "application/json"),
             });
         }
-        public async Task PushMetadata(string accessToken, string metadataJson)
+        public async Task PushMetadata<T>(string accessToken, T metadata)
         {
             using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/users/@me/applications/{_options.ClientId}/role-connection")
             {
@@ -147,7 +147,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                 {
                     {"Authorization", $"Bearer {accessToken}"},
                 },
-                Content = new StringContent(JsonSerializer.Serialize(new PutMetadata("BUTR", metadataJson)), Encoding.UTF8, "application/json"),
+                Content = new StringContent(JsonSerializer.Serialize(new PutMetadata<T>("BUTR", metadata)), Encoding.UTF8, "application/json"),
             });
         }
     }
