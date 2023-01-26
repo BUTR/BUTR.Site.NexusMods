@@ -18,7 +18,7 @@ namespace BUTR.Site.NexusMods.Server.Services
     public sealed record DiscordUserInfoUser(
         [property: JsonPropertyName("id")] int Id,
         [property: JsonPropertyName("username")] string Username,
-        [property: JsonPropertyName("discriminator")] string Discriminator);
+        [property: JsonPropertyName("discriminator")] int Discriminator);
     public sealed record DiscordUserInfo(
         [property: JsonPropertyName("user")] DiscordUserInfoUser User);
     
