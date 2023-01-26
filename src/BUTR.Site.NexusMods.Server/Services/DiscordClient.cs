@@ -15,12 +15,16 @@ namespace BUTR.Site.NexusMods.Server.Services
 {
     public sealed record DiscordOAuthTokens(string AccessToken, string RefreshToken, DateTimeOffset ExpiresAt);
 
-    public sealed record UserInfoUser(
+    public sealed record DiscordUserInfoUser(
         [property: JsonPropertyName("id")] int Id);
-    public sealed record UserInfo(
-        [property: JsonPropertyName("user")] UserInfoUser User);
+    public sealed record DiscordUserInfo(
+        [property: JsonPropertyName("user")] DiscordUserInfoUser User);
     
-    public sealed record DiscordGlobalMetadata(string Key, string Name, string Description, int Type);
+    public sealed record DiscordGlobalMetadata(
+        [property: JsonPropertyName("key")] string Key,
+        [property: JsonPropertyName("name")] string Name,
+        [property: JsonPropertyName("description")] string Description,
+        [property: JsonPropertyName("type")] int Type);
     
     public sealed class DiscordClient
     {
@@ -110,7 +114,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             return null;
         }
         
-        public async Task<UserInfo?> GetUserInfo(string accessToken)
+        public async Task<DiscordUserInfo?> GetUserInfo(string accessToken)
         {
             using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/v10/oauth2/@me")
             {
@@ -119,7 +123,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                     {"Authorization", $"Bearer {accessToken}"}
                 }
             });
-            return await JsonSerializer.DeserializeAsync<UserInfo>(await response.Content.ReadAsStreamAsync());
+            return await JsonSerializer.DeserializeAsync<DiscordUserInfo>(await response.Content.ReadAsStreamAsync());
         }
         
         public async Task PushMetadata(int userId, DiscordOAuthTokens tokens, string metadataJson)

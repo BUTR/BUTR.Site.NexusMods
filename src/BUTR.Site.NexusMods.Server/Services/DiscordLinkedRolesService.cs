@@ -4,24 +4,32 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Services;
-
-public sealed class DiscordLinkedRolesService : BackgroundService
+namespace BUTR.Site.NexusMods.Server.Services
 {
-    private readonly DiscordClient _client;
-
-    public DiscordLinkedRolesService(DiscordClient client)
+    public static class DiscordConstants
     {
-        _client = client ?? throw new ArgumentNullException(nameof(client));
+        public const string BUTRModAuthor = "butrmodauthor";
+        public const string BUTRModerator = "butrmoderator";
+        public const string BUTRAdministrator = "butradministrator";
     }
-        
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    
+    public sealed class DiscordLinkedRolesService : BackgroundService
     {
-        await _client.SetGlobalMetadata(new DiscordGlobalMetadata[]
+        private readonly DiscordClient _client;
+
+        public DiscordLinkedRolesService(DiscordClient client)
         {
-            new("butrmodauthor", "BUTR Mod Author", "Linked with the BUTR Site", 7), 
-            new("butrmoderator", "BUTR Moderator", "Moderator of BUTR Site", 7),
-            new("butradministrator", "BUTR Administrator", "Administrator of BUTR Site", 7),
-        });
+            _client = client ?? throw new ArgumentNullException(nameof(client));
+        }
+        
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            await _client.SetGlobalMetadata(new DiscordGlobalMetadata[]
+            {
+                new(DiscordConstants.BUTRModAuthor, "BUTR Mod Author", "Linked with the BUTR Site", 7), 
+                new(DiscordConstants.BUTRModerator, "BUTR Moderator", "Moderator of BUTR Site", 7),
+                new(DiscordConstants.BUTRAdministrator, "BUTR Administrator", "Administrator of BUTR Site", 7),
+            });
+        }
     }
 }
