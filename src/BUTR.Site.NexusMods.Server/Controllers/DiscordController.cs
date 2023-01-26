@@ -31,7 +31,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
         
-        [HttpPost("LinkedRole")]
+        [HttpGet("LinkedRole")]
         //[Produces("application/json")]
         //[ProducesResponseType(typeof(PagingResponse<ExposedModModel>), StatusCodes.Status200OK)]
         //[ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
