@@ -1,0 +1,19 @@
+﻿@attribute [Authorize]
+@page "/discord-linked-role"
+
+@inject IDiscordClient _discordClient;
+@inject ILocalStorageService _localStorage;
+@inject NavigationManager _navigationManager;
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        var response = await _discordClient.GetoauthurlAsync();
+        await _localStorage.SetItemAsync("discord_state", response.State);
+        _navigationManager.NavigateTo(response.Url);
+    }
+
+}

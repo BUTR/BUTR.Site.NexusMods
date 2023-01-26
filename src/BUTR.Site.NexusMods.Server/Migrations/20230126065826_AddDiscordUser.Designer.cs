@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BUTR.Site.NexusMods.Server.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BUTR.Site.NexusMods.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230126065826_AddDiscordUser")]
+    partial class AddDiscordUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -107,6 +110,32 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasName("crash_report_ignored_files_pkey");
 
                     b.ToTable("crash_report_ignored_files", (string)null);
+                });
+
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.DiscordUserEntity", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("access_token");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("refresh_token");
+
+                    b.HasKey("UserId")
+                        .HasName("discord_user_pkey");
+
+                    b.ToTable("discord_user", (string)null);
                 });
 
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.ModNexusModsManualLinkEntity", b =>

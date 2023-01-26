@@ -1,0 +1,95 @@
+﻿@attribute [Authorize]
+@page "/discord-oauth-callback"
+
+@inject IDiscordClient _discordClient;
+@inject ILocalStorageService _localStorage;
+@inject NavigationManager _navigationManager;
+
+<Container>
+    <Row Flex="@Flex.JustifyContent.Center">
+        <Column ColumnSize="@ColumnSize.Is7.OnWidescreen.IsAuto.OnDesktop">
+            <Card Margin="@Margin.Is5.OnDesktop.Is4.OnTablet.Is3.OnMobile" Border="@Border.Is0.Rounded" Shadow="@Shadow.Small">
+                <CardBody>
+                    <Heading Padding="@Padding.Is3" Size="@HeadingSize.Is5" TextAlignment="@TextAlignment.Center" TextTransform="@TextTransform.Uppercase" TextWeight="@TextWeight.Bold">@_status</Heading>
+                    <Divider/>
+                    <Row Margin="@Margin.Is2">
+                        <Text>@_message</Text>
+                    </Row>
+                    <Row Margin="@Margin.Is2">
+                        <FigureImage Source="@_image" AlternateText="A meme image displaying success or failure. Success is Brent Rambo giving a thumbs up. Failure is a horse failing to play with a gymnastics by kinda lying onto it ball and falling."></FigureImage>
+                    </Row>
+                    <Row Margin="@Margin.Is2">
+                        <Text>Use the "Linked Roles" option in servers with the BUTR Discord bot to claim your roles.</Text>
+                    </Row>
+                    <Row Margin="@Margin.Is2">
+                        <Button Border="@Border.RoundedPill"
+                                TextTransform="@TextTransform.Uppercase"
+                                Padding="@Padding.Is2"
+                                TextWeight="@TextWeight.Bold"
+                                Color="@Color.Primary"
+                                To="discord://-/"
+                                Target="@Target.Blank">
+                            <Figure Margin="@Margin.Is0" Size="@FigureSize.Is32x32">
+                                <FigureImage AlternateText="Discord app icon." Source="images/discord.svg"/>
+                            </Figure>
+                            Back to Discord
+                        </Button>
+                    </Row>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+</Container>
+
+@code {
+    
+    private const string Success = "images/success.gif";
+    private const string Failure = "images/failure.gif";
+    
+    private string _status = string.Empty;
+    private string _message = string.Empty;
+    private string _image = string.Empty;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (!await _localStorage.ContainKeyAsync("discord_state"))
+        {
+            _status = "FAILURE";
+            _message = "State verification failed.";
+            _image = Failure;
+            return;
+        }
+
+        var queries = _navigationManager.QueryString();
+        var queryStatRaw = queries["state"];
+        var queryCode = queries["code"];
+        
+        try
+        {
+            var state = await _localStorage.GetItemAsync<Guid>("discord_state");
+            if (!Guid.TryParse(queryStatRaw, out var queryState) || state != queryState)
+            {
+                _status = "FAILURE";
+                _message = "State verification failed.";
+                _image = Failure;
+                return;
+            }
+
+            var tokens = await _discordClient.GetoauthtokensAsync(queryCode);
+            await _discordClient.UpdatemetadataAsync(new UpdateMetadataModel(tokens.AccessToken));
+
+            _status = "SUCCESS";
+            _message = "You did it! Now go back to Discord.";
+            _image = Success;
+        }
+        catch (ApiException)
+        {
+            _status = "FAILURE";
+            _message = "Failed to link!";
+            _image = Failure;
+        }
+    }
+
+}

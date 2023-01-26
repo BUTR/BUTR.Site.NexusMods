@@ -45,6 +45,7 @@ namespace BUTR.Site.NexusMods.Server
         private const string CrashReporterSectionName = "CrashReporter";
         private const string NexusModsSectionName = "NexusMods";
         private const string JwtSectionName = "Jwt";
+        private const string DiscordSectionName = "Discord";
 
         private static JsonSerializerOptions Configure(JsonSerializerOptions opt)
         {
@@ -71,11 +72,13 @@ namespace BUTR.Site.NexusMods.Server
             var crashReporterSection = _configuration.GetSection(CrashReporterSectionName);
             var nexusModsSection = _configuration.GetSection(NexusModsSectionName);
             var jwtSection = _configuration.GetSection(JwtSectionName);
+            var discordSection = _configuration.GetSection(DiscordSectionName);
 
             services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>(connectionStringSection);
             services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>(crashReporterSection);
             services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>(nexusModsSection);
             services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>(jwtSection);
+            services.AddValidatedOptions<DiscordOptions, DiscordOptionsValidator>(discordSection);
 
             services.AddHttpClient(string.Empty).ConfigureHttpClient((sp, client) =>
             {
@@ -102,21 +105,30 @@ namespace BUTR.Site.NexusMods.Server
                     "Basic",
                     Convert.ToBase64String(Encoding.ASCII.GetBytes($"{opts.Username}:{opts.Password}")));
             });
+            services.AddHttpClient<DiscordClient>().ConfigureHttpClient((sp, client) =>
+            {
+                client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+            });
 
             services.AddQuartz(opt =>
             {
                 opt.UseMicrosoftDependencyInjectionJobFactory();
 
-                opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
-                opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
+                //opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
+                //opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
+                //opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
                 //opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
+                //opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
             });
+
+            services.AddMemoryCache();
 
             services.AddDbContext<AppDbContext>(x => x.UseNpgsql(_configuration.GetConnectionString("Main"), opt => opt.EnableRetryOnFailure()).AddPrepareInterceptorr());
 
             services.AddNexusModsDefaultServices();
+
+            services.AddHostedService<DiscordLinkedRolesService>();
+            services.AddTransient<IDiscordStorage, MemoryDiscordStorage>();
 
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IHttpMessageHandlerBuilderFilter, SyncLoggingHttpMessageHandlerBuilderFilter>());
             services.AddTransient<NexusModsInfo>();
