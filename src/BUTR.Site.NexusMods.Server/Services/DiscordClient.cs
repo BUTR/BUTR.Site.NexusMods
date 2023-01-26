@@ -13,11 +13,30 @@ using System.Web;
 
 namespace BUTR.Site.NexusMods.Server.Services
 {
-    public sealed record DiscordOAuthTokensResponse(string AccessToken, string RefreshToken, ulong ExpiresIn);
+    public sealed record DiscordOAuthTokensResponse(
+        [property: JsonPropertyName("access_token")] string AccessToken,
+        [property: JsonPropertyName("refresh_token")] string RefreshToken,
+        [property: JsonPropertyName("expires_in")] ulong ExpiresIn);
     public sealed record DiscordOAuthTokens(string AccessToken, string RefreshToken, DateTimeOffset ExpiresAt);
     
+    public sealed record UserInfoUser(
+        [property: JsonPropertyName("id")] int Id);
+    public sealed record UserInfo(
+        [property: JsonPropertyName("user")] UserInfoUser User);
+    
+    public sealed record GlobalMetadata(
+        string Key,
+        string Name,
+        string Description,
+        int Type);
+
     public sealed class DiscordClient
     {
+        private sealed record PutMetadata(
+            [property: JsonPropertyName("platform_name")] string PlatformName,
+            [property: JsonPropertyName("metadata")] string Metadata);
+
+        
         private readonly HttpClient _httpClient;
         private readonly DiscordOptions _options;
         private readonly IDiscordStorage _storage;
@@ -29,7 +48,6 @@ namespace BUTR.Site.NexusMods.Server.Services
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
 
-        public sealed record GlobalMetadata(string Key, string Name, string Description, int Type);
         public async Task SetGlobalMetadata(IReadOnlyList<GlobalMetadata> metadata)
         {
             using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/applications/{_options.ClientId}/role-connections/metadata")
@@ -93,9 +111,7 @@ namespace BUTR.Site.NexusMods.Server.Services
 
             return null;
         }
-
-        public sealed record UserInfoUser([property:JsonPropertyName("id")] int Id);
-        public sealed record UserInfo([property:JsonPropertyName("user")] UserInfoUser User);
+        
         public async Task<UserInfo?> GetUserInfo(string accessToken)
         {
             using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/v10/oauth2/@me")
@@ -108,7 +124,6 @@ namespace BUTR.Site.NexusMods.Server.Services
             return await JsonSerializer.DeserializeAsync<UserInfo>(await response.Content.ReadAsStreamAsync());
         }
         
-        private sealed record PutMetadata([property:JsonPropertyName("platform_name")] string PlatformName, [property:JsonPropertyName("metadata")] string Metadata);
         public async Task PushMetadata(int userId, DiscordOAuthTokens tokens, string metadataJson)
         {
             var accessToken = await GetAccessToken(userId, tokens);
