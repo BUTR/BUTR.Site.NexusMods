@@ -87,7 +87,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         public async Task<ActionResult> GetUserInfo([FromBody] DiscordAccessTokenModel body)
         {
             var result = await _discordClient.GetUserInfo(body.AccessToken);
-            return StatusCode(result is null ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest, result);
+            return StatusCode(result is not null ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest, result);
         }
     }
 }
