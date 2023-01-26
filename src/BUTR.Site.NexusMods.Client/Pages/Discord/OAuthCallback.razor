@@ -12,21 +12,23 @@
                 <CardBody>
                     <Heading Padding="@Padding.Is3" Size="@HeadingSize.Is5" TextAlignment="@TextAlignment.Center" TextTransform="@TextTransform.Uppercase" TextWeight="@TextWeight.Bold">@_status</Heading>
                     <Divider/>
-                    <Row Margin="@Margin.Is2">
                         @if (_userInfo is not null)
                         {
-                            <Text><Anchor To="@_userInfo.Url" Target="Target.Blank">@_userInfo.Name</Anchor> was successfully linked with the BUTR Site!</Text>
+                            <Row Margin="@Margin.Is2">
+                                <Span><Anchor To="@_userInfo.Url" Target="Target.Blank">@_userInfo.Name</Anchor> was successfully linked with the BUTR Site!</Span>
+                            </Row>
                         }
                         @if (!string.IsNullOrEmpty(_message))
                         {
-                            <Text>@_message</Text>
+                            <Row Margin="@Margin.Is2">
+                                <Span>@_message</Span>
+                            </Row>
                         }
-                    </Row>
                     <Row Margin="@Margin.Is2">
                         <FigureImage Margin="Margin.Is0" Source="@_image" AlternateText="A meme image displaying success or failure. Success is Brent Rambo giving a thumbs up. Failure is a horse failing to play with a gymnastics by kinda lying onto it ball and falling."></FigureImage>
                     </Row>
                     <Row Margin="@Margin.Is2">
-                        <Text>Use the "Linked Roles" option in servers with the BUTR Discord bot to claim your roles.</Text>
+                        <Span>Use the "Linked Roles" option in servers with the BUTR Discord bot to claim your roles.</Span>
                     </Row>
                     <Row Margin="@Margin.Is2">
                         <Button Border="@Border.RoundedPill"
