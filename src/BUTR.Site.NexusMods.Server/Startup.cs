@@ -114,11 +114,11 @@ namespace BUTR.Site.NexusMods.Server
             {
                 opt.UseMicrosoftDependencyInjectionJobFactory();
 
-                opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
-                opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
+                //opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
+                //opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
+                //opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
                 //opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
+                //opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
             });
 
             services.AddMemoryCache();

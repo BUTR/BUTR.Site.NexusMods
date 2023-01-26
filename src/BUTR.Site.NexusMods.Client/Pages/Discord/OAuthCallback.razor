@@ -4,11 +4,30 @@
 @inject ILocalStorageService _localStorage;
 @inject NavigationManager _navigationManager;
 
-<Text>@_message</Text>
+<div class="content">
+    <h1 class="title">@_status</h1>
+    <p class="subtext">@_message</p>
+    <div class="centered-content">
+        <img class="main-image" alt="A meme image displaying success or failure. Success is Brent Rambo giving a thumbs up. Failure is a horse failing to play with a gymnastics by kinda
+        lying onto it ball and falling." src="@_image"/>
+    </div>
+    <p class="supertext">Use the "Linked Roles" option in servers with the BUTR Discord bot to claim your roles.</p>
+    <div class="centered-content">
+        <a class="discord-button" target="_blank" rel="noreferrer" href="discord://-/">
+            <img class="icon" alt="Discord app icon." src="images/discord.svg"/>
+            <span>Back to Discord</span>
+        </a>
+    </div>
+</div>
 
 @code {
     
+    private const string Success = "images/success.gif";
+    private const string Failure = "images/failure.gif";
+    
+    private string _status = string.Empty;
     private string _message = string.Empty;
+    private string _image = string.Empty;
     
     protected override async Task OnInitializedAsync()
     {
@@ -16,24 +35,40 @@
 
         if (!await _localStorage.ContainKeyAsync("discord_state"))
         {
+            _status = "FAILURE";
             _message = "State verification failed.";
+            _image = Failure;
             return;
         }
 
         var queries = _navigationManager.QueryString();
         var queryStatRaw = queries["state"];
         var queryCode = queries["code"];
-
-        var state = await _localStorage.GetItemAsync<Guid>("discord_state");
-        if (!Guid.TryParse(queryStatRaw, out var queryState) || state != queryState)
+        
+        try
         {
-            _message = "State verification failed.";
-            return;
-        }
+            var state = await _localStorage.GetItemAsync<Guid>("discord_state");
+            if (!Guid.TryParse(queryStatRaw, out var queryState) || state != queryState)
+            {
+                _status = "FAILURE";
+                _message = "State verification failed.";
+                _image = Failure;
+                return;
+            }
 
-        var tokens = await _discordClient.GetoauthtokensAsync(queryCode);
-        await _discordClient.UpdatemetadataAsync(new UpdateMetadataModel(tokens.AccessToken));
-        _message = "You did it!  Now go back to Discord.";
+            var tokens = await _discordClient.GetoauthtokensAsync(queryCode);
+            await _discordClient.UpdatemetadataAsync(new UpdateMetadataModel(tokens.AccessToken));
+
+            _status = "SUCCESS";
+            _message = "You did it! Now go back to Discord.";
+            _image = Success;
+        }
+        catch (ApiException)
+        {
+            _status = "FAILURE";
+            _message = "Failed to link!";
+            _image = Failure;
+        }
     }
 
 }

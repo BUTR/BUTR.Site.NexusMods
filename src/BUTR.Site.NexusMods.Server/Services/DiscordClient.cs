@@ -49,7 +49,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
 
-        public async Task SetGlobalMetadata(IReadOnlyList<DiscordGlobalMetadata> metadata)
+        public async Task<bool> SetGlobalMetadata(IReadOnlyList<DiscordGlobalMetadata> metadata)
         {
             using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/applications/{_options.ClientId}/role-connections/metadata")
             {
@@ -59,6 +59,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                 },
                 Content = new StringContent(JsonSerializer.Serialize(metadata), Encoding.UTF8, "application/json"),
             });
+            return response.IsSuccessStatusCode;
         }
         
         public (string Url, Guid State) GetOAuthUrl()
@@ -126,7 +127,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             return await JsonSerializer.DeserializeAsync<DiscordUserInfo>(await response.Content.ReadAsStreamAsync());
         }
         
-        public async Task PushMetadata<T>(int userId, DiscordOAuthTokens tokens, T metadata)
+        public async Task<bool> PushMetadata<T>(int userId, DiscordOAuthTokens tokens, T metadata)
         {
             var accessToken = await GetAccessToken(userId, tokens);
 
@@ -138,8 +139,9 @@ namespace BUTR.Site.NexusMods.Server.Services
                 },
                 Content = new StringContent(JsonSerializer.Serialize(new PutMetadata<T>("BUTR", metadata)), Encoding.UTF8, "application/json"),
             });
+            return response.IsSuccessStatusCode;
         }
-        public async Task PushMetadata<T>(string accessToken, T metadata)
+        public async Task<bool> PushMetadata<T>(string accessToken, T metadata)
         {
             using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/users/@me/applications/{_options.ClientId}/role-connection")
             {
@@ -149,6 +151,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                 },
                 Content = new StringContent(JsonSerializer.Serialize(new PutMetadata<T>("BUTR", metadata)), Encoding.UTF8, "application/json"),
             });
+            return response.IsSuccessStatusCode;
         }
     }
 }

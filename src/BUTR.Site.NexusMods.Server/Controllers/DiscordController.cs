@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using System;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,21 +42,23 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [HttpGet("GetOAuthTokens")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(DiscordOAuthTokens), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> GetOAuthTokens([FromQuery] string code, CancellationToken ct)
         {
             var tokens = await _discordClient.GetOAuthTokens(code);
-            return StatusCode(StatusCodes.Status200OK, tokens);
+            return StatusCode(tokens is not null ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest, tokens);
 
         }
 
         [HttpPost("UpdateMetadata")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> UpdateMetadata([FromBody] UpdateMetadataModel body)
         {
             var role = HttpContext.GetRole();
 
-            await _discordClient.PushMetadata(body.AccessToken, new Metadata(1, role == ApplicationRoles.Moderator ? 1 : 0, role == ApplicationRoles.Administrator ? 1 : 0));
-            return StatusCode(StatusCodes.Status200OK);
+            var result = await _discordClient.PushMetadata(body.AccessToken, new Metadata(1, role == ApplicationRoles.Moderator ? 1 : 0, role == ApplicationRoles.Administrator ? 1 : 0));
+            return StatusCode(result ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest);
         }
     }
 }
