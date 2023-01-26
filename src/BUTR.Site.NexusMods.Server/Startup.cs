@@ -121,6 +121,8 @@ namespace BUTR.Site.NexusMods.Server
                 opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
             });
 
+            services.AddMemoryCache();
+
             services.AddDbContext<AppDbContext>(x => x.UseNpgsql(_configuration.GetConnectionString("Main"), opt => opt.EnableRetryOnFailure()).AddPrepareInterceptorr());
 
             services.AddNexusModsDefaultServices();
