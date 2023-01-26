@@ -109,7 +109,7 @@
                         <BarDropdown RightAligned>
                             <BarDropdownToggle>
                                 <Figure Margin="Margin.Is0" Size="FigureSize.Is32x32">
-                                    <FigureImage Margin="Margin.Is0" Source="@(_user?.ProfileUrl ?? FallabackIcon)" Border="Border.RoundedCircle" AlternateText="BUTR Logo"/>
+                                    <FigureImage Margin="Margin.Is0" Source="@(_user?.ProfileUrl ?? FallbackIcon)" Border="Border.RoundedCircle" AlternateText="BUTR Logo"/>
                                 </Figure>
                             </BarDropdownToggle>
                             <BarDropdownMenu Background="Background.Dark">
@@ -137,7 +137,7 @@
 
 @code {
 
-    private const string FallabackIcon = "images/default_profile.webp";
+    private const string FallbackIcon = "images/default_profile.webp";
     private ProfileModel? _user;
 
     protected override async Task OnInitializedAsync()
