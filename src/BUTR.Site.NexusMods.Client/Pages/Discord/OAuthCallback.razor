@@ -2,17 +2,12 @@
 
 @inject IDiscordClient _discordClient;
 @inject ILocalStorageService _localStorage;
+@inject NavigationManager _navigationManager;
 
 <Text>@_message</Text>
 
 @code {
     
-    [Parameter]
-    public string Code { get; set; }
-    
-    [Parameter]
-    public Guid State { get; set; }
-
     private string _message = string.Empty;
     
     protected override async Task OnInitializedAsync()
@@ -25,14 +20,18 @@
             return;
         }
 
+        var queries = _navigationManager.QueryString();
+        var queryStatRaw = queries["state"];
+        var queryCode = queries["code"];
+
         var state = await _localStorage.GetItemAsync<Guid>("discord_state");
-        if (state != State)
+        if (!Guid.TryParse(queryStatRaw, out var queryState) || state != queryState)
         {
             _message = "State verification failed.";
             return;
         }
 
-        var tokens = await _discordClient.GetoauthtokensAsync(Code);
+        var tokens = await _discordClient.GetoauthtokensAsync(queryCode);
         await _discordClient.UpdatemetadataAsync(new UpdateMetadataRequest(tokens.AccessToken));
         _message = "You did it!  Now go back to Discord.";
     }
