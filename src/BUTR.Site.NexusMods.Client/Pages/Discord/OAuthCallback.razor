@@ -15,8 +15,7 @@
                     <Row Margin="@Margin.Is2">
                         @if (_userInfo is not null)
                         {
-                            <Blazorize.Link To="@_userInfo.Url" Target="Target.Blank">@_userInfo.Name</Blazorize.Link>
-                            <Text> was successfully linked with the BUTR Site!</Text>
+                            <Blazorise.Link To="@_userInfo.Url" Target="Target.Blank">@_userInfo.Name</Blazorise.Link><Text> was successfully linked with the BUTR Site!</Text>
                         }
                         @if (!string.IsNullOrEmpty(_message))
                         {
@@ -76,7 +75,7 @@
         var queries = _navigationManager.QueryString();
         var queryStatRaw = queries["state"];
         var queryCode = queries["code"];
-        
+
         try
         {
             var state = await _localStorage.GetItemAsync<Guid>("discord_state");
@@ -101,6 +100,10 @@
             _status = "FAILURE";
             _message = "Failed to link!";
             _image = Failure;
+        }
+        finally
+        {
+            await _localStorage.RemoveItemAsync("discord_state");
         }
     }
 
