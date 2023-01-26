@@ -32,7 +32,7 @@
         }
 
         var tokens = await _discordClient.GetoauthtokensAsync(queryCode);
-        await _discordClient.UpdatemetadataAsync(new UpdateMetadataRequest(tokens.AccessToken));
+        await _discordClient.UpdatemetadataAsync(new UpdateMetadataModel(tokens.AccessToken));
         _message = "You did it!  Now go back to Discord.";
     }
 
