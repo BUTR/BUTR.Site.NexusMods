@@ -53,12 +53,22 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [HttpPost("UpdateMetadata")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> UpdateMetadata([FromBody] UpdateMetadataModel body)
+        public async Task<ActionResult> UpdateMetadata([FromBody] DiscordAccessTokenModel body)
         {
             var role = HttpContext.GetRole();
 
             var result = await _discordClient.PushMetadata(body.AccessToken, new Metadata(1, role == ApplicationRoles.Moderator ? 1 : 0, role == ApplicationRoles.Administrator ? 1 : 0));
             return StatusCode(result ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest);
+        }
+        
+        
+        [HttpPost("GetUserInfo")]
+        [ProducesResponseType(typeof(DiscordUserInfo), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult> GetUserInfo([FromBody] DiscordAccessTokenModel body)
+        {
+            var result = await _discordClient.GetUserInfo(body.AccessToken);
+            return StatusCode(result is null ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest, result);
         }
     }
 }

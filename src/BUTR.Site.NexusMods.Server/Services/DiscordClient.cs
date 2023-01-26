@@ -16,7 +16,9 @@ namespace BUTR.Site.NexusMods.Server.Services
     public sealed record DiscordOAuthTokens(string AccessToken, string RefreshToken, DateTimeOffset ExpiresAt);
 
     public sealed record DiscordUserInfoUser(
-        [property: JsonPropertyName("id")] int Id);
+        [property: JsonPropertyName("id")] int Id,
+        [property: JsonPropertyName("username")] string Username,
+        [property: JsonPropertyName("discriminator")] string Discriminator);
     public sealed record DiscordUserInfo(
         [property: JsonPropertyName("user")] DiscordUserInfoUser User);
     
