@@ -56,8 +56,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         {
             var role = HttpContext.GetRole();
 
-            var metadataJson = JsonSerializer.Serialize(new Metadata(1, role == ApplicationRoles.Moderator ? 1 : 0, role == ApplicationRoles.Administrator ? 1 : 0));
-            await _discordClient.PushMetadata(body.AccessToken, metadataJson);
+            await _discordClient.PushMetadata(body.AccessToken, new Metadata(1, role == ApplicationRoles.Moderator ? 1 : 0, role == ApplicationRoles.Administrator ? 1 : 0));
             return StatusCode(StatusCodes.Status200OK);
         }
     }
