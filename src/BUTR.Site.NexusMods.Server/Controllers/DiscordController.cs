@@ -1,13 +1,11 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Extensions;
-using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 using System;
 using System.Threading;
@@ -39,7 +37,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         
         [HttpGet("GetOAuthTokens")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(DiscordOAuthTokensResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(DiscordOAuthTokens), StatusCodes.Status200OK)]
         public async Task<ActionResult> GetOAuthTokens([FromQuery] string code, CancellationToken ct)
         {
             var tokens = await _discordClient.GetOAuthTokens(code);

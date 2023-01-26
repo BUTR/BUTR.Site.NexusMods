@@ -13,28 +13,25 @@ using System.Web;
 
 namespace BUTR.Site.NexusMods.Server.Services
 {
-    public sealed record DiscordOAuthTokensResponse(
-        [property: JsonPropertyName("access_token")] string AccessToken,
-        [property: JsonPropertyName("refresh_token")] string RefreshToken,
-        [property: JsonPropertyName("expires_in")] ulong ExpiresIn);
     public sealed record DiscordOAuthTokens(string AccessToken, string RefreshToken, DateTimeOffset ExpiresAt);
-    
+
     public sealed record UserInfoUser(
         [property: JsonPropertyName("id")] int Id);
     public sealed record UserInfo(
         [property: JsonPropertyName("user")] UserInfoUser User);
     
-    public sealed record DiscordGlobalMetadata(
-        string Key,
-        string Name,
-        string Description,
-        int Type);
-
+    public sealed record DiscordGlobalMetadata(string Key, string Name, string Description, int Type);
+    
     public sealed class DiscordClient
     {
         private sealed record PutMetadata(
             [property: JsonPropertyName("platform_name")] string PlatformName,
             [property: JsonPropertyName("metadata")] string Metadata);
+        
+        public sealed record DiscordOAuthTokensResponse(
+            [property: JsonPropertyName("access_token")] string AccessToken,
+            [property: JsonPropertyName("refresh_token")] string RefreshToken,
+            [property: JsonPropertyName("expires_in")] ulong ExpiresIn);
 
         
         private readonly HttpClient _httpClient;
@@ -76,7 +73,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             return (url.ToString(), state);
         }
 
-        public async Task<DiscordOAuthTokensResponse?> GetOAuthTokens(string code)
+        public async Task<DiscordOAuthTokens?> GetOAuthTokens(string code)
         {
             var data = new List<KeyValuePair<string, string>>()
             {
@@ -87,7 +84,8 @@ namespace BUTR.Site.NexusMods.Server.Services
                 new("code", code),
             };
             using var response = await _httpClient.PostAsync("https://discord.com/api/v10/oauth2/token", new FormUrlEncodedContent(data));
-            return await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync());
+            var tokens = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync());
+            return tokens is not null? new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokens.ExpiresIn)) : null;
         }
 
         public async Task<string?> GetAccessToken(int userId, DiscordOAuthTokens tokens)
