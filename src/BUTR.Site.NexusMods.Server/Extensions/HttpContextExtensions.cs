@@ -1,4 +1,5 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace BUTR.Site.NexusMods.Server.Extensions
 {
@@ -21,6 +23,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             IsPremium = context.GetIsPremium(),
             IsSupporter = context.GetIsSupporter(),
             Role = role,
+            DiscordUserId = context.GetDiscordTokens()?.UserId
         };
 
         public static int GetUserId(this HttpContext context) =>
@@ -46,6 +49,9 @@ namespace BUTR.Site.NexusMods.Server.Extensions
 
         public static string GetRole(this HttpContext context) =>
             context.User.FindFirst(ButrNexusModsClaimTypes.Role)?.Value ?? ApplicationRoles.User;
+
+        public static DiscordUserTokens? GetDiscordTokens(this HttpContext context) =>
+            !context.GetMetadata().TryGetValue("DiscordTokens", out var json) ? null : JsonSerializer.Deserialize<DiscordUserTokens>(json);
 
         public static Dictionary<string, string> GetMetadata(this HttpContext context) =>
             context.User.FindFirst(ButrNexusModsClaimTypes.Metadata)?.Value.Split(';', StringSplitOptions.RemoveEmptyEntries)

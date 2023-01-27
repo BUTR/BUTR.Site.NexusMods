@@ -3,6 +3,7 @@
 
 @inject NavigationManager _navigationManager
 @inject IProfileProvider _profileProvider
+@inject IDiscordClient _discordClient
 
 @if (_user is null)
 {
@@ -43,7 +44,7 @@ else
 }
 
 @code {
-
+    
     private static readonly (int Horizontal, int Vertical) _gutter = (5, 5);
 
     private RenderFragment ProfilePrimary(ProfileModel user) =>
@@ -80,15 +81,26 @@ else
                     <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Email</Column>
                     <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.Email</Column>
                 </Row>
+                @if (_discordUser is not null)
+                {
+                    <Divider/>
+                    <Row>
+                        <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Discord</Column>
+                        <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary"><Anchor Style="text-decoration: none" To="@_discordUser.Url" Target="Target.Blank">@_discordUser.Name</Anchor></Column>
+                    </Row>
+                }
             </CardBody>
         </Card>;
 
     private ProfileModel? _user;
+    private DiscordUserInfo2? _discordUser;
     private Row? _gutterRow;
 
     protected override async Task OnInitializedAsync()
     {
         _user = await _profileProvider.GetProfileAsync();
+        var discordUserInfo = _user?.DiscordUserId is not null ? await _discordClient.GetuserinfoAsync() : null;
+        _discordUser = discordUserInfo is not null ? new DiscordUserInfo2(discordUserInfo) : null;
         if (_gutterRow is not null)
             _gutterRow.Gutter = (5,5);
     }

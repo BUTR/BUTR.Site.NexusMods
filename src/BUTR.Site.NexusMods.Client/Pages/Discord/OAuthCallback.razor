@@ -15,7 +15,7 @@
                         @if (_userInfo is not null)
                         {
                             <Row Margin="@Margin.Is2">
-                                <Span><Anchor To="@_userInfo.Url" Target="Target.Blank">@_userInfo.Name</Anchor> was successfully linked with the BUTR Site!</Span>
+                                <Span><Anchor Style="text-decoration: none" To="@_userInfo.Url" Target="Target.Blank">@_userInfo.Name</Anchor> was successfully linked with the BUTR Site!</Span>
                             </Row>
                         }
                         @if (!string.IsNullOrEmpty(_message))
@@ -37,6 +37,7 @@
                                 TextWeight="@TextWeight.Bold"
                                 Color="@Color.Primary"
                                 To="discord://-/"
+                                rel="noreferrer"
                                 Target="@Target.Blank">
                             <Figure Margin="@Margin.Is0" Size="@FigureSize.Is32x32">
                                 <FigureImage Margin="Margin.Is0" AlternateText="Discord app icon." Source="images/discord.svg"/>
@@ -52,15 +53,13 @@
 
 @code {
 
-    private sealed record UserInfo(string Url, string Name);
-    
     private const string Success = "images/success.gif";
     private const string Failure = "images/failure.gif";
     
     private string _status = string.Empty;
     private string _message = string.Empty;
     private string _image = string.Empty;
-    private UserInfo? _userInfo;
+    private DiscordUserInfo2? _userInfo;
     
     protected override async Task OnInitializedAsync()
     {
@@ -89,11 +88,10 @@
                 return;
             }
 
-            var tokens = await _discordClient.GetoauthtokensAsync(queryCode);
-            await _discordClient.UpdatemetadataAsync(new DiscordAccessTokenModel(tokens.AccessToken));
+            await _discordClient.LinkAsync(queryCode);
 
-            var userInfo = await _discordClient.GetuserinfoAsync(new DiscordAccessTokenModel(tokens.AccessToken));
-            _userInfo = new UserInfo($"discord://discordapp.com/users/{userInfo.User.Id}", $"@{userInfo.User.Username}#{userInfo.User.Discriminator}");
+            var userInfo = await _discordClient.GetuserinfoAsync();
+            _userInfo = new DiscordUserInfo2(userInfo);
             _status = "SUCCESS";
             _image = Success;
         }

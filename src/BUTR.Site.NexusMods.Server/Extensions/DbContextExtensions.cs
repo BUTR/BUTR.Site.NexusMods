@@ -32,6 +32,18 @@ namespace BUTR.Site.NexusMods.Server.Extensions
             changeTrackerEntity.CurrentValues.SetValues(changed);
         }
 
+        public static bool AddUpdateRemoveAndSave<TEntity>(this DbContext dbContext, IQueryable<TEntity> dbSet, Expression<Func<TEntity, bool>> predicate, Func<TEntity?, TEntity?> applyChanges) where TEntity : class
+        {
+            dbContext.AddUpdateRemove(dbSet, predicate, applyChanges);
+            return dbContext.SaveChanges() > 0;
+        }
+
+        public static bool AddUpdateRemoveAndSave<TEntity>(this DbContext dbContext, Expression<Func<TEntity, bool>> predicate, Func<TEntity?, TEntity?> applyChanges) where TEntity : class
+        {
+            dbContext.AddUpdateRemove(predicate, applyChanges);
+            return dbContext.SaveChanges() > 0;
+        }
+
         public static Task AddUpdateRemoveAsync<TEntity>(this DbContext dbContext, Expression<Func<TEntity, bool>> predicate, Func<TEntity?, TEntity?> applyChanges, CancellationToken ct = default) where TEntity : class
         {
             return AddUpdateRemoveAsync(dbContext, dbContext.Set<TEntity>(), predicate, applyChanges, ct);

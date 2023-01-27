@@ -14,7 +14,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Text.Json.Serialization;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers
@@ -27,16 +26,18 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             [property: JsonPropertyName(DiscordConstants.BUTRModerator)] int IsModerator,
             [property: JsonPropertyName(DiscordConstants.BUTRAdministrator)] int IsAdministrator,
             [property: JsonPropertyName(DiscordConstants.BUTRLinkedMods)] int LinkedMods);
-        
+
         private readonly DiscordClient _discordClient;
+        private readonly IDiscordStorage _discordStorage;
         private readonly AppDbContext _dbContext;
 
-        public DiscordController(DiscordClient discordClient, AppDbContext dbContext)
+        public DiscordController(DiscordClient discordClient, IDiscordStorage discordStorage, AppDbContext dbContext)
         {
             _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
+            _discordStorage = discordStorage ?? throw new ArgumentNullException(nameof(discordStorage));
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
-        
+
         [HttpGet("GetOAuthUrl")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(DiscordOAuthUrlModel), StatusCodes.Status200OK)]
@@ -45,25 +46,79 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var (url, state) = _discordClient.GetOAuthUrl();
             return StatusCode(StatusCodes.Status200OK, new DiscordOAuthUrlModel(url, state));
         }
-        
-        [HttpGet("GetOAuthTokens")]
+
+        [HttpGet("Link")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(DiscordOAuthTokens), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> GetOAuthTokens([FromQuery] string code, CancellationToken ct)
+        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult> Link([FromQuery] string code)
         {
             var tokens = await _discordClient.GetOAuthTokens(code);
-            return StatusCode(tokens is not null ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest, tokens);
+            if (tokens is null)
+                return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to link!"));
+
+            var userId = HttpContext.GetUserId();
+            var userInfo = await _discordClient.GetUserInfo(tokens.AccessToken);
+
+            if (userInfo is null || !_discordStorage.Upsert(userId, userInfo.User.Id, tokens))
+                return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to link!"));
+
+            await UpdateMetadataInternal();
+
+            return StatusCode(StatusCodes.Status200OK, new StandardResponse("Linked successful!"));
+        }
+
+        [HttpPost("Unlink")]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult> Unlink()
+        {
+            var userId = HttpContext.GetUserId();
+            var tokens = HttpContext.GetDiscordTokens();
+
+            if (tokens is null)
+                return StatusCode(StatusCodes.Status200OK, new StandardResponse("Unlinked successful!"));
+
+            if (!await _discordClient.PushMetadata(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt), new Metadata(0, 0, 0, 0)))
+                return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to unlink!"));
+
+            if (!_discordStorage.Remove(userId, tokens.UserId))
+                return StatusCode(StatusCodes.Status200OK, new StandardResponse("Failed to unlink!"));
+
+            return StatusCode(StatusCodes.Status200OK, new StandardResponse("Unlinked successful!"));
 
         }
 
         [HttpPost("UpdateMetadata")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> UpdateMetadata([FromBody] DiscordAccessTokenModel body)
+        public async Task<ActionResult> UpdateMetadata() => StatusCode(await UpdateMetadataInternal() ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest);
+
+
+        [HttpPost("GetUserInfo")]
+        [ProducesResponseType(typeof(DiscordUserInfo), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult> GetUserInfoByAccessToken()
+        {
+            var userId = HttpContext.GetUserId();
+            var tokens = HttpContext.GetDiscordTokens();
+
+            if (tokens is null)
+                return StatusCode(StatusCodes.Status400BadRequest);
+
+            var result = await _discordClient.GetUserInfo(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt));
+            return StatusCode(result is not null ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest, result);
+        }
+
+        private async Task<bool> UpdateMetadataInternal()
         {
             var role = HttpContext.GetRole();
             var userId = HttpContext.GetUserId();
+            var tokens = HttpContext.GetDiscordTokens();
+
+            if (tokens is null)
+                return false;
 
             var linkedModsCount = await _dbContext
                 .Set<NexusModsModEntity>()
@@ -71,23 +126,12 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var manuallyLinkedModsCount = await _dbContext
                 .Set<UserAllowedModsEntity>()
                 .CountAsync(y => y.UserId == userId);
-            
-            var result = await _discordClient.PushMetadata(body.AccessToken, new Metadata(
+
+            return await _discordClient.PushMetadata(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt), new Metadata(
                 1,
                 role == ApplicationRoles.Moderator ? 1 : 0,
                 role == ApplicationRoles.Administrator ? 1 : 0,
                 linkedModsCount + manuallyLinkedModsCount));
-            return StatusCode(result ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest);
-        }
-        
-        
-        [HttpPost("GetUserInfo")]
-        [ProducesResponseType(typeof(DiscordUserInfo), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> GetUserInfo([FromBody] DiscordAccessTokenModel body)
-        {
-            var result = await _discordClient.GetUserInfo(body.AccessToken);
-            return StatusCode(result is not null ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest, result);
         }
     }
 }

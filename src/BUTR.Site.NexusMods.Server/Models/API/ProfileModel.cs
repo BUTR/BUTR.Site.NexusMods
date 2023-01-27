@@ -9,5 +9,7 @@
         public required bool IsPremium { get; init; }
         public required bool IsSupporter { get; init; }
         public required string Role { get; init; }
+
+        public required string? DiscordUserId { get; init; }
     }
 }

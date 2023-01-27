@@ -354,3 +354,5 @@ MigrationBackup/
 /src/BUTR.Site.NexusMods.Server/.config/dotnet-tools.json
 /**/*.g.cs
 /src/BUTR.Site.NexusMods.ServerClient/.config/dotnet-tools.json
+/src/BUTR.Site.NexusMods.Server/appsettings.Development.json
+/src/BUTR.Site.NexusMods.Client/wwwroot/appsettings.Development.json

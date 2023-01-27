@@ -21,25 +21,25 @@ namespace BUTR.Site.NexusMods.Server.Services
         [property: JsonPropertyName("discriminator")] string Discriminator);
     public sealed record DiscordUserInfo(
         [property: JsonPropertyName("user")] DiscordUserInfoUser User);
-    
+
     public sealed record DiscordGlobalMetadata(
         [property: JsonPropertyName("key")] string Key,
         [property: JsonPropertyName("name")] string Name,
         [property: JsonPropertyName("description")] string Description,
         [property: JsonPropertyName("type")] int Type);
-    
+
     public sealed class DiscordClient
     {
         private sealed record PutMetadata<T>(
             [property: JsonPropertyName("platform_name")] string PlatformName,
             [property: JsonPropertyName("metadata")] T Metadata);
-        
+
         public sealed record DiscordOAuthTokensResponse(
             [property: JsonPropertyName("access_token")] string AccessToken,
             [property: JsonPropertyName("refresh_token")] string RefreshToken,
             [property: JsonPropertyName("expires_in")] ulong ExpiresIn);
 
-        
+
         private readonly HttpClient _httpClient;
         private readonly DiscordOptions _options;
         private readonly IDiscordStorage _storage;
@@ -63,7 +63,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             });
             return response.IsSuccessStatusCode;
         }
-        
+
         public (string Url, Guid State) GetOAuthUrl()
         {
             var state = Guid.NewGuid();
@@ -92,14 +92,14 @@ namespace BUTR.Site.NexusMods.Server.Services
             };
             using var response = await _httpClient.PostAsync("https://discord.com/api/v10/oauth2/token", new FormUrlEncodedContent(data));
             var tokens = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync());
-            return tokens is not null? new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokens.ExpiresIn)) : null;
+            return tokens is not null ? new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokens.ExpiresIn)) : null;
         }
 
-        public async Task<string?> GetAccessToken(int userId, DiscordOAuthTokens tokens)
+        private async Task<string?> GetAccessToken(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
         {
             if (DateTimeOffset.Now <= tokens.ExpiresAt)
                 return tokens.AccessToken;
-            
+
             var data = new List<KeyValuePair<string, string>>
             {
                 new("client_id", _options.ClientId),
@@ -110,13 +110,21 @@ namespace BUTR.Site.NexusMods.Server.Services
             using var response = await _httpClient.PostAsync("https://discord.com/api/v10/oauth2/token", new FormUrlEncodedContent(data));
             if (response.IsSuccessStatusCode && await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync()) is { } tokensNew)
             {
-                _storage.Upsert(userId, new DiscordOAuthTokens(tokensNew.AccessToken, tokensNew.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokensNew.ExpiresIn)));
+                _storage.Upsert(nexusModsUserId, discordUserId, new DiscordOAuthTokens(tokensNew.AccessToken, tokensNew.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokensNew.ExpiresIn)));
                 return tokensNew.AccessToken;
             }
 
             return null;
         }
-        
+
+        public async Task<DiscordUserInfo?> GetUserInfo(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
+        {
+            var accessToken = await GetAccessToken(nexusModsUserId, discordUserId, tokens);
+            if (accessToken is null)
+                return null;
+            return await GetUserInfo(accessToken);
+        }
+
         public async Task<DiscordUserInfo?> GetUserInfo(string accessToken)
         {
             using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/v10/oauth2/@me")
@@ -128,23 +136,11 @@ namespace BUTR.Site.NexusMods.Server.Services
             });
             return await JsonSerializer.DeserializeAsync<DiscordUserInfo>(await response.Content.ReadAsStreamAsync());
         }
-        
-        public async Task<bool> PushMetadata<T>(int userId, DiscordOAuthTokens tokens, T metadata)
-        {
-            var accessToken = await GetAccessToken(userId, tokens);
 
-            using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/users/@me/applications/{_options.ClientId}/role-connection")
-            {
-                Headers =
-                {
-                    {"Authorization", $"Bearer {accessToken}"},
-                },
-                Content = new StringContent(JsonSerializer.Serialize(new PutMetadata<T>("BUTR", metadata)), Encoding.UTF8, "application/json"),
-            });
-            return response.IsSuccessStatusCode;
-        }
-        public async Task<bool> PushMetadata<T>(string accessToken, T metadata)
+        public async Task<bool> PushMetadata<T>(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens, T metadata)
         {
+            var accessToken = await GetAccessToken(nexusModsUserId, discordUserId, tokens);
+
             using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/users/@me/applications/{_options.ClientId}/role-connection")
             {
                 Headers =

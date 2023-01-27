@@ -1,36 +1,101 @@
-using BUTR.Site.NexusMods.Server.Contexts;
+﻿using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
-using Microsoft.Extensions.Caching.Memory;
-
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace BUTR.Site.NexusMods.Server.Services
 {
     public interface IDiscordStorage
     {
-        DiscordOAuthTokens? Get(int userId);
-        void Upsert(int userId, DiscordOAuthTokens tokens);
+        DiscordOAuthTokens? Get(string userId);
+        bool Upsert(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens);
+        bool Remove(int nexusModsUserId, string discordUserId);
     }
 
-    public sealed class MemoryDiscordStorage : IDiscordStorage
+    public sealed class DatabaseDiscordStorage : IDiscordStorage
     {
-        private readonly IMemoryCache _memoryCache;
+        private readonly AppDbContext _dbContext;
 
-        public MemoryDiscordStorage(IMemoryCache memoryCache)
+        public DatabaseDiscordStorage(AppDbContext dbContext)
         {
-            _memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
-        }
-        
-        public DiscordOAuthTokens? Get(int userId)
-        {
-            return _memoryCache.Get<DiscordOAuthTokens>(userId);
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-        public void Upsert(int userId, DiscordOAuthTokens tokens)
+        public DiscordOAuthTokens? Get(string userId)
         {
-            _memoryCache.Set(userId, tokens);
+            var entity = _dbContext.FirstOrDefault<DiscordLinkedRoleTokensEntity>(x => x.UserId == userId);
+            return entity is not null ? new DiscordOAuthTokens(entity.AccessToken, entity.RefreshToken, entity.AccessTokenExpiresAt) : null;
+        }
+
+        public bool Upsert(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
+        {
+            DiscordLinkedRoleTokensEntity? ApplyChanges(DiscordLinkedRoleTokensEntity? existing) => existing switch
+            {
+                null => new DiscordLinkedRoleTokensEntity
+                {
+                    UserId = discordUserId,
+                    RefreshToken = tokens.RefreshToken,
+                    AccessToken = tokens.AccessToken,
+                    AccessTokenExpiresAt = tokens.ExpiresAt
+                },
+                _ => existing with
+                {
+                    RefreshToken = tokens.RefreshToken,
+                    AccessToken = tokens.AccessToken,
+                    AccessTokenExpiresAt = tokens.ExpiresAt
+                }
+            };
+            if (!_dbContext.AddUpdateRemoveAndSave<DiscordLinkedRoleTokensEntity>(x => x.UserId == discordUserId, ApplyChanges))
+                return false;
+
+            UserMetadataEntity? ApplyChanges2(UserMetadataEntity? existing) => existing switch
+            {
+                null => new UserMetadataEntity
+                {
+                    UserId = nexusModsUserId,
+                    Metadata = new Dictionary<string, string>
+                    {
+                        {"DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt))}
+                    }
+                },
+                _ when existing.Metadata.TryGetValue("DiscordTokens", out var json) && JsonSerializer.Deserialize<DiscordUserTokens>(json) is { } eTokens && eTokens.RefreshToken != tokens.RefreshToken => existing,
+                _ => existing with
+                {
+                    Metadata = existing.Metadata.AddAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt)))
+                }
+            };
+            if (!_dbContext.AddUpdateRemoveAndSave<UserMetadataEntity>(x => x.UserId == nexusModsUserId, ApplyChanges2))
+                return false;
+
+            return true;
+        }
+
+        public bool Remove(int nexusModsUserId, string discordUserId)
+        {
+            DiscordLinkedRoleTokensEntity? ApplyChanges(DiscordLinkedRoleTokensEntity? existing) => existing switch
+            {
+                _ => null
+            };
+            if (!_dbContext.AddUpdateRemoveAndSave<DiscordLinkedRoleTokensEntity>(x => x.UserId == discordUserId, ApplyChanges))
+                return false;
+
+            UserMetadataEntity? ApplyChanges2(UserMetadataEntity? existing) => existing switch
+            {
+                null => null,
+                _ when existing.Metadata.ContainsKey("DiscordTokens") => existing with
+                {
+                    Metadata = existing.Metadata.RemoveAndReturn<Dictionary<string, string>, string, string>("DiscordTokens")
+                },
+                _ => existing
+            };
+            if (!_dbContext.AddUpdateRemoveAndSave<UserMetadataEntity>(x => x.UserId == nexusModsUserId, ApplyChanges2))
+                return false;
+
+            return true;
         }
     }
 }

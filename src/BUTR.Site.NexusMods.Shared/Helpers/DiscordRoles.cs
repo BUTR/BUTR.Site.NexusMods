@@ -1,4 +1,4 @@
-namespace BUTR.Site.NexusMods.Shared.Helpers
+﻿namespace BUTR.Site.NexusMods.Shared.Helpers
 {
     public static class DiscordConstants
     {
