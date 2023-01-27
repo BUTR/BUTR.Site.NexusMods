@@ -116,7 +116,7 @@ WHERE
                         CrashReportIgnoredFilesEntity? ApplyChanges(CrashReportIgnoredFilesEntity? existing) => existing switch
                         {
                             null => new() { Filename = missing.Filename, Id = report.Id },
-                            var entity => entity,
+                            _ => existing,
                         };
                         await dbContext.AddUpdateRemoveAndSaveAsync<CrashReportIgnoredFilesEntity>(x => x.Filename == missing.Filename, ApplyChanges, ct);
                         continue;

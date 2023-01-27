@@ -172,7 +172,7 @@ WHERE
                 var entity => entity with { Status = updatedCrashReport.Status, Comment = updatedCrashReport.Comment }
             };
             var set = _dbContext.Set<UserCrashReportEntity>().Include(x => x.CrashReport);
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync<UserCrashReportEntity>(set, x => x.UserId == userId && x.CrashReport.Id == updatedCrashReport.Id, ApplyChanges))
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync(set, x => x.UserId == userId && x.CrashReport.Id == updatedCrashReport.Id, ApplyChanges))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Updated successful!"));
 
             return StatusCode(StatusCodes.Status200OK, new StandardResponse("Failed to update!"));

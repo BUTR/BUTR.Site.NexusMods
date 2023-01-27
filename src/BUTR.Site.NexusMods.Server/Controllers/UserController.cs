@@ -49,7 +49,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             UserRoleEntity? ApplyChanges(UserRoleEntity? existing) => existing switch
             {
                 null => new() { UserId = (int) body.UserId, Role = body.Role },
-                var entity => entity with { Role = body.Role }
+                _ => existing with { Role = body.Role }
             };
             if (await _dbContext.AddUpdateRemoveAndSaveAsync<UserRoleEntity>(x => x.UserId == body.UserId, ApplyChanges, ct))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Set successful!"));

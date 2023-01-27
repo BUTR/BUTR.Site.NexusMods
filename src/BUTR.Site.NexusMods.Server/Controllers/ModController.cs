@@ -129,7 +129,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             NexusModsModEntity? ApplyChanges(NexusModsModEntity? existing) => existing switch
             {
                 null => null,
-                var entity => entity with { Name = modInfo.Name }
+                _ => existing with { Name = modInfo.Name }
             };
             if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Updated successful!"));
@@ -160,7 +160,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
                 {
                     null => new() { NexusModsModId = modInfo.Id, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
-                    var entity => entity with { ModIds = entity.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(entity.ModIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
+                    _ => existing with { ModIds = existing.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
                 };
                 if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges2))
                     return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to link!"));
@@ -169,8 +169,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             NexusModsModEntity? ApplyChanges(NexusModsModEntity? existing) => existing switch
             {
                 null => new() { Name = modInfo.Name, NexusModsModId = modInfo.Id, UserIds = ImmutableArray.Create<int>(userId).AsArray() },
-                var entity when entity.UserIds.Contains(userId) => entity,
-                var entity => entity with { UserIds = ImmutableArray.Create<int>(userId).AsArray() }
+                _ when existing.UserIds.Contains(userId) => existing,
+                _ => existing with { UserIds = ImmutableArray.Create<int>(userId).AsArray() }
             };
             if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Linked successful!"));
@@ -190,9 +190,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             NexusModsModEntity? ApplyChanges(NexusModsModEntity? existing) => existing switch
             {
                 null => null,
-                var entity when entity.UserIds.Contains(userId) && entity.UserIds.Length == 1 => null,
-                var entity when !entity.UserIds.Contains(userId) => entity,
-                var entity => entity with { UserIds = entity.UserIds.AsImmutableArray().Remove(userId).AsArray() }
+                _ when existing.UserIds.Contains(userId) && existing.UserIds.Length == 1 => null,
+                _ when !existing.UserIds.Contains(userId) => existing,
+                _ => existing with { UserIds = existing.UserIds.AsImmutableArray().Remove(userId).AsArray() }
             };
             if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Unlinked successful!"));
@@ -212,7 +212,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             ModNexusModsManualLinkEntity? ApplyChanges(ModNexusModsManualLinkEntity? existing) => existing switch
             {
                 null => new() { ModId = query.ModId, NexusModsId = query.NexusModsId },
-                var entity => entity with { NexusModsId = query.NexusModsId }
+                _ => existing with { NexusModsId = query.NexusModsId }
             };
             if (await _dbContext.AddUpdateRemoveAndSaveAsync<ModNexusModsManualLinkEntity>(x => x.ModId == query.ModId, ApplyChanges))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Linked successful!"));
@@ -271,8 +271,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             UserAllowedModsEntity? ApplyChanges(UserAllowedModsEntity? existing) => existing switch
             {
                 null => new() { UserId = query.UserId, AllowedModIds = ImmutableArray.Create<string>(query.ModId).AsArray() },
-                var entity when entity.AllowedModIds.Contains(query.ModId) => entity,
-                var entity => entity with { AllowedModIds = entity.AllowedModIds.AsImmutableArray().Add(query.ModId).AsArray() }
+                _ when existing.AllowedModIds.Contains(query.ModId) => existing,
+                _ => existing with { AllowedModIds = existing.AllowedModIds.AsImmutableArray().Add(query.ModId).AsArray() }
             };
             if (await _dbContext.AddUpdateRemoveAndSaveAsync<UserAllowedModsEntity>(x => x.UserId == query.UserId, ApplyChanges))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Allowed successful!"));
@@ -291,9 +291,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             UserAllowedModsEntity? ApplyChanges(UserAllowedModsEntity? existing) => existing switch
             {
                 null => null,
-                var entity when entity.AllowedModIds.Contains(query.ModId) && entity.AllowedModIds.Length == 1 => null,
-                var entity when !entity.AllowedModIds.Contains(query.ModId) => entity,
-                var entity => entity with { AllowedModIds = entity.AllowedModIds.AsImmutableArray().Remove(query.ModId).AsArray() }
+                _ when existing.AllowedModIds.Contains(query.ModId) && existing.AllowedModIds.Length == 1 => null,
+                _ when !existing.AllowedModIds.Contains(query.ModId) => existing,
+                _ => existing with { AllowedModIds = existing.AllowedModIds.AsImmutableArray().Remove(query.ModId).AsArray() }
             };
             if (await _dbContext.AddUpdateRemoveAndSaveAsync<UserAllowedModsEntity>(x => x.UserId == query.UserId, ApplyChanges))
                 return StatusCode(StatusCodes.Status200OK, new StandardResponse("Disallowed successful!"));

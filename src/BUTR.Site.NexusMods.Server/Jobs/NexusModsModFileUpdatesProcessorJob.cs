@@ -54,14 +54,14 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                 NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
                 {
                     null => new() { NexusModsModId = modUpdate.Id, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
-                    var entity => entity with { ModIds = entity.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(entity.ModIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
+                    _ => existing with { ModIds = existing.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
                 };
                 await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == modUpdate.Id, ApplyChanges2, context.CancellationToken);
 
                 NexusModsFileUpdateEntity? ApplyChanges(NexusModsFileUpdateEntity? existing) => existing switch
                 {
                     null => new() { NexusModsModId = modUpdate.Id, LastCheckedDate = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime },
-                    var entity => entity with { LastCheckedDate = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime }
+                    _ => existing with { LastCheckedDate = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime }
                 };
                 await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsFileUpdateEntity>(x => x.NexusModsModId == modUpdate.Id, ApplyChanges, context.CancellationToken);
             }

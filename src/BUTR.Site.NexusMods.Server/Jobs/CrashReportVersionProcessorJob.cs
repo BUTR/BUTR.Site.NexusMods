@@ -46,7 +46,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                     CrashReportEntity? ApplyChanges(CrashReportEntity? existing) => existing switch
                     {
                         null => null,
-                        var entity => entity with { Version = report.Version },
+                        _ => existing with { Version = report.Version },
                     };
                     await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == crashReport.Id, ApplyChanges, ct);
                 }

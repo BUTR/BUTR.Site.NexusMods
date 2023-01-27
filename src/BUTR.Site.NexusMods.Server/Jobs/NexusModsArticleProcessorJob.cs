@@ -82,7 +82,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                         AuthorName = authorText,
                         CreateDate = dateTime
                     },
-                    var entity => entity with
+                    _ => existing with
                     {
                         Title = title
                     }

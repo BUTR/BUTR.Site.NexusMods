@@ -52,9 +52,9 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                         NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
                         {
                             null => new() { NexusModsModId = modId, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
-                            var entity => entity with
+                            _ => existing with
                             {
-                                ModIds = entity.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(entity.ModIds)).AsArray(),
+                                ModIds = existing.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModIds)).AsArray(),
                                 LastCheckedDate = DateTime.UtcNow
                             }
                         };
@@ -63,7 +63,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                         NexusModsFileUpdateEntity? ApplyChanges(NexusModsFileUpdateEntity? existing) => existing switch
                         {
                             null => new() { NexusModsModId = modId, LastCheckedDate = latestFileUpdate },
-                            var entity => entity with { LastCheckedDate = latestFileUpdate }
+                            _ => existing with { LastCheckedDate = latestFileUpdate }
                         };
                         await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsFileUpdateEntity>(x => x.NexusModsModId == modId, ApplyChanges, context.CancellationToken);
                     }
