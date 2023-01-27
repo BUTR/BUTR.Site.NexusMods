@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aragas.Extensions.Options.FluentValidation" Version="1.0.0.11" />
-    <PackageReference Include="BUTR.Authentication.NexusMods" Version="1.0.0.4" />
+    <PackageReference Include="BUTR.Authentication.NexusMods" Version="1.0.0.6" />
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="4.0.2" />
     <PackageReference Include="DynamicExpressions.NET" Version="1.1.0" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="8.0.0.7106-preview2" />

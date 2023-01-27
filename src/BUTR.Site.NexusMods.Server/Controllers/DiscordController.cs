@@ -99,7 +99,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         {
             if (await UpdateMetadataInternal() is not { } result)
                 return StatusCode(StatusCodes.Status403Forbidden);
-            return StatusCode(result ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest);
+            return StatusCode(result ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest, null);
         }
 
 

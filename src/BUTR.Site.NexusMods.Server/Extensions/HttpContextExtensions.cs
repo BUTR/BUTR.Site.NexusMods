@@ -4,10 +4,10 @@ using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 
 namespace BUTR.Site.NexusMods.Server.Extensions
@@ -50,13 +50,18 @@ namespace BUTR.Site.NexusMods.Server.Extensions
         public static string GetRole(this HttpContext context) =>
             context.User.FindFirst(ButrNexusModsClaimTypes.Role)?.Value ?? ApplicationRoles.User;
 
-        public static DiscordUserTokens? GetDiscordTokens(this HttpContext context) =>
-            !context.GetMetadata().TryGetValue("DiscordTokens", out var json) ? null : JsonSerializer.Deserialize<DiscordUserTokens>(json);
+        public static DiscordUserTokens? GetDiscordTokens(this HttpContext context)
+        {
+            var options = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;
+            return context.GetMetadata().TryGetValue("DiscordTokens", out var json) ? JsonSerializer.Deserialize<DiscordUserTokens>(json, options) : null;
+        }
 
-        public static Dictionary<string, string> GetMetadata(this HttpContext context) =>
-            context.User.FindFirst(ButrNexusModsClaimTypes.Metadata)?.Value.Split(';', StringSplitOptions.RemoveEmptyEntries)
-                .Select(kv => kv.Split('='))
-                .Where(split => split.Length == 2)
-                .ToDictionary(split => split[0], split => split[1]) ?? new();
+        public static Dictionary<string, string> GetMetadata(this HttpContext context)
+        {
+            var options = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;
+            if (context.User.FindFirst(ButrNexusModsClaimTypes.Metadata)?.Value is { } json)
+                return JsonSerializer.Deserialize<Dictionary<string, string>>(json, options) ?? new();
+            return new();
+        }
     }
 }
