@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.Server.Contexts;
+﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.Extensions.Caching.Memory;
@@ -22,7 +22,7 @@ namespace BUTR.Site.NexusMods.Server.Services
         {
             _memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
         }
-        
+
         public DiscordOAuthTokens? Get(int userId)
         {
             return _memoryCache.Get<DiscordOAuthTokens>(userId);

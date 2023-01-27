@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace BUTR.Site.NexusMods.Server.Models.API
 {

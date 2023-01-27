@@ -27,7 +27,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             [property: JsonPropertyName(DiscordConstants.BUTRModerator)] int IsModerator,
             [property: JsonPropertyName(DiscordConstants.BUTRAdministrator)] int IsAdministrator,
             [property: JsonPropertyName(DiscordConstants.BUTRLinkedMods)] int LinkedMods);
-        
+
         private readonly DiscordClient _discordClient;
         private readonly AppDbContext _dbContext;
 
@@ -36,7 +36,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
-        
+
         [HttpGet("GetOAuthUrl")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(DiscordOAuthUrlModel), StatusCodes.Status200OK)]
@@ -45,7 +45,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var (url, state) = _discordClient.GetOAuthUrl();
             return StatusCode(StatusCodes.Status200OK, new DiscordOAuthUrlModel(url, state));
         }
-        
+
         [HttpGet("GetOAuthTokens")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(DiscordOAuthTokens), StatusCodes.Status200OK)]
@@ -71,7 +71,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var manuallyLinkedModsCount = await _dbContext
                 .Set<UserAllowedModsEntity>()
                 .CountAsync(y => y.UserId == userId);
-            
+
             var result = await _discordClient.PushMetadata(body.AccessToken, new Metadata(
                 1,
                 role == ApplicationRoles.Moderator ? 1 : 0,
@@ -79,8 +79,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 linkedModsCount + manuallyLinkedModsCount));
             return StatusCode(result ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest);
         }
-        
-        
+
+
         [HttpPost("GetUserInfo")]
         [ProducesResponseType(typeof(DiscordUserInfo), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
