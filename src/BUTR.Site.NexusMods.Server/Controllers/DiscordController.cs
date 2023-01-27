@@ -51,11 +51,12 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status403Forbidden)]
         public async Task<ActionResult> Link([FromQuery] string code)
         {
             var tokens = await _discordClient.GetOAuthTokens(code);
             if (tokens is null)
-                return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to link!"));
+                return StatusCode(StatusCodes.Status403Forbidden, new StandardResponse("Failed to link!"));
 
             var userId = HttpContext.GetUserId();
             var userInfo = await _discordClient.GetUserInfo(tokens.AccessToken);
@@ -71,6 +72,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [HttpPost("Unlink")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> Unlink()
         {
@@ -78,7 +80,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var tokens = HttpContext.GetDiscordTokens();
 
             if (tokens is null)
-                return StatusCode(StatusCodes.Status200OK, new StandardResponse("Unlinked successful!"));
+                return StatusCode(StatusCodes.Status403Forbidden, new StandardResponse("Unlinked successful!"));
 
             if (!await _discordClient.PushMetadata(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt), new Metadata(0, 0, 0, 0)))
                 return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("Failed to unlink!"));
@@ -93,11 +95,17 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [HttpPost("UpdateMetadata")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> UpdateMetadata() => StatusCode(await UpdateMetadataInternal() ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest);
+        public async Task<ActionResult> UpdateMetadata()
+        {
+            if (await UpdateMetadataInternal() is not { } result)
+                return StatusCode(StatusCodes.Status403Forbidden);
+            return StatusCode(result ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest);
+        }
 
 
         [HttpPost("GetUserInfo")]
         [ProducesResponseType(typeof(DiscordUserInfo), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> GetUserInfoByAccessToken()
         {
@@ -105,20 +113,20 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var tokens = HttpContext.GetDiscordTokens();
 
             if (tokens is null)
-                return StatusCode(StatusCodes.Status400BadRequest);
+                return StatusCode(StatusCodes.Status403Forbidden);
 
             var result = await _discordClient.GetUserInfo(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt));
             return StatusCode(result is not null ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest, result);
         }
 
-        private async Task<bool> UpdateMetadataInternal()
+        private async Task<bool?> UpdateMetadataInternal()
         {
             var role = HttpContext.GetRole();
             var userId = HttpContext.GetUserId();
             var tokens = HttpContext.GetDiscordTokens();
 
             if (tokens is null)
-                return false;
+                return null;
 
             var linkedModsCount = await _dbContext
                 .Set<NexusModsModEntity>()
