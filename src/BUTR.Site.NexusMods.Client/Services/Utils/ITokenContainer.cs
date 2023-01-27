@@ -12,5 +12,6 @@ namespace BUTR.Site.NexusMods.Client.Services
 
         Task<Token?> GetTokenAsync(CancellationToken ct = default);
         Task SetTokenAsync(Token? token, CancellationToken ct = default);
+        Task RefreshTokenAsync(Token token, CancellationToken ct = default);
     }
 }

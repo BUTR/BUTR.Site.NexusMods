@@ -42,5 +42,12 @@ namespace BUTR.Site.NexusMods.Client.Services
             }
             OnTokenChanged?.Invoke();
         }
+
+        public async Task RefreshTokenAsync(Token token, CancellationToken ct = default)
+        {
+            if (await _localStorage.GetItemAsync<Token>("token", ct) is not { } oldToken || oldToken.Type != token.Type)
+                return;
+            await _localStorage.SetItemAsync("token", token, ct);
+        }
     }
 }

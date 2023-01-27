@@ -54,6 +54,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             try
             {
                 var response = await _authenticationClient.ValidateAsync(ct);
+                await _tokenContainer.RefreshTokenAsync(new Token(token.Type, response.Token), ct);
                 return response.Profile;
             }
             catch (Exception)
