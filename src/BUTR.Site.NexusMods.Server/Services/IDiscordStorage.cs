@@ -62,11 +62,17 @@ namespace BUTR.Site.NexusMods.Server.Services
                         {"DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt))}
                     }
                 },
-                _ when existing.Metadata.TryGetValue("DiscordTokens", out var json) && JsonSerializer.Deserialize<DiscordUserTokens>(json) is { } eTokens && eTokens.RefreshToken != tokens.RefreshToken => existing,
+                //_ when existing.Metadata.TryGetValue("DiscordTokens", out var json) => JsonSerializer.Deserialize<DiscordUserTokens>(json) is { } eTokens && eTokens.RefreshToken != tokens.RefreshToken
+                //    ? existing
+                //    : existing,
+                //_ when !existing.Metadata.ContainsKey("DiscordTokens") => existing with
+                //{
+                //    Metadata = existing.Metadata.AddAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt)))
+                //},
                 _ => existing with
                 {
-                    Metadata = existing.Metadata.AddAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt)))
-                }
+                    Metadata = existing.Metadata.SetAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt)))
+                },
             };
             if (!_dbContext.AddUpdateRemoveAndSave<UserMetadataEntity>(x => x.UserId == nexusModsUserId, ApplyChanges2))
                 return false;
