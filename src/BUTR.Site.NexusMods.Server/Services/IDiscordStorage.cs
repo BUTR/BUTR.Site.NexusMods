@@ -47,7 +47,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             };
             if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserToDiscordEntity>(x => x.NexusModsId == nexusModsUserId, ApplyChanges1))
                 return false;
-            
+
             DiscordLinkedRoleTokensEntity? ApplyChanges2(DiscordLinkedRoleTokensEntity? existing) => existing switch
             {
                 null => new DiscordLinkedRoleTokensEntity
@@ -103,7 +103,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             };
             if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserToDiscordEntity>(x => x.NexusModsId == nexusModsUserId, ApplyChanges1))
                 return false;
-            
+
             DiscordLinkedRoleTokensEntity? ApplyChanges(DiscordLinkedRoleTokensEntity? existing) => existing switch
             {
                 _ => null
