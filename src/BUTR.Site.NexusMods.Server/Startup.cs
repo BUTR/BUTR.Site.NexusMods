@@ -114,6 +114,7 @@ namespace BUTR.Site.NexusMods.Server
             {
                 opt.UseMicrosoftDependencyInjectionJobFactory();
 
+                opt.AddJobAtStartup<CrashReportModIdToVersionProcessorJob>();
                 opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
                 opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
                 opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
@@ -123,7 +124,7 @@ namespace BUTR.Site.NexusMods.Server
 
             services.AddMemoryCache();
 
-            services.AddDbContext<AppDbContext>(x => x.UseNpgsql(_configuration.GetConnectionString("Main"), opt => opt.EnableRetryOnFailure()).AddPrepareInterceptorr());
+            services.AddDbContext<AppDbContext>(x => x.UseNpgsql(_configuration.GetConnectionString("Main"), opt => opt.EnableRetryOnFailure()).AddPrepareInterceptor());
 
             services.AddNexusModsDefaultServices();
 

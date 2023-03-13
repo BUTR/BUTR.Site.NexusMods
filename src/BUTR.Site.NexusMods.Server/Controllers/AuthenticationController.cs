@@ -56,7 +56,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var role = roleEntity?.Role ?? ApplicationRoles.User;
             var metadataEntity = await _dbContext.FirstOrDefaultAsync<UserMetadataEntity>(x => x.UserId == validateResponse.UserId);
             var metadata = metadataEntity?.Metadata ?? new();
-            
+
             var generatedToken = await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
             {
                 UserId = validateResponse.UserId,
@@ -84,13 +84,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             var roleEntity = await _dbContext.FirstOrDefaultAsync<UserRoleEntity>(x => x.UserId == validateResponse.UserId);
             var role = roleEntity?.Role ?? ApplicationRoles.User;
-            
+
             var metadataEntity = await _dbContext.FirstOrDefaultAsync<UserMetadataEntity>(x => x.UserId == validateResponse.UserId);
             var metadata = metadataEntity?.Metadata ?? new();
             var existingMetadata = HttpContext.GetMetadata();
             var isMetadataEqual = metadata.Count == existingMetadata.Count && metadata.All(
                 d1KV => existingMetadata.TryGetValue(d1KV.Key, out var d2Value) && (d1KV.Value == d2Value || d1KV.Value?.Equals(d2Value) == true));
-            
+
             if (role != HttpContext.GetRole() || !isMetadataEqual)
             {
                 var generatedToken = await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo

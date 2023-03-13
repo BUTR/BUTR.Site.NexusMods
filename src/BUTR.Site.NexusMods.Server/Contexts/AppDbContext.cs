@@ -13,6 +13,8 @@ namespace BUTR.Site.NexusMods.Server.Contexts
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.HasPostgresExtension("hstore");
+            modelBuilder.HasDbFunction(typeof(Extensions.DbFunctionsExtensions).GetMethod(nameof(Extensions.DbFunctionsExtensions.HasKeyValue))!)
+                .HasName("hstore_has_key_value");
 
             modelBuilder.ApplyConfiguration(new UserRoleEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserMetadataEntityConfiguration());

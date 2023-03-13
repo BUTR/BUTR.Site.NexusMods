@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database
@@ -16,6 +17,8 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
         public required DateTime CreatedAt { get; init; }
 
         public required string[] ModIds { get; init; }
+
+        public required Dictionary<string, string> ModIdToVersion { get; init; }
 
         public required string[] InvolvedModIds { get; init; }
 

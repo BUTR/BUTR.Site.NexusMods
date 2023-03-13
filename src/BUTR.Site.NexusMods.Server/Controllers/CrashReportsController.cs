@@ -38,6 +38,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             public required string Exception { get; init; }
             public required DateTime CreatedAt { get; init; }
             public required string[] ModIds { get; init; }
+            public required Dictionary<string, string> ModIdToVersion { get; init; }
             public required string[] InvolvedModIds { get; init; }
             public required int[] ModNexusModsIds { get; init; }
             public required string Url { get; init; }
@@ -83,6 +84,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                         Exception = x.cre.Exception,
                         CreatedAt = x.cre.CreatedAt,
                         ModIds = x.cre.ModIds,
+                        ModIdToVersion = x.cre.ModIdToVersion,
                         InvolvedModIds = x.cre.InvolvedModIds,
                         ModNexusModsIds = x.cre.ModNexusModsIds,
                         Url = x.cre.Url,

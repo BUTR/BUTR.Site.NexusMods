@@ -16,6 +16,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts.Config
             builder.Property(p => p.Exception).HasColumnName("exception").IsRequired();
             builder.Property(p => p.CreatedAt).HasColumnName("created_at").IsRequired();
             builder.Property(p => p.ModIds).HasColumnName("mod_ids") /*.HasConversion<ImmutableArrayToArrayConverter<string>>()*/.IsRequired();
+            builder.Property(p => p.ModIdToVersion).HasColumnName("mod_id_to_version") /*.HasConversion<ImmutableArrayToArrayConverter<string>>()*/.IsRequired();
             builder.Property(p => p.InvolvedModIds).HasColumnName("involved_mod_ids") /*.HasConversion<ImmutableArrayToArrayConverter<string>>()*/.IsRequired();
             builder.Property(p => p.ModNexusModsIds).HasColumnName("mod_nexusmods_ids") /*.HasConversion<ImmutableArrayToArrayConverter<int>>()*/.IsRequired();
             builder.Property(p => p.Url).HasColumnName("url").IsRequired();

@@ -6,7 +6,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions
 {
     public static class DbContextOptionsBuilderExtensions
     {
-        public static DbContextOptionsBuilder AddPrepareInterceptorr(this DbContextOptionsBuilder optionsBuilder)
+        public static DbContextOptionsBuilder AddPrepareInterceptor(this DbContextOptionsBuilder optionsBuilder)
             => optionsBuilder.AddInterceptors(new PrepareCommandInterceptor());
     }
 }

@@ -13,19 +13,21 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
+using DbFunctionsExtensions = BUTR.Site.NexusMods.Server.Extensions.DbFunctionsExtensions;
+
 namespace BUTR.Site.NexusMods.Server.Jobs
 {
     /// <summary>
-    /// Part of migration process. Process all old reports and add the missing Version prop
+    /// Part of migration process. Process all old reports and add the missing ModIdToVersion prop
     /// </summary>
     [DisallowConcurrentExecution]
-    public sealed class CrashReportVersionProcessorJob : IJob
+    public sealed class CrashReportModIdToVersionProcessorJob : IJob
     {
         private readonly ILogger _logger;
         private readonly HttpClient _client;
         private readonly AppDbContext _dbContext;
 
-        public CrashReportVersionProcessorJob(ILogger<CrashReportVersionProcessorJob> logger, HttpClient client, AppDbContext dbContext)
+        public CrashReportModIdToVersionProcessorJob(ILogger<CrashReportModIdToVersionProcessorJob> logger, HttpClient client, AppDbContext dbContext)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _client = client ?? throw new ArgumentNullException(nameof(client));
@@ -35,7 +37,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
         public async Task Execute(IJobExecutionContext context)
         {
             var ct = context.CancellationToken;
-            var query = _dbContext.Set<CrashReportEntity>().Where(x => x.Version == 0).Take(500).AsNoTracking();
+            var query = _dbContext.Set<CrashReportEntity>().Where(x => DbFunctionsExtensions.HasKeyValue(x.ModIdToVersion, "ignore", "=", "ignore")).Take(500).AsNoTracking();
             while (await query.ToArrayAsync(ct) is { Length: > 0 } crashReports)
             {
                 foreach (var crashReport in crashReports)
@@ -46,7 +48,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                     CrashReportEntity? ApplyChanges(CrashReportEntity? existing) => existing switch
                     {
                         null => null,
-                        _ => existing with { Version = report.Version },
+                        _ => existing with { ModIdToVersion = report.Modules.Select(item => new { item.Id, item.Version }).Distinct().ToDictionary(x => x.Id, x => x.Version) },
                     };
                     await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == crashReport.Id, ApplyChanges, ct);
                 }
