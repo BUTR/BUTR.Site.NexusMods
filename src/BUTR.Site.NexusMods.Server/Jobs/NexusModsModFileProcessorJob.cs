@@ -16,6 +16,9 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Jobs
 {
+    /// <summary>
+    /// First time job to fill the database
+    /// </summary>
     [DisallowConcurrentExecution]
     public sealed class NexusModsModFileProcessorJob : IJob
     {

@@ -110,16 +110,21 @@ namespace BUTR.Site.NexusMods.Server
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
 
+            services.AddSingleton<InMemoryQuartzJobHistory>();
             services.AddQuartz(opt =>
             {
                 opt.UseMicrosoftDependencyInjectionJobFactory();
 
-                opt.AddJobAtStartup<CrashReportModIdToVersionProcessorJob>();
-                opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
+                opt.AddJobListener<InMemoryQuartzJobHistory>(sp => sp.GetRequiredService<InMemoryQuartzJobHistory>());
+                //opt.AddJobAtStartup<CrashReportModIdToVersionProcessorJob>();
+                //opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
+                opt.AddJob<TopExceptionsTypesAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<CrashReportAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
                 opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
+                //opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
                 opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<NexusModsArticleUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
             });
 
             services.AddMemoryCache();

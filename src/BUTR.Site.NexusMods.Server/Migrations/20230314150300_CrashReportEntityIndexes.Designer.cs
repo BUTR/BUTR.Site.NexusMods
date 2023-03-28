@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Models.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,13 +13,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BUTR.Site.NexusMods.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230314150300_CrashReportEntityIndexes")]
+    partial class CrashReportEntityIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.4")
+                .HasAnnotation("ProductVersion", "7.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "hstore");
@@ -50,10 +52,6 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .IsRequired()
                         .HasColumnType("text[]")
                         .HasColumnName("involved_mod_ids");
-
-                    b.Property<CrashReportEntityMetadata>("Metadata")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("metadata");
 
                     b.Property<Dictionary<string, string>>("ModIdToVersion")
                         .IsRequired()
@@ -314,20 +312,6 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasName("nexusmods_to_discord_pkey");
 
                     b.ToTable("nexusmods_to_discord", (string)null);
-                });
-
-            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.TopExceptionsTypeEntity", b =>
-                {
-                    b.Property<int>("Count")
-                        .HasColumnType("integer")
-                        .HasColumnName("count");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("type");
-
-                    b.ToTable("top_exceptions_type_entity", (string)null);
                 });
 
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.UserAllowedModsEntity", b =>

@@ -42,36 +42,54 @@ namespace BUTR.Site.NexusMods.Server.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            await foreach (var (report, date) in MissingFilenames(_dbContext, context.CancellationToken))
+            var processed = 0;
+            try
             {
-                var crashReportEntity = new CrashReportEntity
+                await foreach (var (report, date) in MissingFilenames(_dbContext, context.CancellationToken))
                 {
-                    Id = report.Id,
-                    Url = new Uri(new Uri(_options.Endpoint), $"{report.Id2}.html").ToString(),
-                    Version = report.Version,
-                    GameVersion = report.GameVersion,
-                    Exception = report.Exception,
-                    CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date,
-                    ModIds = report.Modules.Select(x => x.Id).Distinct().ToImmutableArray().AsArray(),
-                    ModIdToVersion = report.Modules.Select(item => new { item.Id, item.Version }).Distinct().ToDictionary(x => x.Id, x => x.Version),
-                    InvolvedModIds = report.InvolvedModules.Select(x => x.Id).ToImmutableArray().AsArray(),
-                    ModNexusModsIds = report.Modules
-                        .Select(x => ModsUtils.TryParse(x.Url, out _, out var modId) ? modId.GetValueOrDefault(-1) : -1)
-                        .Where(x => x != -1)
-                        .ToImmutableArray().AsArray(),
-                };
+                    var crashReportEntity = new CrashReportEntity
+                    {
+                        Id = report.Id,
+                        Url = new Uri(new Uri(_options.Endpoint), $"{report.Id2}.html").ToString(),
+                        Version = report.Version,
+                        GameVersion = report.GameVersion,
+                        Exception = report.Exception,
+                        CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date,
+                        ModIds = report.Modules.Select(x => x.Id).Distinct().ToImmutableArray().AsArray(),
+                        ModIdToVersion = report.Modules.Select(item => new { item.Id, item.Version }).Distinct().ToDictionary(x => x.Id, x => x.Version),
+                        InvolvedModIds = report.InvolvedModules.Select(x => x.Id).ToImmutableArray().AsArray(),
+                        ModNexusModsIds = report.Modules
+                            .Select(x => ModsUtils.TryParse(x.Url, out _, out var modId) ? modId.GetValueOrDefault(-1) : -1)
+                            .Where(x => x != -1)
+                            .ToImmutableArray().AsArray(),
+                        Metadata = new CrashReportEntityMetadata
+                        {
+                            LauncherType = report.LauncherType,
+                            LauncherVersion = report.LauncherVersion,
+                            Runtime = report.Runtime,
+                            BUTRLoaderVersion = report.BUTRLoaderVersion,
+                            BLSEVersion = report.BLSEVersion,
+                            LauncherExVersion = report.LauncherExVersion,
+                        }
+                    };
 
-                CrashReportEntity? ApplyChangesCrashReportEntity(CrashReportEntity? existing) => existing switch
-                {
-                    _ => crashReportEntity,
-                };
-                await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == report.Id, ApplyChangesCrashReportEntity, context.CancellationToken);
+                    CrashReportEntity? ApplyChangesCrashReportEntity(CrashReportEntity? existing) => existing switch
+                    {
+                        _ => crashReportEntity,
+                    };
+                    await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == report.Id, ApplyChangesCrashReportEntity, context.CancellationToken);
 
-                CrashReportFileEntity? ApplyChangesCrashReportFileEntity(CrashReportFileEntity? existing) => existing switch
-                {
-                    _ => new CrashReportFileEntity { Filename = report.Id2, CrashReport = crashReportEntity },
-                };
-                await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportFileEntity>(x => x.Filename == report.Id2, ApplyChangesCrashReportFileEntity, context.CancellationToken);
+                    CrashReportFileEntity? ApplyChangesCrashReportFileEntity(CrashReportFileEntity? existing) => existing switch
+                    {
+                        _ => new CrashReportFileEntity { Filename = report.Id2, CrashReport = crashReportEntity },
+                    };
+                    await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportFileEntity>(x => x.Filename == report.Id2, ApplyChangesCrashReportFileEntity, context.CancellationToken);
+                    processed++;
+                }
+            }
+            finally
+            {
+                context.MergedJobDataMap["Processed"] = processed;
             }
         }
 

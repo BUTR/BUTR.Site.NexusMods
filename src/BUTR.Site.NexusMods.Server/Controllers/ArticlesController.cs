@@ -68,7 +68,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         public async Task<ActionResult> Autocomplete([FromQuery] string authorName)
         {
             var mapping = _dbContext.Model.FindEntityType(typeof(NexusModsArticleEntity));
-            if (mapping is null || mapping.GetTableName() is not { } table)
+            if (mapping?.GetTableName() is not { } table)
                 return StatusCode(StatusCodes.Status200OK, Array.Empty<string>());
 
             var schema = mapping.GetSchema();

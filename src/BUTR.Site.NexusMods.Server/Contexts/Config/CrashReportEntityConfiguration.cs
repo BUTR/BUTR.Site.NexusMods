@@ -20,6 +20,11 @@ namespace BUTR.Site.NexusMods.Server.Contexts.Config
             builder.Property(p => p.InvolvedModIds).HasColumnName("involved_mod_ids") /*.HasConversion<ImmutableArrayToArrayConverter<string>>()*/.IsRequired();
             builder.Property(p => p.ModNexusModsIds).HasColumnName("mod_nexusmods_ids") /*.HasConversion<ImmutableArrayToArrayConverter<int>>()*/.IsRequired();
             builder.Property(p => p.Url).HasColumnName("url").IsRequired();
+            builder.Property(p => p.Metadata).HasColumnName("metadata").HasColumnType("jsonb");
+
+            builder.HasIndex(p => p.Version);
+            builder.HasIndex(p => p.GameVersion);
+            builder.HasIndex(p => p.CreatedAt);
         }
     }
 }

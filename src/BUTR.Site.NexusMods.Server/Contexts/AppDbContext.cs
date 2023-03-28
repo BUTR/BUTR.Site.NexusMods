@@ -15,7 +15,10 @@ namespace BUTR.Site.NexusMods.Server.Contexts
             modelBuilder.HasPostgresExtension("hstore");
             modelBuilder.HasDbFunction(typeof(Extensions.DbFunctionsExtensions).GetMethod(nameof(Extensions.DbFunctionsExtensions.HasKeyValue))!)
                 .HasName("hstore_has_key_value");
+            modelBuilder.HasDbFunction(typeof(Extensions.DbFunctionsExtensions).GetMethod(nameof(Extensions.DbFunctionsExtensions.HasKeysValues))!)
+                .HasName("hstore_has_keys_values");
 
+            modelBuilder.ApplyConfiguration(new TopExceptionsTypeEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserRoleEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserMetadataEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserAllowedModsEntityConfiguration());
@@ -28,6 +31,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts
             modelBuilder.ApplyConfiguration(new CrashReportEntityConfiguration());
             modelBuilder.ApplyConfiguration(new CrashReportFileEntityConfiguration());
             modelBuilder.ApplyConfiguration(new CrashReportIgnoredFilesEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new CrashScoreInvolvedEntityConfiguration());
             modelBuilder.ApplyConfiguration(new NexusModsUserToDiscordEntityConfiguration());
             modelBuilder.ApplyConfiguration(new DiscordLinkedRoleTokensEntityConfiguration());
         }

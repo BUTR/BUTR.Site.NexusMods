@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Models.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,13 +13,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BUTR.Site.NexusMods.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230314094505_HStoreHelpers")]
+    partial class HStoreHelpers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.4")
+                .HasAnnotation("ProductVersion", "7.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "hstore");
@@ -51,10 +53,6 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("text[]")
                         .HasColumnName("involved_mod_ids");
 
-                    b.Property<CrashReportEntityMetadata>("Metadata")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("metadata");
-
                     b.Property<Dictionary<string, string>>("ModIdToVersion")
                         .IsRequired()
                         .HasColumnType("hstore")
@@ -81,12 +79,6 @@ namespace BUTR.Site.NexusMods.Server.Migrations
 
                     b.HasKey("Id")
                         .HasName("crash_report_entity_pkey");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("GameVersion");
-
-                    b.HasIndex("Version");
 
                     b.ToTable("crash_report_entity", (string)null);
                 });
@@ -123,46 +115,6 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasName("crash_report_ignored_files_pkey");
 
                     b.ToTable("crash_report_ignored_files", (string)null);
-                });
-
-            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.CrashScoreInvolvedEntity", b =>
-                {
-                    b.Property<string>("GameVersion")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("game_version");
-
-                    b.Property<int>("InvolvedCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("involved_count");
-
-                    b.Property<string>("ModId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("mod_id");
-
-                    b.Property<string>("ModVersion")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("version");
-
-                    b.Property<int>("NotInvolvedCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("not_involved_count");
-
-                    b.Property<int>("RawValue")
-                        .HasColumnType("integer")
-                        .HasColumnName("value");
-
-                    b.Property<double>("Score")
-                        .HasColumnType("double precision")
-                        .HasColumnName("crash_score");
-
-                    b.Property<int>("TotalCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("total_count");
-
-                    b.ToTable("crash_score_involved_entity", (string)null);
                 });
 
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.DiscordLinkedRoleTokensEntity", b =>
@@ -314,20 +266,6 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasName("nexusmods_to_discord_pkey");
 
                     b.ToTable("nexusmods_to_discord", (string)null);
-                });
-
-            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.TopExceptionsTypeEntity", b =>
-                {
-                    b.Property<int>("Count")
-                        .HasColumnType("integer")
-                        .HasColumnName("count");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("type");
-
-                    b.ToTable("top_exceptions_type_entity", (string)null);
                 });
 
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.UserAllowedModsEntity", b =>

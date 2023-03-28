@@ -19,13 +19,13 @@ namespace BUTR.Site.NexusMods.Server.Jobs
     /// Part of migration process. Process all old reports and add the missing Version prop
     /// </summary>
     [DisallowConcurrentExecution]
-    public sealed class CrashReportVersionProcessorJob : IJob
+    public sealed class CrashReportMetadataProcessorJob : IJob
     {
         private readonly ILogger _logger;
         private readonly HttpClient _client;
         private readonly AppDbContext _dbContext;
 
-        public CrashReportVersionProcessorJob(ILogger<CrashReportVersionProcessorJob> logger, HttpClient client, AppDbContext dbContext)
+        public CrashReportMetadataProcessorJob(ILogger<CrashReportMetadataProcessorJob> logger, HttpClient client, AppDbContext dbContext)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _client = client ?? throw new ArgumentNullException(nameof(client));
@@ -35,7 +35,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
         public async Task Execute(IJobExecutionContext context)
         {
             var ct = context.CancellationToken;
-            var query = _dbContext.Set<CrashReportEntity>().Where(x => x.Version == 0).Take(500).AsNoTracking();
+            var query = _dbContext.Set<CrashReportEntity>().Where(x => x.Metadata == null).Take(500).Take(500).AsNoTracking();
             var processed = 0;
             try
             {
@@ -49,7 +49,18 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                         CrashReportEntity? ApplyChanges(CrashReportEntity? existing) => existing switch
                         {
                             null => null,
-                            _ => existing with { Version = report.Version },
+                            _ => existing with
+                            {
+                                Metadata = new CrashReportEntityMetadata
+                                {
+                                    LauncherType = report.LauncherType,
+                                    LauncherVersion = report.LauncherVersion,
+                                    Runtime = report.Runtime,
+                                    BUTRLoaderVersion = report.BUTRLoaderVersion,
+                                    BLSEVersion = report.BLSEVersion,
+                                    LauncherExVersion = report.LauncherExVersion,
+                                }
+                            },
                         };
                         await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == crashReport.Id, ApplyChanges, ct);
                         processed++;

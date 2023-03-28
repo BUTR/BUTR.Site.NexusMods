@@ -14,13 +14,13 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Jobs
 {
     [DisallowConcurrentExecution]
-    public sealed class NexusModsArticleProcessorJob : IJob
+    public sealed class NexusModsArticleUpdatesProcessorJob : IJob
     {
         private readonly ILogger _logger;
         private readonly NexusModsClient _client;
         private readonly AppDbContext _dbContext;
 
-        public NexusModsArticleProcessorJob(ILogger<NexusModsArticleProcessorJob> logger, NexusModsClient client, AppDbContext dbContext)
+        public NexusModsArticleUpdatesProcessorJob(ILogger<NexusModsArticleUpdatesProcessorJob> logger, NexusModsClient client, AppDbContext dbContext)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _client = client ?? throw new ArgumentNullException(nameof(client));
@@ -34,7 +34,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
 
             var ct = context.CancellationToken;
 
-            var articleId = 0;
+            var articleId = _dbContext.Set<NexusModsArticleEntity>().LastOrDefault()?.ArticleId ?? 0;
             var notFoundArticles = 0;
             var processed = 0;
             try

@@ -20,6 +20,16 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
         public required ImmutableArray<InvolvedModule> InvolvedModules { get; init; }
         public required ImmutableArray<EnhancedStacktraceFrame> EnhancedStacktrace { get; init; }
         public required string Id2 { get; init; }
+        
+        public required string? LauncherType { get; init; }
+        public required string? LauncherVersion { get; init; }
+        
+        public required string? Runtime { get; init; }
+        
+        public required string? BUTRLoaderVersion { get; init; }
+        
+        public required string? BLSEVersion { get; init; }
+        public required string? LauncherExVersion { get; init; }
     }
 
     public record EnhancedStacktraceFrame
@@ -96,6 +106,12 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
             var enhancedStacktrace = document.SelectSingleNode("descendant::div[@id=\"enhanced-stacktrace\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseEnhancedStacktrace).ToImmutableArray() ?? ImmutableArray<EnhancedStacktraceFrame>.Empty;
             //var assemblies = document.SelectSingleNode("descendant::div[@id=\"assemblies\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();
             //var harmonyPatches = document.SelectSingleNode("descendant::div[@id=\"harmony-patches\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();
+            var launcherType = document.SelectSingleNode("descendant::launcher")?.Attributes?["type"]?.Value ?? string.Empty;
+            var launcherVersion = document.SelectSingleNode("descendant::launcher")?.Attributes?["version"]?.Value ?? string.Empty;
+            var runtime = document.SelectSingleNode("descendant::runtime")?.Attributes?["value"]?.Value ?? string.Empty;
+            var butrloaderVersion = document.SelectSingleNode("descendant::butrloader")?.Attributes?["version"]?.Value ?? string.Empty;
+            var blseVersion = document.SelectSingleNode("descendant::blse")?.Attributes?["version"]?.Value ?? string.Empty;
+            var launcherexVersion = document.SelectSingleNode("descendant::launcherex")?.Attributes?["version"]?.Value ?? string.Empty;
             return new CrashReport
             {
                 Id = Guid.TryParse(id, out var val) ? val : Guid.Empty,
@@ -106,6 +122,12 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
                 InvolvedModules = involvedModules,
                 EnhancedStacktrace = enhancedStacktrace,
                 Id2 = id2,
+                LauncherType = launcherType,
+                LauncherVersion = launcherVersion,
+                Runtime = runtime,
+                BUTRLoaderVersion = butrloaderVersion,
+                BLSEVersion = blseVersion,
+                LauncherExVersion = launcherexVersion,
             };
         }
 

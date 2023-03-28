@@ -38,20 +38,29 @@ namespace BUTR.Site.NexusMods.Server.Jobs
         {
             var ct = context.CancellationToken;
             var query = _dbContext.Set<CrashReportEntity>().Where(x => DbFunctionsExtensions.HasKeyValue(x.ModIdToVersion, "ignore", "=", "ignore")).Take(500).AsNoTracking();
-            while (await query.ToArrayAsync(ct) is { Length: > 0 } crashReports)
+            var processed = 0;
+            try
             {
-                foreach (var crashReport in crashReports)
+                while (await query.ToArrayAsync(ct) is { Length: > 0 } crashReports)
                 {
-                    var reportStr = await _client.GetStringAsync(crashReport.Url, ct);
-                    var report = CrashReportParser.Parse(string.Empty, reportStr);
-
-                    CrashReportEntity? ApplyChanges(CrashReportEntity? existing) => existing switch
+                    foreach (var crashReport in crashReports)
                     {
-                        null => null,
-                        _ => existing with { ModIdToVersion = report.Modules.Select(item => new { item.Id, item.Version }).Distinct().ToDictionary(x => x.Id, x => x.Version) },
-                    };
-                    await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == crashReport.Id, ApplyChanges, ct);
+                        var reportStr = await _client.GetStringAsync(crashReport.Url, ct);
+                        var report = CrashReportParser.Parse(string.Empty, reportStr);
+
+                        CrashReportEntity? ApplyChanges(CrashReportEntity? existing) => existing switch
+                        {
+                            null => null,
+                            _ => existing with { ModIdToVersion = report.Modules.Select(item => new { item.Id, item.Version }).Distinct().ToDictionary(x => x.Id, x => x.Version) },
+                        };
+                        await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == crashReport.Id, ApplyChanges, ct);
+                        processed++;
+                    }
                 }
+            }
+            finally
+            {
+                context.MergedJobDataMap["Processed"] = processed;
             }
         }
     }

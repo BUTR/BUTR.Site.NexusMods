@@ -17,6 +17,9 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Jobs
 {
+    /// <summary>
+    /// Will be able to keep the database consistent as long as the service is not stopped for more than a day
+    /// </summary>
     [DisallowConcurrentExecution]
     public sealed class NexusModsModFileUpdatesProcessorJob : IJob
     {
@@ -47,23 +50,38 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                 var found = updatesStoredWithinDay.FirstOrDefault(y => y.NexusModsModId == x.Id);
                 return found is null || found.LastCheckedDate < latestFileUpdateDate;
             }).ToList();
-            foreach (var modUpdate in newUpdates)
+            
+            context.MergedJobDataMap["UpdatesStoredWithinDay"] = updatesStoredWithinDay.Count;
+            context.MergedJobDataMap["UpdatedWithinDay"] = updatedWithinDay.Length;
+            context.MergedJobDataMap["NewUpdates"] = newUpdates.Count;
+
+            var processed = 0;
+            try
             {
-                var exposedModIds = await _info.GetModIdsAsync("mountandblade2bannerlord", modUpdate.Id, _options.ApiKey).Distinct().ToImmutableArrayAsync(context.CancellationToken);
-
-                NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
+                foreach (var modUpdate in newUpdates)
                 {
-                    null => new() { NexusModsModId = modUpdate.Id, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
-                    _ => existing with { ModIds = existing.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
-                };
-                await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == modUpdate.Id, ApplyChanges2, context.CancellationToken);
+                    var exposedModIds = await _info.GetModIdsAsync("mountandblade2bannerlord", modUpdate.Id, _options.ApiKey).Distinct().ToImmutableArrayAsync(context.CancellationToken);
 
-                NexusModsFileUpdateEntity? ApplyChanges(NexusModsFileUpdateEntity? existing) => existing switch
-                {
-                    null => new() { NexusModsModId = modUpdate.Id, LastCheckedDate = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime },
-                    _ => existing with { LastCheckedDate = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime }
-                };
-                await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsFileUpdateEntity>(x => x.NexusModsModId == modUpdate.Id, ApplyChanges, context.CancellationToken);
+                    NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
+                    {
+                        null => new() { NexusModsModId = modUpdate.Id, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
+                        _ => existing with { ModIds = existing.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
+                    };
+                    await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == modUpdate.Id, ApplyChanges2, context.CancellationToken);
+
+                    NexusModsFileUpdateEntity? ApplyChanges(NexusModsFileUpdateEntity? existing) => existing switch
+                    {
+                        null => new() { NexusModsModId = modUpdate.Id, LastCheckedDate = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime },
+                        _ => existing with { LastCheckedDate = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime }
+                    };
+                    await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsFileUpdateEntity>(x => x.NexusModsModId == modUpdate.Id, ApplyChanges, context.CancellationToken);
+                    processed++;
+                }
+            }
+            finally
+            {
+                context.MergedJobDataMap["Processed"] = processed;
+
             }
         }
     }
