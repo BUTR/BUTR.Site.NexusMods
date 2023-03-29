@@ -15,7 +15,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
         {
             if (!migrationBuilder.IsNpgsql())
                 return;
-            
+
             migrationBuilder.Sql("""
 CREATE OR REPLACE FUNCTION hstore_has_key_value(IN "@hstore" hstore, IN "@key" text, IN "@operator" text, IN "@value" text)
     RETURNS boolean
@@ -84,7 +84,7 @@ CREATE INDEX IF NOT EXISTS crash_report_entity_involved_mod_ids_idx ON crash_rep
         {
             if (!migrationBuilder.IsNpgsql())
                 return;
-            
+
             migrationBuilder.Sql("""
 DROP FUNCTION hstore_has_key_value;
 """);

@@ -101,6 +101,7 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddTransient<IArticlesClient, ArticlesClient>(sp => ConfigureClient(sp, (http, opt) => new ArticlesClient(http, opt)));
                 services.AddTransient<IExposedModsClient, ExposedModsClient>(sp => ConfigureClient(sp, (http, opt) => new ExposedModsClient(http, opt)));
                 services.AddTransient<IDiscordClient, DiscordClient>(sp => ConfigureClient(sp, (http, opt) => new DiscordClient(http, opt)));
+                services.AddTransient<IStatisticsClient, StatisticsClient>(sp => ConfigureClient(sp, (http, opt) => new StatisticsClient(http, opt)));
 
                 services.AddScoped<IAuthenticationProvider, DefaultAuthenticationProvider>();
                 services.AddScoped<IProfileProvider, DefaultProfileProvider>();

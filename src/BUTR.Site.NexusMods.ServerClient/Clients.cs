@@ -87,6 +87,14 @@ namespace BUTR.Site.NexusMods.ServerClient
         }
     }
 
+    public partial class StatisticsClient
+    {
+        public StatisticsClient(HttpClient client, JsonSerializerOptions options) : this(client)
+        {
+            _settings = new Lazy<JsonSerializerOptions>(options);
+        }
+    }
+
     public partial record CrashReportModel
     {
         [JsonIgnore]

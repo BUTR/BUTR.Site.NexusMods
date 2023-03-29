@@ -28,12 +28,12 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             var crashReportEntity = _dbContext.Model.FindEntityType(typeof(CrashReportEntity))!;
             var crashReportEntityTable = crashReportEntity.GetSchemaQualifiedTableName();
             var exception = crashReportEntity.GetProperty(nameof(CrashReportEntity.Exception)).GetColumnName();
-            
+
             var topExceptionsTypeEntity = _dbContext.Model.FindEntityType(typeof(TopExceptionsTypeEntity))!;
             var topExceptionsTypeEntityTable = topExceptionsTypeEntity.GetSchemaQualifiedTableName();
-            
+
             if (!_dbContext.Database.IsNpgsql()) return;
-            
+
 
             var sql = $"""
 TRUNCATE TABLE {topExceptionsTypeEntityTable};

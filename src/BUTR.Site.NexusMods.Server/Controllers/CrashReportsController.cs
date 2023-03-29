@@ -122,11 +122,12 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 Metadata = paginated.Metadata
             });
         }
+
         [HttpGet("Autocomplete")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(string[]), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> Paginated([FromQuery] string modId)
+        public async Task<ActionResult> Autocomplete([FromQuery] string modId)
         {
             var mapping = _dbContext.Model.FindEntityType(typeof(CrashReportEntity));
             if (mapping is null || mapping.GetTableName() is not { } table)

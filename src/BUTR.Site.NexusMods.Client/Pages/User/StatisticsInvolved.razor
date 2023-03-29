@@ -1,0 +1,60 @@
+﻿@attribute [Authorize]
+@page "/statistics-involved-mods"
+
+<Container>
+    <Card Margin="@Margin.Is4">
+        <CardBody>
+            <Field>
+                <FieldLabel>Game Version</FieldLabel>
+                <FieldBody>
+                    <Autocomplete TItem="string"
+                                  TValue="string"
+                                  Data="@_gameVersionsAutocompleteValues"
+                                  ReadData="@OnHandleGameVersionReadData"
+                                  TextField="@(x => x)"
+                                  ValueField="@(x => x)"
+                                  SelectionMode="@AutocompleteSelectionMode.Multiple"
+                                  Placeholder="v1.0.0"
+                                  @bind-SelectedValues="@_gameVersions"
+                                  FreeTyping>
+                    </Autocomplete>
+                </FieldBody>
+            </Field>
+            <Field>
+                <FieldLabel>Mod Id</FieldLabel>
+                <FieldBody>
+                    <Autocomplete TItem="string"
+                                  TValue="string"
+                                  Data="@_modIdsAutocompleteValues"
+                                  ReadData="@OnHandleModIdReadData"
+                                  TextField="@(x => x)"
+                                  ValueField="@(x => x)"
+                                  SelectionMode="@AutocompleteSelectionMode.Multiple"
+                                  Placeholder="Bannerlord.Harmony"
+                                  @bind-SelectedValues="@_modIds"
+                                  FreeTyping>
+                    </Autocomplete>
+                </FieldBody>
+            </Field>
+            <!--
+            <Field>
+                <FieldLabel>Mod Version</FieldLabel>
+                <FieldBody>
+                    <Autocomplete TItem="string"
+                                  TValue="string"
+                                  Data="@_modVersionsAutocompleteValues"
+                                  ReadData="@OnHandleModVersionReadData"
+                                  TextField="@(x => x)"
+                                  ValueField="@(x => x)"
+                                  SelectionMode="@AutocompleteSelectionMode.Multiple"
+                                  Placeholder="v1.0.0"
+                                  @bind-SelectedValues="@_modVersions"
+                                  FreeTyping>
+                    </Autocomplete>
+                </FieldBody>
+            </Field>
+            -->
+            <LineChart @ref="@_lineChart" TItem="double?" Options="@_options" />
+        </CardBody>
+    </Card>
+</Container>

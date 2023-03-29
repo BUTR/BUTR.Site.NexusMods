@@ -1,0 +1,31 @@
+﻿@attribute [Authorize]
+@page "/statistics-top-exception-types"
+
+<Card Margin="Margin.Is4">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Top Exception Types</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Row>
+            <Column ColumnSize="@ColumnSize.Is6">
+                <Card Margin="Margin.Is4">
+                    <CardBody>
+                        <DoughnutChart @ref="doughnutChart" TItem="int" Options="doughnutChartOptions"/>
+                    </CardBody>
+                </Card>        
+            </Column>
+            <Column ColumnSize="@ColumnSize.Is6">
+                <Card Margin="Margin.Is4">
+                    <CardBody>
+                        <DataGridInMemory @ref="@_dataGridRef" TItem="TopExceptionsEntry">
+                            <DataGridColumns>
+                                <DataGridColumn TItem="TopExceptionsEntry" Field="@nameof(TopExceptionsEntry.Type)" Caption="@nameof(TopExceptionsEntry.Type)"/>
+                                <DataGridColumn TItem="TopExceptionsEntry" Field="@nameof(TopExceptionsEntry.Count)" Caption="@nameof(TopExceptionsEntry.Count)"/>
+                            </DataGridColumns>
+                        </DataGridInMemory>
+                    </CardBody>
+                </Card> 
+            </Column>
+        </Row>
+    </CardBody>
+</Card>

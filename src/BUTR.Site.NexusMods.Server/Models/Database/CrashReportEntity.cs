@@ -8,15 +8,15 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
     {
         public required string? LauncherType { get; init; }
         public required string? LauncherVersion { get; init; }
-        
+
         public required string? Runtime { get; init; }
-        
+
         public required string? BUTRLoaderVersion { get; init; }
-        
+
         public required string? BLSEVersion { get; init; }
         public required string? LauncherExVersion { get; init; }
     }
-    
+
     public sealed record CrashReportEntity : IEntity
     {
         public required Guid Id { get; init; }
@@ -38,7 +38,7 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
         public required int[] ModNexusModsIds { get; init; }
 
         public required string Url { get; init; }
-        
+
         public required CrashReportEntityMetadata? Metadata { get; init; }
 
         public CrashReportEntity() { }
