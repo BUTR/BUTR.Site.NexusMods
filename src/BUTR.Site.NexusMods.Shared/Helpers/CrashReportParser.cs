@@ -20,14 +20,14 @@ namespace BUTR.Site.NexusMods.Shared.Helpers
         public required ImmutableArray<InvolvedModule> InvolvedModules { get; init; }
         public required ImmutableArray<EnhancedStacktraceFrame> EnhancedStacktrace { get; init; }
         public required string Id2 { get; init; }
-        
+
         public required string? LauncherType { get; init; }
         public required string? LauncherVersion { get; init; }
-        
+
         public required string? Runtime { get; init; }
-        
+
         public required string? BUTRLoaderVersion { get; init; }
-        
+
         public required string? BLSEVersion { get; init; }
         public required string? LauncherExVersion { get; init; }
     }

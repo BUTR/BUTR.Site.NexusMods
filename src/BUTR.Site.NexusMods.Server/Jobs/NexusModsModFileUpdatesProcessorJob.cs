@@ -50,7 +50,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                 var found = updatesStoredWithinDay.FirstOrDefault(y => y.NexusModsModId == x.Id);
                 return found is null || found.LastCheckedDate < latestFileUpdateDate;
             }).ToList();
-            
+
             context.MergedJobDataMap["UpdatesStoredWithinDay"] = updatesStoredWithinDay.Count;
             context.MergedJobDataMap["UpdatedWithinDay"] = updatedWithinDay.Length;
             context.MergedJobDataMap["NewUpdates"] = newUpdates.Count;

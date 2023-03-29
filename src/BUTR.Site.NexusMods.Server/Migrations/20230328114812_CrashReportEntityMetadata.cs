@@ -1,4 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Models.Database;
+
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

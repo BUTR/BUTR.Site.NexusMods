@@ -21,10 +21,10 @@ namespace BUTR.Site.NexusMods.Server.Extensions
         public static async IAsyncEnumerable<ImmutableArray<T>> BatchedAsync<T>(this IQueryable<T> query, int batchSize = 3000)
         {
             var processed = 0;
-            
+
             Task<ImmutableArray<T>> FetchNext() => query.Skip(processed).Take(batchSize).ToImmutableArrayAsync();
             var fetch = FetchNext();
-            
+
             while (true)
             {
                 var toProcess = await fetch;
@@ -34,11 +34,11 @@ namespace BUTR.Site.NexusMods.Server.Extensions
 
                 // Start pre-fetching the next batch if there's still available
                 fetch = toProcess.Length == batchSize ? FetchNext() : Task.FromResult(ImmutableArray<T>.Empty);
-                
+
                 yield return toProcess;
             }
         }
-        
+
         public static Paging<TEntity> Paginated<TEntity>(this IQueryable<TEntity> queryable, uint page, uint pageSize) where TEntity : class
         {
             var count = queryable.Count();

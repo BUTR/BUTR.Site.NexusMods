@@ -31,12 +31,12 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             var involvedModIds = crashReportEntity.GetProperty(nameof(CrashReportEntity.InvolvedModIds)).GetColumnName();
             var gameVersion = crashReportEntity.GetProperty(nameof(CrashReportEntity.GameVersion)).GetColumnName();
             var modIdToVersion = crashReportEntity.GetProperty(nameof(CrashReportEntity.ModIdToVersion)).GetColumnName();
-            
+
             var crashScoreInvolvedEntity = _dbContext.Model.FindEntityType(typeof(CrashScoreInvolvedEntity))!;
             var crashScoreInvolvedEntityTable = crashScoreInvolvedEntity.GetSchemaQualifiedTableName();
-            
+
             if (!_dbContext.Database.IsNpgsql()) return;
-            
+
             var sql = $"""
 TRUNCATE TABLE {crashScoreInvolvedEntityTable};
 WITH
