@@ -15,7 +15,8 @@
                                   ValueField="@(x => x)"
                                   SelectionMode="@AutocompleteSelectionMode.Multiple"
                                   Placeholder="v1.0.0"
-                                  @bind-SelectedValues="@_gameVersions"
+                                  SelectedValues="@_gameVersions"
+                                  SelectedTextsChanged="OnGameVersionChanged"
                                   FreeTyping>
                     </Autocomplete>
                 </FieldBody>
@@ -31,7 +32,8 @@
                                   ValueField="@(x => x)"
                                   SelectionMode="@AutocompleteSelectionMode.Multiple"
                                   Placeholder="Bannerlord.Harmony"
-                                  @bind-SelectedValues="@_modIds"
+                                  SelectedValues="@_modIds"
+                                  SelectedTextsChanged="OnModIdChanged"
                                   FreeTyping>
                     </Autocomplete>
                 </FieldBody>
@@ -48,7 +50,8 @@
                                   ValueField="@(x => x)"
                                   SelectionMode="@AutocompleteSelectionMode.Multiple"
                                   Placeholder="v1.0.0"
-                                  @bind-SelectedValues="@_modVersions"
+                                  SelectedValues="@_modVersions"
+                                  SelectedTextsChanged="OnModVersionChanged"
                                   FreeTyping>
                     </Autocomplete>
                 </FieldBody>
