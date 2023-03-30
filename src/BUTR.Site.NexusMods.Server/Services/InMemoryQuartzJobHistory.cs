@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public record JobInfo(string Id, DateTimeOffset StartTimeUtc, string Type, int RunTimeMilliseconds, Dictionary<string, string?> Metadata, string? Exception = null);
+public sealed record JobInfo(string Id, DateTimeOffset StartTimeUtc, string Type, int RunTimeMilliseconds, Dictionary<string, string?> Metadata, string? Exception = null);
 
-public class InMemoryQuartzJobHistory : IJobListener
+public sealed class InMemoryQuartzJobHistory : IJobListener
 {
     public string Name => nameof(InMemoryQuartzJobHistory);
 
@@ -19,25 +19,37 @@ public class InMemoryQuartzJobHistory : IJobListener
 
     public Task JobToBeExecuted(IJobExecutionContext context, CancellationToken ct)
     {
-        //var jobId = context.JobDetail.Key.ToString();
-        var jobId = context.FireInstanceId;
-        JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, TimeSpan.Zero.Milliseconds, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()));
+        try
+        {
+            //var jobId = context.JobDetail.Key.ToString();
+            var jobId = context.FireInstanceId;
+            JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, TimeSpan.Zero.Milliseconds, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()));
+        }
+        catch (Exception) { }
         return Task.CompletedTask;
     }
 
     public Task JobExecutionVetoed(IJobExecutionContext context, CancellationToken ct)
     {
-        //var jobId = context.JobDetail.Key.ToString();
-        var jobId = context.FireInstanceId;
-        JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, context.JobRunTime.Milliseconds, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()));
+        try
+        {
+            //var jobId = context.JobDetail.Key.ToString();
+            var jobId = context.FireInstanceId;
+            JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, context.JobRunTime.Milliseconds, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()));
+        }
+        catch (Exception) { }
         return Task.CompletedTask;
     }
 
     public Task JobWasExecuted(IJobExecutionContext context, JobExecutionException? jobException, CancellationToken ct)
     {
-        //var jobId = context.JobDetail.Key.ToString();
-        var jobId = context.FireInstanceId;
-        JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, context.JobRunTime.Milliseconds, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()), jobException?.ToString());
+        try
+        {
+            //var jobId = context.JobDetail.Key.ToString();
+            var jobId = context.FireInstanceId;
+            JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, context.JobRunTime.Milliseconds, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()), jobException?.ToString());
+        }
+        catch (Exception) { }
         return Task.CompletedTask;
     }
 }
