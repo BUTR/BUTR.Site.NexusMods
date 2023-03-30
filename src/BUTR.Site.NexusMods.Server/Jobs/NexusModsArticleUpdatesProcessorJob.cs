@@ -34,7 +34,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
 
             var ct = context.CancellationToken;
 
-            var articleId = _dbContext.Set<NexusModsArticleEntity>().LastOrDefault()?.ArticleId ?? 0;
+            var articleId = _dbContext.Set<NexusModsArticleEntity>().OrderBy(x => x.ArticleId).LastOrDefault()?.ArticleId ?? 0;
             var notFoundArticles = 0;
             var processed = 0;
             try
@@ -98,7 +98,6 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             finally
             {
                 context.MergedJobDataMap["Processed"] = processed;
-
             }
         }
     }
