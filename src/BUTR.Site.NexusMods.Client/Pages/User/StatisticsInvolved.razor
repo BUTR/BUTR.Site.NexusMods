@@ -38,25 +38,6 @@
                     </Autocomplete>
                 </FieldBody>
             </Field>
-            <!--
-            <Field>
-                <FieldLabel>Mod Version</FieldLabel>
-                <FieldBody>
-                    <Autocomplete TItem="string"
-                                  TValue="string"
-                                  Data="@_modVersionsAutocompleteValues"
-                                  ReadData="@OnHandleModVersionReadData"
-                                  TextField="@(x => x)"
-                                  ValueField="@(x => x)"
-                                  SelectionMode="@AutocompleteSelectionMode.Multiple"
-                                  Placeholder="v1.0.0"
-                                  SelectedValues="@_modVersions"
-                                  SelectedTextsChanged="OnModVersionChanged"
-                                  FreeTyping>
-                    </Autocomplete>
-                </FieldBody>
-            </Field>
-            -->
             <LineChart @ref="@_lineChart" TItem="double?" Options="@_options" />
         </CardBody>
     </Card>

@@ -24,11 +24,9 @@ namespace BUTR.Site.NexusMods.Client.Pages.User
 
         private ICollection<string> _gameVersionsAutocompleteValues = default!;
         private ICollection<string> _modIdsAutocompleteValues = default!;
-        private ICollection<string> _modVersionsAutocompleteValues = default!;
 
         private List<string> _gameVersions = new();
         private List<string> _modIds = new();
-        private List<string> _modVersions = new();
 
         private LineChart<double?> _lineChart = default!;
         private readonly LineChartOptions _options = new()
@@ -63,7 +61,6 @@ namespace BUTR.Site.NexusMods.Client.Pages.User
             var queries = NavigationManager.QueryString();
             _gameVersions = queries.GetValues("gameVersions")?.ToList() ?? _gameVersions;
             _modIds = queries.GetValues("modIds")?.ToList() ?? _modIds;
-            _modVersions = queries.GetValues("modVersions")?.ToList() ?? _modVersions;
 
             await Refresh();
 
@@ -72,61 +69,69 @@ namespace BUTR.Site.NexusMods.Client.Pages.User
 
         private async Task Refresh()
         {
-            var data = await StatisticsClient.InvolvedAsync(_gameVersions, _modIds, _modVersions);
+            if (_lineChart is null) return;
+
+            await _lineChart.Clear();
+            if (_modIds.Count == 0) return;
+
+            var data = await StatisticsClient.InvolvedAsync(_gameVersions, _modIds, Array.Empty<string>());
 
             var allGameVersions = data.Select(x => x.GameVersion).ToArray();
-            var allModVersions = data.SelectMany(x => x.Mods).SelectMany(x => x.Versions).Select(x => x.Version).Distinct().OrderBy(x => x, new AlphanumComparatorFast()).ToArray();
+            var allModIdsWithVersions = data
+                .SelectMany(x => x.Mods)
+                .GroupBy(x => x.Id)
+                .Select(x => new { Id = x.Key, Versions = x.SelectMany(y => y.Versions).ToArray() })
+                .ToDictionary(x => x.Id, x => x.Versions.Select(y => y.Version).Distinct().OrderBy(y => y, new AlphanumComparatorFast()).ToArray());
+
+            var gameVersions = (_gameVersions.Count == 0 ? (ICollection<string>) allGameVersions : (ICollection<string>) _gameVersions);
+            var modIds = (_modIds.Count == 0 ? (ICollection<string>) allModIdsWithVersions.Keys : (ICollection<string>) _modIds);
+            var modIdsWithVersions = modIds.Select(x => new { Key = x, Value = allModIdsWithVersions[x] }).ToList();
+
+            var backgrounds = ChartUtiities.GetColors(gameVersions.Count * modIds.Count, 0.2f).ToList();
+            var borders = ChartUtiities.GetColors(gameVersions.Count * modIds.Count, 1f).ToList();
 
             var dataSets = new List<LineChartDataset<double?>>();
-            var backgrounds = ChartUtiities.GetColors(allGameVersions.Length * _modIds.Count, 0.2f).ToList();
-            var borders = ChartUtiities.GetColors(allGameVersions.Length * _modIds.Count, 1f).ToList();
-            foreach (var gameVersion in allGameVersions)
+            foreach (var modId in modIds)
             {
-                foreach (var modId in _modIds)
+                foreach (var gameVersion in gameVersions)
                 {
                     var versionScores = data
                         .Where(x => x.GameVersion == gameVersion).SelectMany(x => x.Mods)
                         .Where(x => x.Id == modId).SelectMany(x => x.Versions)
                         .ToDictionary(x => x.Version, x => x.Score * 100);
-                    var values = allModVersions.Select(modVersion => versionScores.TryGetValue(modVersion, out var val) ? val : (double?) null).ToList();
 
-                    var background = backgrounds[dataSets.Count];
-                    var border = borders[dataSets.Count];
+                    var values = modIdsWithVersions.SelectMany(x => x.Key == modId
+                        ? x.Value.Select(modVersion => versionScores.TryGetValue(modVersion, out var val) ? val : (double?) null)
+                        : x.Value.Select(_ => (double?) null)).ToList();
+
                     dataSets.Add(new LineChartDataset<double?>
                     {
                         Label = $"{gameVersion} {modId}",
                         Data = values,
-                        BackgroundColor = Enumerable.Range(0, values.Count).Select(_ => background).ToList(),
-                        BorderColor = Enumerable.Range(0, values.Count).Select(_ => border).ToList(),
+                        BackgroundColor = Enumerable.Range(0, values.Count).Select(_ => backgrounds[dataSets.Count]).ToList(),
+                        BorderColor = Enumerable.Range(0, values.Count).Select(_ => borders[dataSets.Count]).ToList(),
                         Fill = false,
                         PointRadius = 3,
                         CubicInterpolationMode = "monotone",
                     });
                 }
             }
-            await _lineChart.Clear();
-            await _lineChart.AddLabelsDatasetsAndUpdate(allModVersions, dataSets.ToArray());
+
+            await _lineChart.AddLabelsDatasetsAndUpdate(modIdsWithVersions.SelectMany(x => x.Value/*.Select(y => $"{x.Key} {y}")*/).ToArray(), dataSets.ToArray());
         }
 
         private async Task OnHandleGameVersionReadData(AutocompleteReadDataEventArgs autocompleteReadDataEventArgs)
         {
             if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested)
             {
-                _gameVersionsAutocompleteValues = await StatisticsClient.AutocompletegameversionAsync(autocompleteReadDataEventArgs.SearchValue) ?? Array.Empty<string>();
+                _gameVersionsAutocompleteValues = await StatisticsClient.AutocompletegameversionAsync(autocompleteReadDataEventArgs.SearchValue);
             }
         }
         private async Task OnHandleModIdReadData(AutocompleteReadDataEventArgs autocompleteReadDataEventArgs)
         {
             if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested && autocompleteReadDataEventArgs.SearchValue.Length >= 3)
             {
-                _modIdsAutocompleteValues = await StatisticsClient.AutocompletemodidAsync(autocompleteReadDataEventArgs.SearchValue) ?? Array.Empty<string>();
-            }
-        }
-        private async Task OnHandleModVersionReadData(AutocompleteReadDataEventArgs autocompleteReadDataEventArgs)
-        {
-            if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested)
-            {
-                //_modVersionsAutocompleteValues = await _statisticsClient.AutocompletemodversionAsync(autocompleteReadDataEventArgs.SearchValue) ?? Array.Empty<string>();
+                _modIdsAutocompleteValues = await StatisticsClient.AutocompletemodidAsync(autocompleteReadDataEventArgs.SearchValue);
             }
         }
 
@@ -138,11 +143,6 @@ namespace BUTR.Site.NexusMods.Client.Pages.User
         private async void OnModIdChanged(List<string> modIds)
         {
             _modIds = modIds;
-            await Refresh();
-        }
-        private async void OnModVersionChanged(List<string> modVersions)
-        {
-            _modVersions = modVersions;
             await Refresh();
         }
     }
