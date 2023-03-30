@@ -5,6 +5,7 @@ using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BUTR.Site.NexusMods.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230330064816_AutocompleteEntity")]
+    partial class AutocompleteEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,8 +31,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.AutocompleteEntity", b =>
                 {
                     b.Property<string>("Type")
-                        .HasColumnType("text")
-                        .HasColumnName("type");
+                        .HasColumnType("text");
 
                     b.Property<string[]>("Values")
                         .IsRequired()

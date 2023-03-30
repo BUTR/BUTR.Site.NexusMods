@@ -8,11 +8,7 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Logging;
-
-using Npgsql;
 
 using System;
 using System.Collections.Generic;
@@ -66,32 +62,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         [ProducesResponseType(typeof(string[]), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> Autocomplete([FromQuery] string authorName)
+        public ActionResult Autocomplete([FromQuery] string modId)
         {
-            var mapping = _dbContext.Model.FindEntityType(typeof(NexusModsExposedModsEntity));
-            if (mapping is null || mapping.GetTableName() is not { } table)
-                return StatusCode(StatusCodes.Status200OK, Array.Empty<string>());
-
-            var schema = mapping.GetSchema();
-            var tableName = mapping.GetSchemaQualifiedTableName();
-            var storeObjectIdentifier = StoreObjectIdentifier.Table(table, schema);
-            var modIdsName = mapping.GetProperty(nameof(NexusModsExposedModsEntity.ModIds)).GetColumnName(storeObjectIdentifier);
-
-            var valPram = new NpgsqlParameter<string>("val", authorName);
-            var values = await _dbContext.Set<NexusModsExposedModsEntity>()
-                .FromSqlRaw(@$"
-WITH values AS (SELECT DISTINCT unnest({modIdsName}) as {modIdsName} FROM {tableName} ORDER BY {modIdsName})
-SELECT
-    array_agg({modIdsName}) as {modIdsName}
-FROM
-    values
-WHERE
-    {modIdsName} ILIKE @val || '%'", valPram)
-                .AsNoTracking()
-                .Select(x => x.ModIds)
-                .ToArrayAsync();
-
-            return StatusCode(StatusCodes.Status200OK, values.First());
+            return StatusCode(StatusCodes.Status200OK, _dbContext.AutocompleteStartsWith<NexusModsExposedModsEntity, string[]>(x => x.ModIds, modId));
         }
     }
 }

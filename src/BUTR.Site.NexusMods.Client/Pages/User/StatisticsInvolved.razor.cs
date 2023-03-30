@@ -27,11 +27,8 @@ namespace BUTR.Site.NexusMods.Client.Pages.User
         private ICollection<string> _modVersionsAutocompleteValues = default!;
 
         private List<string> _gameVersions = new();
-        private List<string> _gameVersionsTexts = new();
         private List<string> _modIds = new();
-        private List<string> _modIdsTexts = new();
         private List<string> _modVersions = new();
-        private List<string> _modVersionsTexts = new();
 
         private LineChart<double?> _lineChart = default!;
         private readonly LineChartOptions _options = new()

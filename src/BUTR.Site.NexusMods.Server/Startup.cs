@@ -118,6 +118,7 @@ namespace BUTR.Site.NexusMods.Server
                 opt.AddJobListener<InMemoryQuartzJobHistory>(sp => sp.GetRequiredService<InMemoryQuartzJobHistory>());
                 //opt.AddJobAtStartup<CrashReportModIdToVersionProcessorJob>();
                 //opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
+                opt.AddJob<AutocompleteProcessorProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
                 opt.AddJob<TopExceptionsTypesAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
                 opt.AddJob<CrashReportAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
                 opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
