@@ -1,0 +1,30 @@
+﻿@attribute [Authorize(Roles = ApplicationRoles.Administrator)]
+@page "/quartz-manager"
+
+@inject IQuartzClient _quartzClient;
+
+<ListView TItem="JobInfo"
+          Data="@_jobHistory.Values"
+          TextField="@((item) => item.Id)"
+          ValueField="@((item) => item.Type)"
+          Mode="@ListGroupMode.Static"
+          MaxHeight="300px">
+    <ItemTemplate>
+        <Div Flex="@Flex.InlineFlex.JustifyContent.Between" Width="@Width.Is100">
+            <Heading Margin="@Margin.Is2.FromBottom">@context.Item.Type</Heading>
+            <Small>@context.Item.StartTimeUtc</Small>
+        </Div>
+        <Paragraph Margin="@Margin.Is2.FromBottom">@context.Text</Paragraph>
+    </ItemTemplate>
+</ListView>
+
+@code {
+
+    private IDictionary<string, JobInfo> _jobHistory = new Dictionary<string, JobInfo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _jobHistory = await _quartzClient.StatusAsync();
+        await base.OnInitializedAsync();
+    }
+}

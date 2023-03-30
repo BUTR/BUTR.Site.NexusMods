@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public record JobInfo(string Id, DateTimeOffset StartTimeUtc, string Type, TimeSpan RunTime, Dictionary<string, string?> Metadata, string? Exception = null);
+public record JobInfo(string Id, DateTimeOffset StartTimeUtc, string Type, int RunTimeMilliseconds, Dictionary<string, string?> Metadata, string? Exception = null);
 
 public class InMemoryQuartzJobHistory : IJobListener
 {
@@ -21,7 +21,7 @@ public class InMemoryQuartzJobHistory : IJobListener
     {
         //var jobId = context.JobDetail.Key.ToString();
         var jobId = context.FireInstanceId;
-        JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, TimeSpan.Zero, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()));
+        JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, TimeSpan.Zero.Milliseconds, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()));
         return Task.CompletedTask;
     }
 
@@ -29,7 +29,7 @@ public class InMemoryQuartzJobHistory : IJobListener
     {
         //var jobId = context.JobDetail.Key.ToString();
         var jobId = context.FireInstanceId;
-        JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, context.JobRunTime, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()));
+        JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, context.JobRunTime.Milliseconds, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()));
         return Task.CompletedTask;
     }
 
@@ -37,7 +37,7 @@ public class InMemoryQuartzJobHistory : IJobListener
     {
         //var jobId = context.JobDetail.Key.ToString();
         var jobId = context.FireInstanceId;
-        JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, context.JobRunTime, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()), jobException?.ToString());
+        JobHistory[jobId] = new JobInfo(jobId, context.FireTimeUtc, context.JobDetail.JobType.Name, context.JobRunTime.Milliseconds, context.MergedJobDataMap.ToDictionary(x => x.Key, x => x.Value.ToString()), jobException?.ToString());
         return Task.CompletedTask;
     }
 }
