@@ -18,6 +18,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts
             modelBuilder.HasDbFunction(typeof(Extensions.DbFunctionsExtensions).GetMethod(nameof(Extensions.DbFunctionsExtensions.HasKeysValues))!)
                 .HasName("hstore_has_keys_values");
 
+            modelBuilder.ApplyConfiguration(new QuartzExecutionLogEntityConfiguration());
             modelBuilder.ApplyConfiguration(new AutocompleteEntityConfiguration());
             modelBuilder.ApplyConfiguration(new TopExceptionsTypeEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserRoleEntityConfiguration());

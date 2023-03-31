@@ -89,14 +89,15 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             }
             finally
             {
-                context.MergedJobDataMap["Processed"] = processed;
+                context.Result = $"Processed {processed} crash reports";
+                context.SetIsSuccess(true);
             }
         }
 
         private async IAsyncEnumerable<(CrashReport, DateTime)> MissingFilenames(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
         {
             var mapping = dbContext.Model.FindEntityType(typeof(CrashReportFileEntity));
-            if (mapping is null || mapping.GetTableName() is not { } table)
+            if (mapping?.GetTableName() is not { } table)
                 yield break;
 
             var schema = mapping.GetSchema();

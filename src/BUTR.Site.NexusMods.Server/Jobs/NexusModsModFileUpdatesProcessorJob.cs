@@ -60,6 +60,8 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             {
                 foreach (var modUpdate in newUpdates)
                 {
+                    if (context.CancellationToken.IsCancellationRequested) break;
+                    
                     var exposedModIds = await _info.GetModIdsAsync("mountandblade2bannerlord", modUpdate.Id, _options.ApiKey).Distinct().ToImmutableArrayAsync(context.CancellationToken);
 
                     NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
@@ -80,8 +82,8 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             }
             finally
             {
-                context.MergedJobDataMap["Processed"] = processed;
-
+                context.Result = $"Processed {processed} file updates";
+                context.SetIsSuccess(true);
             }
         }
     }

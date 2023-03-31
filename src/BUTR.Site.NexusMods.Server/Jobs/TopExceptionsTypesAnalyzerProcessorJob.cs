@@ -1,4 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,9 @@ SELECT split_part((regexp_split_to_array({exception}, '\r\n'))[3], ': ', 2) as t
 FROM {crashReportEntityTable}
 GROUP BY type
 """;
-            await _dbContext.Database.ExecuteSqlRawAsync(sql);
+            await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { }, context.CancellationToken);
+            context.Result = "Updated Top Exception Types Data";
+            context.SetIsSuccess(true);
         }
     }
 }

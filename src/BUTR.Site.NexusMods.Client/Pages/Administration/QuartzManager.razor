@@ -3,28 +3,80 @@
 
 @inject IQuartzClient _quartzClient;
 
-<ListView TItem="JobInfo"
-          Data="@_jobHistory.Values"
-          TextField="@((item) => item.Id)"
-          ValueField="@((item) => item.Type)"
-          Mode="@ListGroupMode.Static"
-          MaxHeight="300px">
-    <ItemTemplate>
-        <Div Flex="@Flex.InlineFlex.JustifyContent.Between" Width="@Width.Is100">
-            <Heading Margin="@Margin.Is2.FromBottom">@context.Item.Type</Heading>
-            <Small>@context.Item.StartTimeUtc</Small>
-        </Div>
-        <Paragraph Margin="@Margin.Is2.FromBottom">@context.Text</Paragraph>
-    </ItemTemplate>
-</ListView>
+<Card Margin="Margin.Is4">
+    <CardHeader>
+        <CardTitle Size="4" Margin="Margin.Is0">Top Exception Types</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <DataGridPaging TItem="QuartzExecutionLogEntity"
+                        @ref="@_dataGridRef" 
+                        @bind-SelectedRow="@_selected"
+                        DetailRowTrigger="@(x => x.Item.LogId == _selected?.LogId)"
+                        GetItems="@Paging">
+            <DataGridColumns>
+                <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="">
+                    <DisplayTemplate>
+                        @if (context.IsSuccess == true)
+                        {
+                            <Icon Name="IconName.CheckCircle"/>
+                        }
+                        @if (context.IsVetoed == true)
+                        {
+                            <Icon Name="IconName.MinusCircle"/>
+                        }
+                        @if (context.IsException == true)
+                        {
+                            <Icon Name="IconName.TimesCircle"/>
+                        }
+                    </DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.MachineName)" Caption="Machine Name"/>
+                <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="Job"/>
+                <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.TriggerName)" Caption="Trigger"/>
+                <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.ScheduleFireTimeUtc)" Caption="Schedule Fire Time"/>
+                <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.FireTimeUtc)" Caption="Actual Fire Time"/>
+                <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobRunTime)" Caption="Run Time"/>
+            </DataGridColumns>
+            <DetailRowTemplate>
+                <Field>
+                    <FieldLabel>Run Instance Id</FieldLabel>
+                    <TextEdit Text="@context.RunInstanceId" Disabled  />
+                </Field>
+                <Field>
+                    <FieldLabel>Retry Count</FieldLabel>
+                    <TextEdit Text="@((context.RetryCount ?? 0).ToString())" Disabled  />
+                </Field>
+                <Field>
+                    <FieldLabel>Result</FieldLabel>
+                    <TextEdit Text="@context.Result" Disabled  />
+                </Field>
+                <Field>
+                    <FieldLabel>Error Code</FieldLabel>
+                    <TextEdit Text="@((context.ExecutionLogDetail?.ErrorCode ?? 0).ToString())" Disabled  />
+                </Field>
+                <Field>
+                    <FieldLabel>Execution Details</FieldLabel>
+                    <TextEdit Text="@(context.ExecutionLogDetail?.ExecutionDetails ?? string.Empty)" Disabled  />
+                </Field>
+                <Field>
+                    <FieldLabel>Error Help Link</FieldLabel>
+                    <TextEdit Text="@(context.ExecutionLogDetail?.ErrorHelpLink ?? string.Empty)" Disabled  />
+                </Field>
+                <Field>
+                    <FieldLabel>Error Stack Trace</FieldLabel>
+                    <TextEdit Text="@(context.ExecutionLogDetail?.ErrorStackTrace ?? string.Empty)" Disabled  />
+                </Field>
+            </DetailRowTemplate>
+        </DataGridPaging>
+    </CardBody>
+</Card>
 
 @code {
 
-    private IDictionary<string, JobInfo> _jobHistory = new Dictionary<string, JobInfo>();
+    private DataGridPaging<QuartzExecutionLogEntity> _dataGridRef = default!;
+    
+    private QuartzExecutionLogEntity? _selected;
 
-    protected override async Task OnInitializedAsync()
-    {
-        _jobHistory = await _quartzClient.StatusAsync();
-        await base.OnInitializedAsync();
-    }
+    private async Task<DataGridPaging<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
+        await _quartzClient.HistorypaginatedAsync(page, pageSize, ct) is { } response ? new(response.Items, response.Metadata) : null;
 }

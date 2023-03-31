@@ -3,7 +3,8 @@
 <DataGrid @ref="_dataGridRef" @attributes="@AdditionalAttributes"
           TItem="TItem"
           Data="@Values"
-          SelectedRowChanged="@(model => DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef))"
+          SelectedRow="@SelectedRow"
+          SelectedRowChanged="@(async model => { await SelectedRowChanged.InvokeAsync(model); DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
           SelectionMode="DataGridSelectionMode.Single"
           Responsive
           ShowPager
@@ -14,7 +15,9 @@
           Resizable="@Resizable"
           ResizeMode="@ResizeMode"
           DataGridColumns="@DataGridColumns"
-          ButtonRowTemplate="@ButtonRowTemplate">
+          ButtonRowTemplate="@ButtonRowTemplate"
+          DetailRowTemplate="@DetailRowTemplate"
+          DetailRowTrigger="@DetailRowTrigger" >
     <EmptyTemplate>
         No result!
     </EmptyTemplate>
@@ -36,10 +39,22 @@
     public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     [Parameter]
+    public TItem SelectedRow { get; set; }
+    
+    [Parameter]
+    public EventCallback<TItem> SelectedRowChanged { get; set; }
+    
+    [Parameter]
     public RenderFragment? DataGridColumns { get; set; }
 
     [Parameter]
     public RenderFragment<ButtonRowContext<TItem>>? ButtonRowTemplate { get; set; }
+    
+    [Parameter]
+    public RenderFragment<TItem>? DetailRowTemplate { get; set; }
+    
+    [Parameter]
+    public Func<DetailRowTriggerEventArgs<TItem>, bool> DetailRowTrigger { get; set; }
 
     public TItem? Value;
     public ICollection<TItem> Values = new List<TItem>();

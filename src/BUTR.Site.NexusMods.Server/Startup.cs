@@ -8,6 +8,7 @@ using BUTR.Site.NexusMods.Server.Jobs;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils.Http.Logging;
+using BUTR.Site.NexusMods.Shared.Utils;
 
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
@@ -110,22 +111,46 @@ namespace BUTR.Site.NexusMods.Server
                 client.DefaultRequestHeaders.Add("User-Agent", userAgent);
             });
 
-            services.AddSingleton<InMemoryQuartzJobHistory>();
+            services.AddSingleton<QuartzEventProviderService>();
+            services.AddHostedService<QuartzListenerBackgroundService>();
             services.AddQuartz(opt =>
             {
                 opt.UseMicrosoftDependencyInjectionJobFactory();
 
-                opt.AddJobListener<InMemoryQuartzJobHistory>(sp => sp.GetRequiredService<InMemoryQuartzJobHistory>());
+                opt.AddJobListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
+                opt.AddTriggerListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
+                opt.AddSchedulerListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
+
+                string AtEveryMonday(int hour = 0) => $"0 0 {hour} ? * MON *";
+                string AtEveryDay(int hour = 0) => $"0 0 {hour} ? * *";
+                string AtEveryHour() => "0 0 * * * ?";
+#if DEBUG
+                // Migration
                 //opt.AddJobAtStartup<CrashReportModIdToVersionProcessorJob>();
+                //opt.AddJobAtStartup<CrashReportMetadataProcessorJob>();
                 //opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
-                opt.AddJob<AutocompleteProcessorProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<TopExceptionsTypesAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<CrashReportAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
-                //opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 * * * ?").InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsArticleUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule("0 0 0 * * ?").InTimeZone(TimeZoneInfo.Utc));
+                
+                // Manual
+                //opt.AddJobAtStartup<NexusModsArticleProcessorJob>();
+                opt.AddJobAtStartup<TopExceptionsTypesAnalyzerProcessorJob>();
+                opt.AddJobAtStartup<CrashReportAnalyzerProcessorJob>();
+                opt.AddJobAtStartup<AutocompleteProcessorProcessorJob>();
+#else
+                // Hourly
+                opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<AutocompleteProcessorProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<TopExceptionsTypesAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<CrashReportAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
+
+                // Daily
+                opt.AddJob<QuartzLogHistoryManagerExecutionLogsJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(00)).InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(00)).InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<NexusModsArticleUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(12)).InTimeZone(TimeZoneInfo.Utc));
+
+                // Weekly
+                opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryMonday(06)).InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryMonday(18)).InTimeZone(TimeZoneInfo.Utc));
+#endif
             });
 
             services.AddMemoryCache();
@@ -198,6 +223,9 @@ namespace BUTR.Site.NexusMods.Server
 
                 opt.DescribeAllParametersInCamelCase();
                 opt.SupportNonNullableReferenceTypes();
+                
+                // Really .NET?
+                opt.MapType<TimeSpan>(() => new OpenApiSchema { Type = "string", Format = "time-span" });
 
                 var currentAssembly = Assembly.GetExecutingAssembly();
                 var xmlFilePaths = currentAssembly.GetReferencedAssemblies()

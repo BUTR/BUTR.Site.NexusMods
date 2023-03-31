@@ -97,8 +97,8 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             }
             finally
             {
-                context.MergedJobDataMap["Processed"] = processed;
-
+                context.Result = $"Processed {processed} article updates";
+                context.SetIsSuccess(true);
             }
         }
     }

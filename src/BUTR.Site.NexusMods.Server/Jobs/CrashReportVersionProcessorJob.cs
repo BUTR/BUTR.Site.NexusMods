@@ -39,7 +39,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             var processed = 0;
             try
             {
-                while (await query.ToArrayAsync(ct) is { Length: > 0 } crashReports)
+                while (!ct.IsCancellationRequested && await query.ToArrayAsync(ct) is { Length: > 0 } crashReports)
                 {
                     foreach (var crashReport in crashReports)
                     {
@@ -58,7 +58,8 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             }
             finally
             {
-                context.MergedJobDataMap["Processed"] = processed;
+                context.Result = $"Processed {processed} crash report entities version migration";
+                context.SetIsSuccess(true);
             }
         }
     }

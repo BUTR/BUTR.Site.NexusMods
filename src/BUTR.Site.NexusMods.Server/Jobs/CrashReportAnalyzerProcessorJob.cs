@@ -1,4 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -103,7 +104,9 @@ ORDER BY
     all_mod_versions.mod_id,
     all_mod_versions.version;
 """;
-            await _dbContext.Database.ExecuteSqlRawAsync(sql);
+            await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { }, context.CancellationToken);
+            context.Result = "Updated Crash Report Statistics Data";
+            context.SetIsSuccess(true);
         }
     }
 }

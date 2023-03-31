@@ -1,4 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -51,6 +52,8 @@ namespace BUTR.Site.NexusMods.Server.Jobs
 
             foreach (var value in toAutocomplete)
             {
+                if (context.CancellationToken.IsCancellationRequested) break;
+                
                 if (value.BaseExpression is not LambdaExpression { Body: MemberExpression { Member: PropertyInfo propertyInfo } }) continue;
                 if (!value.BaseExpression.Type.IsGenericType || value.BaseExpression.Type.GenericTypeArguments.Length != 2) continue;
                 var entityType = value.BaseExpression.Type.GenericTypeArguments[0];
@@ -79,7 +82,7 @@ FROM
 WHERE
     mod_version ILIKE @val || '%'";
                     var valPram = new NpgsqlParameter<string>("val", value.Name);
-                    await _dbContext.Database.ExecuteSqlRawAsync(sql, valPram);
+                    await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { valPram }, context.CancellationToken);
                     */
                 }
                 if (typeof(IEnumerable<string>).IsAssignableFrom(propertyType))
@@ -90,7 +93,7 @@ WITH values AS (SELECT DISTINCT unnest({propertyColumnName}) as props FROM {enti
 INSERT INTO {autocompleteEntityTable}
 SELECT @val as {typePropertyName}, array_agg(props) as {valuesPropertyName} FROM values";
                     var valPram = new NpgsqlParameter<string>("val", name);
-                    await _dbContext.Database.ExecuteSqlRawAsync(sql, valPram);
+                    await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { valPram }, context.CancellationToken);
                 }
                 if (propertyType == typeof(string))
                 {
@@ -100,9 +103,12 @@ WITH values AS (SELECT DISTINCT {propertyColumnName} as props FROM {entityTable}
 INSERT INTO {autocompleteEntityTable}
 SELECT @val as {typePropertyName}, array_agg(props) as {valuesPropertyName} FROM values";
                     var valPram = new NpgsqlParameter<string>("val", name);
-                    await _dbContext.Database.ExecuteSqlRawAsync(sql, valPram);
+                    await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { valPram }, context.CancellationToken);
                 }
             }
+            
+            context.Result = "Updated Autocomplete Data";
+            context.SetIsSuccess(true);
         }
     }
 }

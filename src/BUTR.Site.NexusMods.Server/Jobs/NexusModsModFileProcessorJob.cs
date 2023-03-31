@@ -86,6 +86,8 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                 };
                 await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsFileUpdateEntity>(x => x.NexusModsModId == modId, ApplyChanges, context.CancellationToken);
             }
+            context.Result = "Finished processing all available files";
+            context.SetIsSuccess(true);
         }
     }
 }
