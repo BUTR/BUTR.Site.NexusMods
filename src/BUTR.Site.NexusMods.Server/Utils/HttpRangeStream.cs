@@ -9,13 +9,6 @@ using System.Threading;
 
 namespace BUTR.Site.NexusMods.Server.Utils
 {
-    public class RangeDownloadedEventArgs : EventArgs
-    {
-        public required long Offset { get; set; }
-
-        public required long Length { get; set; }
-    }
-
     public sealed record HttpRangeOptions
     {
         public int BufferSize { get; init; } = 16 * 1024;
@@ -48,8 +41,6 @@ namespace BUTR.Site.NexusMods.Server.Utils
             httpRangeStream = new HttpRangeStream(url, httpClient, options.BufferSize, length);
             return true;
         }
-
-        public event EventHandler<RangeDownloadedEventArgs>? RangeDownloaded;
 
         public override bool CanRead => true;
         public override bool CanSeek => true;

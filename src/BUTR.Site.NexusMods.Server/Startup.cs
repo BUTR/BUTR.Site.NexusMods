@@ -8,7 +8,6 @@ using BUTR.Site.NexusMods.Server.Jobs;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils.Http.Logging;
-using BUTR.Site.NexusMods.Shared.Utils;
 
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 

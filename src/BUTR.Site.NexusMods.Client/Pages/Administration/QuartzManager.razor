@@ -18,15 +18,19 @@
                     <DisplayTemplate>
                         @if (context.IsSuccess == true)
                         {
-                            <Icon Name="IconName.CheckCircle"/>
+                            <Icon Name="IconName.CheckCircle" Style="@($"color: {Theme.ColorOptions.Success}")" />
                         }
-                        @if (context.IsVetoed == true)
+                        else if (context.IsVetoed == true)
                         {
-                            <Icon Name="IconName.MinusCircle"/>
+                            <Icon Name="IconName.MinusCircle" Style="@($"color: {Theme.ColorOptions.Warning}")" />
                         }
-                        @if (context.IsException == true)
+                        else if (context.IsException == true)
                         {
-                            <Icon Name="IconName.TimesCircle"/>
+                            <Icon Name="IconName.TimesCircle" Style="@($"color: {Theme.ColorOptions.Danger}")" />
+                        }
+                        else
+                        {
+                            <Icon Name="IconName.Circle" Style="@($"color: {Theme.ColorOptions.Info}")" />
                         }
                     </DisplayTemplate>
                 </DataGridColumn>
@@ -51,20 +55,8 @@
                     <TextEdit Text="@context.Result" Disabled  />
                 </Field>
                 <Field>
-                    <FieldLabel>Error Code</FieldLabel>
-                    <TextEdit Text="@((context.ExecutionLogDetail?.ErrorCode ?? 0).ToString())" Disabled  />
-                </Field>
-                <Field>
-                    <FieldLabel>Execution Details</FieldLabel>
-                    <TextEdit Text="@(context.ExecutionLogDetail?.ExecutionDetails ?? string.Empty)" Disabled  />
-                </Field>
-                <Field>
-                    <FieldLabel>Error Help Link</FieldLabel>
-                    <TextEdit Text="@(context.ExecutionLogDetail?.ErrorHelpLink ?? string.Empty)" Disabled  />
-                </Field>
-                <Field>
-                    <FieldLabel>Error Stack Trace</FieldLabel>
-                    <TextEdit Text="@(context.ExecutionLogDetail?.ErrorStackTrace ?? string.Empty)" Disabled  />
+                    <FieldLabel>Stack Trace</FieldLabel>
+                    <MemoEdit Text="@(context.ExecutionLogDetail?.ErrorStackTrace ?? string.Empty)" Disabled  />
                 </Field>
             </DetailRowTemplate>
         </DataGridPaging>
@@ -73,6 +65,9 @@
 
 @code {
 
+    [CascadingParameter]
+    protected Theme? Theme { get; set; }
+    
     private DataGridPaging<QuartzExecutionLogEntity> _dataGridRef = default!;
     
     private QuartzExecutionLogEntity? _selected;

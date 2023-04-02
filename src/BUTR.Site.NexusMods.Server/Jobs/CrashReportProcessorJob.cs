@@ -54,7 +54,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                         Version = report.Version,
                         GameVersion = report.GameVersion,
                         Exception = report.Exception,
-                        CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date,
+                        CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date.ToUniversalTime(),
                         ModIds = report.Modules.Select(x => x.Id).Distinct().ToImmutableArray().AsArray(),
                         ModIdToVersion = report.Modules.Select(item => new { item.Id, item.Version }).Distinct().ToDictionary(x => x.Id, x => x.Version),
                         InvolvedModIds = report.InvolvedModules.Select(x => x.Id).ToImmutableArray().AsArray(),

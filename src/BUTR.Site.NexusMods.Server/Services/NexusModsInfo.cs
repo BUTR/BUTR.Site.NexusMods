@@ -63,7 +63,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                     using var archive = ArchiveExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
                     if (archive is null) continue;
 
-                    if (archive.IsSolid && archive.Type == ArchiveType.Rar)
+                    if (archive is { IsSolid: true, Type: ArchiveType.Rar })
                     {
                         httpStream.SetBufferSize(LargeBufferSize);
                         using var reader = ReaderExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
