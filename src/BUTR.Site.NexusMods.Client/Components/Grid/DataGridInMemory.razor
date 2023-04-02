@@ -3,8 +3,7 @@
 <DataGrid @ref="_dataGridRef" @attributes="@AdditionalAttributes"
           TItem="TItem"
           Data="@Values"
-          SelectedRow="@SelectedRow"
-          SelectedRowChanged="@(async model => { await SelectedRowChanged.InvokeAsync(model); DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
+          SelectedRowChanged="@(model => { DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
           SelectionMode="DataGridSelectionMode.Single"
           Responsive
           ShowPager
@@ -38,12 +37,6 @@
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
-    [Parameter]
-    public TItem SelectedRow { get; set; }
-    
-    [Parameter]
-    public EventCallback<TItem> SelectedRowChanged { get; set; }
-    
     [Parameter]
     public RenderFragment? DataGridColumns { get; set; }
 

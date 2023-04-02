@@ -9,9 +9,8 @@
     </CardHeader>
     <CardBody>
         <DataGridPaging TItem="QuartzExecutionLogEntity"
-                        @ref="@_dataGridRef" 
-                        @bind-SelectedRow="@_selected"
-                        DetailRowTrigger="@(x => x.Item.LogId == _selected?.LogId)"
+                        @ref="@_dataGridRef"
+                        DetailRowTrigger="@(x => x.Item.LogId == _dataGridRef.Value?.LogId)"
                         GetItems="@Paging">
             <DataGridColumns>
                 <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="">
@@ -70,8 +69,6 @@
     
     private DataGridPaging<QuartzExecutionLogEntity> _dataGridRef = default!;
     
-    private QuartzExecutionLogEntity? _selected;
-
     private async Task<DataGridPaging<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
         await _quartzClient.HistorypaginatedAsync(page, pageSize, ct) is { } response ? new(response.Items, response.Metadata) : null;
 }
