@@ -106,7 +106,6 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [HttpPost("GetUserInfo")]
         [ProducesResponseType(typeof(DiscordUserInfo), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> GetUserInfoByAccessToken()
         {
             var userId = HttpContext.GetUserId();
@@ -115,8 +114,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             if (tokens is null)
                 return StatusCode(StatusCodes.Status403Forbidden);
 
-            var result = await _discordClient.GetUserInfo(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt));
-            return StatusCode(result is not null ? StatusCodes.Status200OK : StatusCodes.Status400BadRequest, result);
+            var result = (object?) await _discordClient.GetUserInfo(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt));
+            return StatusCode(StatusCodes.Status200OK,  result ?? new object());
         }
 
         private async Task<bool?> UpdateMetadataInternal()

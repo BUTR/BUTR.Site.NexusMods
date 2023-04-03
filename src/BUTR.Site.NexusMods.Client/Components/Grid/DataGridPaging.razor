@@ -1,37 +1,37 @@
 ﻿@typeparam TItem where TItem : class
 
-<DataGrid @ref="_dataGridRef" @attributes="@AdditionalAttributes"
-          TItem="TItem"
-          Data="@Values"
-          SelectedRowChanged="@(model => { DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
-          ReadData="@OnReadData"
-          TotalItems="@Metadata.TotalCount"
-          CurrentPage="@Metadata.CurrentPage"
-          PageSize="@Metadata.PageSize"
-          SelectionMode="DataGridSelectionMode.Single"
-          ShowPager
-          ShowPageSizes
-          PageSizes="@(new [] { 5, 10, 25, 50 })"
-          Filterable="@Filterable"
-          CustomFilter="@OnCustomFilter"
-          Sortable="@Sortable"
-          Responsive
-          Editable="@Editable"
-          EditMode="@EditMode"
-          Resizable="@Resizable"
-          ResizeMode="@ResizeMode"
-          DataGridColumns="@DataGridColumns"
-          ButtonRowTemplate="@ButtonRowTemplate"
-          DetailRowTemplate="@DetailRowTemplate" 
-          DetailRowTrigger="@DetailRowTrigger" >
-    <EmptyTemplate>
-        No result!
-    </EmptyTemplate>
+<DataGrid @ref="@_dataGridRef" @attributes="@AdditionalAttributes"
+         TItem="TItem"
+         Data="@Values"
+         SelectedRowChanged="@(model => { DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
+         ReadData="@OnReadData"
+         TotalItems="@Metadata.TotalCount"
+         CurrentPage="@Metadata.CurrentPage"
+         PageSize="@Metadata.PageSize"
+         SelectionMode="@DataGridSelectionMode.Single"
+         ShowPager
+         ShowPageSizes
+         PageSizes="@PageSizes"
+         Filterable="@Filterable"
+         CustomFilter="@OnCustomFilter"
+         Sortable="@Sortable"
+         Responsive
+         Editable="@Editable"
+         EditMode="@EditMode"
+         Resizable="@Resizable"
+         ResizeMode="@ResizeMode"
+         DataGridColumns="@DataGridColumns"
+         ButtonRowTemplate="@ButtonRowTemplate"
+         DetailRowTemplate="@DetailRowTemplate"
+         DetailRowTrigger="@DetailRowTrigger" >
+   <EmptyTemplate>
+       No result!
+   </EmptyTemplate>
 
-    <LoadingTemplate>
-        <Progress @ref="_progressRef" Color="Color.Primary" Value="@_progressValue" Max="100"></Progress>
-    </LoadingTemplate>
-</DataGrid>
+   <LoadingTemplate>
+       <Progress @ref="@_progressRef" Color="@Color.Primary" Value="@_progressValue" Max="100"></Progress>
+   </LoadingTemplate>
+</DataGrid> 
 
 @code {
 
@@ -74,9 +74,15 @@
     [Parameter]
     public Func<int, int, ICollection<Filtering>, ICollection<Sorting>, CancellationToken, Task<ItemsResponse>>? GetItems { get; set; }
 
+    [Parameter]
+    public IEnumerable<int> PageSizes { get; set; } = new[] { 5, 10, 25, 50 };
+    
+    [Parameter]
+    public PagingMetadata Metadata { get; set; } = new(1, 0, 25, 0);
+    
+
     public TItem? Value;
     public ICollection<TItem> Values = default!;
-    public PagingMetadata Metadata = new(1, 0, 50, 0);
 
     private int _progressValue = default!;
 

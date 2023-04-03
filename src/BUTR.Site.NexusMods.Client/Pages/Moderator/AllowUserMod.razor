@@ -70,7 +70,7 @@
         <CardTitle Size="4" Margin="Margin.Is0">Allowed User Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModsModel" GetItems="GetAllowUserMods">
+        <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModsModel" GetItems="GetAllowUserMods" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
                 <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.UserId)" Caption="User Id"/>
                 <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.AllowedModIds)" Caption="Allowed Mod Ids">

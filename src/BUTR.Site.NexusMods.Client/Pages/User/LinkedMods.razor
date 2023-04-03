@@ -31,7 +31,7 @@
         <CardTitle Size="4" Margin="Margin.Is0">Linked Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="ModModel" GetItems="GetMods">
+        <DataGridPaging @ref="@_dataGridRef" TItem="ModModel" GetItems="GetMods" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name"/>
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.AllowedUserIds)" Caption="Allowed User Ids">

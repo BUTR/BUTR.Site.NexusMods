@@ -23,7 +23,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
     {
         public sealed record PaginatedQuery(uint Page, uint PageSize);
 
-        
+
         private readonly ILogger _logger;
         private readonly AppDbContext _dbContext;
 
@@ -39,13 +39,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         public async Task<ActionResult> HistoryPaginated([FromQuery] PaginatedQuery query, CancellationToken ct)
         {
             var page = query.Page;
-            var pageSize = Math.Max(Math.Min(query.PageSize, 20), 5);
+            var pageSize = Math.Max(Math.Min(query.PageSize, 100), 5);
 
             var dbQuery = _dbContext.Set<QuartzExecutionLogEntity>()
                 .Where(x => x.LogType == QuartzLogType.ScheduleJob)
                 .OrderBy(x => x.DateAddedUtc);
             var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
-            
+
             return StatusCode(StatusCodes.Status200OK, new PagingResponse<QuartzExecutionLogEntity>
             {
                 Items = paginated.Items.ToAsyncEnumerable(),

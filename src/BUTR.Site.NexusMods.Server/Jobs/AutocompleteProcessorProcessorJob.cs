@@ -53,7 +53,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             foreach (var value in toAutocomplete)
             {
                 if (context.CancellationToken.IsCancellationRequested) break;
-                
+
                 if (value.BaseExpression is not LambdaExpression { Body: MemberExpression { Member: PropertyInfo propertyInfo } }) continue;
                 if (!value.BaseExpression.Type.IsGenericType || value.BaseExpression.Type.GenericTypeArguments.Length != 2) continue;
                 var entityType = value.BaseExpression.Type.GenericTypeArguments[0];
@@ -106,7 +106,7 @@ SELECT @val as {typePropertyName}, array_agg(props) as {valuesPropertyName} FROM
                     await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { valPram }, context.CancellationToken);
                 }
             }
-            
+
             context.Result = "Updated Autocomplete Data";
             context.SetIsSuccess(true);
         }

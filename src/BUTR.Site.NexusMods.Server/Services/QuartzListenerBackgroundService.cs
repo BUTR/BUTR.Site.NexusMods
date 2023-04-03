@@ -64,7 +64,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         _quartzEventProviderService.OnTriggerResumed -= OnTriggerResumed;
         _quartzEventProviderService.OnTriggerFinalized -= OnTriggerFinalized;
         _quartzEventProviderService.OnJobScheduled -= OnJobScheduled;
-        
+
         base.Dispose();
     }
 
@@ -455,7 +455,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
             throw new InvalidOperationException("Failed to write the log message");
         }
     }
-    
+
     /// <summary>
     /// Return closest non null stack trace of exception.
     /// Loop until null InnerException to get stack trace.

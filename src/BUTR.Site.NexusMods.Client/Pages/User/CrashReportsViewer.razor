@@ -78,7 +78,7 @@
 
             <ButtonRowTemplate>
                 <Button Color="Color.Primary" Disabled="@(_datagridPagingRef?.Value is null)" Clicked="@ShowModal">Check</Button>
-                <Button Color="Color.Primary" Disabled="@(_datagridPagingRef?.Value is null)" Clicked="@(() => OnClick(_datagridPagingRef.Value))">Open HTML</Button>
+                <Button Color="Color.Primary" Disabled="@(_datagridPagingRef?.Value is null)" Clicked="@OnClick">Open HTML</Button>
             </ButtonRowTemplate>
         </DataGridPaging>
     </CardBody>
@@ -110,9 +110,10 @@
         }
     }
 
-    private async Task OnClick(CrashReportModel report)
+    private async Task OnClick()
     {
-        await _jsRuntime.InvokeVoidAsync("open", report.Url, "_blank");
+        if (_datagridPagingRef?.Value is { } report)
+            await _jsRuntime.InvokeVoidAsync("open", report.Url, "_blank");
     }
 
     private async Task<DataGridPaging<CrashReportModel>.ItemsResponse?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
@@ -124,7 +125,7 @@
     {
         foreach (var columnInfo in columnInfos)
         {
-            if (columnInfo.SortField is nameof(EntityFields.CreatedAt) && columnInfo.SearchValue is string[] dates)
+            if (columnInfo is { SortField: nameof(EntityFields.CreatedAt),SearchValue: string[] dates })
             {
                 yield return new Filtering(columnInfo.SortField, FilteringType.GreaterThanOrEqual, dates[0]);
                 yield return new Filtering(columnInfo.SortField, FilteringType.LessThanOrEqual, dates[1]);

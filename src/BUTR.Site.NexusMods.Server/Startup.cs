@@ -128,7 +128,7 @@ namespace BUTR.Site.NexusMods.Server
                 //opt.AddJobAtStartup<CrashReportModIdToVersionProcessorJob>();
                 //opt.AddJobAtStartup<CrashReportMetadataProcessorJob>();
                 //opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
-                
+
                 // Manual
                 //opt.AddJobAtStartup<NexusModsArticleProcessorJob>();
                 opt.AddJobAtStartup<TopExceptionsTypesAnalyzerProcessorJob>();
@@ -222,7 +222,7 @@ namespace BUTR.Site.NexusMods.Server
 
                 opt.DescribeAllParametersInCamelCase();
                 opt.SupportNonNullableReferenceTypes();
-                
+
                 // Really .NET?
                 opt.MapType<TimeSpan>(() => new OpenApiSchema { Type = "string", Format = "time-span" });
 

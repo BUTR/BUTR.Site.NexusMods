@@ -24,7 +24,7 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
         public DateTimeOffset DateAddedUtc { get; init; } = DateTimeOffset.UtcNow;
         public QuartzExecutionLogDetailEntity? ExecutionLogDetail { get; set; }
         public string? MachineName { get; set; } = Environment.MachineName;
-        
+
         public DateTimeOffset? GetFinishTimeUtc() => FireTimeUtc?.Add(JobRunTime ?? TimeSpan.Zero);
     }
 }
