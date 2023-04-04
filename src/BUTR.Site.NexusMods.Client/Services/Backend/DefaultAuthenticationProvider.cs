@@ -35,9 +35,8 @@ namespace BUTR.Site.NexusMods.Client.Services
 
                 return response.Token;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.WriteLine(e);
                 return null;
             }
         }
