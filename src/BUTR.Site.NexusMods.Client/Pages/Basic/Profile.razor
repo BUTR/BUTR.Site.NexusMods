@@ -81,14 +81,11 @@ else
                     <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Email</Column>
                     <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.Email</Column>
                 </Row>
-                @if (_discordUser is not null)
-                {
-                    <Divider/>
-                    <Row>
-                        <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Discord</Column>
-                        <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary"><Anchor Style="text-decoration: none" To="@_discordUser.Url" Target="Target.Blank">@_discordUser.Name</Anchor></Column>
-                    </Row>
-                }
+                <Divider/>
+                <Row>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Discord</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary"><Anchor Style="text-decoration: none" To="@(_discordUser?.Url ?? "discord-linked-role")" Target="@Target.Blank">@(_discordUser?.Name ?? "Not Linked")</Anchor></Column>
+                </Row>
             </CardBody>
         </Card>;
 
