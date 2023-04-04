@@ -115,7 +115,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 return StatusCode(StatusCodes.Status403Forbidden);
 
             var result = (object?) await _discordClient.GetUserInfo(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt));
-            return StatusCode(StatusCodes.Status200OK,  result ?? new object());
+            return StatusCode(StatusCodes.Status200OK, result ?? new object());
         }
 
         private async Task<bool?> UpdateMetadataInternal()
