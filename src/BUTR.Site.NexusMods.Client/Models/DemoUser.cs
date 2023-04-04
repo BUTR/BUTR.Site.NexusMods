@@ -37,9 +37,9 @@ namespace BUTR.Site.NexusMods.Client.Models
             if (_crashReports is null)
             {
                 var crm = new List<CrashReportModel>();
-                const string baseUrl = "https://crash.butr.dev/report/";
+                const string baseUrl = "https://report.butr.link/";
                 var client = factory.CreateClient("InternalReports");
-                var reports = new[] { "FC58E239", "7AA28856", "4EFF0B0A", "3DF57593" };
+                var reports = new[] { "4DDA8D", "6FB0EF", "2AE0EA", "F966E3" };
                 var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, r)));
                 foreach (var cr in contents)
                 {

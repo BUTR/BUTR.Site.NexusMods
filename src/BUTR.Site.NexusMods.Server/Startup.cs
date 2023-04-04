@@ -12,6 +12,7 @@ using BUTR.Site.NexusMods.Server.Utils.Http.Logging;
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -171,7 +172,10 @@ namespace BUTR.Site.NexusMods.Server
                 options.EncryptionKey = opts.EncryptionKey;
             });
 
-            services.AddControllers().AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
+            services.AddControllers(opt =>
+            {
+                opt.OutputFormatters.RemoveType<HttpNoContentOutputFormatter>();
+            }).AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
             services.AddRouting(options =>
             {
                 options.LowercaseUrls = true;
