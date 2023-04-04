@@ -33,6 +33,10 @@ namespace BUTR.Site.NexusMods.Client.Services
                 {
                     await _notificationService.Error("Backend is down! Notify about the issue on GitHub https://github.com/BUTR/BUTR.Site.NexusMods", "Error!");
                 }
+                else
+                {
+                    Console.WriteLine(e.Message);
+                }
                 throw;
             }
         }
