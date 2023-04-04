@@ -7,10 +7,10 @@
      Breakpoint="Breakpoint.Desktop"
      Background="Background.Dark"
      ThemeContrast="ThemeContrast.Dark">
-    <BarBrand>
+    <BarBrand Margin="Margin.Is0.FromEnd">
         <BarItem TextAlignment="TextAlignment.Center">
-            <BarLink To="">
-                <Figure Margin="Margin.Is0" Size="FigureSize.Is32x32">
+            <BarLink To="" Padding="Padding.Is0.OnY">
+                <Figure Margin="Margin.Is0" Size="FigureSize.Is48x48">
                     <FigureImage Margin="Margin.Is0" Source="favicon.svg" AlternateText="BUTR Logo" />
                 </Figure>
             </BarLink>
@@ -75,7 +75,9 @@
             </AuthorizeView>
             <BarItem>
                 <BarDropdown RightAligned>
-                    <BarDropdownToggle>Tools</BarDropdownToggle>
+                    <BarDropdownToggle>
+                        Tools
+                    </BarDropdownToggle>
                     <BarDropdownMenu Background="Background.Dark">
                         <AuthorizeView Context="context4" Roles="@($"{ApplicationRoles.User},{ApplicationRoles.Moderator},{ApplicationRoles.Administrator}")">
                             <Authorized>
@@ -111,12 +113,14 @@
                     </BarDropdownMenu>
                 </BarDropdown>
             </BarItem>
+        </BarEnd>
+        <BarEnd Style="margin-left: 0!important;">
             <AuthorizeView>
                 <Authorized>
                     <BarItem>
                         <BarDropdown RightAligned>
                             <BarDropdownToggle>
-                                <Figure Margin="Margin.Is0" Size="FigureSize.Is32x32">
+                                <Figure Margin="Margin.Is0" Size="FigureSize.Is48x48">
                                     <FigureImage Margin="Margin.Is0" Source="@(_user?.ProfileUrl ?? FallbackIcon)" Border="Border.RoundedCircle" AlternateText="BUTR Logo"/>
                                 </Figure>
                             </BarDropdownToggle>
