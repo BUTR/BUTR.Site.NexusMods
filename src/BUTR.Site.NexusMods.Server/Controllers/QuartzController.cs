@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers
 {
     [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme, Roles = $"{ApplicationRoles.Administrator}")]
-    public sealed class QuartzController : ControllerBase
+    public sealed class QuartzController : ControllerExtended
     {
         public sealed record PaginatedQuery(uint Page, uint PageSize);
 
@@ -35,8 +35,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpGet("HistoryPaginated")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(PagingResponse<QuartzExecutionLogEntity>), StatusCodes.Status200OK)]
-        public async Task<ActionResult> HistoryPaginated([FromQuery] PaginatedQuery query, CancellationToken ct)
+        [ProducesResponseType(typeof(APIResponse<PagingData<QuartzExecutionLogEntity>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<APIResponse<PagingData<QuartzExecutionLogEntity>?>>> HistoryPaginated([FromQuery] PaginatedQuery query, CancellationToken ct)
         {
             var page = query.Page;
             var pageSize = Math.Max(Math.Min(query.PageSize, 100), 5);
@@ -46,22 +47,23 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 .OrderBy(x => x.DateAddedUtc);
             var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
 
-            return StatusCode(StatusCodes.Status200OK, new PagingResponse<QuartzExecutionLogEntity>
+            return Result(APIResponse.From(new PagingData<QuartzExecutionLogEntity>
             {
                 Items = paginated.Items.ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
-            });
+            }));
         }
 
         /*
         [HttpGet("TriggerJob")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> TriggerJob(string jobId, CancellationToken ct)
         {
             var scheduler = await _schedulerFactory.GetScheduler(ct);
             _ = scheduler.TriggerJob(new JobKey(jobId), CancellationToken.None);
-            return StatusCode(StatusCodes.Status200OK);
+            return Ok();
         }
         */
     }

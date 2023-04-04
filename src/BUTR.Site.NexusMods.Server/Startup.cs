@@ -173,11 +173,7 @@ namespace BUTR.Site.NexusMods.Server
                 options.EncryptionKey = opts.EncryptionKey;
             });
 
-            services.AddControllers(opt =>
-            {
-                opt.OutputFormatters.RemoveType<HttpNoContentOutputFormatter>();
-                opt.OutputFormatters.Add(new HttpNoContentOutputFormatter2());
-            }).AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
+            services.AddControllers().AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
             services.AddRouting(options =>
             {
                 options.LowercaseUrls = true;

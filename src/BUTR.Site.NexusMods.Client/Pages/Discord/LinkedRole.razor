@@ -12,8 +12,8 @@
         await base.OnInitializedAsync();
         
         var response = await _discordClient.GetoauthurlAsync();
-        await _localStorage.SetItemAsync("discord_state", response.State);
-        _navigationManager.NavigateTo(response.Url);
+        await _localStorage.SetItemAsync("discord_state", response.Data.State);
+        _navigationManager.NavigateTo(response.Data.Url);
     }
 
 }

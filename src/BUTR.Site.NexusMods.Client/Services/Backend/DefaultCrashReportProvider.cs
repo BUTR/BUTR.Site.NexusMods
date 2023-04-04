@@ -23,13 +23,13 @@ namespace BUTR.Site.NexusMods.Client.Services
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
         }
 
-        public async Task<CrashReportModelPagingResponse?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
+        public async Task<CrashReportModelPagingDataAPIResponse?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
         {
             var token = await _tokenContainer.GetTokenAsync(ct);
             if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             {
                 var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-                return new CrashReportModelPagingResponse(crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / pageSize), pageSize, crashReports.Count));
+                return new CrashReportModelPagingDataAPIResponse(new CrashReportModelPagingData(crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / pageSize), pageSize, crashReports.Count)), string.Empty);
             }
 
             try
@@ -54,7 +54,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                return await _crashReportsClient.AutocompleteAsync(modId, ct);
+                return (await _crashReportsClient.AutocompleteAsync(modId, ct)).Data ?? Array.Empty<string>();
             }
             catch (Exception)
             {

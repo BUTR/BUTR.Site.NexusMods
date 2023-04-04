@@ -100,7 +100,7 @@ else
     {
         _user = await _profileProvider.GetProfileAsync();
         var discordUserInfo = _user?.DiscordUserId is not null ? await _discordClient.GetuserinfoAsync() : null;
-        _discordUser = discordUserInfo is not null ? new DiscordUserInfo2(discordUserInfo) : null;
+        _discordUser = discordUserInfo is { Data: { } data } ? new DiscordUserInfo2(data) : null;
         if (_gutterRow is not null)
             _gutterRow.Gutter = (5,5);
     }

@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers
 {
     [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
-    public sealed class AuthenticationController : ControllerBase
+    public sealed class AuthenticationController : ControllerExtended
     {
         private readonly ILogger _logger;
         private readonly NexusModsAPIClient _nexusModsAPIClient;
@@ -40,16 +40,15 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpGet("Authenticate"), AllowAnonymous]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(JwtTokenResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> Authenticate([FromHeader] string? apiKey)
+        [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> Authenticate([FromHeader] string? apiKey)
         {
             if (apiKey is null)
-                return StatusCode(StatusCodes.Status400BadRequest, new StandardResponse("API Key not found!"));
+                return StatusCode(StatusCodes.Status401Unauthorized);
 
             if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey) is not { } validateResponse)
-                return StatusCode(StatusCodes.Status401Unauthorized, new StandardResponse("Invalid NexusMods API Key!"));
+                return StatusCode(StatusCodes.Status401Unauthorized);
 
             var roleEntity = await _dbContext.FirstOrDefaultAsync<UserRoleEntity>(x => x.UserId == validateResponse.UserId);
             var role = roleEntity?.Role ?? ApplicationRoles.User;
@@ -68,18 +67,17 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 Role = role,
                 Metadata = metadata
             });
-            return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role)));
+            return Result(APIResponse.From(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role))));
         }
 
         [HttpGet("Validate"), AllowAnonymous]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(JwtTokenResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(StandardResponse), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> Validate()
+        [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> Validate()
         {
             if (HttpContext.GetAPIKey() is not { } apikey || string.IsNullOrEmpty(apikey) || await _nexusModsAPIClient.ValidateAPIKeyAsync(apikey) is not { } validateResponse)
-                return StatusCode(StatusCodes.Status401Unauthorized, new StandardResponse("Invalid NexusMods API Key!"));
+                return StatusCode(StatusCodes.Status401Unauthorized);
 
             var roleEntity = await _dbContext.FirstOrDefaultAsync<UserRoleEntity>(x => x.UserId == validateResponse.UserId);
             var role = roleEntity?.Role ?? ApplicationRoles.User;
@@ -104,11 +102,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                     Role = role,
                     Metadata = metadata
                 });
-                return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role)));
+                return Result(APIResponse.From(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role))));
             }
 
             var token = Request.Headers["Authorization"].ToString().Replace(ButrNexusModsAuthSchemeConstants.AuthScheme, "").Trim();
-            return StatusCode(StatusCodes.Status200OK, new JwtTokenResponse(token, HttpContext.GetProfile(HttpContext.GetRole())));
+            return Result(APIResponse.From(new JwtTokenResponse(token, HttpContext.GetProfile(HttpContext.GetRole()))));
         }
     }
 }

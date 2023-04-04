@@ -117,7 +117,7 @@
     }
 
     private async Task<DataGridPaging<CrashReportModel>.ItemsResponse?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _crashReportProvider.GetCrashReports(page, pageSize, filterings, sortings, ct) is { } response ? new(response.Items, response.Metadata) : null;
+        await _crashReportProvider.GetCrashReports(page, pageSize, filterings, sortings, ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
 
     private Task<ICollection<string>> GetAutocompleteValues(string filter) => _crashReportProvider.AutocompleteModId(filter);
 

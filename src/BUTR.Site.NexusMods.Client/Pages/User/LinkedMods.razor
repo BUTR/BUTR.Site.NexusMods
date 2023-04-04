@@ -92,7 +92,7 @@
     }
 
     private async Task<DataGridPaging<ModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _modProvider.GetMods(page, pageSize, ct) is { } response ? new(response.Items, response.Metadata) : null;
+        await _modProvider.GetMods(page, pageSize, ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
 
     private async Task OnClick(ModModel? mod)
     {

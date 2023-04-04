@@ -26,7 +26,7 @@ namespace BUTR.Site.NexusMods.Client.Services
             {
                 try
                 {
-                    var profile = await _client.ProfileAsync(ct);
+                    var profile = (await _client.ProfileAsync(ct)).Data;
                     return new(profile, new CacheOptions
                     {
                         AbsoluteExpiration = DateTimeOffset.UtcNow.AddSeconds(5),

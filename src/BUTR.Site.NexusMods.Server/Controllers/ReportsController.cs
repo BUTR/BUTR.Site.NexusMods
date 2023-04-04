@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Services;
+﻿using BUTR.Site.NexusMods.Server.Models.API;
+using BUTR.Site.NexusMods.Server.Services;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers
 {
     [ApiController, Route("api/v1/[controller]"), AllowAnonymous]
-    public sealed class ReportsController : ControllerBase
+    public sealed class ReportsController : ControllerExtended
     {
         private readonly ILogger _logger;
         private readonly CrashReporterClient _crashReporterClient;
@@ -26,7 +27,6 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [HttpGet("Get/{id}.html")]
         [Produces("text/html")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        public async Task<ActionResult> GetAll(string id, CancellationToken ct) =>
-            StatusCode(StatusCodes.Status200OK, await _crashReporterClient.GetCrashReportAsync(id, ct));
+        public async Task<ActionResult<string>> GetAll(string id, CancellationToken ct) => Ok(await _crashReporterClient.GetCrashReportAsync(id, ct));
     }
 }

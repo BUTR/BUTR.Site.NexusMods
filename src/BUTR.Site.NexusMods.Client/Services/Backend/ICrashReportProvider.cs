@@ -8,7 +8,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 {
     public interface ICrashReportProvider
     {
-        Task<CrashReportModelPagingResponse?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default);
+        Task<CrashReportModelPagingDataAPIResponse?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default);
 
         Task<ICollection<string>> AutocompleteModId(string modId, CancellationToken ct = default);
 

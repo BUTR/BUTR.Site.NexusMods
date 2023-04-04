@@ -33,7 +33,7 @@
     private DataGridPaging<ArticleModel>? _dataGridPagingRef;
 
     private async Task<DataGridPaging<ArticleModel>.ItemsResponse?> GetArticles(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _articlesClient.PaginatedAsync(new ArticlesQuery(page, pageSize, filterings, sortings), ct) is { } response ? new(response.Items, response.Metadata) : null;
+        await _articlesClient.PaginatedAsync(new ArticlesQuery(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
 
     private async Task OnClick(ArticleModel? mod)
     {
@@ -41,13 +41,13 @@
             await _jsRuntime.InvokeVoidAsync("open", mod.Url, "_blank");
     }
 
-    private Task<ICollection<string>> GetAutocompleteValues(string filter) => _articlesClient.AutocompleteAsync(filter);
+    private async Task<ICollection<string>> GetAutocompleteValues(string filter) => (await _articlesClient.AutocompleteAsync(filter)).Data ?? Array.Empty<string>();
 
     private static IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
     {
         foreach (var columnInfo in columnInfos)
         {
-            if (columnInfo.SortField is nameof(EntityFields.CreateDate) && columnInfo.SearchValue is string[] dates)
+            if (columnInfo is { SortField: nameof(EntityFields.CreateDate), SearchValue: string[] dates })
             {
                 yield return new Filtering(columnInfo.SortField, FilteringType.GreaterThanOrEqual, dates[0]);
                 yield return new Filtering(columnInfo.SortField, FilteringType.LessThanOrEqual, dates[1]);

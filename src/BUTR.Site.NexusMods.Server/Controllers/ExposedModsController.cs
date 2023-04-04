@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers
 {
     [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
-    public class ExposedModsController : ControllerBase
+    public class ExposedModsController : ControllerExtended
     {
         public sealed record ExposedModsQuery(uint Page, uint PageSize, List<Filtering>? Filters, List<Sorting>? Sotings);
 
@@ -34,9 +34,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpPost("Paginated")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(PagingResponse<ExposedModModel>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(APIResponse<PagingData<ExposedModModel>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult> Paginated([FromBody] ExposedModsQuery query, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<PagingData<ExposedModModel>?>>> Paginated([FromBody] ExposedModsQuery query, CancellationToken ct)
         {
             var page = query.Page;
             var pageSize = Math.Max(Math.Min(query.PageSize, 100), 5);
@@ -51,20 +51,20 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 .WithSort(sortings)
                 .PaginatedAsync(page, pageSize, ct);
 
-            return StatusCode(StatusCodes.Status200OK, new PagingResponse<ExposedModModel>
+            return Result(APIResponse.From(new PagingData<ExposedModModel>
             {
                 Items = paginated.Items.Select(x => new ExposedModModel(x.NexusModsModId, x.ModIds, x.LastCheckedDate)).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
-            });
+            }));
         }
 
         [HttpGet("Autocomplete")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(string[]), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(APIResponse<IQueryable<string>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public ActionResult Autocomplete([FromQuery] string modId)
+        public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] string modId)
         {
-            return StatusCode(StatusCodes.Status200OK, _dbContext.AutocompleteStartsWith<NexusModsExposedModsEntity, string[]>(x => x.ModIds, modId));
+            return Result(APIResponse.From(_dbContext.AutocompleteStartsWith<NexusModsExposedModsEntity, string[]>(x => x.ModIds, modId)));
         }
     }
 }

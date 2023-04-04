@@ -6,6 +6,7 @@ using BUTR.Site.NexusMods.ServerClient;
 
 using Microsoft.AspNetCore.Components;
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -26,7 +27,7 @@ namespace BUTR.Site.NexusMods.Client.Pages.User
 
         protected override async Task OnInitializedAsync()
         {
-            var data = await StatisticsClient.TopexceptionstypesAsync();
+            var data = (await StatisticsClient.TopexceptionstypesAsync()).Data ?? Array.Empty<TopExceptionsEntry>();
 
             _dataGridRef.Values = data;
 

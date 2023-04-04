@@ -41,10 +41,10 @@
 
     private async Task OnSearch(string str)
     {
-        var diffs = await _gamePublicApiClient.SearchAsync(new[]
+        var diffs = (await _gamePublicApiClient.SearchAsync(new[]
         {
             new TextSearchFiltering(TextSearchFilteringType.And, str)
-        });
+        })).Data ?? Array.Empty<string>();
         _diffs = diffs.Select(content =>
         {
             var title = GetDiffTitle(content);

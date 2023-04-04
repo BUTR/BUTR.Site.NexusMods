@@ -55,7 +55,7 @@
                 </Field>
                 <Field>
                     <FieldLabel>Stack Trace</FieldLabel>
-                    <MemoEdit Text="@(context.ExecutionLogDetail?.ErrorStackTrace ?? string.Empty)" Disabled  />
+                    <MemoEdit Text="@(context.ExecutionLogDetail?.ErrorStackTrace ?? string.Empty)" AutoSize Disabled />
                 </Field>
             </DetailRowTemplate>
         </DataGridPaging>
@@ -70,5 +70,5 @@
     private DataGridPaging<QuartzExecutionLogEntity> _dataGridRef = default!;
     
     private async Task<DataGridPaging<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _quartzClient.HistorypaginatedAsync(page, pageSize, ct) is { } response ? new(response.Items, response.Metadata) : null;
+        await _quartzClient.HistorypaginatedAsync(page, pageSize, ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
 }

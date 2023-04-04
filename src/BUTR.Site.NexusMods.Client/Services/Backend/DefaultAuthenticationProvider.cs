@@ -29,7 +29,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                var response = await _authenticationClient.AuthenticateAsync(apiKey, ct);
+                var response = (await _authenticationClient.AuthenticateAsync(apiKey, ct)).Data;
 
                 await _tokenContainer.SetTokenAsync(new Token(type, response.Token), ct);
 
@@ -53,7 +53,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                var response = await _authenticationClient.ValidateAsync(ct);
+                var response = (await _authenticationClient.ValidateAsync(ct)).Data;
                 await _tokenContainer.RefreshTokenAsync(new Token(token.Type, response.Token), ct);
                 return response.Profile;
             }
