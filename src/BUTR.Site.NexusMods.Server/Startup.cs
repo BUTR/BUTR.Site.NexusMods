@@ -122,6 +122,7 @@ namespace BUTR.Site.NexusMods.Server
                 opt.AddTriggerListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
                 opt.AddSchedulerListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
 
+                string AtEveryFirstDayOfMonth(int hour = 0) => $"0 0 {hour} ? 1-12 * *";
                 string AtEveryMonday(int hour = 0) => $"0 0 {hour} ? * MON *";
                 string AtEveryDay(int hour = 0) => $"0 0 {hour} ? * *";
                 string AtEveryHour() => "0 0 * * * ?";
@@ -148,9 +149,9 @@ namespace BUTR.Site.NexusMods.Server
                 opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(00)).InTimeZone(TimeZoneInfo.Utc));
                 opt.AddJob<NexusModsArticleUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(12)).InTimeZone(TimeZoneInfo.Utc));
 
-                // Weekly
-                opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryMonday(06)).InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryMonday(18)).InTimeZone(TimeZoneInfo.Utc));
+                // Monthly
+                opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(06)).InTimeZone(TimeZoneInfo.Utc));
+                opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(18)).InTimeZone(TimeZoneInfo.Utc));
 #endif
             });
 
