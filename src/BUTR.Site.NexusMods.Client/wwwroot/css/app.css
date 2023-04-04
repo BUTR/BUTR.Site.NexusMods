@@ -1,4 +1,9 @@
-﻿a, .btn-link {
+﻿/* Why */
+.b-layout.b-layout-root:not(.b-layout-has-sider) .b-layout-header-fixed, .b-layout.b-layout-root:not(.b-layout-has-sider) > .b-layout .b-layout-header-fixed {
+    position: inherit;
+}
+
+a, .btn-link {
     color: #0366d6;
 }
 
