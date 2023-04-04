@@ -37,6 +37,12 @@ namespace BUTR.Site.NexusMods.Client.Services
                 {
                     Console.WriteLine(e.Message);
                 }
+
+                throw;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
                 throw;
             }
         }
