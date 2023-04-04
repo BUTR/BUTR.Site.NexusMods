@@ -3,6 +3,7 @@
 
 @inject NavigationManager _navigationManager
 @inject IAuthenticationProvider _authenticationProvider
+@inject INotificationService _notificationService
 
 <Container>
     <Row Flex="Flex.JustifyContent.Center">
@@ -49,6 +50,7 @@
             {
                 _isLoading = false;
                 StateHasChanged();
+                await _notificationService.Error("Failed to authenticate!", "Error!");
             }
             else
             {
@@ -59,6 +61,7 @@
         {
             _isLoading = true;
             StateHasChanged();
+            await _notificationService.Error("Failed to authenticate!", "Error!");
         }
     }
 
