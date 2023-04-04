@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Blazorise;
+
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -9,8 +11,9 @@ namespace BUTR.Site.NexusMods.Client.Services
     public class AuthenticationInjectionDelegatingHandler : DelegatingHandler
     {
         protected readonly ITokenContainer _tokenContainer;
+        protected readonly INotificationService _notificationService;
 
-        public AuthenticationInjectionDelegatingHandler(ITokenContainer tokenContainer)
+        public AuthenticationInjectionDelegatingHandler(ITokenContainer tokenContainer, INotificationService notificationService)
         {
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
         }
@@ -20,7 +23,18 @@ namespace BUTR.Site.NexusMods.Client.Services
             if (await _tokenContainer.GetTokenAsync(ct) is { } token && token.Type != "demo")
                 request.Headers.Authorization = new AuthenticationHeaderValue("BUTR-NexusMods", token.Value);
 
-            return await base.SendAsync(request, ct);
+            try
+            {
+                return await base.SendAsync(request, ct);
+            }
+            catch (HttpRequestException e)
+            {
+                if (e.Message == "TypeError: Failed to fetch")
+                {
+                    await _notificationService.Error("Backend is down! Notify about the issue on GitHub https://github.com/BUTR/BUTR.Site.NexusMods", "Error!");
+                }
+                throw;
+            }
         }
     }
 }
