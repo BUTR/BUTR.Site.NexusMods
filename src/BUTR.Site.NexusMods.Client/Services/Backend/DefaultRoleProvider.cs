@@ -25,7 +25,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                await _userClient.SetroleAsync((int) userId, role, ct);
+                await _userClient.SetRoleAsync((int) userId, role, ct);
                 return true;
             }
             catch (Exception)
@@ -41,7 +41,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                await _userClient.RemoveroleAsync((int) userId, ct);
+                await _userClient.RemoveRoleAsync((int) userId, ct);
                 return true;
             }
             catch (Exception)

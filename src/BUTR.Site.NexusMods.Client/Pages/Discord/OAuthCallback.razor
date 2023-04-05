@@ -90,7 +90,7 @@
 
             await _discordClient.LinkAsync(queryCode);
 
-            var userInfo = await _discordClient.GetuserinfoAsync();
+            var userInfo = await _discordClient.GetUserInfoAsync();
             _userInfo = new DiscordUserInfo2(userInfo.Data);
             _status = "SUCCESS";
             _image = Success;

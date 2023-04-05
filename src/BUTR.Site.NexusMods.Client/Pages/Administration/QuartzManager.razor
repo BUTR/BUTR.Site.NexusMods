@@ -93,12 +93,12 @@
     private DataGridPaging<QuartzExecutionLogEntity> _dataGridRef = default!;
     
     private async Task<DataGridPaging<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _quartzClient.HistorypaginatedAsync(page, pageSize, ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
+        await _quartzClient.HistoryPaginatedAsync(page, pageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>(), ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
     
     private async Task OnSubmit()
     {
         if (string.IsNullOrEmpty(_jobId)) return;
 
-        await _quartzClient.TriggerjobAsync(_jobId);
+        await _quartzClient.TriggerJobAsync(_jobId);
     }
 }

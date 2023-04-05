@@ -34,7 +34,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                return await _crashReportsClient.PaginatedAsync(new CrashReportsPaginated(page, pageSize, filterings, sortings), ct);
+                return await _crashReportsClient.PaginatedAsync(new PaginatedQuery(page, pageSize, filterings, sortings), ct);
             }
             catch (Exception)
             {

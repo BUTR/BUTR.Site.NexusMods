@@ -175,10 +175,7 @@ namespace BUTR.Site.NexusMods.Server
             });
 
             services.AddControllers().AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
-            services.AddRouting(options =>
-            {
-                options.LowercaseUrls = true;
-            });
+            services.AddRouting();
             services.AddResponseCompression(options =>
             {
                 options.Providers.Add<BrotliCompressionProvider>();

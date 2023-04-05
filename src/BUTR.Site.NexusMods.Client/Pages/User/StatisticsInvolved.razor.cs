@@ -124,14 +124,14 @@ namespace BUTR.Site.NexusMods.Client.Pages.User
         {
             if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested)
             {
-                _gameVersionsAutocompleteValues = (await StatisticsClient.AutocompletegameversionAsync(autocompleteReadDataEventArgs.SearchValue)).Data ?? Array.Empty<string>();
+                _gameVersionsAutocompleteValues = (await StatisticsClient.AutocompleteGameVersionAsync(autocompleteReadDataEventArgs.SearchValue)).Data ?? Array.Empty<string>();
             }
         }
         private async Task OnHandleModIdReadData(AutocompleteReadDataEventArgs autocompleteReadDataEventArgs)
         {
             if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested && autocompleteReadDataEventArgs.SearchValue.Length >= 3)
             {
-                _modIdsAutocompleteValues = (await StatisticsClient.AutocompletemodidAsync(autocompleteReadDataEventArgs.SearchValue)).Data ?? Array.Empty<string>(); ;
+                _modIdsAutocompleteValues = (await StatisticsClient.AutocompleteModIdAsync(autocompleteReadDataEventArgs.SearchValue)).Data ?? Array.Empty<string>(); ;
             }
         }
 

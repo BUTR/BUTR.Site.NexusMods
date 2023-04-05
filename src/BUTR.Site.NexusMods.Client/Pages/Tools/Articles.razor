@@ -33,7 +33,7 @@
     private DataGridPaging<ArticleModel>? _dataGridPagingRef;
 
     private async Task<DataGridPaging<ArticleModel>.ItemsResponse?> GetArticles(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _articlesClient.PaginatedAsync(new ArticlesQuery(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
+        await _articlesClient.PaginatedAsync(new PaginatedQuery(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
 
     private async Task OnClick(ArticleModel? mod)
     {

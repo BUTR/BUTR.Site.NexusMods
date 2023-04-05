@@ -11,7 +11,7 @@
     {
         await base.OnInitializedAsync();
         
-        var response = await _discordClient.GetoauthurlAsync();
+        var response = await _discordClient.GetOAuthUrlAsync();
         await _localStorage.SetItemAsync("discord_state", response.Data.State);
         _navigationManager.NavigateTo(response.Data.Url);
     }

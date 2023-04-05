@@ -1,6 +1,7 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Services;
@@ -23,8 +24,6 @@ namespace BUTR.Site.NexusMods.Server.Controllers
     public sealed class ModController : ControllerExtended
     {
         public sealed record ModQuery(int ModId);
-
-        public sealed record PaginatedQuery(uint Page, uint PageSize);
 
         public sealed record ManualLinkQuery(string ModId, int NexusModsId);
         public sealed record ManualUnlinkQuery(string ModId);
@@ -82,15 +81,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<PagingData<ModModel>?>>> Paginated([FromQuery] PaginatedQuery query, CancellationToken ct)
         {
-            var page = query.Page;
-            var pageSize = Math.Max(Math.Min(query.PageSize, 20), 5);
-
             var userId = HttpContext.GetUserId();
 
-            var dbQuery = _dbContext.Set<NexusModsModEntity>()
+            var paginated = await _dbContext.Set<NexusModsModEntity>()
                 .Where(y => y.UserIds.Contains(userId))
-                .OrderBy(x => x.NexusModsModId);
-            var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
+                .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
             /*
             var allowedUserIds = await _dbContext.Set<NexusModsModEntity>()
@@ -240,13 +235,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<PagingData<ModNexusModsManualLinkModel>?>>> ManualLinkPaginated([FromQuery] PaginatedQuery query, CancellationToken ct)
         {
-            var page = query.Page;
-            var pageSize = Math.Max(Math.Min(query.PageSize, 20), 5);
-
-            var dbQuery = _dbContext.Set<ModNexusModsManualLinkEntity>()
-                .OrderBy(y => y.ModId);
-
-            var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
+            var paginated = await _dbContext.Set<ModNexusModsManualLinkEntity>()
+                .PaginatedAsync(query, 20, new() { Property = nameof(ModNexusModsManualLinkEntity.ModId), Type = SortingType.Ascending }, ct);
 
             return Result(APIResponse.From(new PagingData<ModNexusModsManualLinkModel>
             {
@@ -303,13 +293,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<PagingData<UserAllowedModsModel>?>>> AllowModPaginated([FromQuery] PaginatedQuery query, CancellationToken ct)
         {
-            var page = query.Page;
-            var pageSize = Math.Max(Math.Min(query.PageSize, 20), 5);
-
-            var dbQuery = _dbContext.Set<UserAllowedModsEntity>()
-                .OrderBy(y => y.UserId);
-
-            var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
+            var paginated = await _dbContext.Set<UserAllowedModsEntity>()
+                .PaginatedAsync(query, 20, new() { Property = nameof(UserAllowedModsEntity.UserId), Type = SortingType.Ascending }, ct);
 
             return Result(APIResponse.From(new PagingData<UserAllowedModsModel>
             {

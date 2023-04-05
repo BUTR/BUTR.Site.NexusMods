@@ -27,7 +27,7 @@ namespace BUTR.Site.NexusMods.Client.Pages.User
 
         protected override async Task OnInitializedAsync()
         {
-            var data = (await StatisticsClient.TopexceptionstypesAsync()).Data ?? Array.Empty<TopExceptionsEntry>();
+            var data = (await StatisticsClient.TopExceptionsTypesAsync()).Data ?? Array.Empty<TopExceptionsEntry>();
 
             _dataGridRef.Values = data;
 

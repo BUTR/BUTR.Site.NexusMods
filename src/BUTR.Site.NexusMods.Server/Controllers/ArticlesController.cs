@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,8 +20,6 @@ namespace BUTR.Site.NexusMods.Server.Controllers
     [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
     public class ArticlesController : ControllerExtended
     {
-        public sealed record ArticlesQuery(uint Page, uint PageSize, List<Filtering>? Filters, List<Sorting>? Sotings);
-
         private readonly ILogger _logger;
         private readonly AppDbContext _dbContext;
 
@@ -36,19 +33,10 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         [ProducesResponseType(typeof(APIResponse<PagingData<ArticleModel>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<APIResponse<PagingData<ArticleModel>?>>> Paginated([FromBody] ArticlesQuery query, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<PagingData<ArticleModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
-            var page = query.Page;
-            var pageSize = Math.Max(Math.Min(query.PageSize, 100), 5);
-            var filters = query.Filters ?? Enumerable.Empty<Filtering>();
-            var sortings = query.Sotings is null || query.Sotings.Count == 0
-                ? new List<Sorting> { new() { Property = nameof(NexusModsArticleEntity.ArticleId), Type = SortingType.Ascending } }
-                : query.Sotings;
-
             var paginated = await _dbContext.Set<NexusModsArticleEntity>()
-                .WithFilter(filters)
-                .WithSort(sortings)
-                .PaginatedAsync(page, pageSize, ct);
+                .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsArticleEntity.ArticleId), Type = SortingType.Ascending }, ct);
 
             return Result(APIResponse.From(new PagingData<ArticleModel>
             {

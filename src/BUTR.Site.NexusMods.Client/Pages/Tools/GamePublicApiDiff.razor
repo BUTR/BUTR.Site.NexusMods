@@ -127,7 +127,7 @@
                 {
                     if (node.Children.Count == 0)
                     {
-                        _gamePublicApiClient.TreeflatAsync(GetPath(node)).ContinueWith(async x =>
+                        _gamePublicApiClient.TreeFlatAsync(GetPath(node)).ContinueWith(async x =>
                         {
                             FillNode(node, (await x).Data ?? Array.Empty<string>());
                             StateHasChanged();

@@ -25,8 +25,6 @@ namespace BUTR.Site.NexusMods.Server.Controllers
     [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
     public sealed class CrashReportsController : ControllerExtended
     {
-        public sealed record CrashReportsPaginated(uint Page, uint PageSize, List<Filtering>? Filters, List<Sorting>? Sotings);
-
         private sealed record UserCrashReportView
         {
             public required Guid Id { get; init; }
@@ -58,7 +56,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         [ProducesResponseType(typeof(APIResponse<PagingData<CrashReportModel>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<APIResponse<PagingData<CrashReportModel>?>>> Paginated([FromBody] CrashReportsPaginated query)
+        public async Task<ActionResult<APIResponse<PagingData<CrashReportModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
             var page = query.Page;
             var pageSize = Math.Max(Math.Min(query.PageSize, 50), 5);
@@ -100,7 +98,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                                    _dbContext.Set<ModNexusModsManualLinkEntity>().Any(y => _dbContext.Set<NexusModsModEntity>().Any(z => z.UserIds.Contains(userId) && z.NexusModsModId == y.NexusModsId) && x.ModIds.Contains(y.ModId)) ||
                                    _dbContext.Set<UserAllowedModsEntity>().Any(y => y.UserId == userId && x.ModIds.Any(z => y.AllowedModIds.Contains(z))));
 
-            var paginated = await dbQuery.PaginatedAsync<UserCrashReportView>(page, pageSize, CancellationToken.None);
+            var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
 
             return Result(APIResponse.From(new PagingData<CrashReportModel>
             {

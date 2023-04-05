@@ -106,7 +106,7 @@ namespace BUTR.Site.NexusMods.Server.Utils
                         Range = new RangeHeaderValue(from, to)
                     },
                 };
-                    
+
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                 using var response = _httpClient.Send(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
                 using var stream = response.Content.ReadAsStream();

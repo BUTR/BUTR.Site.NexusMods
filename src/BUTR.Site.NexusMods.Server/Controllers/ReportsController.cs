@@ -1,5 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Models.API;
-using BUTR.Site.NexusMods.Server.Services;
+﻿using BUTR.Site.NexusMods.Server.Services;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

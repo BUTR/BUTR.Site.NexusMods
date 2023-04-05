@@ -32,7 +32,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                return await _modClient.PaginatedAsync(page, pageSize, ct);
+                return await _modClient.PaginatedAsync(page, pageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>(), ct);
             }
             catch (Exception)
             {
@@ -96,7 +96,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                return await _modClient.ManuallinkpaginatedAsync(page, pageSize, ct);
+                return await _modClient.ManualLinkPaginatedAsync(page, pageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>(), ct);
             }
             catch (Exception)
             {
@@ -111,7 +111,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                await _modClient.ManuallinkAsync(modId, nexusModsId, ct);
+                await _modClient.ManualLinkAsync(modId, nexusModsId, ct);
                 return true;
             }
             catch (Exception)
@@ -127,7 +127,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                await _modClient.ManualunlinkAsync(modId, ct);
+                await _modClient.ManualUnlinkAsync(modId, ct);
                 return true;
             }
             catch (Exception)
@@ -145,7 +145,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                return await _modClient.AllowmodpaginatedAsync(page, pageSize, ct);
+                return await _modClient.AllowModPaginatedAsync(page, pageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>(), ct);
             }
             catch (Exception)
             {
@@ -160,7 +160,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                await _modClient.AllowmodAsync(userId, modId, ct);
+                await _modClient.AllowModAsync(userId, modId, ct);
                 return true;
             }
             catch (Exception)
@@ -176,7 +176,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                await _modClient.DisallowmodAsync(userId, modId, ct);
+                await _modClient.DisallowModAsync(userId, modId, ct);
                 return true;
             }
             catch (Exception)

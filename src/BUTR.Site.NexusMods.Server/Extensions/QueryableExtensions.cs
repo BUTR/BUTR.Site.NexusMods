@@ -1,5 +1,6 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using DynamicExpressions;
@@ -66,6 +67,21 @@ WHERE
 
                 yield return toProcess;
             }
+        }
+
+        public static Task<Paging<TEntity>> PaginatedAsync<TEntity>(this IQueryable<TEntity> queryable, PaginatedQuery query, uint maxPageSize = 20, Sorting? defaultSorting = default, CancellationToken ct = default) where TEntity : class
+        {
+            var page = query.Page;
+            var pageSize = Math.Max(Math.Min(query.PageSize, maxPageSize), 5);
+            var filters = query.Filters ?? Enumerable.Empty<Filtering>();
+            var sortings = query.Sotings is null || query.Sotings.Count == 0
+                ? defaultSorting == null ? Array.Empty<Sorting>() : new List<Sorting> { defaultSorting }
+                : query.Sotings;
+
+            return queryable
+                .WithFilter(filters)
+                .WithSort(sortings)
+                .PaginatedAsync(page, pageSize, ct);
         }
 
         public static Paging<TEntity> Paginated<TEntity>(this IQueryable<TEntity> queryable, uint page, uint pageSize) where TEntity : class
