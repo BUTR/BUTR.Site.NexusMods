@@ -10,7 +10,7 @@
             <Column ColumnSize="@ColumnSize.Is6">
                 <Card Margin="Margin.Is4">
                     <CardBody>
-                        <DoughnutChart @ref="doughnutChart" TItem="int" Options="doughnutChartOptions"/>
+                        <DoughnutChart @ref="doughnutChart" TItem="double" Options="doughnutChartOptions"/>
                     </CardBody>
                 </Card>        
             </Column>
@@ -20,7 +20,11 @@
                         <DataGridInMemory @ref="@_dataGridRef" TItem="TopExceptionsEntry">
                             <DataGridColumns>
                                 <DataGridColumn TItem="TopExceptionsEntry" Field="@nameof(TopExceptionsEntry.Type)" Caption="@nameof(TopExceptionsEntry.Type)"/>
-                                <DataGridColumn TItem="TopExceptionsEntry" Field="@nameof(TopExceptionsEntry.Count)" Caption="@nameof(TopExceptionsEntry.Count)"/>
+                                <DataGridColumn TItem="TopExceptionsEntry" Field="@nameof(TopExceptionsEntry.Percentage)" Caption="@nameof(TopExceptionsEntry.Percentage)">
+                                    <DisplayTemplate>
+                                        @context.Percentage.ToString("F3")
+                                    </DisplayTemplate>
+                                </DataGridColumn>
                             </DataGridColumns>
                         </DataGridInMemory>
                     </CardBody>

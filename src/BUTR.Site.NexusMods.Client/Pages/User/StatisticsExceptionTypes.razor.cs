@@ -17,7 +17,7 @@ namespace BUTR.Site.NexusMods.Client.Pages.User
         [Inject]
         private IStatisticsClient StatisticsClient { get; set; } = default!;
 
-        private DoughnutChart<int> doughnutChart = default!;
+        private DoughnutChart<double> doughnutChart = default!;
         private readonly DoughnutChartOptions doughnutChartOptions = new()
         {
             Responsive = true,
@@ -31,10 +31,10 @@ namespace BUTR.Site.NexusMods.Client.Pages.User
 
             _dataGridRef.Values = data;
 
-            var labels = data.OrderByDescending(x => x.Count).Select(x => x.Type).ToList();
-            var values = data.OrderByDescending(x => x.Count).Select(x => x.Count).ToList();
+            var labels = data.OrderByDescending(x => x.Percentage).Select(x => x.Type).ToList();
+            var values = data.OrderByDescending(x => x.Percentage).Select(x => x.Percentage).ToList();
             await doughnutChart.Clear();
-            await doughnutChart.AddLabelsDatasetsAndUpdate(labels, new DoughnutChartDataset<int>() { Label = "Top Exception Types", Data = values, BackgroundColor = ChartUtiities.GetColors(data.Count, 0.2f).ToList(), BorderColor = ChartUtiities.GetColors(data.Count, 1f).ToList(), BorderWidth = 1 });
+            await doughnutChart.AddLabelsDatasetsAndUpdate(labels, new DoughnutChartDataset<double> { Label = "Top Exception Types", Data = values, BackgroundColor = ChartUtiities.GetColors(data.Count, 0.2f).ToList(), BorderColor = ChartUtiities.GetColors(data.Count, 1f).ToList(), BorderWidth = 1 });
 
             await base.OnInitializedAsync();
         }

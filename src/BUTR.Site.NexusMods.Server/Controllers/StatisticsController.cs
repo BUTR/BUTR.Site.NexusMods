@@ -7,18 +7,21 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers
 {
     [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
     public sealed class StatisticsController : ControllerExtended
     {
-        public record TopExceptionsEntry(string Type, int Count);
+        public record TopExceptionsEntry(string Type, decimal Percentage);
 
         public record ModVersionScore(string Version, double Score, double Value, int CountStable, int CountUnstable)
         {
@@ -60,11 +63,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpGet("TopExceptionsTypes")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<IQueryable<TopExceptionsEntry>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(APIResponse<IEnumerable<TopExceptionsEntry>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public ActionResult<APIResponse<IQueryable<TopExceptionsEntry>?>> TopExceptionsTypes()
+        public async Task<ActionResult<APIResponse<IEnumerable<TopExceptionsEntry>?>>> TopExceptionsTypes(CancellationToken ct)
         {
-            return Result(APIResponse.From(_dbContext.Set<TopExceptionsEntry>().Select(x => new TopExceptionsEntry(x.Type, x.Count))));
+            var types = await _dbContext.Set<TopExceptionsTypeEntity>().ToArrayAsync(ct);
+            var total = (decimal) types.Sum(x => x.Count);
+            return Result(APIResponse.From(types.Select(x => new TopExceptionsEntry(x.Type, ((decimal) x.Count / total) * 100M))));
         }
 
         [HttpGet("Involved")]
