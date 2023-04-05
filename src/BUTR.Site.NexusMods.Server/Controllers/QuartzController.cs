@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
+using Quartz;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,11 +28,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         private readonly ILogger _logger;
         private readonly AppDbContext _dbContext;
+        private readonly ISchedulerFactory _schedulerFactory;
 
-        public QuartzController(ILogger<ReportsController> logger, AppDbContext dbContext)
+        public QuartzController(ILogger<ReportsController> logger, AppDbContext dbContext, ISchedulerFactory schedulerFactory)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _schedulerFactory = schedulerFactory ?? throw new ArgumentNullException(nameof(schedulerFactory));
         }
 
         [HttpGet("HistoryPaginated")]
@@ -54,7 +58,6 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             }));
         }
 
-        /*
         [HttpGet("TriggerJob")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
@@ -65,6 +68,5 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             _ = scheduler.TriggerJob(new JobKey(jobId), CancellationToken.None);
             return Ok();
         }
-        */
     }
 }

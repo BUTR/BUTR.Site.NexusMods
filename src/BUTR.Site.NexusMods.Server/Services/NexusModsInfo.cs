@@ -9,6 +9,7 @@ using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -53,35 +54,31 @@ namespace BUTR.Site.NexusMods.Server.Services
                 if (!await HasSubModuleXml(fileInfo)) continue;
 
                 var downloadLinks = await _apiClient.GetModFileLinksAsync(gameDomain, modId, fileInfo.Id, apiKey) ?? Array.Empty<NexusModsDownloadLinkResponse>();
-                foreach (var downloadLink in downloadLinks)
+
+                await using var httpStream = HttpRangeStream.CreateOrDefault(downloadLinks.Select(x => new Uri(x.Url)).ToArray(), _httpClient, new HttpRangeOptions { BufferSize = DefaultBufferSize });
+                if (httpStream is null) throw new InvalidOperationException($"Failed to get HttpStream for file '{fileInfo.FileName}'");
+
+                using var archive = ArchiveExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
+                if (archive is null) throw new InvalidOperationException($"Failed to get Archive for file '{fileInfo.FileName}'");
+
+                if (archive is { IsSolid: true, Type: ArchiveType.Rar })
                 {
-                    var uri = new Uri(downloadLink.Url);
-
-                    await using var httpStream = HttpRangeStream.CreateOrDefault(uri, _httpClient, new HttpRangeOptions { BufferSize = DefaultBufferSize });
-                    if (httpStream is null) continue;
-
-                    using var archive = ArchiveExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
-                    if (archive is null) continue;
-
-                    if (archive is { IsSolid: true, Type: ArchiveType.Rar })
-                    {
-                        httpStream.SetBufferSize(LargeBufferSize);
-                        using var reader = ReaderExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
-                        if (reader is null) continue;
-                        await foreach (var id in GetModIdsFromReaderAsync(reader))
-                            yield return id;
-                        continue;
-                    }
-
-                    if (archive.Type == ArchiveType.SevenZip)
-                        httpStream.SetBufferSize(LargeBufferSize);
-
-                    if (archive.Type == ArchiveType.Rar)
-                        httpStream.SetBufferSize(LargeBufferSize);
-
-                    await foreach (var id in GetModIdsFromArchiveAsync(archive))
+                    httpStream.SetBufferSize(LargeBufferSize);
+                    using var reader = ReaderExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
+                    if (reader is null) throw new InvalidOperationException($"Failed to get Reader for file '{fileInfo.FileName}'");
+                    await foreach (var id in GetModIdsFromReaderAsync(reader))
                         yield return id;
+                    continue;
                 }
+
+                if (archive.Type == ArchiveType.SevenZip)
+                    httpStream.SetBufferSize(LargeBufferSize);
+
+                if (archive.Type == ArchiveType.Rar)
+                    httpStream.SetBufferSize(LargeBufferSize);
+
+                await foreach (var id in GetModIdsFromArchiveAsync(archive))
+                    yield return id;
             }
         }
 

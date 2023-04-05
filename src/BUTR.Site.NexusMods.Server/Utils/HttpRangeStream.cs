@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -16,30 +17,40 @@ namespace BUTR.Site.NexusMods.Server.Utils
 
     public sealed class HttpRangeStream : Stream
     {
-        public static HttpRangeStream? CreateOrDefault(Uri url, HttpClient httpClient, HttpRangeOptions options)
+        public static HttpRangeStream? CreateOrDefault(ICollection<Uri> urlPool, HttpClient httpClient, HttpRangeOptions options)
         {
-            TryCreate(url, httpClient, options, out var httpRangeStream);
+            TryCreate(urlPool, httpClient, options, out var httpRangeStream);
             return httpRangeStream;
         }
 
-        public static bool TryCreate(Uri url, HttpClient httpClient, HttpRangeOptions options, [NotNullWhen(true)] out HttpRangeStream? httpRangeStream)
+        public static bool TryCreate(ICollection<Uri> urlPool, HttpClient httpClient, HttpRangeOptions options, [NotNullWhen(true)] out HttpRangeStream? httpRangeStream)
         {
-            var request = new HttpRequestMessage
+            foreach (var url in urlPool)
             {
-                RequestUri = url,
-                Method = HttpMethod.Head
-            };
-            var response = httpClient.Send(request);
-            var length = response.Content.Headers.ContentLength ?? 0;
+                try
+                {
+                    var request = new HttpRequestMessage
+                    {
+                        RequestUri = url,
+                        Method = HttpMethod.Head
+                    };
+                    var response = httpClient.Send(request);
+                    var length = response.Content.Headers.ContentLength ?? 0;
 
-            if (response.Headers.AcceptRanges.All(x => x != "bytes"))
-            {
-                httpRangeStream = null;
-                return false;
+                    if (response.Headers.AcceptRanges.All(x => x != "bytes"))
+                        continue;
+
+                    httpRangeStream = new HttpRangeStream(url, urlPool, httpClient, options.BufferSize, length);
+                    return true;
+                }
+                catch (HttpRequestException)
+                {
+                    continue;
+                }
             }
 
-            httpRangeStream = new HttpRangeStream(url, httpClient, options.BufferSize, length);
-            return true;
+            httpRangeStream = null;
+            return false;
         }
 
         public override bool CanRead => true;
@@ -49,15 +60,17 @@ namespace BUTR.Site.NexusMods.Server.Utils
         public override long Position { get; set; }
 
         private readonly Uri _url;
+        private readonly ICollection<Uri> _urlPools;
         private readonly HttpClient _httpClient;
 
         private IMemoryOwner<byte> _dowloadedDataBufferOwnner;
         private Memory<byte> _dowloadedDataBuffer;
         private long _downloadedDataBufferStartPosition = -1;
 
-        private HttpRangeStream(Uri url, HttpClient httpClient, int bufferSize, long length)
+        private HttpRangeStream(Uri url, ICollection<Uri> urlPools, HttpClient httpClient, int bufferSize, long length)
         {
             _url = url;
+            _urlPools = urlPools;
             _httpClient = httpClient;
             _dowloadedDataBufferOwnner = MemoryPool<byte>.Shared.Rent(bufferSize);
             _dowloadedDataBuffer = _dowloadedDataBufferOwnner.Memory;
@@ -66,37 +79,51 @@ namespace BUTR.Site.NexusMods.Server.Utils
 
         private int Read(Span<byte> buffer, long from, long to)
         {
-            var toRead = to - from;
-            using var request = new HttpRequestMessage
-            {
-                RequestUri = _url,
-                Method = HttpMethod.Get,
-                Headers =
-                {
-                    Range = new RangeHeaderValue(from, to)
-                },
-            };
+            if (TryRead(_url, buffer, from, to, out var read))
+                return read;
 
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            foreach (var url in _urlPools.Where(x => x != _url))
+            {
+                if (TryRead(url, buffer, from, to, out read))
+                    return read;
+            }
+
+            throw new InvalidOperationException("Failed to get data from any Download Link!");
+        }
+        private bool TryRead(Uri url, Span<byte> buffer, long from, long to, out int read)
+        {
+            read = 0;
+            var toRead = to - from;
+
             try
             {
+                using var request = new HttpRequestMessage
+                {
+                    RequestUri = url,
+                    Method = HttpMethod.Get,
+                    Headers =
+                    {
+                        Range = new RangeHeaderValue(from, to)
+                    },
+                };
+                    
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                 using var response = _httpClient.Send(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);
                 using var stream = response.Content.ReadAsStream();
 
-                var read = 0;
                 while (read < toRead)
                 {
                     var currRead = stream.Read(buffer.Slice(read));
                     if (currRead == 0)
-                        return read;
+                        return true;
                     read += currRead;
                 }
 
-                return read;
+                return true;
             }
-            catch (Exception e) when (e is OperationCanceledException)
+            catch (Exception)
             {
-                return 0;
+                return false;
             }
         }
 
