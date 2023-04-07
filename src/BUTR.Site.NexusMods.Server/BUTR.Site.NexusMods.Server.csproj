@@ -11,6 +11,20 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <Title>BUTR.Site.NexusMods.Server</Title>
+    <Description>The Backend for BUTR's Site</Description>
+    <Authors>BUTR</Authors>
+    <ContainerInformationUrl>https://github.com/BUTR/BUTR.Site.NexusMods</ContainerInformationUrl>
+    <ContainerDocumentationUrl>https://github.com/BUTR/BUTR.Site.NexusMods/blob/master/README.md</ContainerDocumentationUrl>
+    <ContainerVendor>BUTR</ContainerVendor>
+    <ContainerLicenseExpression>MIT</ContainerLicenseExpression>
+    <ContainerUser>app</ContainerUser>
+    <ContainerImageName>sitenexusmods</ContainerImageName>
+    <ContainerRegistry>ghcr.io</ContainerRegistry>
+    <PublishRepositoryUr>true</PublishRepositoryUr>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Aragas.Extensions.Options.FluentValidation" Version="1.0.0.11" />
@@ -19,6 +33,7 @@
     <PackageReference Include="DynamicExpressions.NET" Version="1.1.0" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="8.0.0.7106-preview2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.4" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
     <PackageReference Include="Npgsql" Version="7.0.2" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.3" />
     <PackageReference Include="Polly" Version="7.2.3" />
