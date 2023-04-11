@@ -2,13 +2,11 @@
 
 <DataGridColumn TItem="TItem" Field="@Field" Caption="@Caption" Filterable="@Filterable" SortField="@SortField" Sortable="@Sortable" DisplayTemplate="@DisplayTemplate" @attributes="@AdditionalAttributes">
     <FilterTemplate>
-        <DatePicker TValue="DateTime?"
+        <TimePicker TValue="TimeSpan?"
                     TimeAs24hr
-                    Placeholder="yyyy-MM-dd"
-                    InputMode="DateInputMode.DateTime"
-                    SelectionMode="DateInputSelectionMode.Range"
-                    DatesChanged="@(range => OnDatesChanged(range, context))">
-        </DatePicker>
+                    Placeholder="HH:mm"
+                    TimeChanged="@(time => OnTimeChanged(time, context))">
+        </TimePicker>
     </FilterTemplate>
 </DataGridColumn>
 
@@ -35,26 +33,15 @@
     [Parameter]
     public RenderFragment<TItem>? DisplayTemplate { get; set; }
 
-    private static void OnDatesChanged(IReadOnlyList<DateTime?>? range, FilterContext<TItem> context)
+    private static void OnTimeChanged(TimeSpan? time, FilterContext<TItem> context)
     {
-        if (range is null)
+        if (time is null)
         {
             context.TriggerFilterChange(string.Empty);
             return;
         }
 
-        var dates = range.Where(x => x is not null).Select(x => x.GetValueOrDefault()).ToArray();
-
-        if (dates.Length == 1)
-        {
-            var min = dates[0].Date;
-            var max = dates[0].Date.AddDays(1).AddTicks(-1);
-            context.TriggerFilterChange(new[] {min, max}.Select(x => x.ToString("O")).ToArray());
-        }
-        else
-        {
-            context.TriggerFilterChange(dates.Select(x => x.ToString("O")).ToArray());
-        }
+        context.TriggerFilterChange(time.Value.ToString("O"));
     }
 
 }

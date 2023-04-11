@@ -171,7 +171,7 @@ namespace BUTR.Site.NexusMods.Server
             services.AddAuthentication(ButrNexusModsAuthSchemeConstants.AuthScheme).AddNexusMods(options =>
             {
                 var opts = jwtSection.Get<JwtOptions>();
-                options.EncryptionKey = opts.EncryptionKey;
+                options.EncryptionKey = opts?.EncryptionKey ?? string.Empty;
             });
 
             services.AddControllers().AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
@@ -249,7 +249,7 @@ namespace BUTR.Site.NexusMods.Server
             {
                 var opts = connectionStringSection.Get<ConnectionStringsOptions>();
 
-                options.ConnectionString = opts.Main;
+                options.ConnectionString = opts?.Main;
                 options.SchemaName = "public";
                 options.TableName = "nexusmods_cache_entry";
                 options.CreateInfrastructure = true;

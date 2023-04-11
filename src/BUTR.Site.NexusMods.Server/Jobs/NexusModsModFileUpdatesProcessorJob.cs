@@ -94,7 +94,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             finally
             {
                 context.Result = $"Processed {processed} file updates. Failed {exceptions.Count} file updates.\n{string.Join('\n', exceptions)}";
-                context.SetIsSuccess(true);
+                context.SetIsSuccess(exceptions.Count == 0);
             }
         }
     }

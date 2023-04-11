@@ -23,6 +23,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             var args = $"{_options.BinaryPath} -app {_options.AppId} -depot {string.Join(" ", _options.Depots)} -beta {version} -filelist {_options.Filelist} -username {_options.Username} -password {_options.Password} -dir {path}";
             var processInfo = new ProcessStartInfo("dotnet", args);
             var process = Process.Start(processInfo);
+            if (process is null) return;
             await process.WaitForExitAsync(ct);
         }
     }

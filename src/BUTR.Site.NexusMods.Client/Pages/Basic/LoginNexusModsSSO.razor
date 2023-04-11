@@ -71,10 +71,7 @@
     
     protected override async Task OnInitializedAsync()
     {
-        if (!await _sessionStorage.ContainKeyAsync("sso_uuid"))
-            await _sessionStorage.SetItemAsync("sso_uuid", Guid.NewGuid());
-
-        var uuid = await _sessionStorage.GetItemAsync<Guid>("sso_uuid");
+        var uuid = Guid.NewGuid();
         var token = await _sessionStorage.GetItemAsync<string>("sso_token");
 
         var request = JsonSerializer.SerializeToUtf8Bytes(new SSORequest(uuid, token, 2), _jsonSerializerOptions?.Value ?? new());
@@ -97,48 +94,40 @@
                 break;
 
             sb.Append(Encoding.UTF8.GetString(buffer.AsSpan(0, received.Count)));
-            if (received.EndOfMessage)
+            if (!received.EndOfMessage) continue;
+            var text = sb.ToString();
+            sb.Clear();
+
+            if (JsonSerializer.Deserialize<SSOResponse?>(text, _jsonSerializerOptions?.Value ?? new()) is not { Success: true, Data: not null } response) continue;
+            if (response.Data.ConnectionToken is not null)
             {
-                var text = sb.ToString();
-                sb.Clear();
+                await _sessionStorage.SetItemAsync("sso_token", response.Data.ConnectionToken);
+                var uuid = await _sessionStorage.GetItemAsync<Guid>("sso_uuid");
+                const string applicationSlug = "butr";
+                _url = $"https://www.nexusmods.com/sso?id={uuid}&application={applicationSlug}";
+                _selectedStep = "ButtonClick";
+                StateHasChanged();
+            }
 
-                var response = JsonSerializer.Deserialize<SSOResponse?>(text, _jsonSerializerOptions?.Value ?? new());
-                if (response is not null && response.Success && response.Data is not null)
+            if (response.Data.ApiKey is null) continue;
+            _selectedStep = "Finalizing";
+            StateHasChanged();
+
+            try
+            {
+                var result = await _authenticationProvider.AuthenticateAsync(response.Data.ApiKey, "nexusmods");
+                if (result is null)
                 {
-                    if (response.Data.ConnectionToken is not null)
-                    {
-                        await _sessionStorage.SetItemAsync("sso_token", response.Data.ConnectionToken);
-                        var uuid = await _sessionStorage.GetItemAsync<Guid>("sso_uuid");
-                        const string applicationSlug = "butr";
-                        _url = $"https://www.nexusmods.com/sso?id={uuid}&application={applicationSlug}";
-                        _selectedStep = "ButtonClick";
-                        StateHasChanged();
-                    }
-
-                    if (response.Data.ApiKey is not null)
-                    {
-                        _selectedStep = "Finalizing";
-                        StateHasChanged();
-
-                        try
-                        {
-                            var result = await _authenticationProvider.AuthenticateAsync(response.Data.ApiKey, "nexusmods");
-                            if (result is null)
-                            {
-                                await _notificationService.Error("Failed to authorize!");
-                            }
-                            else
-                            {
-                                _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "");
-                            }
-                        }
-                        catch
-                        {
-                            await _notificationService.Error("Failed to authorize!");
-                        }
-                    }
+                    await _notificationService.Error("Failed to authorize!");
                 }
-
+                else
+                {
+                    _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "");
+                }
+            }
+            catch
+            {
+                await _notificationService.Error("Failed to authorize!");
             }
         }
     }
@@ -147,7 +136,7 @@
     {
         _selectedStep = "Authorise";
         StateHasChanged();
-        await _jsRuntime.InvokeAsync<string>("open", _url, "_blank");
+        await _jsRuntime.InvokeVoidAsync("open", _url, "_blank");
     }
 
     private Task OnSelectedStepChanged(string name)

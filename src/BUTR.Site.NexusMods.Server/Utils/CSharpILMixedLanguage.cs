@@ -46,10 +46,10 @@ namespace BUTR.Site.NexusMods.Server.Utils
         private class MixedMethodBodyDisassembler : MethodBodyDisassembler
         {
             // list sorted by IL offset
-            private IList<ICSharpCode.Decompiler.DebugInfo.SequencePoint> sequencePoints;
+            private IList<ICSharpCode.Decompiler.DebugInfo.SequencePoint>? sequencePoints;
 
             // lines of raw c# source code
-            private string[] codeLines;
+            private string[]? codeLines;
 
             public MixedMethodBodyDisassembler(ITextOutput output) : base(output, CancellationToken.None) { }
 
@@ -75,7 +75,7 @@ namespace BUTR.Site.NexusMods.Server.Utils
 
             protected override void WriteInstruction(ITextOutput output, MetadataReader metadata, MethodDefinitionHandle methodHandle, ref BlobReader blob, int methodRva)
             {
-                if (sequencePoints.BinarySearch(blob.Offset, seq => seq.Offset) is var index and >= 0)
+                if (codeLines is not null && sequencePoints?.BinarySearch(blob.Offset, seq => seq.Offset) is { } index and >= 0)
                 {
                     var info = sequencePoints[index];
                     if (!info.IsHidden)

@@ -75,11 +75,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             return Result(APIResponse.From(new ModModel(modInfo.Name, modInfo.Id, ImmutableArray<int>.Empty)));
         }
 
-        [HttpGet("Paginated")]
+        [HttpPost("Paginated")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(APIResponse<PagingData<ModModel>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<APIResponse<PagingData<ModModel>?>>> Paginated([FromQuery] PaginatedQuery query, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<PagingData<ModModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
             var userId = HttpContext.GetUserId();
 
@@ -229,11 +229,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             return Result(APIResponse.Error<string>("Failed to unlink!"));
         }
 
-        [HttpGet("ManualLinkPaginated")]
+        [HttpPost("ManualLinkPaginated")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(APIResponse<PagingData<ModNexusModsManualLinkModel>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<APIResponse<PagingData<ModNexusModsManualLinkModel>?>>> ManualLinkPaginated([FromQuery] PaginatedQuery query, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<PagingData<ModNexusModsManualLinkModel>?>>> ManualLinkPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
             var paginated = await _dbContext.Set<ModNexusModsManualLinkEntity>()
                 .PaginatedAsync(query, 20, new() { Property = nameof(ModNexusModsManualLinkEntity.ModId), Type = SortingType.Ascending }, ct);
@@ -287,11 +287,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             return Result(APIResponse.Error<string>("Failed to disallowed!"));
         }
 
-        [HttpGet("AllowModPaginated")]
+        [HttpPost("AllowModPaginated")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(APIResponse<PagingData<UserAllowedModsModel>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<APIResponse<PagingData<UserAllowedModsModel>?>>> AllowModPaginated([FromQuery] PaginatedQuery query, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<PagingData<UserAllowedModsModel>?>>> AllowModPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
             var paginated = await _dbContext.Set<UserAllowedModsEntity>()
                 .PaginatedAsync(query, 20, new() { Property = nameof(UserAllowedModsEntity.UserId), Type = SortingType.Ascending }, ct);

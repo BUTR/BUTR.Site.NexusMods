@@ -67,9 +67,9 @@
                 </DataGridColumnTextAutocomplete>
                 <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Exception" Filterable Placeholder="System.NullReferenceException" Sortable SortField="@nameof(EntityFields.Exception)"/>
                 <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Version)" Caption="Version" Filterable Placeholder="1" Sortable SortField="@nameof(EntityFields.Version)"/>
-                <DataGridColumnDateTime TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.CreatedAt)">
+                <DataGridColumnDate TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.CreatedAt)">
                     <DisplayTemplate>@(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
-                </DataGridColumnDateTime>
+                </DataGridColumnDate>
                 <DataGridColumnEnum TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" Filterable Sortable SortField="@nameof(EntityFields.Status)" >
                     <DisplayTemplate>@(context.Status.GetDisplayName())</DisplayTemplate>
                 </DataGridColumnEnum>

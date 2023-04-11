@@ -27,18 +27,18 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         private readonly AppDbContext _dbContext;
         private readonly ISchedulerFactory _schedulerFactory;
 
-        public QuartzController(ILogger<ReportsController> logger, AppDbContext dbContext, ISchedulerFactory schedulerFactory)
+        public QuartzController(ILogger<QuartzController> logger, AppDbContext dbContext, ISchedulerFactory schedulerFactory)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _schedulerFactory = schedulerFactory ?? throw new ArgumentNullException(nameof(schedulerFactory));
         }
 
-        [HttpGet("HistoryPaginated")]
+        [HttpPost("HistoryPaginated")]
         [Produces("application/json")]
         [ProducesResponseType(typeof(APIResponse<PagingData<QuartzExecutionLogEntity>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<APIResponse<PagingData<QuartzExecutionLogEntity>?>>> HistoryPaginated([FromQuery] PaginatedQuery query, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<PagingData<QuartzExecutionLogEntity>?>>> HistoryPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
             var paginated = await _dbContext.Set<QuartzExecutionLogEntity>()
                 .Where(x => x.LogType == QuartzLogType.ScheduleJob)
@@ -49,6 +49,22 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 Items = paginated.Items.ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
             }));
+        }
+        
+        [HttpGet("Delete")]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<APIResponse<string?>>> Delete([FromQuery] long logId)
+        {
+            QuartzExecutionLogEntity? ApplyChanges(QuartzExecutionLogEntity? existing) => existing switch
+            {
+                _ => null
+            };
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<QuartzExecutionLogEntity>(x => x.LogId == logId, ApplyChanges))
+                return Result(APIResponse.From("Deleted successful!"));
+
+            return Result(APIResponse.Error<string>("Failed to delete!"));
         }
 
         [HttpGet("TriggerJob")]

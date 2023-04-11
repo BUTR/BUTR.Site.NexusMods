@@ -32,7 +32,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                return await _modClient.PaginatedAsync(page, pageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>(), ct);
+                return await _modClient.PaginatedAsync(new PaginatedQuery(page, pageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>()), ct);
             }
             catch (Exception)
             {
@@ -96,7 +96,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                return await _modClient.ManualLinkPaginatedAsync(page, pageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>(), ct);
+                return await _modClient.ManualLinkPaginatedAsync(new PaginatedQuery(page, pageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>()), ct);
             }
             catch (Exception)
             {
@@ -145,7 +145,7 @@ namespace BUTR.Site.NexusMods.Client.Services
 
             try
             {
-                return await _modClient.AllowModPaginatedAsync(page, pageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>(), ct);
+                return await _modClient.AllowModPaginatedAsync(new PaginatedQuery(page, pageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>()), ct);
             }
             catch (Exception)
             {

@@ -23,21 +23,21 @@ namespace BUTR.Site.NexusMods.Server.Models.Database
 
         public required int Version { get; init; }
 
-        public required string GameVersion { get; init; }
+        public required string GameVersion { get; init; } = string.Empty;
 
-        public required string Exception { get; init; }
+        public required string Exception { get; init; } = string.Empty;
 
-        public required DateTime CreatedAt { get; init; }
+        public required DateTime CreatedAt { get; init; } = DateTime.MinValue;
 
-        public required string[] ModIds { get; init; }
+        public required string[] ModIds { get; init; } = Array.Empty<string>();
 
-        public required Dictionary<string, string> ModIdToVersion { get; init; }
+        public required Dictionary<string, string> ModIdToVersion { get; init; } = new();
 
-        public required string[] InvolvedModIds { get; init; }
+        public required string[] InvolvedModIds { get; init; } = Array.Empty<string>();
 
-        public required int[] ModNexusModsIds { get; init; }
+        public required int[] ModNexusModsIds { get; init; } = Array.Empty<int>();
 
-        public required string Url { get; init; }
+        public required string Url { get; init; } = string.Empty;
 
         public required CrashReportEntityMetadata? Metadata { get; init; }
 

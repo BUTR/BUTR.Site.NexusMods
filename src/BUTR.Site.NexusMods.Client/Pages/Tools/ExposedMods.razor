@@ -15,9 +15,9 @@
                 <DataGridColumnTextAutocomplete TItem="ExposedModModel" Field="@nameof(ExposedModModel.ModIds)" Caption="Mod Id's" Filterable Sortable SortField="@nameof(EntityFields.ModIds)" GetAutocompleteValues="GetAutocompleteValues">
                     <DisplayTemplate>@(string.Join(", ", context.ModIds))</DisplayTemplate>
                 </DataGridColumnTextAutocomplete>
-                <DataGridColumnDateTime TItem="ExposedModModel" Field="@nameof(ExposedModModel.LastCheckedDate)" Caption="Last Checked Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.LastCheckedDate)">
+                <DataGridColumnDate TItem="ExposedModModel" Field="@nameof(ExposedModModel.LastCheckedDate)" Caption="Last Checked Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.LastCheckedDate)">
                     <DisplayTemplate>@(context.LastCheckedDate.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
-                </DataGridColumnDateTime>
+                </DataGridColumnDate>
             </DataGridColumns>
 
             <ButtonRowTemplate>
