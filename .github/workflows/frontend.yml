@@ -29,10 +29,10 @@ jobs:
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
 
-    - name: Setup .NET 5
+    - name: Setup .NET 7
       uses: actions/setup-dotnet@master
       with:
-        dotnet-version: 5.x.x
+        dotnet-version: 7.x.x
 
     - name: Build Server
       run: dotnet build src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj --configuration Release;
