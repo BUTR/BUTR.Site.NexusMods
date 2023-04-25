@@ -36,25 +36,21 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpPost("HistoryPaginated")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<PagingData<QuartzExecutionLogEntity>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<PagingData<QuartzExecutionLogEntity>?>>> HistoryPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
             var paginated = await _dbContext.Set<QuartzExecutionLogEntity>()
                 .Where(x => x.LogType == QuartzLogType.ScheduleJob)
                 .PaginatedAsync(query, 100, new() { Property = nameof(QuartzExecutionLogEntity.DateAddedUtc), Type = SortingType.Descending }, ct);
 
-            return Result(APIResponse.From(new PagingData<QuartzExecutionLogEntity>
+            return APIResponse(new PagingData<QuartzExecutionLogEntity>
             {
                 Items = paginated.Items.ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
-            }));
+            });
         }
-        
+
         [HttpGet("Delete")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<string?>>> Delete([FromQuery] long logId)
         {
             QuartzExecutionLogEntity? ApplyChanges(QuartzExecutionLogEntity? existing) => existing switch
@@ -62,15 +58,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 _ => null
             };
             if (await _dbContext.AddUpdateRemoveAndSaveAsync<QuartzExecutionLogEntity>(x => x.LogId == logId, ApplyChanges))
-                return Result(APIResponse.From("Deleted successful!"));
+                return APIResponse("Deleted successful!");
 
-            return Result(APIResponse.Error<string>("Failed to delete!"));
+            return APIResponseError<string>("Failed to delete!");
         }
 
         [HttpGet("TriggerJob")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult> TriggerJob(string jobId, CancellationToken ct)
         {
             var scheduler = await _schedulerFactory.GetScheduler(ct);

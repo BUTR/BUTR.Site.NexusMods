@@ -40,7 +40,7 @@
             </DataGridColumns>
 
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnClick(_dataGridRef.Value))">Open Page</Button>
+                <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnClick(_dataGridRef!.Value))">Open Page</Button>
                 <Button Color="Color.Danger" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnDelete(context))">
                     <LoadingTemplate>Unlinking...</LoadingTemplate>
                     <ChildContent>Unlink</ChildContent>

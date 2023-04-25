@@ -7,7 +7,6 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -54,8 +53,6 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpPost("Paginated")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<PagingData<CrashReportModel>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<PagingData<CrashReportModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
             var page = query.Page;
@@ -100,7 +97,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
             var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
 
-            return Result(APIResponse.From(new PagingData<CrashReportModel>
+            return APIResponse(new PagingData<CrashReportModel>
             {
                 Items = paginated.Items.Select(x => new CrashReportModel
                 {
@@ -115,22 +112,18 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                     Comment = x.Comment
                 }).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
-            }));
+            });
         }
 
         [HttpGet("Autocomplete")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<string[]>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] string modId)
         {
-            return Result(APIResponse.From(_dbContext.AutocompleteStartsWith<CrashReportEntity, string[]>(x => x.ModIds, modId)));
+            return APIResponse(_dbContext.AutocompleteStartsWith<CrashReportEntity, string[]>(x => x.ModIds, modId));
         }
 
         [HttpPost("Update")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<string?>>> Update([FromBody] CrashReportModel updatedCrashReport)
         {
             var userId = HttpContext.GetUserId();
@@ -148,9 +141,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             };
             var set = _dbContext.Set<UserCrashReportEntity>().Include(x => x.CrashReport);
             if (await _dbContext.AddUpdateRemoveAndSaveAsync(set, x => x.UserId == userId && x.CrashReport.Id == updatedCrashReport.Id, ApplyChanges))
-                return Result(APIResponse.From("Updated successful!"));
+                return APIResponse("Updated successful!");
 
-            return Result(APIResponse.From("Failed to update!"));
+            return APIResponseError<string>("Failed to update!");
         }
     }
 }

@@ -6,7 +6,6 @@ using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -31,28 +30,24 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpPost("Paginated")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<PagingData<ExposedModModel>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<PagingData<ExposedModModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
             var paginated = await _dbContext.Set<NexusModsExposedModsEntity>()
                 .Where(x => x.ModIds.Length > 0)
                 .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsExposedModsEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
-            return Result(APIResponse.From(new PagingData<ExposedModModel>
+            return APIResponse(new PagingData<ExposedModModel>
             {
                 Items = paginated.Items.Select(x => new ExposedModModel(x.NexusModsModId, x.ModIds, x.LastCheckedDate)).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
-            }));
+            });
         }
 
         [HttpGet("Autocomplete")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<IQueryable<string>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] string modId)
         {
-            return Result(APIResponse.From(_dbContext.AutocompleteStartsWith<NexusModsExposedModsEntity, string[]>(x => x.ModIds, modId)));
+            return APIResponse(_dbContext.AutocompleteStartsWith<NexusModsExposedModsEntity, string[]>(x => x.ModIds, modId));
         }
     }
 }

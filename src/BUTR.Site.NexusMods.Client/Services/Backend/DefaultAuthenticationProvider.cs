@@ -47,14 +47,16 @@ namespace BUTR.Site.NexusMods.Client.Services
 
         public async Task<ProfileModel?> ValidateAsync(CancellationToken ct = default)
         {
-            var token = await _tokenContainer.GetTokenAsync(ct);
-            if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
+            if (await _tokenContainer.GetTokenAsync(ct) is not { } token)
+                return null;
+            
+            if (token.Type.Equals("demo", StringComparison.OrdinalIgnoreCase))
                 return await _profileProvider.GetProfileAsync(ct);
 
             try
             {
                 var response = (await _authenticationClient.ValidateAsync(ct)).Data;
-                await _tokenContainer.RefreshTokenAsync(new Token(token.Type, response.Token), ct);
+                await _tokenContainer.RefreshTokenAsync(token with { Value = response.Token }, ct);
                 return response.Profile;
             }
             catch (Exception)

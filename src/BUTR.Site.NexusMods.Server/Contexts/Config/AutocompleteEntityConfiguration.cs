@@ -3,8 +3,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-using System;
-
 namespace BUTR.Site.NexusMods.Server.Contexts.Config
 {
     public class AutocompleteEntityConfiguration : BaseEntityConfiguration<AutocompleteEntity>

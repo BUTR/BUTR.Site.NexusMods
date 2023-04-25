@@ -25,7 +25,6 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpGet("Get/{id}.html")]
         [Produces("text/html")]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<ActionResult<string>> GetAll(string id, CancellationToken ct) => Ok(await _crashReporterClient.GetCrashReportAsync(id, ct));
     }
 }

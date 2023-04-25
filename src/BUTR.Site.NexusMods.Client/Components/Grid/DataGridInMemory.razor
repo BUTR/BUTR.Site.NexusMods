@@ -47,7 +47,7 @@
     public RenderFragment<TItem>? DetailRowTemplate { get; set; }
     
     [Parameter]
-    public Func<DetailRowTriggerEventArgs<TItem>, bool> DetailRowTrigger { get; set; }
+    public Func<DetailRowTriggerEventArgs<TItem>, bool>? DetailRowTrigger { get; set; }
 
     public TItem? Value;
     public ICollection<TItem> Values = new List<TItem>();

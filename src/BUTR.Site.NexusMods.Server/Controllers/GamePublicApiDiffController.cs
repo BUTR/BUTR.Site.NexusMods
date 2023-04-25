@@ -2,7 +2,6 @@
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
 
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -28,22 +27,18 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpGet("List")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<IEnumerable<string>>), StatusCodes.Status200OK)]
-        public ActionResult<APIResponse<IEnumerable<string>?>> List() => Result(APIResponse.From(_diffProvider.List(basePath)));
+        public ActionResult<APIResponse<IEnumerable<string>?>> List() => APIResponse(_diffProvider.List(basePath));
 
         [HttpGet("TreeFlat")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<IEnumerable<string>>), StatusCodes.Status200OK)]
-        public ActionResult<APIResponse<IEnumerable<string>?>> TreeFlat(string entry) => Result(APIResponse.From(_diffProvider.TreeFlat(basePath, entry)));
+        public ActionResult<APIResponse<IEnumerable<string>?>> TreeFlat(string entry) => APIResponse(_diffProvider.TreeFlat(basePath, entry));
 
         [HttpGet("Get")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<IEnumerable<string>>), StatusCodes.Status200OK)]
-        public ActionResult<APIResponse<IEnumerable<string>?>> Get(string path, CancellationToken ct) => Result(APIResponse.From(_diffProvider.Get(basePath, path, ct)));
+        public ActionResult<APIResponse<IEnumerable<string>?>> Get(string path, CancellationToken ct) => APIResponse(_diffProvider.Get(basePath, path, ct));
 
         [HttpPost("Search")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<IEnumerable<string>>), StatusCodes.Status200OK)]
-        public ActionResult<APIResponse<IEnumerable<string>?>> Search(TextSearchFiltering[] filters, CancellationToken ct) => Result(APIResponse.From(_diffProvider.Search(basePath, filters, ct)));
+        public ActionResult<APIResponse<IEnumerable<string>?>> Search(TextSearchFiltering[] filters, CancellationToken ct) => APIResponse(_diffProvider.Search(basePath, filters, ct));
     }
 }

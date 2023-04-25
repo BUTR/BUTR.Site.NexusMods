@@ -88,9 +88,9 @@
 @code {
 
     private enum EntityFields { MachineName, JobName, FireTimeUtc, JobRunTime }
-    
+
     [CascadingParameter]
-    protected Theme? Theme { get; set; }
+    protected Theme Theme { get; set; } = default!;
 
     private string _jobId = string.Empty;
     

@@ -8,8 +8,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 public class ControllerExtended : ControllerBase
 {
     [NonAction]
-    protected ActionResult<APIResponse<T?>> Result<T>([ActionResultObjectValue] APIResponse<T?> value) => new OkObjectResult(value);
-
+    protected ActionResult<APIResponse<T?>> APIResponse<T>([ActionResultObjectValue] T? value) => BUTR.Site.NexusMods.Server.Models.API.APIResponse.From(value);
     [NonAction]
-    protected ActionResult<APIResponse> Result() => new OkResult();
+    protected ActionResult<APIResponse<T?>> APIResponseError<T>(string error) => BUTR.Site.NexusMods.Server.Models.API.APIResponse.Error<T>(error);
 }

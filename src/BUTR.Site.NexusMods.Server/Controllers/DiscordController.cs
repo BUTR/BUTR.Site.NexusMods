@@ -7,7 +7,6 @@ using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,81 +39,73 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpGet("GetOAuthUrl")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<DiscordOAuthUrlModel>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public ActionResult<APIResponse<DiscordOAuthUrlModel?>> GetOAuthUrl()
         {
             var (url, state) = _discordClient.GetOAuthUrl();
-            return Result(APIResponse.From(new DiscordOAuthUrlModel(url, state)));
+            return APIResponse(new DiscordOAuthUrlModel(url, state));
         }
 
         [HttpGet("Link")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<string?>>> Link([FromQuery] string code)
         {
             var tokens = await _discordClient.GetOAuthTokens(code);
             if (tokens is null)
-                return Result(APIResponse.Error<string>("Failed to link!"));
+                return APIResponseError<string>("Failed to link!");
 
             var userId = HttpContext.GetUserId();
             var userInfo = await _discordClient.GetUserInfo(tokens.AccessToken);
 
             if (userInfo is null || !_discordStorage.Upsert(userId, userInfo.User.Id, tokens))
-                return Result(APIResponse.Error<string>("Failed to link!"));
+                return APIResponseError<string>("Failed to link!");
 
             await UpdateMetadataInternal();
 
-            return Result(APIResponse.From("Linked successful!"));
+            return APIResponse("Linked successful!");
         }
 
         [HttpPost("Unlink")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<string?>>> Unlink()
         {
             var userId = HttpContext.GetUserId();
             var tokens = HttpContext.GetDiscordTokens();
 
             if (tokens is null)
-                return Result(APIResponse.Error<string>("Unlinked successful!"));
+                return APIResponseError<string>("Unlinked successful!");
 
             if (!await _discordClient.PushMetadata(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt), new Metadata(0, 0, 0, 0)))
-                return Result(APIResponse.Error<string>("Failed to unlink!"));
+                return APIResponseError<string>("Failed to unlink!");
 
             if (!_discordStorage.Remove(userId, tokens.UserId))
-                return Result(APIResponse.From("Failed to unlink!"));
+                return APIResponseError<string>("Failed to unlink!");
 
-            return Result(APIResponse.From("Unlinked successful!"));
+            return APIResponse("Unlinked successful!");
 
         }
 
         [HttpPost("UpdateMetadata")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+        [Produces("application/json")]
         public async Task<ActionResult<APIResponse<string?>>> UpdateMetadata()
         {
             if (await UpdateMetadataInternal() is not { } result)
-                return Result(APIResponse.Error<string>("Failed to update"));
-            return Result(result ? APIResponse.From("") : APIResponse.Error<string>("Failed to update"));
+                return APIResponseError<string>("Failed to update");
+            return result ? APIResponse("") : APIResponseError<string>("Failed to update");
         }
 
 
         [HttpPost("GetUserInfo")]
-        [ProducesResponseType(typeof(APIResponse<DiscordUserInfo>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+        [Produces("application/json")]
         public async Task<ActionResult<APIResponse<DiscordUserInfo?>>> GetUserInfoByAccessToken()
         {
             var userId = HttpContext.GetUserId();
             var tokens = HttpContext.GetDiscordTokens();
 
             if (tokens is null)
-                return Result(APIResponse.Error<DiscordUserInfo>("Failed to get the token!"));
+                return APIResponseError<DiscordUserInfo>("Failed to get the token!");
 
             var result = await _discordClient.GetUserInfo(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt));
-            return Result(APIResponse.From(result));
+            return APIResponse(result);
         }
 
         private async Task<bool?> UpdateMetadataInternal()

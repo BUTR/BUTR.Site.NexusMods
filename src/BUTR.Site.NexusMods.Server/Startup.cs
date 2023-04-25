@@ -59,7 +59,7 @@ namespace BUTR.Site.NexusMods.Server
         }
 
         private readonly IConfiguration _configuration;
-        private readonly AssemblyName? _assemblyName = Assembly.GetEntryAssembly()?.GetName();
+        private readonly AssemblyName _assemblyName = typeof(Startup).Assembly.GetName();
 
         public Startup(IConfiguration configuration)
         {
@@ -68,7 +68,7 @@ namespace BUTR.Site.NexusMods.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var userAgent = $"{_assemblyName?.Name ?? "ERROR"} v{_assemblyName?.Version?.ToString() ?? "ERROR"} (github.com/BUTR)";
+            var userAgent = $"{_assemblyName.Name ?? "ERROR"} v{_assemblyName.Version?.ToString() ?? "ERROR"} (github.com/BUTR)";
 
             var connectionStringSection = _configuration.GetSection(ConnectionStringsSectionName);
             var crashReporterSection = _configuration.GetSection(CrashReporterSectionName);
@@ -222,11 +222,12 @@ namespace BUTR.Site.NexusMods.Server
 
                 opt.DescribeAllParametersInCamelCase();
                 opt.SupportNonNullableReferenceTypes();
+                opt.OperationFilter<AuthResponsesOperationFilter>();
 
                 // Really .NET?
                 opt.MapType<TimeSpan>(() => new OpenApiSchema { Type = "string", Format = "time-span" });
 
-                var currentAssembly = Assembly.GetExecutingAssembly();
+                var currentAssembly = typeof(Startup).Assembly;
                 var xmlFilePaths = currentAssembly.GetReferencedAssemblies()
                     .Append(currentAssembly.GetName())
                     .Select(x => Path.Combine(Path.GetDirectoryName(currentAssembly.Location)!, $"{x.Name}.xml"))

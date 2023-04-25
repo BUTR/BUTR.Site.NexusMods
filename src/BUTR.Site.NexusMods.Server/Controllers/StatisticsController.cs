@@ -45,37 +45,29 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         [HttpGet("AutocompleteGameVersion")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<IQueryable<string>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public ActionResult<APIResponse<IQueryable<string>?>> AutocompleteGameVersion([FromQuery] string gameVersion)
         {
-            return Result(APIResponse.From(_dbContext.AutocompleteStartsWith<CrashReportEntity, string>(x => x.GameVersion, gameVersion)));
+            return APIResponse(_dbContext.AutocompleteStartsWith<CrashReportEntity, string>(x => x.GameVersion, gameVersion));
         }
 
         [HttpGet("AutocompleteModId")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<IQueryable<string>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public ActionResult<APIResponse<IQueryable<string>?>> AutocompleteModId([FromQuery] string modId)
         {
-            return Result(APIResponse.From(_dbContext.AutocompleteStartsWith<CrashReportEntity, string[]>(x => x.ModIds, modId)));
+            return APIResponse(_dbContext.AutocompleteStartsWith<CrashReportEntity, string[]>(x => x.ModIds, modId));
         }
 
         [HttpGet("TopExceptionsTypes")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<IEnumerable<TopExceptionsEntry>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<APIResponse<IEnumerable<TopExceptionsEntry>?>>> TopExceptionsTypes(CancellationToken ct)
         {
             var types = await _dbContext.Set<TopExceptionsTypeEntity>().ToArrayAsync(ct);
             var total = (decimal) types.Sum(x => x.Count);
-            return Result(APIResponse.From(types.Select(x => new TopExceptionsEntry(x.Type, ((decimal) x.Count / total) * 100M))));
+            return APIResponse(types.Select(x => new TopExceptionsEntry(x.Type, ((decimal) x.Count / total) * 100M)));
         }
 
         [HttpGet("Involved")]
         [Produces("application/json")]
-        [ProducesResponseType(typeof(APIResponse<IEnumerable<GameStorage>>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public ActionResult<APIResponse<IEnumerable<GameStorage>?>> Involved([FromQuery] string[]? gameVersions, [FromQuery] string[]? modIds, [FromQuery] string[]? modVersions)
         {
             //if (gameVersions?.Length == 0 && modIds?.Length == 0 && modVersions?.Length == 0)
@@ -95,7 +87,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                         .SelectMany(z => z)
                         .Select(z => new ModVersionScore(z.ModVersion, 1 - z.Score, z.RawValue, z.NotInvolvedCount, z.InvolvedCount)).ToArray())).ToArray()));
 
-            return Result(APIResponse.From(data));
+            return APIResponse(data);
         }
     }
 }

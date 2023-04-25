@@ -16,6 +16,7 @@ namespace BUTR.Site.NexusMods.Client.Services
         public AuthenticationInjectionDelegatingHandler(ITokenContainer tokenContainer, INotificationService notificationService)
         {
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
+            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)

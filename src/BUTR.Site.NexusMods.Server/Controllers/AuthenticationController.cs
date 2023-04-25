@@ -67,7 +67,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 Role = role,
                 Metadata = metadata
             });
-            return Result(APIResponse.From(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role))));
+            return APIResponse(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role)));
         }
 
         [HttpGet("Validate"), AllowAnonymous]
@@ -102,11 +102,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                     Role = role,
                     Metadata = metadata
                 });
-                return Result(APIResponse.From(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role))));
+                return APIResponse(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role)));
             }
 
             var token = Request.Headers["Authorization"].ToString().Replace(ButrNexusModsAuthSchemeConstants.AuthScheme, "").Trim();
-            return Result(APIResponse.From(new JwtTokenResponse(token, HttpContext.GetProfile(HttpContext.GetRole()))));
+            return APIResponse(new JwtTokenResponse(token, HttpContext.GetProfile(HttpContext.GetRole())));
         }
     }
 }

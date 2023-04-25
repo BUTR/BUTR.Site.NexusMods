@@ -66,7 +66,7 @@
     public RenderFragment<TItem>? DetailRowTemplate { get; set; }
     
     [Parameter]
-    public Func<DetailRowTriggerEventArgs<TItem>, bool> DetailRowTrigger { get; set; }
+    public Func<DetailRowTriggerEventArgs<TItem>, bool>? DetailRowTrigger { get; set; }
 
     [Parameter]
     public Func<IEnumerable<DataGridColumnInfo>, IEnumerable<Filtering>>? GetFilters { get; set; }
