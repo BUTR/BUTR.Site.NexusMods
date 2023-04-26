@@ -49,7 +49,7 @@ namespace BUTR.Site.NexusMods.Client.Services
         {
             if (await _tokenContainer.GetTokenAsync(ct) is not { } token)
                 return null;
-            
+
             if (token.Type.Equals("demo", StringComparison.OrdinalIgnoreCase))
                 return await _profileProvider.GetProfileAsync(ct);
 
