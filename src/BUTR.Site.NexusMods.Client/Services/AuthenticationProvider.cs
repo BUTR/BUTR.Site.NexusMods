@@ -48,7 +48,7 @@ public sealed class AuthenticationProvider
     {
         if (await _tokenContainer.GetTokenAsync(ct) is not { } token)
             return null;
-            
+
         if (token.Type.Equals("demo", StringComparison.OrdinalIgnoreCase))
             return await DemoUser.GetProfile();
 

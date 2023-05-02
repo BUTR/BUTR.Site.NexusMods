@@ -30,10 +30,10 @@ namespace BUTR.Site.NexusMods.Server.Controllers
 
         public sealed record AllowModuleIdQuery(int UserId, string ModuleId);
         public sealed record DisallowModuleIdQuery(int UserId, string ModuleId);
-        
+
         public sealed record AllowModQuery(int UserId, int ModId);
         public sealed record DisallowModQuery(int UserId, int ModId);
-        
+
 
 
         private readonly ILogger _logger;
@@ -70,7 +70,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         public async Task<ActionResult<APIResponse<PagingData<ModModel>?>>> ModPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
-            var baseQuery = 
+            var baseQuery =
                 from mod in _dbContext.Set<NexusModsModEntity>()
                 join allowedUserIds in _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
                     on mod.NexusModsModId equals allowedUserIds.NexusModsModId
@@ -83,14 +83,14 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                     on mod.NexusModsModId equals exposedMods.NexusModsModId
                     into ExposedMods
                 from x3 in ExposedMods.DefaultIfEmpty()
-                select new 
+                select new
                 {
                     NexusModsModId = mod.NexusModsModId,
                     Name = mod.Name,
                     UserIds = mod.UserIds,
                     AllowedNexusModsUserIds = x1.AllowedNexusModsUserIds,
                     //ManuallyLinkedUserIds = x3.ModuleIds, 
-                    ManuallyLinkedModuleIds = ManuallyLinkedModuleId.Select(x => x.ModuleId).ToArray(), 
+                    ManuallyLinkedModuleIds = ManuallyLinkedModuleId.Select(x => x.ModuleId).ToArray(),
                     KnownModuleIds = x3.ModuleIds
                 };
             var paginated = await baseQuery
@@ -105,9 +105,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var nexusModsModManualLinkedModuleIdEntityTable = nexusModsModManualLinkedModuleIdEntity.GetSchemaQualifiedTableName();
             var moduleId = nexusModsModManualLinkedModuleIdEntity.GetProperty(nameof(NexusModsModManualLinkedModuleIdEntity.ModuleId)).GetColumnName();
             var nexusModsModId = nexusModsModManualLinkedModuleIdEntity.GetProperty(nameof(NexusModsModManualLinkedModuleIdEntity.NexusModsModId)).GetColumnName();
-           
+
             var nexusModsIds = paginated.Items.Select(x => x.NexusModsModId).ToArray();
-            
+
             var manuallyLinkedModIdsSql = $"""
 SELECT DISTINCT a.{nexusModsUserId}::TEXT as {moduleId}, b.{nexusModsModId} FROM {nexusModsUserAllowedModuleIdsEntityTable} a
 JOIN {nexusModsModManualLinkedModuleIdEntityTable} b
@@ -311,8 +311,8 @@ WHERE b.{nexusModsModId} = ANY(ARRAY[{string.Join(",", nexusModsIds.Select(x => 
                 Metadata = paginated.Metadata
             });
         }
-        
-        
+
+
         [HttpGet("AllowUserAMod")]
         [Produces("application/json")]
         public async Task<ActionResult<APIResponse<string?>>> AllowUserAMod([FromQuery] AllowModQuery query)
@@ -326,7 +326,7 @@ WHERE b.{nexusModsModId} = ANY(ARRAY[{string.Join(",", nexusModsIds.Select(x => 
             if (userId != modInfo.User.Id)
                 return APIResponseError<string>("User does not have access to the mod!");
 
-                
+
             NexusModsModManualLinkedNexusModsUsersEntity? ApplyChanges(NexusModsModManualLinkedNexusModsUsersEntity? existing) => existing switch
             {
                 null => new() { NexusModsModId = query.ModId, AllowedNexusModsUserIds = ImmutableArray.Create<int>(query.UserId).AsArray() },
@@ -365,7 +365,7 @@ WHERE b.{nexusModsModId} = ANY(ARRAY[{string.Join(",", nexusModsIds.Select(x => 
             var ownedModIs = await _dbContext.Set<NexusModsModEntity>()
                 .Where(y => y.UserIds.Contains(userId))
                 .Select(x => x.NexusModsModId).ToArrayAsync(ct);
-            
+
             var paginated = await _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
                 .Where(x => ownedModIs.Contains(x.NexusModsModId))
                 .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModManualLinkedNexusModsUsersEntity.NexusModsModId), Type = SortingType.Ascending }, ct);

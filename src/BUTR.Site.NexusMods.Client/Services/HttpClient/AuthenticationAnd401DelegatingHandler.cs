@@ -17,7 +17,7 @@ namespace BUTR.Site.NexusMods.Client.Services
         {
             if (await _tokenContainer.GetTokenAsync(ct) is { Type: "demo" })
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}", Encoding.UTF8, "application/json") };
-            
+
             var response = await base.SendAsync(request, ct);
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)

@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.Client.Models;
+﻿using BUTR.Site.NexusMods.Client.Models;
 using BUTR.Site.NexusMods.ServerClient;
 
 using System;
@@ -20,7 +20,7 @@ public sealed class ModClientWithDemo : IModClient
         _implementation = Program.ConfigureClient(serviceProvider, (http, opt) => new ModClient(http, opt));
         _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
     }
-        
+
     public Task<RawModModelAPIResponse> RawGetAsync(string gameDomain, int modId, CancellationToken ct) => _implementation.RawGetAsync(gameDomain, modId, ct);
 
     public async Task<ModModelPagingDataAPIResponse> ModPaginatedAsync(PaginatedQuery? body, CancellationToken ct)

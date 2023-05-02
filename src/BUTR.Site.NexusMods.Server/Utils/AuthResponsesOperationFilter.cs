@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -13,13 +13,13 @@ public class AuthResponsesOperationFilter : IOperationFilter
     {
         if (context == default || context.MethodInfo == default || context.MethodInfo.DeclaringType == default)
             return;
-        
+
         var anonymousAttributes = context.MethodInfo.DeclaringType.GetCustomAttributes(true)
             .Union(context.MethodInfo.GetCustomAttributes(true))
             .OfType<AllowAnonymousAttribute>();
         if (anonymousAttributes.Any())
             return;
-            
+
         var authAttributes = context.MethodInfo.DeclaringType.GetCustomAttributes(true)
             .Union(context.MethodInfo.GetCustomAttributes(true))
             .OfType<AuthorizeAttribute>();
