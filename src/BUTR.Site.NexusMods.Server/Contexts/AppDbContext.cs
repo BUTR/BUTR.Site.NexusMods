@@ -29,6 +29,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts
             modelBuilder.ApplyConfiguration(new NexusModsFileUpdateEntityConfiguration());
             modelBuilder.ApplyConfiguration(new NexusModsModEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ModNexusModsManualLinkEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new NexusModsModManualLinkedNexusModsUsersEntityConfiguration());
             modelBuilder.ApplyConfiguration(new UserCrashReportEntityConfiguration());
             modelBuilder.ApplyConfiguration(new CrashReportEntityConfiguration());
             modelBuilder.ApplyConfiguration(new CrashReportFileEntityConfiguration());

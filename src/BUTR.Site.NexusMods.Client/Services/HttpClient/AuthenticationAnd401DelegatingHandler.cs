@@ -3,6 +3,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,6 +15,9 @@ namespace BUTR.Site.NexusMods.Client.Services
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
+            if (await _tokenContainer.GetTokenAsync(ct) is { Type: "demo" })
+                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}", Encoding.UTF8, "application/json") };
+            
             var response = await base.SendAsync(request, ct);
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)

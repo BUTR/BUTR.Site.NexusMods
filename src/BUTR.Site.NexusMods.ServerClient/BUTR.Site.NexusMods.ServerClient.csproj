@@ -14,7 +14,7 @@
       <ExecPreprocessArgs Include="/input:../swagger.json /classname:&quot;{controller}Client&quot; /namespace:$(RootNamespace) /output:Clients.g.cs" />
       <ExecPreprocessArgs Include="/InjectHttpClient:true /UseBaseUrl:false /GenerateClientInterfaces:true" />
       <ExecPreprocessArgs Include="/RequiredPropertiesMustBeDefined:true /GenerateNullableReferenceTypes:true" />
-      <ExecPreprocessArgs Include="/ClassStyle:Record /GenerateNativeRecords:true /TemplateDirectory:Templates" />
+      <ExecPreprocessArgs Include="/ClassStyle:Record /GenerateNativeRecords:true /TemplateDirectory:Templates /GenerateOptionalParameters:true /UseCancellationToken:true" />
       <ExecPreprocessArgs Include="/OperationGenerationMode:MultipleClientsFromFirstTagAndPathSegments /JsonLibrary:SystemTextJson" />
     </ItemGroup>
 

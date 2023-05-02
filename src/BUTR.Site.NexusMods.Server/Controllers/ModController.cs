@@ -9,6 +9,7 @@ using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using System;
@@ -27,8 +28,12 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         public sealed record ManualLinkQuery(string ModId, int NexusModsId);
         public sealed record ManualUnlinkQuery(string ModId);
 
-        public sealed record AllowModQuery(int UserId, string ModId);
-        public sealed record DisallowModQuery(int UserId, string ModId);
+        public sealed record AllowModuleIdQuery(int UserId, string ModuleId);
+        public sealed record DisallowModuleIdQuery(int UserId, string ModuleId);
+        
+        public sealed record AllowModQuery(int UserId, int ModId);
+        public sealed record DisallowModQuery(int UserId, int ModId);
+        
 
 
         private readonly ILogger _logger;
@@ -45,63 +50,92 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         }
 
 
-        [HttpGet("Get/{gameDomain}/{modId:int}")]
+        [HttpGet("RawGet/{gameDomain}/{modId:int}")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<ModModel?>>> Get(string gameDomain, int modId, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<RawModModel?>>> RawGet(string gameDomain, int modId, CancellationToken ct)
         {
             var userId = HttpContext.GetUserId();
             var apiKey = HttpContext.GetAPIKey();
 
             if (await _nexusModsAPIClient.GetModAsync(gameDomain, modId, apiKey) is not { } modInfo)
-                return APIResponseError<ModModel>("Mod not found!");
+                return APIResponseError<RawModModel>("Mod not found!");
 
             if (userId != modInfo.User.Id)
-                return APIResponseError<ModModel>("User does not have access to the mod!");
+                return APIResponseError<RawModModel>("User does not have access to the mod!");
 
-            /*
-            var allowedUserIds = await _dbContext.Set<NexusModsModEntity>()
-                .Where(x => x.NexusModsModId == modInfo.Id)
-                .SelectMany(x => _dbContext.Set<UserAllowedModsEntity>(), (x, y) => new {x, y})
-                .Join(_dbContext.Set<ModNexusModsManualLinkEntity>(), x => x.x.NexusModsModId, z => z.NexusModsId, (x, z) => new {x, z})
-                .Where(x => x.x.x.UserIds.Contains(userId))
-                .Where(x => x.x.y.AllowedModIds.Contains(x.z.ModId))
-                .Select(x => x.x.y.UserId)
-                .ToImmutableArrayAsync(ct);
-            */
-
-            return APIResponse(new ModModel(modInfo.Name, modInfo.Id, ImmutableArray<int>.Empty));
+            return APIResponse(new RawModModel(modInfo.Name, modInfo.Id));
         }
 
-        [HttpPost("Paginated")]
+        [HttpPost("ModPaginated")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<PagingData<ModModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<PagingData<ModModel>?>>> ModPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
-            var userId = HttpContext.GetUserId();
-
-            var paginated = await _dbContext.Set<NexusModsModEntity>()
-                .Where(y => y.UserIds.Contains(userId))
+            var baseQuery = 
+                from mod in _dbContext.Set<NexusModsModEntity>()
+                join allowedUserIds in _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
+                    on mod.NexusModsModId equals allowedUserIds.NexusModsModId
+                    into AllowedUserIds
+                from x1 in AllowedUserIds.DefaultIfEmpty()
+                join manuallyLinkedModuleId in _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>()
+                    on mod.NexusModsModId equals manuallyLinkedModuleId.NexusModsModId
+                    into ManuallyLinkedModuleId
+                join exposedMods in _dbContext.Set<NexusModsExposedModsEntity>()
+                    on mod.NexusModsModId equals exposedMods.NexusModsModId
+                    into ExposedMods
+                from x3 in ExposedMods.DefaultIfEmpty()
+                select new 
+                {
+                    NexusModsModId = mod.NexusModsModId,
+                    Name = mod.Name,
+                    UserIds = mod.UserIds,
+                    AllowedNexusModsUserIds = x1.AllowedNexusModsUserIds,
+                    //ManuallyLinkedUserIds = x3.ModuleIds, 
+                    ManuallyLinkedModuleIds = ManuallyLinkedModuleId.Select(x => x.ModuleId).ToArray(), 
+                    KnownModuleIds = x3.ModuleIds
+                };
+            var paginated = await baseQuery
                 .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
-            /*
-            var allowedUserIds = await _dbContext.Set<NexusModsModEntity>()
-                .SelectMany(x => _dbContext.Set<UserAllowedModsEntity>(), (x, y) => new {x, y})
-                .Join(_dbContext.Set<ModNexusModsManualLinkEntity>(), x => x.x.NexusModsModId, z => z.NexusModsId, (x, z) => new {x, z})
-                .Where(x => x.x.x.UserIds.Contains(userId))
-                .Where(x => x.x.y.AllowedModIds.Contains(x.z.ModId))
-                .Select(x => x.x.y.UserId)
-                .ToImmutableArrayAsync(ct);
-            */
+            var nexusModsUserAllowedModuleIdsEntity = _dbContext.Model.FindEntityType(typeof(NexusModsUserAllowedModuleIdsEntity))!;
+            var nexusModsUserAllowedModuleIdsEntityTable = nexusModsUserAllowedModuleIdsEntity.GetSchemaQualifiedTableName();
+            var nexusModsUserId = nexusModsUserAllowedModuleIdsEntity.GetProperty(nameof(NexusModsUserAllowedModuleIdsEntity.NexusModsUserId)).GetColumnName();
+            var allowedModuleIds = nexusModsUserAllowedModuleIdsEntity.GetProperty(nameof(NexusModsUserAllowedModuleIdsEntity.AllowedModuleIds)).GetColumnName();
+
+            var nexusModsModManualLinkedModuleIdEntity = _dbContext.Model.FindEntityType(typeof(NexusModsModManualLinkedModuleIdEntity))!;
+            var nexusModsModManualLinkedModuleIdEntityTable = nexusModsModManualLinkedModuleIdEntity.GetSchemaQualifiedTableName();
+            var moduleId = nexusModsModManualLinkedModuleIdEntity.GetProperty(nameof(NexusModsModManualLinkedModuleIdEntity.ModuleId)).GetColumnName();
+            var nexusModsModId = nexusModsModManualLinkedModuleIdEntity.GetProperty(nameof(NexusModsModManualLinkedModuleIdEntity.NexusModsModId)).GetColumnName();
+           
+            var nexusModsIds = paginated.Items.Select(x => x.NexusModsModId).ToArray();
+            
+            var manuallyLinkedModIdsSql = $"""
+SELECT DISTINCT a.{nexusModsUserId}::TEXT as {moduleId}, b.{nexusModsModId} FROM {nexusModsUserAllowedModuleIdsEntityTable} a
+JOIN {nexusModsModManualLinkedModuleIdEntityTable} b
+    ON b.{moduleId} = ANY(a.{allowedModuleIds})
+WHERE b.{nexusModsModId} = ANY(ARRAY[{string.Join(",", nexusModsIds.Select(x => x))}])
+""";
+            var manuallyLinkedUserIds = await _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().FromSqlRaw(manuallyLinkedModIdsSql)
+                .Select(x => new { NexusModsModId = x.NexusModsModId, UserId = int.Parse(x.ModuleId) })
+                .GroupBy(x => x.NexusModsModId, x => x.UserId)
+                .ToDictionaryAsync(x => x.Key, x => x.ToArray(), ct);
+
 
             return APIResponse(new PagingData<ModModel>
             {
-                Items = paginated.Items.Select(m => new ModModel(m.Name, m.NexusModsModId, ImmutableArray<int>.Empty)).ToAsyncEnumerable(),
+                Items = paginated.Items.Select(m => new ModModel(
+                    m.Name,
+                    m.NexusModsModId,
+                    m.AllowedNexusModsUserIds?.AsImmutableArray() ?? ImmutableArray<int>.Empty,
+                    manuallyLinkedUserIds.TryGetValue(m.NexusModsModId, out var arr) ? arr.AsImmutableArray() : ImmutableArray<int>.Empty,
+                    m.ManuallyLinkedModuleIds?.AsImmutableArray() ?? ImmutableArray<string>.Empty,
+                    m.KnownModuleIds?.AsImmutableArray() ?? ImmutableArray<string>.Empty)).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
             });
         }
 
-        [HttpPost("Update")]
+        [HttpPost("ModUpdate")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<string?>>> Update([FromBody] ModQuery query)
+        public async Task<ActionResult<APIResponse<string?>>> ModUpdate([FromBody] ModQuery query)
         {
             var userId = HttpContext.GetUserId();
             var apiKey = HttpContext.GetAPIKey();
@@ -124,9 +158,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         }
 
 
-        [HttpGet("Link")]
+        [HttpGet("ModLink")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<string?>>> Link([FromQuery] ModQuery query)
+        public async Task<ActionResult<APIResponse<string?>>> ModLink([FromQuery] ModQuery query)
         {
             var userId = HttpContext.GetUserId();
             var apiKey = HttpContext.GetAPIKey();
@@ -137,13 +171,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             if (userId != modInfo.User.Id)
                 return APIResponseError<string>("User does not have access to the mod!");
 
-            if (HttpContext.GetIsPremium())
+            if (HttpContext.GetIsPremium()) // Premium is needed for API based downloading
             {
                 var exposedModIds = await _nexusModsInfo.GetModIdsAsync("mountandblade2bannerlord", modInfo.Id, apiKey).Distinct().ToImmutableArrayAsync();
                 NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
                 {
-                    null => new() { NexusModsModId = modInfo.Id, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
-                    _ => existing with { ModIds = existing.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
+                    null => new() { NexusModsModId = modInfo.Id, ModuleIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
+                    _ => existing with { ModuleIds = existing.ModuleIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModuleIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
                 };
                 if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges2))
                     return APIResponseError<string>("Failed to link!");
@@ -161,9 +195,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             return APIResponseError<string>("Failed to link!");
         }
 
-        [HttpGet("Unlink")]
+        [HttpGet("ModUnlink")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<string?>>> Unlink([FromQuery] ModQuery query)
+        public async Task<ActionResult<APIResponse<string?>>> ModUnlink([FromQuery] ModQuery query)
         {
             var userId = HttpContext.GetUserId();
 
@@ -181,97 +215,164 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         }
 
 
-        [HttpGet("ManualLink")]
+        [HttpGet("ModManualLink")]
         [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<string?>>> ManualLink([FromQuery] ManualLinkQuery query)
+        public async Task<ActionResult<APIResponse<string?>>> ModManualLink([FromQuery] ManualLinkQuery query)
         {
-            ModNexusModsManualLinkEntity? ApplyChanges(ModNexusModsManualLinkEntity? existing) => existing switch
+            NexusModsModManualLinkedModuleIdEntity? ApplyChanges(NexusModsModManualLinkedModuleIdEntity? existing) => existing switch
             {
-                null => new() { ModId = query.ModId, NexusModsId = query.NexusModsId },
-                _ => existing with { NexusModsId = query.NexusModsId }
+                null => new() { ModuleId = query.ModId, NexusModsModId = query.NexusModsId },
+                _ => existing with { NexusModsModId = query.NexusModsId }
             };
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync<ModNexusModsManualLinkEntity>(x => x.ModId == query.ModId, ApplyChanges))
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModManualLinkedModuleIdEntity>(x => x.ModuleId == query.ModId, ApplyChanges))
                 return APIResponse("Linked successful!");
 
             return APIResponseError<string>("Failed to link!");
         }
 
-        [HttpGet("ManualUnlink")]
+        [HttpGet("ModManualUnlink")]
         [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<string?>>> ManualUnlink([FromQuery] ManualUnlinkQuery query)
+        public async Task<ActionResult<APIResponse<string?>>> ModManualUnlink([FromQuery] ManualUnlinkQuery query)
         {
-            ModNexusModsManualLinkEntity? ApplyChanges(ModNexusModsManualLinkEntity? existing) => existing switch
+            NexusModsModManualLinkedModuleIdEntity? ApplyChanges(NexusModsModManualLinkedModuleIdEntity? existing) => existing switch
             {
                 _ => null
             };
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync<ModNexusModsManualLinkEntity>(x => x.ModId == query.ModId, ApplyChanges))
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModManualLinkedModuleIdEntity>(x => x.ModuleId == query.ModId, ApplyChanges))
                 return APIResponse("Unlinked successful!");
 
             return APIResponseError<string>("Failed to unlink!");
         }
 
-        [HttpPost("ManualLinkPaginated")]
+        [HttpPost("ModManualLinkPaginated")]
+        [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<PagingData<ModNexusModsManualLinkModel>?>>> ManualLinkPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<PagingData<ModNexusModsManualLinkModel>?>>> ModManualLinkPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
-            var paginated = await _dbContext.Set<ModNexusModsManualLinkEntity>()
-                .PaginatedAsync(query, 20, new() { Property = nameof(ModNexusModsManualLinkEntity.ModId), Type = SortingType.Ascending }, ct);
+            var paginated = await _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>()
+                .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModManualLinkedModuleIdEntity.ModuleId), Type = SortingType.Ascending }, ct);
 
             return APIResponse(new PagingData<ModNexusModsManualLinkModel>
             {
-                Items = paginated.Items.Select(m => new ModNexusModsManualLinkModel(m.ModId, m.NexusModsId)).ToAsyncEnumerable(),
+                Items = paginated.Items.Select(m => new ModNexusModsManualLinkModel(m.ModuleId, m.NexusModsModId)).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
             });
         }
 
 
-        [HttpGet("AllowMod")]
+        [HttpGet("AllowUserAModuleId")]
         [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<string?>>> AllowMod([FromQuery] AllowModQuery query)
+        public async Task<ActionResult<APIResponse<string?>>> AllowUserAModuleId([FromQuery] AllowModuleIdQuery query)
         {
-            UserAllowedModsEntity? ApplyChanges(UserAllowedModsEntity? existing) => existing switch
+            NexusModsUserAllowedModuleIdsEntity? ApplyChanges(NexusModsUserAllowedModuleIdsEntity? existing) => existing switch
             {
-                null => new() { UserId = query.UserId, AllowedModIds = ImmutableArray.Create<string>(query.ModId).AsArray() },
-                _ when existing.AllowedModIds.Contains(query.ModId) => existing,
-                _ => existing with { AllowedModIds = existing.AllowedModIds.AsImmutableArray().Add(query.ModId).AsArray() }
+                null => new() { NexusModsUserId = query.UserId, AllowedModuleIds = ImmutableArray.Create<string>(query.ModuleId).AsArray() },
+                _ when existing.AllowedModuleIds.Contains(query.ModuleId) => existing,
+                _ => existing with { AllowedModuleIds = existing.AllowedModuleIds.AsImmutableArray().Add(query.ModuleId).AsArray() }
             };
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync<UserAllowedModsEntity>(x => x.UserId == query.UserId, ApplyChanges))
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserAllowedModuleIdsEntity>(x => x.NexusModsUserId == query.UserId, ApplyChanges))
                 return APIResponse("Allowed successful!");
 
             return APIResponseError<string>("Failed to allowed!");
         }
 
-        [HttpGet("DisallowMod")]
+        [HttpGet("DisallowUserAModuleId")]
         [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<string?>>> DisallowMod([FromQuery] DisallowModQuery query)
+        public async Task<ActionResult<APIResponse<string?>>> DisallowUserAModuleId([FromQuery] DisallowModuleIdQuery query)
         {
-            UserAllowedModsEntity? ApplyChanges(UserAllowedModsEntity? existing) => existing switch
+            NexusModsUserAllowedModuleIdsEntity? ApplyChanges(NexusModsUserAllowedModuleIdsEntity? existing) => existing switch
             {
                 null => null,
-                _ when existing.AllowedModIds.Contains(query.ModId) && existing.AllowedModIds.Length == 1 => null,
-                _ when !existing.AllowedModIds.Contains(query.ModId) => existing,
-                _ => existing with { AllowedModIds = existing.AllowedModIds.AsImmutableArray().Remove(query.ModId).AsArray() }
+                _ when existing.AllowedModuleIds.Contains(query.ModuleId) && existing.AllowedModuleIds.Length == 1 => null,
+                _ when !existing.AllowedModuleIds.Contains(query.ModuleId) => existing,
+                _ => existing with { AllowedModuleIds = existing.AllowedModuleIds.AsImmutableArray().Remove(query.ModuleId).AsArray() }
             };
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync<UserAllowedModsEntity>(x => x.UserId == query.UserId, ApplyChanges))
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserAllowedModuleIdsEntity>(x => x.NexusModsUserId == query.UserId, ApplyChanges))
                 return APIResponse("Disallowed successful!");
 
             return APIResponseError<string>("Failed to disallowed!");
         }
 
-        [HttpPost("AllowModPaginated")]
+        [HttpPost("AllowUserAModuleIdPaginated")]
+        [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
         [Produces("application/json")]
-        public async Task<ActionResult<APIResponse<PagingData<UserAllowedModsModel>?>>> AllowModPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<PagingData<UserAllowedModuleIdsModel>?>>> AllowUserAModuleIdPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
-            var paginated = await _dbContext.Set<UserAllowedModsEntity>()
-                .PaginatedAsync(query, 20, new() { Property = nameof(UserAllowedModsEntity.UserId), Type = SortingType.Ascending }, ct);
+            var paginated = await _dbContext.Set<NexusModsUserAllowedModuleIdsEntity>()
+                .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsUserAllowedModuleIdsEntity.NexusModsUserId), Type = SortingType.Ascending }, ct);
+
+            return APIResponse(new PagingData<UserAllowedModuleIdsModel>
+            {
+                Items = paginated.Items.Select(m => new UserAllowedModuleIdsModel(m.NexusModsUserId, m.AllowedModuleIds.AsImmutableArray())).ToAsyncEnumerable(),
+                Metadata = paginated.Metadata
+            });
+        }
+        
+        
+        [HttpGet("AllowUserAMod")]
+        [Produces("application/json")]
+        public async Task<ActionResult<APIResponse<string?>>> AllowUserAMod([FromQuery] AllowModQuery query)
+        {
+            var userId = HttpContext.GetUserId();
+            var apiKey = HttpContext.GetAPIKey();
+
+            if (await _nexusModsAPIClient.GetModAsync("mountandblade2bannerlord", query.ModId, apiKey) is not { } modInfo)
+                return APIResponseError<string>("Mod not found!");
+
+            if (userId != modInfo.User.Id)
+                return APIResponseError<string>("User does not have access to the mod!");
+
+                
+            NexusModsModManualLinkedNexusModsUsersEntity? ApplyChanges(NexusModsModManualLinkedNexusModsUsersEntity? existing) => existing switch
+            {
+                null => new() { NexusModsModId = query.ModId, AllowedNexusModsUserIds = ImmutableArray.Create<int>(query.UserId).AsArray() },
+                _ when existing.AllowedNexusModsUserIds.Contains(query.UserId) => existing,
+                _ => existing with { AllowedNexusModsUserIds = existing.AllowedNexusModsUserIds.AsImmutableArray().Add(query.UserId).AsArray() }
+            };
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModManualLinkedNexusModsUsersEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges))
+                return APIResponse("Allowed successful!");
+
+            return APIResponseError<string>("Failed to allowed!");
+        }
+
+        [HttpGet("DisallowUserAMod")]
+        [Produces("application/json")]
+        public async Task<ActionResult<APIResponse<string?>>> DisallowUserAMod([FromQuery] DisallowModQuery query)
+        {
+            NexusModsModManualLinkedNexusModsUsersEntity? ApplyChanges(NexusModsModManualLinkedNexusModsUsersEntity? existing) => existing switch
+            {
+                null => null,
+                _ when existing.AllowedNexusModsUserIds.Contains(query.UserId) && existing.AllowedNexusModsUserIds.Length == 1 => null,
+                _ when !existing.AllowedNexusModsUserIds.Contains(query.UserId) => existing,
+                _ => existing with { AllowedNexusModsUserIds = existing.AllowedNexusModsUserIds.AsImmutableArray().Remove(query.UserId).AsArray() }
+            };
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsModManualLinkedNexusModsUsersEntity>(x => x.NexusModsModId == query.ModId, ApplyChanges))
+                return APIResponse("Disallowed successful!");
+
+            return APIResponseError<string>("Failed to disallowed!");
+        }
+
+        [HttpPost("AllowUserAModPaginated")]
+        [Produces("application/json")]
+        public async Task<ActionResult<APIResponse<PagingData<UserAllowedModsModel>?>>> AllowUserAModPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
+        {
+            var userId = HttpContext.GetUserId();
+
+            var ownedModIs = await _dbContext.Set<NexusModsModEntity>()
+                .Where(y => y.UserIds.Contains(userId))
+                .Select(x => x.NexusModsModId).ToArrayAsync(ct);
+            
+            var paginated = await _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
+                .Where(x => ownedModIs.Contains(x.NexusModsModId))
+                .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModManualLinkedNexusModsUsersEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
             return APIResponse(new PagingData<UserAllowedModsModel>
             {
-                Items = paginated.Items.Select(m => new UserAllowedModsModel(m.UserId, m.AllowedModIds.AsImmutableArray())).ToAsyncEnumerable(),
+                Items = paginated.Items.Select(m => new UserAllowedModsModel(m.NexusModsModId, m.AllowedNexusModsUserIds.AsImmutableArray())).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
             });
         }

@@ -1,8 +1,8 @@
 ﻿namespace BUTR.Site.NexusMods.Server.Models.Database;
 
-public sealed record NexusModsUserToDiscordEntity : IEntity
+public sealed record NexusModsUserRoleEntity : IEntity
 {
     public required int NexusModsUserId { get; init; }
-    public required string DiscordId { get; init; }
 
+    public required string Role { get; init; }
 }

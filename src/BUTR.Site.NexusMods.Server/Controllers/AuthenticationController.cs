@@ -50,9 +50,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey) is not { } validateResponse)
                 return StatusCode(StatusCodes.Status401Unauthorized);
 
-            var roleEntity = await _dbContext.FirstOrDefaultAsync<UserRoleEntity>(x => x.UserId == validateResponse.UserId);
+            var roleEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserRoleEntity>(x => x.NexusModsUserId == validateResponse.UserId);
             var role = roleEntity?.Role ?? ApplicationRoles.User;
-            var metadataEntity = await _dbContext.FirstOrDefaultAsync<UserMetadataEntity>(x => x.UserId == validateResponse.UserId);
+            var metadataEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == validateResponse.UserId);
             var metadata = metadataEntity?.Metadata ?? new();
 
             var generatedToken = await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
@@ -79,10 +79,10 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             if (HttpContext.GetAPIKey() is not { } apikey || string.IsNullOrEmpty(apikey) || await _nexusModsAPIClient.ValidateAPIKeyAsync(apikey) is not { } validateResponse)
                 return StatusCode(StatusCodes.Status401Unauthorized);
 
-            var roleEntity = await _dbContext.FirstOrDefaultAsync<UserRoleEntity>(x => x.UserId == validateResponse.UserId);
+            var roleEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserRoleEntity>(x => x.NexusModsUserId == validateResponse.UserId);
             var role = roleEntity?.Role ?? ApplicationRoles.User;
 
-            var metadataEntity = await _dbContext.FirstOrDefaultAsync<UserMetadataEntity>(x => x.UserId == validateResponse.UserId);
+            var metadataEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == validateResponse.UserId);
             var metadata = metadataEntity?.Metadata ?? new();
             var existingMetadata = HttpContext.GetMetadata();
             var isMetadataEqual = metadata.Count == existingMetadata.Count && metadata.All(

@@ -33,12 +33,12 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         public async Task<ActionResult<APIResponse<PagingData<ExposedModModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
             var paginated = await _dbContext.Set<NexusModsExposedModsEntity>()
-                .Where(x => x.ModIds.Length > 0)
+                .Where(x => x.ModuleIds.Length > 0)
                 .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsExposedModsEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
             return APIResponse(new PagingData<ExposedModModel>
             {
-                Items = paginated.Items.Select(x => new ExposedModModel(x.NexusModsModId, x.ModIds, x.LastCheckedDate)).ToAsyncEnumerable(),
+                Items = paginated.Items.Select(x => new ExposedModModel(x.NexusModsModId, x.ModuleIds, x.LastCheckedDate)).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
             });
         }
@@ -47,7 +47,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] string modId)
         {
-            return APIResponse(_dbContext.AutocompleteStartsWith<NexusModsExposedModsEntity, string[]>(x => x.ModIds, modId));
+            return APIResponse(_dbContext.AutocompleteStartsWith<NexusModsExposedModsEntity, string[]>(x => x.ModuleIds, modId));
         }
     }
 }

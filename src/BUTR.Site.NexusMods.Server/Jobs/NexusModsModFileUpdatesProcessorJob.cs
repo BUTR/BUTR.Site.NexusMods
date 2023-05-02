@@ -70,8 +70,8 @@ namespace BUTR.Site.NexusMods.Server.Jobs
 
                         NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
                         {
-                            null => new() { NexusModsModId = modUpdate.Id, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
-                            _ => existing with { ModIds = existing.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
+                            null => new() { NexusModsModId = modUpdate.Id, ModuleIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
+                            _ => existing with { ModuleIds = existing.ModuleIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModuleIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
                         };
 
                         await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == modUpdate.Id, ApplyChanges2, context.CancellationToken);

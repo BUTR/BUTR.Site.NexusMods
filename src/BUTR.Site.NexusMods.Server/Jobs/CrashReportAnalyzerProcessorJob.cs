@@ -33,7 +33,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             var gameVersion = crashReportEntity.GetProperty(nameof(CrashReportEntity.GameVersion)).GetColumnName();
             var modIdToVersion = crashReportEntity.GetProperty(nameof(CrashReportEntity.ModIdToVersion)).GetColumnName();
 
-            var crashScoreInvolvedEntity = _dbContext.Model.FindEntityType(typeof(CrashScoreInvolvedEntity))!;
+            var crashScoreInvolvedEntity = _dbContext.Model.FindEntityType(typeof(StatisticsCrashScoreInvolvedEntity))!;
             var crashScoreInvolvedEntityTable = crashScoreInvolvedEntity.GetSchemaQualifiedTableName();
 
             if (!_dbContext.Database.IsNpgsql()) return;

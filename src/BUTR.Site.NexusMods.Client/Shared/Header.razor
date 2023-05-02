@@ -1,7 +1,7 @@
 ﻿@implements IAsyncDisposable
 
 @inject AuthenticationStateProvider _authenticationStateProvider
-@inject IProfileProvider _profileProvider
+@inject IUserClient _userClient
 
 <Bar Mode="BarMode.Horizontal"
      Breakpoint="Breakpoint.Desktop"
@@ -40,10 +40,10 @@
                             <BarDropdownToggle>Moderation</BarDropdownToggle>
                             <BarDropdownMenu Background="Background.Dark">
                                 <BarDropdownItem Background="Background.Dark">
-                                    <BarLink To="manual-mod-link">Manual Mod Link</BarLink>
+                                    <BarLink To="manual-module-id-link">Manual Module Id Link</BarLink>
                                 </BarDropdownItem>
                                 <BarDropdownItem Background="Background.Dark">
-                                    <BarLink To="allow-user-mod">Allow User Mod</BarLink>
+                                    <BarLink To="allow-user-module-id">Allow User Module Id</BarLink>
                                 </BarDropdownItem>
                             </BarDropdownMenu>
                         </BarDropdown>
@@ -63,10 +63,10 @@
                                     <BarLink To="role-manager">Role Manager</BarLink>
                                 </BarDropdownItem>
                                 <BarDropdownItem Background="Background.Dark">
-                                    <BarLink To="manual-mod-link">Manual Mod Link</BarLink>
+                                    <BarLink To="manual-module-id-link">Manual Module Id Link</BarLink>
                                 </BarDropdownItem>
                                 <BarDropdownItem Background="Background.Dark">
-                                    <BarLink To="allow-user-mod">Allow User Mod</BarLink>
+                                    <BarLink To="allow-user-module-id">Allow User Module Id</BarLink>
                                 </BarDropdownItem>
                             </BarDropdownMenu>
                         </BarDropdown>
@@ -82,6 +82,9 @@
                         <AuthorizeView Context="context4" Roles="@($"{ApplicationRoles.User},{ApplicationRoles.Moderator},{ApplicationRoles.Administrator}")">
                             <Authorized>
                                 <BarDropdownItem Background="Background.Dark">
+                                    <BarLink To="allow-user-mod">Allow User Mod</BarLink>
+                                </BarDropdownItem>
+                                <BarDropdownItem Background="Background.Dark">
                                     <BarLink To="articles">NexusMods Articles</BarLink>
                                 </BarDropdownItem>
                                 <BarDropdownItem Background="Background.Dark">
@@ -93,12 +96,14 @@
                                 <BarDropdownItem Background="Background.Dark">
                                     <BarLink To="statistics-involved-mods">Statistics Involved Mods</BarLink>
                                 </BarDropdownItem>
+                                <!--
                                 <BarDropdownItem Background="Background.Dark">
                                     <BarLink To="game-public-api-diff">Public API Diff</BarLink>
                                 </BarDropdownItem>
                                 <BarDropdownItem Background="Background.Dark">
                                     <BarLink To="game-public-api-diff-search">Public API Diff Search</BarLink>
                                 </BarDropdownItem>
+                                -->
                             </Authorized>
                         </AuthorizeView>
                         <BarDropdownItem Background="Background.Dark">
@@ -171,8 +176,8 @@
     {
         if (state.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role) is { } claim && claim.Value !=  ApplicationRoles.Anonymous)
         {
-            var profile = await _profileProvider.GetProfileAsync();
-            _user = profile;
+            var response = await _userClient.ProfileAsync();
+            _user = response.Data;
             StateHasChanged();
         }
     }

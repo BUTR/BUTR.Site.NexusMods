@@ -2,7 +2,7 @@
 @page "/role-manager"
 
 @inject INotificationService _notificationService
-@inject IRoleProvider _roleProvider
+@inject IUserClient _userClient
 
 <Container>
     <Row Flex="Flex.JustifyContent.Center">
@@ -53,7 +53,7 @@
     {
         try
         {
-            if (await _roleProvider.SetRole(_model.UserId, _model.Role))
+            if (await _userClient.SetRoleAsync((int) _model.UserId, _model.Role) is { HumanReadableError: var error } && string.IsNullOrEmpty(error))
             {
                 await _notificationService.Success(
                     $"Assigned '{_model.Role}' to user with id '{_model.UserId}'!",

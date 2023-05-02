@@ -37,7 +37,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             {
                 null => new NexusModsUserToDiscordEntity
                 {
-                    NexusModsId = nexusModsUserId,
+                    NexusModsUserId = nexusModsUserId,
                     DiscordId = discordUserId,
                 },
                 _ => existing with
@@ -45,7 +45,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                     DiscordId = discordUserId,
                 }
             };
-            if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserToDiscordEntity>(x => x.NexusModsId == nexusModsUserId, ApplyChanges1))
+            if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserToDiscordEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges1))
                 return false;
 
             DiscordLinkedRoleTokensEntity? ApplyChanges2(DiscordLinkedRoleTokensEntity? existing) => existing switch
@@ -67,11 +67,11 @@ namespace BUTR.Site.NexusMods.Server.Services
             if (!_dbContext.AddUpdateRemoveAndSave<DiscordLinkedRoleTokensEntity>(x => x.UserId == discordUserId, ApplyChanges2))
                 return false;
 
-            UserMetadataEntity? ApplyChanges3(UserMetadataEntity? existing) => existing switch
+            NexusModsUserMetadataEntity? ApplyChanges3(NexusModsUserMetadataEntity? existing) => existing switch
             {
-                null => new UserMetadataEntity
+                null => new NexusModsUserMetadataEntity
                 {
-                    UserId = nexusModsUserId,
+                    NexusModsUserId = nexusModsUserId,
                     Metadata = new Dictionary<string, string>
                     {
                         {"DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt))}
@@ -89,7 +89,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                     Metadata = existing.Metadata.SetAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt)))
                 },
             };
-            if (!_dbContext.AddUpdateRemoveAndSave<UserMetadataEntity>(x => x.UserId == nexusModsUserId, ApplyChanges3))
+            if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges3))
                 return false;
 
             return true;
@@ -101,7 +101,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             {
                 _ => null
             };
-            if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserToDiscordEntity>(x => x.NexusModsId == nexusModsUserId, ApplyChanges1))
+            if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserToDiscordEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges1))
                 return false;
 
             DiscordLinkedRoleTokensEntity? ApplyChanges(DiscordLinkedRoleTokensEntity? existing) => existing switch
@@ -111,7 +111,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             if (!_dbContext.AddUpdateRemoveAndSave<DiscordLinkedRoleTokensEntity>(x => x.UserId == discordUserId, ApplyChanges))
                 return false;
 
-            UserMetadataEntity? ApplyChanges2(UserMetadataEntity? existing) => existing switch
+            NexusModsUserMetadataEntity? ApplyChanges2(NexusModsUserMetadataEntity? existing) => existing switch
             {
                 null => null,
                 _ when existing.Metadata.ContainsKey("DiscordTokens") => existing with
@@ -120,7 +120,7 @@ namespace BUTR.Site.NexusMods.Server.Services
                 },
                 _ => existing
             };
-            if (!_dbContext.AddUpdateRemoveAndSave<UserMetadataEntity>(x => x.UserId == nexusModsUserId, ApplyChanges2))
+            if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges2))
                 return false;
 
             return true;

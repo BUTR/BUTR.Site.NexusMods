@@ -1,17 +1,17 @@
 ﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")]
-@page "/manual-mod-link"
+@page "/manual-module-id-link"
 
 @inject INotificationService _notificationService
-@inject IModProvider _modProvider
+@inject IModClient _modClient
 
 <Card Margin="Margin.Is4">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Manual Mod Link</CardTitle>
+        <CardTitle Size="4" Margin="Margin.Is0">Manual Module Id Link</CardTitle>
     </CardHeader>
     <CardBody>
         <Form>
             <Field>
-                <FieldLabel>Mod Id</FieldLabel>
+                <FieldLabel>Module Id</FieldLabel>
                 <FieldBody>
                     <TextEdit Role="@TextRole.Text" @bind-Text="@_model.ModId" />
                 </FieldBody>
@@ -38,12 +38,12 @@
 
 <Card Margin="Margin.Is4" Overflow="Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Manual Mod Links</CardTitle>
+        <CardTitle Size="4" Margin="Margin.Is0">Manual Module Id Links</CardTitle>
     </CardHeader>
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef" TItem="ModNexusModsManualLinkModel" GetItems="GetManualLinks" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
-                <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.ModId)" Caption="Mod Id"/>
+                <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.ModId)" Caption="Module Id"/>
                 <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.NexusModsId)" Caption="NexusMods Id"/>
             </DataGridColumns>
             <ButtonRowTemplate>
@@ -99,8 +99,8 @@
         StateHasChanged();
     }
 
-    private async Task<DataGridPaging<ModNexusModsManualLinkModel>.ItemsResponse?> GetManualLinks(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _modProvider.GetManualLinks(page, pageSize, ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
+    private async Task<DataGridPaging<ModNexusModsManualLinkModel>.ItemsResponse?> GetManualLinks(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct) =>
+        await _modClient.ModManualLinkPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
 
     private async Task OnDisallow(ButtonRowContext<ModNexusModsManualLinkModel?> context)
     {
@@ -115,10 +115,10 @@
         if (!ModsUtils.TryParse(_model.NexusModsUrl, out _, out var nexusModsId))
             return false;
         
-        return await _modProvider.ManualLink(model.ModId, nexusModsId.Value);
+        return await _modClient.ModManualLinkAsync(model.ModId, nexusModsId.Value) is { HumanReadableError: var error } && !string.IsNullOrEmpty(error);
     }
     private async Task<bool> DoManualUnlink(ModNexusModsManualLinkModel model)
     {
-        return await _modProvider.ManualUnlink(model.ModId);
+        return await _modClient.ModManualUnlinkAsync(model.ModId) is { HumanReadableError: var error } && !string.IsNullOrEmpty(error);
     }
 }

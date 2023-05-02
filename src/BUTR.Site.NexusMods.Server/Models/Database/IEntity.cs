@@ -1,7 +1,6 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models.Database
-{
-    public interface IEntity
-    {
+﻿namespace BUTR.Site.NexusMods.Server.Models.Database;
 
-    }
+public interface IEntity
+{
+
 }

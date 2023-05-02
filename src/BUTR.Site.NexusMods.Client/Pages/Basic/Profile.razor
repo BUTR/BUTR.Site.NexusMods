@@ -2,7 +2,7 @@
 @page "/profile"
 
 @inject NavigationManager _navigationManager
-@inject IProfileProvider _profileProvider
+@inject IUserClient _userClient
 @inject IDiscordClient _discordClient
 
 @if (_user is null)
@@ -93,7 +93,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _user = await _profileProvider.GetProfileAsync();
+        _user = (await _userClient.ProfileAsync()).Data;
         var discordUserInfo = _user?.DiscordUserId is not null ? await _discordClient.GetUserInfoAsync() : null;
         _discordUser = discordUserInfo is { Data: { } data } ? new DiscordUserInfo2(data) : null;
         if (_gutterRow is not null)

@@ -80,8 +80,8 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                         null => new()
                         {
                             Title = title,
-                            ArticleId = articleId,
-                            AuthorId = authorId,
+                            NexusModsArticleId = articleId,
+                            NexusModsUserId = authorId,
                             AuthorName = authorText,
                             CreateDate = dateTime
                         },
@@ -90,7 +90,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                             Title = title
                         }
                     };
-                    await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsArticleEntity>(x => x.ArticleId == articleId, ApplyChanges, ct);
+                    await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsArticleEntity>(x => x.NexusModsArticleId == articleId, ApplyChanges, ct);
                     articleId++;
                     processed++;
                 }

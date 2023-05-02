@@ -1,7 +1,7 @@
 ﻿@attribute [Authorize]
 @page "/linked-mods"
 
-@inject IModProvider _modProvider
+@inject IModClient _modClient
 @inject IJSRuntime _jsRuntime;
 
 <Card Margin="Margin.Is4">
@@ -33,9 +33,19 @@
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef" TItem="ModModel" GetItems="GetMods" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
+                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ModId)" Caption="Id"/>
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name"/>
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.AllowedUserIds)" Caption="Allowed User Ids">
                     <DisplayTemplate>@(string.Join(", ", context.AllowedUserIds))</DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ManuallyLinkedUserIds)" Caption="Manually Linked User Ids">
+                    <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedUserIds))</DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ManuallyLinkedModuleIds)" Caption="Confirmed Module Id">
+                    <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedModuleIds))</DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ManuallyLinkedModuleIds)" Caption="Known Module Id">
+                    <DisplayTemplate>@(string.Join(", ", context.KnownModuleIds))</DisplayTemplate>
                 </DataGridColumn>
             </DataGridColumns>
 
@@ -83,16 +93,16 @@
         if (!ModsUtils.TryParse(model.ModUrl, out var gameDomain, out var modId))
             return false;
 
-        return await _modProvider.LinkMod(modId.Value);
+        return await _modClient.ModLinkAsync(modId.Value) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
     }
 
     private async Task<bool> DoUnlinkMod(ModModel model)
     {
-        return await _modProvider.UnlinkMod(model.ModId);
+        return await _modClient.ModUnlinkAsync(model.ModId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
     }
 
     private async Task<DataGridPaging<ModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _modProvider.GetMods(page, pageSize, ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
+        await _modClient.ModPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
 
     private async Task OnClick(ModModel? mod)
     {

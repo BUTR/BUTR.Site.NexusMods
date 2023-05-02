@@ -42,12 +42,12 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         public async Task<ActionResult<APIResponse<string?>>> SetRole([FromQuery] SetRoleBody body, CancellationToken ct)
         {
-            UserRoleEntity? ApplyChanges(UserRoleEntity? existing) => existing switch
+            NexusModsUserRoleEntity? ApplyChanges(NexusModsUserRoleEntity? existing) => existing switch
             {
-                null => new() { UserId = (int) body.UserId, Role = body.Role },
+                null => new() { NexusModsUserId = (int) body.UserId, Role = body.Role },
                 _ => existing with { Role = body.Role }
             };
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync<UserRoleEntity>(x => x.UserId == body.UserId, ApplyChanges, ct))
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserRoleEntity>(x => x.NexusModsUserId == body.UserId, ApplyChanges, ct))
                 return APIResponse("Set successful!");
 
             return APIResponseError<string>("Failed to set!");
@@ -58,11 +58,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         public async Task<ActionResult<APIResponse<string?>>> RemoveRole([FromQuery] RemoveRoleBody body, CancellationToken ct)
         {
-            UserRoleEntity? ApplyChanges(UserRoleEntity? existing) => existing switch
+            NexusModsUserRoleEntity? ApplyChanges(NexusModsUserRoleEntity? existing) => existing switch
             {
                 _ => null
             };
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync<UserRoleEntity>(x => x.UserId == body.UserId, ApplyChanges, ct))
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserRoleEntity>(x => x.NexusModsUserId == body.UserId, ApplyChanges, ct))
                 return APIResponse("Deleted successful!");
 
             return APIResponseError<string>("Failed to delete!");

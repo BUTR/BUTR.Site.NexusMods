@@ -40,7 +40,7 @@ namespace BUTR.Site.NexusMods.Client
             return opt;
         }
 
-        private static TClient ConfigureClient<TClient>(IServiceProvider sp, Func<HttpClient, JsonSerializerOptions, TClient> factory, string backend = "Backend")
+        public static TClient ConfigureClient<TClient>(IServiceProvider sp, Func<HttpClient, JsonSerializerOptions, TClient> factory, string backend = "Backend")
         {
             var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
             var httpClient = httpClientFactory.CreateClient(backend);
@@ -91,11 +91,10 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddTransient<AuthenticationAnd401DelegatingHandler>();
 
                 services.AddTransient<IAuthenticationClient, AuthenticationClient>(sp => ConfigureClient(sp, (http, opt) => new AuthenticationClient(http, opt), "BackendAuthentication"));
-                services.AddTransient<IUserClient, UserClient>(sp => ConfigureClient(sp, (http, opt) => new UserClient(http, opt)));
-                services.AddTransient<ICrashReportsClient, CrashReportsClient>(sp => ConfigureClient(sp, (http, opt) => new CrashReportsClient(http, opt)));
-                services.AddTransient<IModClient, ModClient>(sp => ConfigureClient(sp, (http, opt) => new ModClient(http, opt)));
+                services.AddTransient<IUserClient, UserClientWithDemo>();
+                services.AddTransient<ICrashReportsClient, CrashReportsClientWithDemo>();
+                services.AddTransient<IModClient, ModClientWithDemo>();
                 services.AddTransient<IReportsClient, ReportsClient>(sp => ConfigureClient(sp, (http, opt) => new ReportsClient(http, opt)));
-                services.AddTransient<IUserClient, UserClient>(sp => ConfigureClient(sp, (http, opt) => new UserClient(http, opt)));
                 services.AddTransient<IGamePublicApiDiffClient, GamePublicApiDiffClient>(sp => ConfigureClient(sp, (http, opt) => new GamePublicApiDiffClient(http, opt)));
                 services.AddTransient<IGameSourceDiffClient, GameSourceDiffClient>(sp => ConfigureClient(sp, (http, opt) => new GameSourceDiffClient(http, opt)));
                 services.AddTransient<IArticlesClient, ArticlesClient>(sp => ConfigureClient(sp, (http, opt) => new ArticlesClient(http, opt)));
@@ -104,11 +103,7 @@ namespace BUTR.Site.NexusMods.Client
                 services.AddTransient<IStatisticsClient, StatisticsClient>(sp => ConfigureClient(sp, (http, opt) => new StatisticsClient(http, opt)));
                 services.AddTransient<IQuartzClient, QuartzClient>(sp => ConfigureClient(sp, (http, opt) => new QuartzClient(http, opt)));
 
-                services.AddScoped<IAuthenticationProvider, DefaultAuthenticationProvider>();
-                services.AddScoped<IProfileProvider, DefaultProfileProvider>();
-                services.AddScoped<IRoleProvider, DefaultRoleProvider>();
-                services.AddScoped<IModProvider, DefaultModProvider>();
-                services.AddScoped<ICrashReportProvider, DefaultCrashReportProvider>();
+                services.AddScoped<AuthenticationProvider>();
 
                 services.AddScoped<ITokenContainer, LocalStorageTokenContainer>();
 

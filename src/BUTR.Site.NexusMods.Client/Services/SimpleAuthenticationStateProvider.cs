@@ -16,10 +16,10 @@ namespace BUTR.Site.NexusMods.Client.Services
         private static readonly ClaimsPrincipal _administrator = new(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Role, ApplicationRoles.Administrator) }, "NexusMods"));
 
         private readonly ITokenContainer _tokenContainer;
-        private readonly IAuthenticationProvider _authenticationProvider;
+        private readonly AuthenticationProvider _authenticationProvider;
         private Task<AuthenticationState> _task;
 
-        public SimpleAuthenticationStateProvider(ITokenContainer tokenContainer, IAuthenticationProvider authenticationProvider)
+        public SimpleAuthenticationStateProvider(ITokenContainer tokenContainer, AuthenticationProvider authenticationProvider)
         {
             _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
             _authenticationProvider = authenticationProvider ?? throw new ArgumentNullException(nameof(authenticationProvider));

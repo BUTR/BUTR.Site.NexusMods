@@ -121,8 +121,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                 .Set<NexusModsModEntity>()
                 .CountAsync(y => y.UserIds.Contains(userId));
             var manuallyLinkedModsCount = await _dbContext
-                .Set<UserAllowedModsEntity>()
-                .CountAsync(y => y.UserId == userId);
+                .Set<NexusModsUserAllowedModuleIdsEntity>()
+                .CountAsync(y => y.NexusModsUserId == userId);
 
             return await _discordClient.PushMetadata(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt), new Metadata(
                 1,

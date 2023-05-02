@@ -2,7 +2,7 @@
 @page "/allow-user-mod"
 
 @inject INotificationService _notificationService
-@inject IModProvider _modProvider
+@inject IModClient _modClient
 
 <Modal ShowBackdrop @ref="_modalRef">
     <ModalContent Size="ModalSize.ExtraLarge" Centered>
@@ -15,12 +15,12 @@
             {
                 <Form>
                     <Field>
-                        <FieldLabel>Mod Id to Remove</FieldLabel>
+                        <FieldLabel>User Id to Remove</FieldLabel>
                         <FieldBody>
-                            <Select TValue="string" @bind-SelectedValue="@_modIdToDelete">
+                            <Select TValue="int?" @bind-SelectedValue="@_userIdToDelete">
                                 @{
-                                    _modIdToDelete = _dataGridRef.Value.AllowedModIds.First();
-                                    foreach (var allowedModId in _dataGridRef.Value.AllowedModIds)
+                                    _userIdToDelete = _dataGridRef.Value.AllowedUserIds.First();
+                                    foreach (var allowedModId in _dataGridRef.Value.AllowedUserIds)
                                     {
                                         <SelectItem Value="@allowedModId">@allowedModId</SelectItem>
                                     }
@@ -47,13 +47,13 @@
             <Field>
                 <FieldLabel>User Id</FieldLabel>
                 <FieldBody>
-                    <NumericEdit TValue="uint" @bind-Value="@_model.UserId" EnableStep="false"/>
+                    <NumericEdit TValue="uint" @bind-Value="@_model.UserId" EnableStep="false" />
                 </FieldBody>
             </Field>
             <Field>
                 <FieldLabel>Mod Id</FieldLabel>
                 <FieldBody>
-                    <TextEdit Role="@TextRole.Text" @bind-Text="@_model.ModId" />
+                    <NumericEdit TValue="uint" @bind-Value="@_model.ModId" EnableStep="false" />
                 </FieldBody>
             </Field>
             <Field>
@@ -67,14 +67,14 @@
 </Card>
 <Card Margin="Margin.Is4" Overflow="Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Allowed User Mods</CardTitle>
+        <CardTitle Size="4" Margin="Margin.Is0">Allowed Mods to Users</CardTitle>
     </CardHeader>
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModsModel" GetItems="GetAllowUserMods" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
-                <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.UserId)" Caption="User Id"/>
-                <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.AllowedModIds)" Caption="Allowed Mod Ids">
-                    <DisplayTemplate>@(string.Join(", ", context.AllowedModIds))</DisplayTemplate>
+                <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.ModId)" Caption="Mod Id"/>
+                <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.AllowedUserIds)" Caption="Allowed User Ids">
+                    <DisplayTemplate>@(string.Join(", ", context.AllowedUserIds))</DisplayTemplate>
                 </DataGridColumnText>
             </DataGridColumns>
             <ButtonRowTemplate>
@@ -91,14 +91,14 @@
     private sealed record AllowUserModel
     {
         public required uint UserId { get; set; }
-        public required string ModId { get; set; }
+        public required uint ModId { get; set; }
     }
     
     private bool _isLoading;
 
-    private readonly AllowUserModel _model = new() { UserId = 0, ModId = string.Empty };
+    private readonly AllowUserModel _model = new() { UserId = 0, ModId = 0 };
 
-    private string? _modIdToDelete;
+    private int? _userIdToDelete;
 
     private Modal _modalRef = default!;
     private DataGridPaging<UserAllowedModsModel>? _dataGridRef;
@@ -108,9 +108,9 @@
     private async Task HideModal(bool save)
     {
         await _modalRef.Hide();
-        if (save && _dataGridRef?.Value is not null && _modIdToDelete is not null)
+        if (save && _dataGridRef?.Value is not null && _userIdToDelete is not null)
         {
-            if (await _modProvider.DisallowUserMod(_dataGridRef.Value.UserId, _modIdToDelete))
+            if (await _modClient.DisallowUserAModAsync(_userIdToDelete, _dataGridRef.Value.ModId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error))
             {
                 await _notificationService.Success($"Disallowed succesfully!", "Success!");
                 await _dataGridRef.Reload();
@@ -149,7 +149,7 @@
     }
 
     private async Task<DataGridPaging<UserAllowedModsModel>.ItemsResponse?> GetAllowUserMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _modProvider.GetAllowUserMods(page, pageSize, ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
+        await _modClient.AllowUserAModPaginatedAsync(new(page, pageSize, filters, sortings), ct) is { Data: { } data } ? new(data.Items, data.Metadata) : null;
 
     private async Task OnDisallow(ButtonRowContext<UserAllowedModsModel?> context)
     {
@@ -161,7 +161,7 @@
     
     private async Task<bool> DoUserAllowMod(AllowUserModel model)
     {
-        return await _modProvider.AllowUserMod((int) model.UserId, model.ModId);
+        return await _modClient.AllowUserAModAsync((int) model.UserId, (int) model.ModId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
     }
     private async Task<bool> DoUserDisallowMod(UserAllowedModsModel model)
     {

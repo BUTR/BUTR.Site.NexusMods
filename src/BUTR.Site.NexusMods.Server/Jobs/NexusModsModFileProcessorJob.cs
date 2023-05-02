@@ -54,10 +54,10 @@ namespace BUTR.Site.NexusMods.Server.Jobs
 
                         NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
                         {
-                            null => new() { NexusModsModId = modId, ModIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
+                            null => new() { NexusModsModId = modId, ModuleIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
                             _ => existing with
                             {
-                                ModIds = existing.ModIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModIds)).AsArray(),
+                                ModuleIds = existing.ModuleIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModuleIds)).AsArray(),
                                 LastCheckedDate = DateTime.UtcNow
                             }
                         };

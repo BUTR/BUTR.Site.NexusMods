@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BUTR.Site.NexusMods.Server.Contexts.Config
 {
-    public class CrashScoreInvolvedEntityConfiguration : BaseEntityConfiguration<CrashScoreInvolvedEntity>
+    public class CrashScoreInvolvedEntityConfiguration : BaseEntityConfiguration<StatisticsCrashScoreInvolvedEntity>
     {
-        protected override void ConfigureModel(EntityTypeBuilder<CrashScoreInvolvedEntity> builder)
+        protected override void ConfigureModel(EntityTypeBuilder<StatisticsCrashScoreInvolvedEntity> builder)
         {
             builder.ToTable("crash_score_involved_entity").HasNoKey();
             builder.Property(p => p.GameVersion).HasColumnName("game_version").IsRequired();

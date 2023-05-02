@@ -40,7 +40,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                 new AutocompleteEntry<CrashReportEntity, string>(e => e.GameVersion),
                 new AutocompleteEntry<CrashReportEntity, string[]>(e => e.ModIds),
                 new AutocompleteEntry<CrashReportEntity, Dictionary<string, string>>(e => e.ModIdToVersion),
-                new AutocompleteEntry<NexusModsExposedModsEntity, string[]>(e => e.ModIds),
+                new AutocompleteEntry<NexusModsExposedModsEntity, string[]>(e => e.ModuleIds),
                 new AutocompleteEntry<NexusModsArticleEntity, string>(e => e.AuthorName),
             };
 

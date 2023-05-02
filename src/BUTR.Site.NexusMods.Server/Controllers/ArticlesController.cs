@@ -33,11 +33,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         public async Task<ActionResult<APIResponse<PagingData<ArticleModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
             var paginated = await _dbContext.Set<NexusModsArticleEntity>()
-                .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsArticleEntity.ArticleId), Type = SortingType.Ascending }, ct);
+                .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsArticleEntity.NexusModsArticleId), Type = SortingType.Ascending }, ct);
 
             return APIResponse(new PagingData<ArticleModel>
             {
-                Items = paginated.Items.Select(x => new ArticleModel(x.ArticleId, x.Title, x.AuthorId, x.AuthorName, x.CreateDate)).ToAsyncEnumerable(),
+                Items = paginated.Items.Select(x => new ArticleModel(x.NexusModsArticleId, x.Title, x.NexusModsUserId, x.AuthorName, x.CreateDate)).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
             });
         }

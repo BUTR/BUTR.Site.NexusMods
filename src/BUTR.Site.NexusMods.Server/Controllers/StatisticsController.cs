@@ -61,7 +61,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         public async Task<ActionResult<APIResponse<IEnumerable<TopExceptionsEntry>?>>> TopExceptionsTypes(CancellationToken ct)
         {
-            var types = await _dbContext.Set<TopExceptionsTypeEntity>().ToArrayAsync(ct);
+            var types = await _dbContext.Set<StatisticsTopExceptionsTypeEntity>().ToArrayAsync(ct);
             var total = (decimal) types.Sum(x => x.Count);
             return APIResponse(types.Select(x => new TopExceptionsEntry(x.Type, ((decimal) x.Count / total) * 100M)));
         }
@@ -73,7 +73,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             //if (gameVersions?.Length == 0 && modIds?.Length == 0 && modVersions?.Length == 0)
             //    return StatusCode(StatusCodes.Status403Forbidden, Array.Empty<GameStorage>());
 
-            var data = _dbContext.Set<CrashScoreInvolvedEntity>()
+            var data = _dbContext.Set<StatisticsCrashScoreInvolvedEntity>()
                 .Where(x =>
                     (gameVersions == null || gameVersions.Length == 0 || gameVersions.Contains(x.GameVersion)) &&
                     (modIds == null || modIds.Length == 0 || modIds.Contains(x.ModId)) &&

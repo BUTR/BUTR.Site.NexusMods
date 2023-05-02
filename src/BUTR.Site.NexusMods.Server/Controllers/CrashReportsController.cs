@@ -66,7 +66,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             {
                 return _dbContext.Set<CrashReportEntity>()
                     .Where(predicate)
-                    .GroupJoin(_dbContext.Set<UserCrashReportEntity>(), cre => cre.Id, ucr => ucr.CrashReport.Id, (cre, ucr) => new { cre, ucr })
+                    .GroupJoin(_dbContext.Set<NexusModsUserCrashReportEntity>(), cre => cre.Id, ucr => ucr.CrashReport.Id, (cre, ucr) => new { cre, ucr })
                     .SelectMany(x => x.ucr.DefaultIfEmpty(), (cre, ucr) => new { cre.cre, ucr })
                     .Select(x => new UserCrashReportView
                     {
@@ -80,7 +80,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                         InvolvedModIds = x.cre.InvolvedModIds,
                         ModNexusModsIds = x.cre.ModNexusModsIds,
                         Url = x.cre.Url,
-                        UserId = x.ucr != null ? x.ucr.UserId : -1,
+                        UserId = x.ucr != null ? x.ucr.NexusModsUserId : -1,
                         Status = x.ucr != null ? x.ucr.Status : CrashReportStatus.New,
                         Comment = x.ucr != null ? x.ucr.Comment : string.Empty,
                     })
@@ -92,8 +92,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers
             var dbQuery = User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator)
                 ? DbQueryBase(x => true)
                 : DbQueryBase(x => _dbContext.Set<NexusModsModEntity>().Any(y => y.UserIds.Contains(userId) && x.ModNexusModsIds.Contains(y.NexusModsModId)) ||
-                                   _dbContext.Set<ModNexusModsManualLinkEntity>().Any(y => _dbContext.Set<NexusModsModEntity>().Any(z => z.UserIds.Contains(userId) && z.NexusModsModId == y.NexusModsId) && x.ModIds.Contains(y.ModId)) ||
-                                   _dbContext.Set<UserAllowedModsEntity>().Any(y => y.UserId == userId && x.ModIds.Any(z => y.AllowedModIds.Contains(z))));
+                                   _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().Any(y => _dbContext.Set<NexusModsModEntity>().Any(z => z.UserIds.Contains(userId) && z.NexusModsModId == y.NexusModsModId) && x.ModIds.Contains(y.ModuleId)) ||
+                                   _dbContext.Set<NexusModsUserAllowedModuleIdsEntity>().Any(y => y.NexusModsUserId == userId && x.ModIds.Any(z => y.AllowedModuleIds.Contains(z))));
 
             var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
 
@@ -128,19 +128,19 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         {
             var userId = HttpContext.GetUserId();
 
-            UserCrashReportEntity? ApplyChanges(UserCrashReportEntity? existing) => existing switch
+            NexusModsUserCrashReportEntity? ApplyChanges(NexusModsUserCrashReportEntity? existing) => existing switch
             {
-                null => new UserCrashReportEntity
+                null => new NexusModsUserCrashReportEntity
                 {
                     CrashReport = new(updatedCrashReport.Id),
-                    UserId = userId,
+                    NexusModsUserId = userId,
                     Status = updatedCrashReport.Status,
                     Comment = updatedCrashReport.Comment
                 },
                 var entity => entity with { Status = updatedCrashReport.Status, Comment = updatedCrashReport.Comment }
             };
-            var set = _dbContext.Set<UserCrashReportEntity>().Include(x => x.CrashReport);
-            if (await _dbContext.AddUpdateRemoveAndSaveAsync(set, x => x.UserId == userId && x.CrashReport.Id == updatedCrashReport.Id, ApplyChanges))
+            var set = _dbContext.Set<NexusModsUserCrashReportEntity>().Include(x => x.CrashReport);
+            if (await _dbContext.AddUpdateRemoveAndSaveAsync(set, x => x.NexusModsUserId == userId && x.CrashReport.Id == updatedCrashReport.Id, ApplyChanges))
                 return APIResponse("Updated successful!");
 
             return APIResponseError<string>("Failed to update!");

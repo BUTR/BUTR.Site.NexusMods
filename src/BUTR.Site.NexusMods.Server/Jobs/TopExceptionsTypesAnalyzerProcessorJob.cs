@@ -30,7 +30,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
             var crashReportEntityTable = crashReportEntity.GetSchemaQualifiedTableName();
             var exception = crashReportEntity.GetProperty(nameof(CrashReportEntity.Exception)).GetColumnName();
 
-            var topExceptionsTypeEntity = _dbContext.Model.FindEntityType(typeof(TopExceptionsTypeEntity))!;
+            var topExceptionsTypeEntity = _dbContext.Model.FindEntityType(typeof(StatisticsTopExceptionsTypeEntity))!;
             var topExceptionsTypeEntityTable = topExceptionsTypeEntity.GetSchemaQualifiedTableName();
 
             if (!_dbContext.Database.IsNpgsql()) return;
