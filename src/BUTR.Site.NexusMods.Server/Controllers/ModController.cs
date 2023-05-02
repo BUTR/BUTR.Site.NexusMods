@@ -400,26 +400,17 @@ JOIN {nexusModsModManualLinkedModuleIdEntityTable} b
     ON b.{moduleId} = ANY(a.{allowedModuleIds})
 WHERE a.{nexusModsUserId} = {userId}
 """;
-            var baseQuery = _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().FromSqlRaw(manuallyLinkedModIdsSql)
+            var paginated = await _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().FromSqlRaw(manuallyLinkedModIdsSql)
                 .Select(x => x.NexusModsModId)
                 .Union(_dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
-                    .Where(x => x.AllowedNexusModsUserIds.Contains(userId)).Select(x => x.NexusModsModId));
-
-            var count = await baseQuery.CountAsync(ct);
-            var items = await baseQuery
-                .Skip((int) ((query.Page - 1) * query.PageSize)).Take((int) query.PageSize)
-                .ToArrayAsync(ct);
+                    .Where(x => x.AllowedNexusModsUserIds.Contains(userId)).Select(x => x.NexusModsModId))
+                .Join(_dbContext.Set<NexusModsModEntity>(), x => x, x => x.NexusModsModId, (iid, entity) => entity)
+                .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
             return APIResponse(new PagingData<AvailableModModel>
             {
-                Items = items.Select(x => new AvailableModModel(x)).ToAsyncEnumerable(),
-                Metadata = new PagingMetadata
-                {
-                    CurrentPage = query.Page,
-                    PageSize = query.PageSize,
-                    TotalCount = (uint) count,
-                    TotalPages = (uint) Math.Floor((double) count / (double) query.PageSize)
-                }
+                Items = paginated.Items.Select(x => new AvailableModModel(x.NexusModsModId, x.Name)).ToAsyncEnumerable(),
+                Metadata = paginated.Metadata
             });
         }
     }

@@ -68,6 +68,7 @@
         <DataGridPaging @ref="@_dataGridRef2" TItem="AvailableModModel" GetItems="GetAllowedMods" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
                 <DataGridColumn TItem="AvailableModModel" Field="@nameof(AvailableModModel.ModId)" Caption="Id"/>
+                <DataGridColumn TItem="AvailableModModel" Field="@nameof(AvailableModModel.Name)" Caption="Name"/>
             </DataGridColumns>
         </DataGridPaging>
     </CardBody>
