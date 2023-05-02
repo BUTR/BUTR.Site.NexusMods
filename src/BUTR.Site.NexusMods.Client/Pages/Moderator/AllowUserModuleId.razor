@@ -7,7 +7,7 @@
 <Modal ShowBackdrop @ref="_modalRef">
     <ModalContent Size="ModalSize.ExtraLarge" Centered>
         <ModalHeader>
-            <ModalTitle>Remove Allowed Mod Id</ModalTitle>
+            <ModalTitle>Remove Allowed Module Id</ModalTitle>
             <CloseButton />
         </ModalHeader>
         <ModalBody>
@@ -15,7 +15,7 @@
             {
                 <Form>
                     <Field>
-                        <FieldLabel>Mod Id to Remove</FieldLabel>
+                        <FieldLabel>Module Id to Remove</FieldLabel>
                         <FieldBody>
                             <Select TValue="string" @bind-SelectedValue="@_moduleIdIdToDelete">
                                 @{
@@ -51,7 +51,7 @@
                 </FieldBody>
             </Field>
             <Field>
-                <FieldLabel>Mod Id</FieldLabel>
+                <FieldLabel>Module Id</FieldLabel>
                 <FieldBody>
                     <TextEdit Role="@TextRole.Text" @bind-Text="@_model.ModuleId" />
                 </FieldBody>
