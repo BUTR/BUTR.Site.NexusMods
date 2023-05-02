@@ -89,7 +89,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers
                     Name = mod.Name,
                     UserIds = mod.UserIds,
                     AllowedNexusModsUserIds = x1.AllowedNexusModsUserIds,
-                    //ManuallyLinkedUserIds = x3.ModuleIds, 
+                    //ManuallyLinkedUserIds = // TODO:
                     ManuallyLinkedModuleIds = ManuallyLinkedModuleId.Select(x => x.ModuleId).ToArray(),
                     KnownModuleIds = x3.ModuleIds
                 };
@@ -374,6 +374,52 @@ WHERE b.{nexusModsModId} = ANY(ARRAY[{string.Join(",", nexusModsIds.Select(x => 
             {
                 Items = paginated.Items.Select(m => new UserAllowedModsModel(m.NexusModsModId, m.AllowedNexusModsUserIds.AsImmutableArray())).ToAsyncEnumerable(),
                 Metadata = paginated.Metadata
+            });
+        }
+
+
+        [HttpPost("AvailableModsPaginated")]
+        [Produces("application/json")]
+        public async Task<ActionResult<APIResponse<PagingData<AvailableModModel>?>>> AvailableModsPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
+        {
+            var userId = HttpContext.GetUserId();
+
+            var nexusModsUserAllowedModuleIdsEntity = _dbContext.Model.FindEntityType(typeof(NexusModsUserAllowedModuleIdsEntity))!;
+            var nexusModsUserAllowedModuleIdsEntityTable = nexusModsUserAllowedModuleIdsEntity.GetSchemaQualifiedTableName();
+            var nexusModsUserId = nexusModsUserAllowedModuleIdsEntity.GetProperty(nameof(NexusModsUserAllowedModuleIdsEntity.NexusModsUserId)).GetColumnName();
+            var allowedModuleIds = nexusModsUserAllowedModuleIdsEntity.GetProperty(nameof(NexusModsUserAllowedModuleIdsEntity.AllowedModuleIds)).GetColumnName();
+
+            var nexusModsModManualLinkedModuleIdEntity = _dbContext.Model.FindEntityType(typeof(NexusModsModManualLinkedModuleIdEntity))!;
+            var nexusModsModManualLinkedModuleIdEntityTable = nexusModsModManualLinkedModuleIdEntity.GetSchemaQualifiedTableName();
+            var moduleId = nexusModsModManualLinkedModuleIdEntity.GetProperty(nameof(NexusModsModManualLinkedModuleIdEntity.ModuleId)).GetColumnName();
+            var nexusModsModId = nexusModsModManualLinkedModuleIdEntity.GetProperty(nameof(NexusModsModManualLinkedModuleIdEntity.NexusModsModId)).GetColumnName();
+
+            var manuallyLinkedModIdsSql = $"""
+SELECT DISTINCT b.{nexusModsModId} FROM {nexusModsUserAllowedModuleIdsEntityTable} a
+JOIN {nexusModsModManualLinkedModuleIdEntityTable} b
+    ON b.{moduleId} = ANY(a.{allowedModuleIds})
+WHERE a.{nexusModsUserId} = {userId}
+""";
+            var baseQuery = _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().FromSqlRaw(manuallyLinkedModIdsSql)
+                .Select(x => x.NexusModsModId)
+                .Union(_dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
+                    .Where(x => x.AllowedNexusModsUserIds.Contains(userId)).Select(x => x.NexusModsModId));
+
+            var count = await baseQuery.CountAsync(ct);
+            var items = await baseQuery
+                .Skip((int) ((query.Page - 1) * query.PageSize)).Take((int) query.PageSize)
+                .ToArrayAsync(ct);
+
+            return APIResponse(new PagingData<AvailableModModel>
+            {
+                Items = items.Select(x => new AvailableModModel(x)).ToAsyncEnumerable(),
+                Metadata = new PagingMetadata
+                {
+                    CurrentPage = query.Page,
+                    PageSize = query.PageSize,
+                    TotalCount = (uint) count,
+                    TotalPages = (uint) Math.Floor((double) count / (double) query.PageSize)
+                }
             });
         }
     }

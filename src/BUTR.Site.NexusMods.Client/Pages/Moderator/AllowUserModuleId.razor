@@ -110,7 +110,7 @@
         await _modalRef.Hide();
         if (save && _dataGridRef?.Value is not null && _moduleIdIdToDelete is not null)
         {
-            if (await _modClient.DisallowUserAModuleIdAsync(_dataGridRef.Value.UserId, _moduleIdIdToDelete) is { HumanReadableError: var error } && !string.IsNullOrEmpty(error))
+            if (await _modClient.DisallowUserAModuleIdAsync(_dataGridRef.Value.UserId, _moduleIdIdToDelete) is { HumanReadableError: var error } && string.IsNullOrEmpty(error))
             {
                 await _notificationService.Success($"Disallowed succesfully!", "Success!");
                 await _dataGridRef.Reload();
@@ -161,7 +161,7 @@
     
     private async Task<bool> DoUserAllowMod(AllowUserModel model)
     {
-        return await _modClient.AllowUserAModuleIdAsync((int) model.UserId, model.ModuleId) is { HumanReadableError: var error } && !string.IsNullOrEmpty(error);
+        return await _modClient.AllowUserAModuleIdAsync((int) model.UserId, model.ModuleId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
     }
     private async Task<bool> DoUserDisallowMod(UserAllowedModuleIdsModel model)
     {

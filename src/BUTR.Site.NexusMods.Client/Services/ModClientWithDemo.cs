@@ -132,4 +132,6 @@ public sealed class ModClientWithDemo : IModClient
 
         return await _implementation.AllowUserAModPaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>()), ct);
     }
+
+    public async Task<AvailableModModelPagingDataAPIResponse> AvailableModsPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default) => await _implementation.AvailableModsPaginatedAsync(body, ct);
 }
