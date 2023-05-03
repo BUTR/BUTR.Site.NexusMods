@@ -104,6 +104,7 @@ ORDER BY
     all_mod_versions.mod_id,
     all_mod_versions.version;
 """;
+            _dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
             await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { }, context.CancellationToken);
             context.Result = "Updated Crash Report Statistics Data";
             context.SetIsSuccess(true);
