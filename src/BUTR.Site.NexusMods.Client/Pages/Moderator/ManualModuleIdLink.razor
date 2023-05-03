@@ -13,7 +13,7 @@
             <Field>
                 <FieldLabel>Module Id</FieldLabel>
                 <FieldBody>
-                    <TextEdit Role="@TextRole.Text" @bind-Text="@_model.ModId" />
+                    <TextEdit Role="@TextRole.Text" @bind-Text="@_model.ModId" Placeholder="Bannerlord.Harmony" />
                 </FieldBody>
             </Field>
             <Field>
@@ -44,7 +44,7 @@
         <DataGridPaging @ref="@_dataGridRef" TItem="ModNexusModsManualLinkModel" GetItems="GetManualLinks" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
                 <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.ModId)" Caption="Module Id"/>
-                <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.NexusModsId)" Caption="NexusMods Id"/>
+                <DataGridColumn TItem="ModNexusModsManualLinkModel" Field="@nameof(ModNexusModsManualLinkModel.NexusModsId)" Caption="Mod Id"/>
             </DataGridColumns>
             <ButtonRowTemplate>
                 <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnDisallow(context))">Unlink</Button>
@@ -112,7 +112,7 @@
     
     private async Task<bool> DoManualLink(ManualLinkModel model)
     {
-        if (!ModsUtils.TryParse(_model.NexusModsUrl, out _, out var nexusModsId))
+        if (!ModsUtils.TryParse(model.NexusModsUrl, out _, out var nexusModsId))
             return false;
         
         return await _modClient.ModManualLinkAsync(model.ModId, nexusModsId.Value) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);

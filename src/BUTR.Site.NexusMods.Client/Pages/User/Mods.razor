@@ -11,7 +11,7 @@
     <CardBody>
         <Form>
             <Field>
-                <FieldLabel>Mod Url</FieldLabel>
+                <FieldLabel>NexusMods Mod Url</FieldLabel>
                 <FieldBody>
                     <TextEdit Role="@TextRole.Url" @bind-Text="@_model.ModUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1"></TextEdit>
                 </FieldBody>
@@ -33,7 +33,7 @@
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef" TItem="ModModel" GetItems="GetMods" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
-                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ModId)" Caption="Id"/>
+                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ModId)" Caption="Mod Id"/>
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name"/>
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.AllowedUserIds)" Caption="Allowed User Ids">
                     <DisplayTemplate>@(string.Join(", ", context.AllowedUserIds))</DisplayTemplate>
@@ -67,7 +67,7 @@
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef2" TItem="AvailableModModel" GetItems="GetAllowedMods" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
-                <DataGridColumn TItem="AvailableModModel" Field="@nameof(AvailableModModel.ModId)" Caption="Id"/>
+                <DataGridColumn TItem="AvailableModModel" Field="@nameof(AvailableModModel.ModId)" Caption="Mod Id"/>
                 <DataGridColumn TItem="AvailableModModel" Field="@nameof(AvailableModModel.Name)" Caption="Name"/>
             </DataGridColumns>
         </DataGridPaging>

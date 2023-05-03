@@ -45,15 +45,15 @@
     <CardBody>
         <Form>
             <Field>
-                <FieldLabel>User Id</FieldLabel>
+                <FieldLabel>NexusMods User Url</FieldLabel>
                 <FieldBody>
-                    <NumericEdit TValue="uint" @bind-Value="@_model.UserId" EnableStep="false" />
+                    <TextEdit Role="@TextRole.Url" @bind-Text="@_model.UserUrl" Placeholder="https://nexusmods.com/users/1" />
                 </FieldBody>
             </Field>
             <Field>
-                <FieldLabel>Mod Id</FieldLabel>
+                <FieldLabel>NexusMods Mod Url</FieldLabel>
                 <FieldBody>
-                    <NumericEdit TValue="uint" @bind-Value="@_model.ModId" EnableStep="false" />
+                    <TextEdit Role="@TextRole.Url" @bind-Text="@_model.UserUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1" />
                 </FieldBody>
             </Field>
             <Field>
@@ -90,13 +90,13 @@
 
     private sealed record AllowUserModel
     {
-        public required uint UserId { get; set; }
-        public required uint ModId { get; set; }
+        public required string UserUrl { get; set; }
+        public required string ModUrl { get; set; }
     }
     
     private bool _isLoading;
 
-    private readonly AllowUserModel _model = new() { UserId = 0, ModId = 0 };
+    private readonly AllowUserModel _model = new() { UserUrl = string.Empty, ModUrl = string.Empty };
 
     private int? _userIdToDelete;
 
@@ -128,7 +128,7 @@
             if (await DoUserAllowMod(_model))
             {
                 await _notificationService.Success(
-                    $"Assigned '{_model.ModId}' to user with id '{_model.UserId}'!",
+                    $"Assigned '{_model.ModUrl}' to user '{_model.UserUrl}'!",
                     "Success!");
                 if (_dataGridRef is not null)
                     await _dataGridRef.Reload();
@@ -136,14 +136,14 @@
             else
             {
                 await _notificationService.Error(
-                    $"Failed to assign '{_model.ModId}' to user with id '{_model.UserId}'!",
+                    $"Failed to assign '{_model.ModUrl}' to user '{_model.UserUrl}'!",
                     "Error!");
             }
         }
         catch
         {
             await _notificationService.Error(
-                $"Failed to assign '{_model.ModId}' to user with id '{_model.UserId}'!",
+                $"Failed to assign '{_model.ModUrl}' to user '{_model.UserUrl}'!",
                 "Error!");
         }
     }
@@ -161,7 +161,13 @@
     
     private async Task<bool> DoUserAllowMod(AllowUserModel model)
     {
-        return await _modClient.AllowUserAModAsync((int) model.UserId, (int) model.ModId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        if (!ModsUtils.TryParse(model.UserUrl, out _, out var nexusModsUserId))
+            return false;
+        
+        if (!ModsUtils.TryParse(model.ModUrl, out _, out var nexusModsModId))
+            return false;
+        
+        return await _modClient.AllowUserAModAsync((int) nexusModsUserId, (int) nexusModsModId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
     }
     private async Task<bool> DoUserDisallowMod(UserAllowedModsModel model)
     {
