@@ -12,7 +12,8 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ namespace BUTR.Site.NexusMods.Server.Services
         private readonly HttpClient _httpClient;
         private readonly IDistributedCache _cache;
         private readonly JsonSerializerOptions _jsonSerializerOptions;
+        private readonly DistributedCacheEntryOptions _apiKeyExpiration = new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1) };
         private readonly DistributedCacheEntryOptions _expiration = new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) };
         private readonly SemaphoreSlim _lock = new(1, 1);
         private TimeLimiter _timeLimiter = TimeLimiter.GetFromMaxCountByInterval(30, TimeSpan.FromSeconds(1));
@@ -34,21 +36,37 @@ namespace BUTR.Site.NexusMods.Server.Services
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
         }
+        
+        private static string HashString(string value)
+        {
+            Span<byte> data2 = stackalloc byte[Encoding.UTF8.GetByteCount(value)];
+            Encoding.UTF8.GetBytes(value, data2);
+            Span<byte> data = stackalloc byte[64];
+            SHA512.HashData(data2, data);
+            return Convert.ToBase64String(data);
+        }
 
         public async Task<NexusModsValidateResponse?> ValidateAPIKeyAsync(string apiKey)
         {
+            var apiKeyKey = HashString(apiKey);
             try
             {
+                if (await _cache.GetStringAsync(apiKeyKey) is { } json)
+                    return string.IsNullOrEmpty(json) ? null : JsonSerializer.Deserialize<NexusModsValidateResponse>(json, _jsonSerializerOptions);
+            
                 var request = new HttpRequestMessage(HttpMethod.Get, "v1/users/validate.json");
                 request.Headers.Add("apikey", apiKey);
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 var response = await _httpClient.SendAsync(request);
                 if (!response.IsSuccessStatusCode)
                     return null;
-                var responseType = await response.Content.ReadFromJsonAsync<NexusModsValidateResponse>();
+                    
+                json = await response.Content.ReadAsStringAsync();
+                var responseType = JsonSerializer.Deserialize<NexusModsValidateResponse>(json, _jsonSerializerOptions);
                 if (responseType is null || responseType.Key != apiKey)
                     return null;
 
+                await _cache.SetStringAsync(apiKeyKey, json, _apiKeyExpiration);
                 return responseType;
             }
             catch (Exception)
@@ -100,6 +118,7 @@ namespace BUTR.Site.NexusMods.Server.Services
 
         private async Task<TResponse?> GetCachedWithTimeLimitAsync<TResponse>(string url, string apiKey) where TResponse : class?
         {
+            var apiKeyKey = HashString(apiKey);
             try
             {
                 if (await _cache.GetStringAsync(url) is { } json)
@@ -140,6 +159,7 @@ namespace BUTR.Site.NexusMods.Server.Services
             }
             catch (Exception)
             {
+                await _cache.RemoveAsync(apiKeyKey);
                 return null;
             }
         }
