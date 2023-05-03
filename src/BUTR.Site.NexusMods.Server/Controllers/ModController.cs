@@ -70,55 +70,54 @@ namespace BUTR.Site.NexusMods.Server.Controllers
         [Produces("application/json")]
         public async Task<ActionResult<APIResponse<PagingData<ModModel>?>>> ModPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
         {
-            var baseQuery =
-                from mod in _dbContext.Set<NexusModsModEntity>()
-                join allowedUserIds in _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
-                    on mod.NexusModsModId equals allowedUserIds.NexusModsModId
-                    into AllowedUserIds
-                from x1 in AllowedUserIds.DefaultIfEmpty()
-                join manuallyLinkedModuleId in _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>()
-                    on mod.NexusModsModId equals manuallyLinkedModuleId.NexusModsModId
-                    into ManuallyLinkedModuleId
-                join exposedMods in _dbContext.Set<NexusModsExposedModsEntity>()
-                    on mod.NexusModsModId equals exposedMods.NexusModsModId
-                    into ExposedMods
-                from x3 in ExposedMods.DefaultIfEmpty()
+            var userId = HttpContext.GetUserId();
+
+            var manuallyLinkedUserIdsQuery =
+                from userAllowedModuleIdsEntity in _dbContext.Set<NexusModsUserAllowedModuleIdsEntity>()
+                from manuallyLinkedModuleIdEntity in _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>()
+                where userAllowedModuleIdsEntity.AllowedModuleIds.Contains(manuallyLinkedModuleIdEntity.ModuleId)
                 select new
                 {
-                    NexusModsModId = mod.NexusModsModId,
-                    Name = mod.Name,
-                    UserIds = mod.UserIds,
-                    AllowedNexusModsUserIds = x1.AllowedNexusModsUserIds,
-                    //ManuallyLinkedUserIds = // TODO:
-                    ManuallyLinkedModuleIds = ManuallyLinkedModuleId.Select(x => x.ModuleId).ToArray(),
-                    KnownModuleIds = x3.ModuleIds
+                    NexusModsUserId = userAllowedModuleIdsEntity.NexusModsUserId,
+                    NexusModsModId = manuallyLinkedModuleIdEntity.NexusModsModId
                 };
-            var paginated = await baseQuery
+
+            var mainQuery =
+                from modEntity in _dbContext.Set<NexusModsModEntity>()
+                where modEntity.UserIds.Contains(userId)
+                join manuallyLinkedModuleIdEntity in _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>()
+                    on modEntity.NexusModsModId equals manuallyLinkedModuleIdEntity.NexusModsModId
+                    into ManuallyLinkedModuleId
+                join allowedUserIdsEntity in _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
+                    on modEntity.NexusModsModId equals allowedUserIdsEntity.NexusModsModId
+                    into AllowedUserIds
+                from allowedUserIds in AllowedUserIds.DefaultIfEmpty()
+                join exposedModsEntity in _dbContext.Set<NexusModsExposedModsEntity>()
+                    on modEntity.NexusModsModId equals exposedModsEntity.NexusModsModId
+                    into ExposedMods
+                from exposedModEntity in ExposedMods.DefaultIfEmpty()
+                    //join manuallyLinkedUserIdsEntity in manuallyLinkedUserIdsQuery
+                    //    on modEntity.NexusModsModId equals manuallyLinkedUserIdsEntity.NexusModsModId
+                    //    into ManuallyLinkedUserId
+                    //from manuallyLinkedUserId in ManuallyLinkedUserId.DefaultIfEmpty()
+                select new
+                {
+                    NexusModsModId = modEntity.NexusModsModId,
+                    Name = modEntity.Name,
+                    UserIds = modEntity.UserIds,
+                    ManuallyLinkedModuleIds = ManuallyLinkedModuleId.Select(x => x.ModuleId).ToArray(),
+                    AllowedNexusModsUserIds = allowedUserIds.AllowedNexusModsUserIds,
+                    KnownModuleIds = exposedModEntity.ModuleIds,
+                    //ManuallyLinkedUserIds = manuallyLinkedUserId,
+                };
+            var paginated = await mainQuery
                 .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
-            var nexusModsUserAllowedModuleIdsEntity = _dbContext.Model.FindEntityType(typeof(NexusModsUserAllowedModuleIdsEntity))!;
-            var nexusModsUserAllowedModuleIdsEntityTable = nexusModsUserAllowedModuleIdsEntity.GetSchemaQualifiedTableName();
-            var nexusModsUserId = nexusModsUserAllowedModuleIdsEntity.GetProperty(nameof(NexusModsUserAllowedModuleIdsEntity.NexusModsUserId)).GetColumnName();
-            var allowedModuleIds = nexusModsUserAllowedModuleIdsEntity.GetProperty(nameof(NexusModsUserAllowedModuleIdsEntity.AllowedModuleIds)).GetColumnName();
-
-            var nexusModsModManualLinkedModuleIdEntity = _dbContext.Model.FindEntityType(typeof(NexusModsModManualLinkedModuleIdEntity))!;
-            var nexusModsModManualLinkedModuleIdEntityTable = nexusModsModManualLinkedModuleIdEntity.GetSchemaQualifiedTableName();
-            var moduleId = nexusModsModManualLinkedModuleIdEntity.GetProperty(nameof(NexusModsModManualLinkedModuleIdEntity.ModuleId)).GetColumnName();
-            var nexusModsModId = nexusModsModManualLinkedModuleIdEntity.GetProperty(nameof(NexusModsModManualLinkedModuleIdEntity.NexusModsModId)).GetColumnName();
-
-            var nexusModsIds = paginated.Items.Select(x => x.NexusModsModId).ToArray();
-
-            var manuallyLinkedModIdsSql = $"""
-SELECT DISTINCT a.{nexusModsUserId}::TEXT as {moduleId}, b.{nexusModsModId} FROM {nexusModsUserAllowedModuleIdsEntityTable} a
-JOIN {nexusModsModManualLinkedModuleIdEntityTable} b
-    ON b.{moduleId} = ANY(a.{allowedModuleIds})
-WHERE b.{nexusModsModId} = ANY(ARRAY[{string.Join(",", nexusModsIds.Select(x => x))}])
-""";
-            var manuallyLinkedUserIds = await _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().FromSqlRaw(manuallyLinkedModIdsSql)
-                .Select(x => new { NexusModsModId = x.NexusModsModId, UserId = int.Parse(x.ModuleId) })
-                .GroupBy(x => x.NexusModsModId, x => x.UserId)
+            var nexusModsModIds = paginated.Items.Select(x => x.NexusModsModId).ToArray();
+            var manuallyLinkedUserIds = await manuallyLinkedUserIdsQuery
+                .Where(x => nexusModsModIds.Contains(x.NexusModsModId))
+                .GroupBy(x => x.NexusModsModId, x => x.NexusModsUserId)
                 .ToDictionaryAsync(x => x.Key, x => x.ToArray(), ct);
-
 
             return APIResponse(new PagingData<ModModel>
             {
@@ -126,6 +125,8 @@ WHERE b.{nexusModsModId} = ANY(ARRAY[{string.Join(",", nexusModsIds.Select(x => 
                     m.Name,
                     m.NexusModsModId,
                     m.AllowedNexusModsUserIds?.AsImmutableArray() ?? ImmutableArray<int>.Empty,
+                    //ImmutableArray<int>.Empty,
+                    //m.ManuallyLinkedUserIds?.AsImmutableArray() ?? ImmutableArray<int>.Empty,
                     manuallyLinkedUserIds.TryGetValue(m.NexusModsModId, out var arr) ? arr.AsImmutableArray() : ImmutableArray<int>.Empty,
                     m.ManuallyLinkedModuleIds?.AsImmutableArray() ?? ImmutableArray<string>.Empty,
                     m.KnownModuleIds?.AsImmutableArray() ?? ImmutableArray<string>.Empty)).ToAsyncEnumerable(),
@@ -384,27 +385,32 @@ WHERE b.{nexusModsModId} = ANY(ARRAY[{string.Join(",", nexusModsIds.Select(x => 
         {
             var userId = HttpContext.GetUserId();
 
-            var nexusModsUserAllowedModuleIdsEntity = _dbContext.Model.FindEntityType(typeof(NexusModsUserAllowedModuleIdsEntity))!;
-            var nexusModsUserAllowedModuleIdsEntityTable = nexusModsUserAllowedModuleIdsEntity.GetSchemaQualifiedTableName();
-            var nexusModsUserId = nexusModsUserAllowedModuleIdsEntity.GetProperty(nameof(NexusModsUserAllowedModuleIdsEntity.NexusModsUserId)).GetColumnName();
-            var allowedModuleIds = nexusModsUserAllowedModuleIdsEntity.GetProperty(nameof(NexusModsUserAllowedModuleIdsEntity.AllowedModuleIds)).GetColumnName();
+            // Can't join because ARRAY CONTAINS
+            var firstQuery =
+                from userAllowedModuleIdsEntity in _dbContext.Set<NexusModsUserAllowedModuleIdsEntity>()
+                from manuallyLinkedModuleIdEntity in _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>()
+                where userAllowedModuleIdsEntity.AllowedModuleIds.Contains(manuallyLinkedModuleIdEntity.ModuleId)
+                where userAllowedModuleIdsEntity.NexusModsUserId == userId
+                select new
+                {
+                    NexusModsModId = manuallyLinkedModuleIdEntity.NexusModsModId
+                };
 
-            var nexusModsModManualLinkedModuleIdEntity = _dbContext.Model.FindEntityType(typeof(NexusModsModManualLinkedModuleIdEntity))!;
-            var nexusModsModManualLinkedModuleIdEntityTable = nexusModsModManualLinkedModuleIdEntity.GetSchemaQualifiedTableName();
-            var moduleId = nexusModsModManualLinkedModuleIdEntity.GetProperty(nameof(NexusModsModManualLinkedModuleIdEntity.ModuleId)).GetColumnName();
-            var nexusModsModId = nexusModsModManualLinkedModuleIdEntity.GetProperty(nameof(NexusModsModManualLinkedModuleIdEntity.NexusModsModId)).GetColumnName();
+            var secondQuery =
+                from modManualLinkedNexusModsUsersEntity in _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
+                where modManualLinkedNexusModsUsersEntity.AllowedNexusModsUserIds.Contains(userId)
+                select new
+                {
+                    NexusModsModId = modManualLinkedNexusModsUsersEntity.NexusModsModId
+                };
 
-            var manuallyLinkedModIdsSql = $"""
-SELECT DISTINCT b.{nexusModsModId} FROM {nexusModsUserAllowedModuleIdsEntityTable} a
-JOIN {nexusModsModManualLinkedModuleIdEntityTable} b
-    ON b.{moduleId} = ANY(a.{allowedModuleIds})
-WHERE a.{nexusModsUserId} = {userId}
-""";
-            var paginated = await _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().FromSqlRaw(manuallyLinkedModIdsSql)
-                .Select(x => x.NexusModsModId)
-                .Union(_dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
-                    .Where(x => x.AllowedNexusModsUserIds.Contains(userId)).Select(x => x.NexusModsModId))
-                .Join(_dbContext.Set<NexusModsModEntity>(), x => x, x => x.NexusModsModId, (iid, entity) => entity)
+            var mainQuery =
+                from nexusModsModId in firstQuery.Union(secondQuery).Select(x => x.NexusModsModId)
+                join modEntity in _dbContext.Set<NexusModsModEntity>()
+                    on nexusModsModId equals modEntity.NexusModsModId
+                select modEntity;
+
+            var paginated = await mainQuery
                 .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
             return APIResponse(new PagingData<AvailableModModel>
