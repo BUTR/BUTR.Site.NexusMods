@@ -6,37 +6,36 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Client.Services
+namespace BUTR.Site.NexusMods.Client.Services;
+
+public class AuthenticationInjectionDelegatingHandler : DelegatingHandler
 {
-    public class AuthenticationInjectionDelegatingHandler : DelegatingHandler
+    protected readonly ITokenContainer _tokenContainer;
+    protected readonly INotificationService _notificationService;
+
+    public AuthenticationInjectionDelegatingHandler(ITokenContainer tokenContainer, INotificationService notificationService)
     {
-        protected readonly ITokenContainer _tokenContainer;
-        protected readonly INotificationService _notificationService;
+        _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+    }
 
-        public AuthenticationInjectionDelegatingHandler(ITokenContainer tokenContainer, INotificationService notificationService)
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+    {
+        if (await _tokenContainer.GetTokenAsync(ct) is { } token && token.Type != "demo")
+            request.Headers.Authorization = new AuthenticationHeaderValue("BUTR-NexusMods", token.Value);
+
+        try
         {
-            _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
-            _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+            return await base.SendAsync(request, ct);
         }
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        catch (HttpRequestException e)
         {
-            if (await _tokenContainer.GetTokenAsync(ct) is { } token && token.Type != "demo")
-                request.Headers.Authorization = new AuthenticationHeaderValue("BUTR-NexusMods", token.Value);
-
-            try
+            if (e.Message == "TypeError: Failed to fetch")
             {
-                return await base.SendAsync(request, ct);
+                await _notificationService.Error("Backend is down! Notify about the issue on GitHub https://github.com/BUTR/BUTR.Site.NexusMods", "Error!");
             }
-            catch (HttpRequestException e)
-            {
-                if (e.Message == "TypeError: Failed to fetch")
-                {
-                    await _notificationService.Error("Backend is down! Notify about the issue on GitHub https://github.com/BUTR/BUTR.Site.NexusMods", "Error!");
-                }
 
-                throw;
-            }
+            throw;
         }
     }
 }

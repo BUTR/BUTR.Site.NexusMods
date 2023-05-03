@@ -8,28 +8,27 @@ using Quartz;
 
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server
-{
-    public static class Program
-    {
-        public static Task Main(string[] args) => CreateHostBuilder(args)
-            .Build()
-            .SeedDbContext<AppDbContext>()
-            .RunAsync();
+namespace BUTR.Site.NexusMods.Server;
 
-        public static IHostBuilder CreateHostBuilder(string[] args) => Host
-            .CreateDefaultBuilder(args)
-            .ConfigureServices((ctx, services) =>
+public static class Program
+{
+    public static Task Main(string[] args) => CreateHostBuilder(args)
+        .Build()
+        .SeedDbContext<AppDbContext>()
+        .RunAsync();
+
+    public static IHostBuilder CreateHostBuilder(string[] args) => Host
+        .CreateDefaultBuilder(args)
+        .ConfigureServices((ctx, services) =>
+        {
+            services.AddQuartzHostedService(options =>
             {
-                services.AddQuartzHostedService(options =>
-                {
-                    options.AwaitApplicationStarted = true;
-                    options.WaitForJobsToComplete = true;
-                });
-            })
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Startup>();
+                options.AwaitApplicationStarted = true;
+                options.WaitForJobsToComplete = true;
             });
-    }
+        })
+        .ConfigureWebHostDefaults(webBuilder =>
+        {
+            webBuilder.UseStartup<Startup>();
+        });
 }

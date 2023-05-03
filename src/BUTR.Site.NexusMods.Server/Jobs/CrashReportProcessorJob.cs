@@ -22,128 +22,127 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Jobs
+namespace BUTR.Site.NexusMods.Server.Jobs;
+
+[DisallowConcurrentExecution]
+public sealed class CrashReportProcessorJob : IJob
 {
-    [DisallowConcurrentExecution]
-    public sealed class CrashReportProcessorJob : IJob
+    private readonly ILogger _logger;
+    private readonly CrashReporterOptions _options;
+    private readonly CrashReporterClient _client;
+    private readonly AppDbContext _dbContext;
+
+    public CrashReportProcessorJob(ILogger<CrashReportProcessorJob> logger, IOptions<CrashReporterOptions> options, CrashReporterClient client, AppDbContext dbContext)
     {
-        private readonly ILogger _logger;
-        private readonly CrashReporterOptions _options;
-        private readonly CrashReporterClient _client;
-        private readonly AppDbContext _dbContext;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+        _client = client ?? throw new ArgumentNullException(nameof(client));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    }
 
-        public CrashReportProcessorJob(ILogger<CrashReportProcessorJob> logger, IOptions<CrashReporterOptions> options, CrashReporterClient client, AppDbContext dbContext)
+    public async Task Execute(IJobExecutionContext context)
+    {
+        var processed = 0;
+        try
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-            _client = client ?? throw new ArgumentNullException(nameof(client));
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        }
-
-        public async Task Execute(IJobExecutionContext context)
-        {
-            var processed = 0;
-            try
+            await foreach (var (report, date) in MissingFilenames(_dbContext, context.CancellationToken))
             {
-                await foreach (var (report, date) in MissingFilenames(_dbContext, context.CancellationToken))
+                var crashReportEntity = new CrashReportEntity
                 {
-                    var crashReportEntity = new CrashReportEntity
+                    Id = report.Id,
+                    Url = new Uri(new Uri(_options.Endpoint), $"{report.Id2}.html").ToString(),
+                    Version = report.Version,
+                    GameVersion = report.GameVersion,
+                    Exception = report.Exception,
+                    CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date.ToUniversalTime(),
+                    ModIds = report.Modules.Select(x => x.Id).Distinct().ToImmutableArray().AsArray(),
+                    ModIdToVersion = report.Modules.Select(item => new { item.Id, item.Version }).Distinct().ToDictionary(x => x.Id, x => x.Version),
+                    InvolvedModIds = report.InvolvedModules.Select(x => x.Id).ToImmutableArray().AsArray(),
+                    ModNexusModsIds = report.Modules
+                        .Select(x => ModsUtils.TryParse(x.Url, out _, out var modId) ? modId : -1)
+                        .Where(x => x != -1)
+                        .ToImmutableArray().AsArray(),
+                    Metadata = new CrashReportEntityMetadata
                     {
-                        Id = report.Id,
-                        Url = new Uri(new Uri(_options.Endpoint), $"{report.Id2}.html").ToString(),
-                        Version = report.Version,
-                        GameVersion = report.GameVersion,
-                        Exception = report.Exception,
-                        CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date.ToUniversalTime(),
-                        ModIds = report.Modules.Select(x => x.Id).Distinct().ToImmutableArray().AsArray(),
-                        ModIdToVersion = report.Modules.Select(item => new { item.Id, item.Version }).Distinct().ToDictionary(x => x.Id, x => x.Version),
-                        InvolvedModIds = report.InvolvedModules.Select(x => x.Id).ToImmutableArray().AsArray(),
-                        ModNexusModsIds = report.Modules
-                            .Select(x => ModsUtils.TryParse(x.Url, out _, out var modId) ? modId : -1)
-                            .Where(x => x != -1)
-                            .ToImmutableArray().AsArray(),
-                        Metadata = new CrashReportEntityMetadata
-                        {
-                            LauncherType = report.LauncherType,
-                            LauncherVersion = report.LauncherVersion,
-                            Runtime = report.Runtime,
-                            BUTRLoaderVersion = report.BUTRLoaderVersion,
-                            BLSEVersion = report.BLSEVersion,
-                            LauncherExVersion = report.LauncherExVersion,
-                        }
-                    };
+                        LauncherType = report.LauncherType,
+                        LauncherVersion = report.LauncherVersion,
+                        Runtime = report.Runtime,
+                        BUTRLoaderVersion = report.BUTRLoaderVersion,
+                        BLSEVersion = report.BLSEVersion,
+                        LauncherExVersion = report.LauncherExVersion,
+                    }
+                };
 
-                    CrashReportEntity? ApplyChangesCrashReportEntity(CrashReportEntity? existing) => existing switch
-                    {
-                        _ => crashReportEntity,
-                    };
-                    await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == report.Id, ApplyChangesCrashReportEntity, context.CancellationToken);
+                CrashReportEntity? ApplyChangesCrashReportEntity(CrashReportEntity? existing) => existing switch
+                {
+                    _ => crashReportEntity,
+                };
+                await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == report.Id, ApplyChangesCrashReportEntity, context.CancellationToken);
 
-                    CrashReportFileEntity? ApplyChangesCrashReportFileEntity(CrashReportFileEntity? existing) => existing switch
-                    {
-                        _ => new CrashReportFileEntity { Filename = report.Id2, CrashReport = crashReportEntity },
-                    };
-                    await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportFileEntity>(x => x.Filename == report.Id2, ApplyChangesCrashReportFileEntity, context.CancellationToken);
-                    processed++;
-                }
-            }
-            finally
-            {
-                context.Result = $"Processed {processed} crash reports";
-                context.SetIsSuccess(true);
+                CrashReportFileEntity? ApplyChangesCrashReportFileEntity(CrashReportFileEntity? existing) => existing switch
+                {
+                    _ => new CrashReportFileEntity { Filename = report.Id2, CrashReport = crashReportEntity },
+                };
+                await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportFileEntity>(x => x.Filename == report.Id2, ApplyChangesCrashReportFileEntity, context.CancellationToken);
+                processed++;
             }
         }
-
-        private async IAsyncEnumerable<(CrashReport, DateTime)> MissingFilenames(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
+        finally
         {
-            var mapping = dbContext.Model.FindEntityType(typeof(CrashReportFileEntity));
-            if (mapping?.GetTableName() is not { } table)
-                yield break;
+            context.Result = $"Processed {processed} crash reports";
+            context.SetIsSuccess(true);
+        }
+    }
 
-            var schema = mapping.GetSchema();
-            var tableName = mapping.GetSchemaQualifiedTableName();
-            var storeObjectIdentifier = StoreObjectIdentifier.Table(table, schema);
-            var filenameName = mapping.GetProperty(nameof(CrashReportFileEntity.Filename)).GetColumnName(storeObjectIdentifier);
+    private async IAsyncEnumerable<(CrashReport, DateTime)> MissingFilenames(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
+    {
+        var mapping = dbContext.Model.FindEntityType(typeof(CrashReportFileEntity));
+        if (mapping?.GetTableName() is not { } table)
+            yield break;
 
-            var filenames = await _client.GetCrashReportNamesAsync(ct);
+        var schema = mapping.GetSchema();
+        var tableName = mapping.GetSchemaQualifiedTableName();
+        var storeObjectIdentifier = StoreObjectIdentifier.Table(table, schema);
+        var filenameName = mapping.GetProperty(nameof(CrashReportFileEntity.Filename)).GetColumnName(storeObjectIdentifier);
 
-            var ignored = dbContext.Set<CrashReportIgnoredFilesEntity>().AsNoTracking().Select(x => x.Filename).ToHashSet();
-            filenames.ExceptWith(ignored);
+        var filenames = await _client.GetCrashReportNamesAsync(ct);
 
-            for (var skip = 0; skip < filenames.Count; skip += 1000)
-            {
-                var take = filenames.Count - skip >= 1000 ? 1000 : filenames.Count - skip;
-                var toFindFilenames = new NpgsqlParameter<List<string>>("filenames", filenames.Skip(skip).Take(take).ToList());
-                var query = dbContext.Set<CrashReportFileEntity>()
-                    .FromSqlRaw(@$"
+        var ignored = dbContext.Set<CrashReportIgnoredFilesEntity>().AsNoTracking().Select(x => x.Filename).ToHashSet();
+        filenames.ExceptWith(ignored);
+
+        for (var skip = 0; skip < filenames.Count; skip += 1000)
+        {
+            var take = filenames.Count - skip >= 1000 ? 1000 : filenames.Count - skip;
+            var toFindFilenames = new NpgsqlParameter<List<string>>("filenames", filenames.Skip(skip).Take(take).ToList());
+            var query = dbContext.Set<CrashReportFileEntity>()
+                .FromSqlRaw(@$"
 SELECT
     {filenameName}
 FROM
     unnest(@filenames) as {filenameName}
 WHERE
     {filenameName} NOT IN (SELECT {filenameName} FROM {tableName})", toFindFilenames)
-                    .AsNoTracking()
-                    .Select(x => x.Filename);
+                .AsNoTracking()
+                .Select(x => x.Filename);
 
-                var missingFilenames = await query.ToImmutableArrayAsync(ct);
-                foreach (var missing in await _client.GetCrashReportDatesAsync(missingFilenames, ct))
+            var missingFilenames = await query.ToImmutableArrayAsync(ct);
+            foreach (var missing in await _client.GetCrashReportDatesAsync(missingFilenames, ct))
+            {
+                var reportStr = await _client.GetCrashReportAsync(missing.Filename, ct);
+                var report = CrashReportParser.Parse(missing.Filename, reportStr);
+                var foundExisting = await dbContext.Set<CrashReportEntity>().Where(x => x.Id == report.Id).Select(x => x.Id).CountAsync(ct) > 0;
+                if (string.IsNullOrEmpty(reportStr) || string.IsNullOrEmpty(report.GameVersion) || foundExisting)
                 {
-                    var reportStr = await _client.GetCrashReportAsync(missing.Filename, ct);
-                    var report = CrashReportParser.Parse(missing.Filename, reportStr);
-                    var foundExisting = await dbContext.Set<CrashReportEntity>().Where(x => x.Id == report.Id).Select(x => x.Id).CountAsync(ct) > 0;
-                    if (string.IsNullOrEmpty(reportStr) || string.IsNullOrEmpty(report.GameVersion) || foundExisting)
+                    CrashReportIgnoredFilesEntity? ApplyChanges(CrashReportIgnoredFilesEntity? existing) => existing switch
                     {
-                        CrashReportIgnoredFilesEntity? ApplyChanges(CrashReportIgnoredFilesEntity? existing) => existing switch
-                        {
-                            null => new() { Filename = missing.Filename, Id = report.Id },
-                            _ => existing,
-                        };
-                        await dbContext.AddUpdateRemoveAndSaveAsync<CrashReportIgnoredFilesEntity>(x => x.Filename == missing.Filename, ApplyChanges, ct);
-                        continue;
-                    }
-
-                    yield return (report, missing.Date);
+                        null => new() { Filename = missing.Filename, Id = report.Id },
+                        _ => existing,
+                    };
+                    await dbContext.AddUpdateRemoveAndSaveAsync<CrashReportIgnoredFilesEntity>(x => x.Filename == missing.Filename, ApplyChanges, ct);
+                    continue;
                 }
+
+                yield return (report, missing.Date);
             }
         }
     }

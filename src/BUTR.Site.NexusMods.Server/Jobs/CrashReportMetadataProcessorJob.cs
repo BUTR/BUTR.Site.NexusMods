@@ -13,65 +13,64 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Jobs
+namespace BUTR.Site.NexusMods.Server.Jobs;
+
+/// <summary>
+/// Part of migration process. Process all old reports and add the missing Version prop
+/// </summary>
+[DisallowConcurrentExecution]
+public sealed class CrashReportMetadataProcessorJob : IJob
 {
-    /// <summary>
-    /// Part of migration process. Process all old reports and add the missing Version prop
-    /// </summary>
-    [DisallowConcurrentExecution]
-    public sealed class CrashReportMetadataProcessorJob : IJob
+    private readonly ILogger _logger;
+    private readonly HttpClient _client;
+    private readonly AppDbContext _dbContext;
+
+    public CrashReportMetadataProcessorJob(ILogger<CrashReportMetadataProcessorJob> logger, HttpClient client, AppDbContext dbContext)
     {
-        private readonly ILogger _logger;
-        private readonly HttpClient _client;
-        private readonly AppDbContext _dbContext;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _client = client ?? throw new ArgumentNullException(nameof(client));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    }
 
-        public CrashReportMetadataProcessorJob(ILogger<CrashReportMetadataProcessorJob> logger, HttpClient client, AppDbContext dbContext)
+    public async Task Execute(IJobExecutionContext context)
+    {
+        var ct = context.CancellationToken;
+        var query = _dbContext.Set<CrashReportEntity>().Where(x => x.Metadata == null).Take(500).Take(500).AsNoTracking();
+        var processed = 0;
+        try
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _client = client ?? throw new ArgumentNullException(nameof(client));
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        }
-
-        public async Task Execute(IJobExecutionContext context)
-        {
-            var ct = context.CancellationToken;
-            var query = _dbContext.Set<CrashReportEntity>().Where(x => x.Metadata == null).Take(500).Take(500).AsNoTracking();
-            var processed = 0;
-            try
+            while (!ct.IsCancellationRequested && await query.ToArrayAsync(ct) is { Length: > 0 } crashReports)
             {
-                while (!ct.IsCancellationRequested && await query.ToArrayAsync(ct) is { Length: > 0 } crashReports)
+                foreach (var crashReport in crashReports)
                 {
-                    foreach (var crashReport in crashReports)
-                    {
-                        var reportStr = await _client.GetStringAsync(crashReport.Url, ct);
-                        var report = CrashReportParser.Parse(string.Empty, reportStr);
+                    var reportStr = await _client.GetStringAsync(crashReport.Url, ct);
+                    var report = CrashReportParser.Parse(string.Empty, reportStr);
 
-                        CrashReportEntity? ApplyChanges(CrashReportEntity? existing) => existing switch
+                    CrashReportEntity? ApplyChanges(CrashReportEntity? existing) => existing switch
+                    {
+                        null => null,
+                        _ => existing with
                         {
-                            null => null,
-                            _ => existing with
+                            Metadata = new CrashReportEntityMetadata
                             {
-                                Metadata = new CrashReportEntityMetadata
-                                {
-                                    LauncherType = report.LauncherType,
-                                    LauncherVersion = report.LauncherVersion,
-                                    Runtime = report.Runtime,
-                                    BUTRLoaderVersion = report.BUTRLoaderVersion,
-                                    BLSEVersion = report.BLSEVersion,
-                                    LauncherExVersion = report.LauncherExVersion,
-                                }
-                            },
-                        };
-                        await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == crashReport.Id, ApplyChanges, ct);
-                        processed++;
-                    }
+                                LauncherType = report.LauncherType,
+                                LauncherVersion = report.LauncherVersion,
+                                Runtime = report.Runtime,
+                                BUTRLoaderVersion = report.BUTRLoaderVersion,
+                                BLSEVersion = report.BLSEVersion,
+                                LauncherExVersion = report.LauncherExVersion,
+                            }
+                        },
+                    };
+                    await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == crashReport.Id, ApplyChanges, ct);
+                    processed++;
                 }
             }
-            finally
-            {
-                context.Result = $"Processed {processed} crash report entities metadata migration";
-                context.SetIsSuccess(true);
-            }
+        }
+        finally
+        {
+            context.Result = $"Processed {processed} crash report entities metadata migration";
+            context.SetIsSuccess(true);
         }
     }
 }

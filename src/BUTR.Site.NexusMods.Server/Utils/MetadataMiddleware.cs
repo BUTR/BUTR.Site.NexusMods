@@ -5,60 +5,59 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Utils
-{
-    public class MetadataMiddleware
-    {
-        private readonly RequestDelegate _next;
+namespace BUTR.Site.NexusMods.Server.Utils;
 
-        public MetadataMiddleware(RequestDelegate next)
+public class MetadataMiddleware
+{
+    private readonly RequestDelegate _next;
+
+    public MetadataMiddleware(RequestDelegate next)
+    {
+        _next = next ?? throw new ArgumentNullException(nameof(next));
+    }
+
+    public async Task Invoke(HttpContext context)
+    {
+        Task Unauthorized()
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
+            context.Response.StatusCode = 403;
+            return Task.CompletedTask;
         }
 
-        public async Task Invoke(HttpContext context)
+        if (context == null)
         {
-            Task Unauthorized()
-            {
-                context.Response.StatusCode = 403;
-                return Task.CompletedTask;
-            }
+            throw new ArgumentNullException(nameof(context));
+        }
 
-            if (context == null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
+        var endpoint = context.GetEndpoint();
 
-            var endpoint = context.GetEndpoint();
+        var metadataData = endpoint?.Metadata.GetOrderedMetadata<IMetadataData>();
+        if (metadataData is null)
+        {
+            await _next(context);
+            return;
+        }
 
-            var metadataData = endpoint?.Metadata.GetOrderedMetadata<IMetadataData>();
-            if (metadataData is null)
-            {
-                await _next(context);
-                return;
-            }
+        if (context.GetMetadata() is not { } userMetadata)
+        {
+            await Unauthorized();
+            return;
+        }
 
-            if (context.GetMetadata() is not { } userMetadata)
+        foreach (var metadata in metadataData)
+        {
+            if (!userMetadata.TryGetValue(metadata.Key, out var userValue))
             {
                 await Unauthorized();
                 return;
             }
-
-            foreach (var metadata in metadataData)
+            if (metadata.Value is { } value && value != userValue)
             {
-                if (!userMetadata.TryGetValue(metadata.Key, out var userValue))
-                {
-                    await Unauthorized();
-                    return;
-                }
-                if (metadata.Value is { } value && value != userValue)
-                {
-                    await Unauthorized();
-                    return;
-                }
+                await Unauthorized();
+                return;
             }
-
-            await _next(context);
         }
+
+        await _next(context);
     }
 }

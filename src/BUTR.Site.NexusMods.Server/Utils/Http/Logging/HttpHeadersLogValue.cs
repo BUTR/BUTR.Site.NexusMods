@@ -4,117 +4,116 @@ using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Text;
 
-namespace BUTR.Site.NexusMods.Server.Utils.Http.Logging
+namespace BUTR.Site.NexusMods.Server.Utils.Http.Logging;
+
+internal sealed class HttpHeadersLogValue : IReadOnlyList<KeyValuePair<string, object>>
 {
-    internal sealed class HttpHeadersLogValue : IReadOnlyList<KeyValuePair<string, object>>
+    private readonly Kind _kind;
+    private readonly Func<string, bool> _shouldRedactHeaderValue;
+
+    private string? _formatted;
+    private List<KeyValuePair<string, object>>? _values;
+
+    public HttpHeadersLogValue(Kind kind, HttpHeaders headers, HttpHeaders? contentHeaders, Func<string, bool> shouldRedactHeaderValue)
     {
-        private readonly Kind _kind;
-        private readonly Func<string, bool> _shouldRedactHeaderValue;
+        _kind = kind;
+        _shouldRedactHeaderValue = shouldRedactHeaderValue;
 
-        private string? _formatted;
-        private List<KeyValuePair<string, object>>? _values;
+        Headers = headers;
+        ContentHeaders = contentHeaders;
+    }
 
-        public HttpHeadersLogValue(Kind kind, HttpHeaders headers, HttpHeaders? contentHeaders, Func<string, bool> shouldRedactHeaderValue)
+    public HttpHeaders Headers { get; }
+
+    public HttpHeaders? ContentHeaders { get; }
+
+    private List<KeyValuePair<string, object>> Values
+    {
+        get
         {
-            _kind = kind;
-            _shouldRedactHeaderValue = shouldRedactHeaderValue;
-
-            Headers = headers;
-            ContentHeaders = contentHeaders;
-        }
-
-        public HttpHeaders Headers { get; }
-
-        public HttpHeaders? ContentHeaders { get; }
-
-        private List<KeyValuePair<string, object>> Values
-        {
-            get
+            if (_values == null)
             {
-                if (_values == null)
-                {
-                    var values = new List<KeyValuePair<string, object>>();
+                var values = new List<KeyValuePair<string, object>>();
 
-                    foreach (var kvp in Headers)
+                foreach (var kvp in Headers)
+                {
+                    values.Add(new KeyValuePair<string, object>(kvp.Key, kvp.Value));
+                }
+
+                if (ContentHeaders != null)
+                {
+                    foreach (var kvp in ContentHeaders)
                     {
                         values.Add(new KeyValuePair<string, object>(kvp.Key, kvp.Value));
                     }
-
-                    if (ContentHeaders != null)
-                    {
-                        foreach (var kvp in ContentHeaders)
-                        {
-                            values.Add(new KeyValuePair<string, object>(kvp.Key, kvp.Value));
-                        }
-                    }
-
-                    _values = values;
                 }
 
-                return _values;
+                _values = values;
             }
-        }
 
-        public KeyValuePair<string, object> this[int index]
+            return _values;
+        }
+    }
+
+    public KeyValuePair<string, object> this[int index]
+    {
+        get
         {
-            get
+            if (index < 0 || index >= Count)
             {
-                if (index < 0 || index >= Count)
-                {
-                    throw new IndexOutOfRangeException(nameof(index));
-                }
-
-                return Values[index];
+                throw new IndexOutOfRangeException(nameof(index));
             }
+
+            return Values[index];
         }
+    }
 
-        public int Count => Values.Count;
+    public int Count => Values.Count;
 
-        public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+    public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+    {
+        return Values.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return Values.GetEnumerator();
+    }
+
+    public override string ToString()
+    {
+        if (_formatted == null)
         {
-            return Values.GetEnumerator();
-        }
+            var builder = new StringBuilder();
+            builder.AppendLine(_kind == Kind.Request ? "Request Headers:" : "Response Headers:");
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return Values.GetEnumerator();
-        }
-
-        public override string ToString()
-        {
-            if (_formatted == null)
+            for (var i = 0; i < Values.Count; i++)
             {
-                var builder = new StringBuilder();
-                builder.AppendLine(_kind == Kind.Request ? "Request Headers:" : "Response Headers:");
+                var kvp = Values[i];
+                builder.Append(kvp.Key);
+                builder.Append(": ");
 
-                for (var i = 0; i < Values.Count; i++)
+                if (_shouldRedactHeaderValue(kvp.Key))
                 {
-                    var kvp = Values[i];
-                    builder.Append(kvp.Key);
-                    builder.Append(": ");
-
-                    if (_shouldRedactHeaderValue(kvp.Key))
-                    {
-                        builder.Append('*');
-                        builder.AppendLine();
-                    }
-                    else
-                    {
-                        builder.AppendJoin(", ", (IEnumerable<object>) kvp.Value);
-                        builder.AppendLine();
-                    }
+                    builder.Append('*');
+                    builder.AppendLine();
                 }
-
-                _formatted = builder.ToString();
+                else
+                {
+                    builder.AppendJoin(", ", (IEnumerable<object>) kvp.Value);
+                    builder.AppendLine();
+                }
             }
 
-            return _formatted;
+            _formatted = builder.ToString();
         }
 
-        public enum Kind
-        {
-            Request,
-            Response,
-        }
+        return _formatted;
+    }
+
+    public enum Kind
+    {
+        Request,
+        Response,
     }
 }

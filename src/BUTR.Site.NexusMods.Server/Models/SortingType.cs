@@ -1,8 +1,7 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models
+﻿namespace BUTR.Site.NexusMods.Server.Models;
+
+public enum SortingType
 {
-    public enum SortingType
-    {
-        Ascending,
-        Descending
-    }
+    Ascending,
+    Descending
 }

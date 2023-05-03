@@ -1,16 +1,15 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models
+﻿namespace BUTR.Site.NexusMods.Server.Models;
+
+public enum FilteringType
 {
-    public enum FilteringType
-    {
-        Equal,
-        NotEquals,
-        GreaterThan,
-        GreaterThanOrEqual,
-        LessThan,
-        LessThanOrEqual,
-        Contains,
-        NotContains,
-        StartsWith,
-        EndsWith
-    }
+    Equal,
+    NotEquals,
+    GreaterThan,
+    GreaterThanOrEqual,
+    LessThan,
+    LessThanOrEqual,
+    Contains,
+    NotContains,
+    StartsWith,
+    EndsWith
 }

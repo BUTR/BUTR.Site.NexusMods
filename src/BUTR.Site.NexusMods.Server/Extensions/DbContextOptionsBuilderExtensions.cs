@@ -2,11 +2,10 @@
 
 using Microsoft.EntityFrameworkCore;
 
-namespace BUTR.Site.NexusMods.Server.Extensions
+namespace BUTR.Site.NexusMods.Server.Extensions;
+
+public static class DbContextOptionsBuilderExtensions
 {
-    public static class DbContextOptionsBuilderExtensions
-    {
-        public static DbContextOptionsBuilder AddPrepareInterceptor(this DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.AddInterceptors(new PrepareCommandInterceptor());
-    }
+    public static DbContextOptionsBuilder AddPrepareInterceptor(this DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.AddInterceptors(new PrepareCommandInterceptor());
 }

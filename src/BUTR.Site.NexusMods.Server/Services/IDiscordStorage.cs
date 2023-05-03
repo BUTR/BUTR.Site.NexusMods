@@ -7,123 +7,122 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace BUTR.Site.NexusMods.Server.Services
+namespace BUTR.Site.NexusMods.Server.Services;
+
+public interface IDiscordStorage
 {
-    public interface IDiscordStorage
+    DiscordOAuthTokens? Get(string userId);
+    bool Upsert(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens);
+    bool Remove(int nexusModsUserId, string discordUserId);
+}
+
+public sealed class DatabaseDiscordStorage : IDiscordStorage
+{
+    private readonly AppDbContext _dbContext;
+
+    public DatabaseDiscordStorage(AppDbContext dbContext)
     {
-        DiscordOAuthTokens? Get(string userId);
-        bool Upsert(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens);
-        bool Remove(int nexusModsUserId, string discordUserId);
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    public sealed class DatabaseDiscordStorage : IDiscordStorage
+    public DiscordOAuthTokens? Get(string userId)
     {
-        private readonly AppDbContext _dbContext;
+        var entity = _dbContext.FirstOrDefault<DiscordLinkedRoleTokensEntity>(x => x.UserId == userId);
+        return entity is not null ? new DiscordOAuthTokens(entity.AccessToken, entity.RefreshToken, entity.AccessTokenExpiresAt) : null;
+    }
 
-        public DatabaseDiscordStorage(AppDbContext dbContext)
+    public bool Upsert(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
+    {
+        NexusModsUserToDiscordEntity? ApplyChanges1(NexusModsUserToDiscordEntity? existing) => existing switch
         {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        }
-
-        public DiscordOAuthTokens? Get(string userId)
-        {
-            var entity = _dbContext.FirstOrDefault<DiscordLinkedRoleTokensEntity>(x => x.UserId == userId);
-            return entity is not null ? new DiscordOAuthTokens(entity.AccessToken, entity.RefreshToken, entity.AccessTokenExpiresAt) : null;
-        }
-
-        public bool Upsert(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
-        {
-            NexusModsUserToDiscordEntity? ApplyChanges1(NexusModsUserToDiscordEntity? existing) => existing switch
+            null => new NexusModsUserToDiscordEntity
             {
-                null => new NexusModsUserToDiscordEntity
+                NexusModsUserId = nexusModsUserId,
+                DiscordId = discordUserId,
+            },
+            _ => existing with
+            {
+                DiscordId = discordUserId,
+            }
+        };
+        if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserToDiscordEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges1))
+            return false;
+
+        DiscordLinkedRoleTokensEntity? ApplyChanges2(DiscordLinkedRoleTokensEntity? existing) => existing switch
+        {
+            null => new DiscordLinkedRoleTokensEntity
+            {
+                UserId = discordUserId,
+                RefreshToken = tokens.RefreshToken,
+                AccessToken = tokens.AccessToken,
+                AccessTokenExpiresAt = tokens.ExpiresAt
+            },
+            _ => existing with
+            {
+                RefreshToken = tokens.RefreshToken,
+                AccessToken = tokens.AccessToken,
+                AccessTokenExpiresAt = tokens.ExpiresAt
+            }
+        };
+        if (!_dbContext.AddUpdateRemoveAndSave<DiscordLinkedRoleTokensEntity>(x => x.UserId == discordUserId, ApplyChanges2))
+            return false;
+
+        NexusModsUserMetadataEntity? ApplyChanges3(NexusModsUserMetadataEntity? existing) => existing switch
+        {
+            null => new NexusModsUserMetadataEntity
+            {
+                NexusModsUserId = nexusModsUserId,
+                Metadata = new Dictionary<string, string>
                 {
-                    NexusModsUserId = nexusModsUserId,
-                    DiscordId = discordUserId,
-                },
-                _ => existing with
-                {
-                    DiscordId = discordUserId,
+                    {"DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt))}
                 }
-            };
-            if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserToDiscordEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges1))
-                return false;
-
-            DiscordLinkedRoleTokensEntity? ApplyChanges2(DiscordLinkedRoleTokensEntity? existing) => existing switch
+            },
+            //_ when existing.Metadata.TryGetValue("DiscordTokens", out var json) => JsonSerializer.Deserialize<DiscordUserTokens>(json) is { } eTokens && eTokens.RefreshToken != tokens.RefreshToken
+            //    ? existing
+            //    : existing,
+            //_ when !existing.Metadata.ContainsKey("DiscordTokens") => existing with
+            //{
+            //    Metadata = existing.Metadata.AddAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt)))
+            //},
+            _ => existing with
             {
-                null => new DiscordLinkedRoleTokensEntity
-                {
-                    UserId = discordUserId,
-                    RefreshToken = tokens.RefreshToken,
-                    AccessToken = tokens.AccessToken,
-                    AccessTokenExpiresAt = tokens.ExpiresAt
-                },
-                _ => existing with
-                {
-                    RefreshToken = tokens.RefreshToken,
-                    AccessToken = tokens.AccessToken,
-                    AccessTokenExpiresAt = tokens.ExpiresAt
-                }
-            };
-            if (!_dbContext.AddUpdateRemoveAndSave<DiscordLinkedRoleTokensEntity>(x => x.UserId == discordUserId, ApplyChanges2))
-                return false;
+                Metadata = existing.Metadata.SetAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt)))
+            },
+        };
+        if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges3))
+            return false;
 
-            NexusModsUserMetadataEntity? ApplyChanges3(NexusModsUserMetadataEntity? existing) => existing switch
-            {
-                null => new NexusModsUserMetadataEntity
-                {
-                    NexusModsUserId = nexusModsUserId,
-                    Metadata = new Dictionary<string, string>
-                    {
-                        {"DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt))}
-                    }
-                },
-                //_ when existing.Metadata.TryGetValue("DiscordTokens", out var json) => JsonSerializer.Deserialize<DiscordUserTokens>(json) is { } eTokens && eTokens.RefreshToken != tokens.RefreshToken
-                //    ? existing
-                //    : existing,
-                //_ when !existing.Metadata.ContainsKey("DiscordTokens") => existing with
-                //{
-                //    Metadata = existing.Metadata.AddAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt)))
-                //},
-                _ => existing with
-                {
-                    Metadata = existing.Metadata.SetAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt)))
-                },
-            };
-            if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges3))
-                return false;
+        return true;
+    }
 
-            return true;
-        }
-
-        public bool Remove(int nexusModsUserId, string discordUserId)
+    public bool Remove(int nexusModsUserId, string discordUserId)
+    {
+        NexusModsUserToDiscordEntity? ApplyChanges1(NexusModsUserToDiscordEntity? existing) => existing switch
         {
-            NexusModsUserToDiscordEntity? ApplyChanges1(NexusModsUserToDiscordEntity? existing) => existing switch
-            {
-                _ => null
-            };
-            if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserToDiscordEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges1))
-                return false;
+            _ => null
+        };
+        if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserToDiscordEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges1))
+            return false;
 
-            DiscordLinkedRoleTokensEntity? ApplyChanges(DiscordLinkedRoleTokensEntity? existing) => existing switch
-            {
-                _ => null
-            };
-            if (!_dbContext.AddUpdateRemoveAndSave<DiscordLinkedRoleTokensEntity>(x => x.UserId == discordUserId, ApplyChanges))
-                return false;
+        DiscordLinkedRoleTokensEntity? ApplyChanges(DiscordLinkedRoleTokensEntity? existing) => existing switch
+        {
+            _ => null
+        };
+        if (!_dbContext.AddUpdateRemoveAndSave<DiscordLinkedRoleTokensEntity>(x => x.UserId == discordUserId, ApplyChanges))
+            return false;
 
-            NexusModsUserMetadataEntity? ApplyChanges2(NexusModsUserMetadataEntity? existing) => existing switch
+        NexusModsUserMetadataEntity? ApplyChanges2(NexusModsUserMetadataEntity? existing) => existing switch
+        {
+            null => null,
+            _ when existing.Metadata.ContainsKey("DiscordTokens") => existing with
             {
-                null => null,
-                _ when existing.Metadata.ContainsKey("DiscordTokens") => existing with
-                {
-                    Metadata = existing.Metadata.RemoveAndReturn<Dictionary<string, string>, string, string>("DiscordTokens")
-                },
-                _ => existing
-            };
-            if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges2))
-                return false;
+                Metadata = existing.Metadata.RemoveAndReturn<Dictionary<string, string>, string, string>("DiscordTokens")
+            },
+            _ => existing
+        };
+        if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges2))
+            return false;
 
-            return true;
-        }
+        return true;
     }
 }

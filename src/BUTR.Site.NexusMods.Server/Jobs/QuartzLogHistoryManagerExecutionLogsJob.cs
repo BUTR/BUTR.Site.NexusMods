@@ -3,7 +3,6 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using Quartz;
 
@@ -11,29 +10,28 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Jobs
+namespace BUTR.Site.NexusMods.Server.Jobs;
+
+public sealed class QuartzLogHistoryManagerExecutionLogsJob : IJob
 {
-    public sealed class QuartzLogHistoryManagerExecutionLogsJob : IJob
+    private readonly AppDbContext _dbContext;
+
+    public QuartzLogHistoryManagerExecutionLogsJob(AppDbContext dbContext)
     {
-        private readonly AppDbContext _dbContext;
+        _dbContext = dbContext;
+    }
 
-        public QuartzLogHistoryManagerExecutionLogsJob(AppDbContext dbContext)
+    public async Task Execute(IJobExecutionContext context)
+    {
+        try
         {
-            _dbContext = dbContext;
+            var count = await _dbContext.Set<QuartzExecutionLogEntity>().Where(x => DateTimeOffset.UtcNow - x.DateAddedUtc > TimeSpan.FromDays(30)).ExecuteDeleteAsync();
+            context.Result = $"Deleted {count} record(s)";
+            context.SetIsSuccess(true);
         }
-
-        public async Task Execute(IJobExecutionContext context)
+        catch (Exception ex)
         {
-            try
-            {
-                var count = await _dbContext.Set<QuartzExecutionLogEntity>().Where(x => DateTimeOffset.UtcNow - x.DateAddedUtc > TimeSpan.FromDays(30)).ExecuteDeleteAsync();
-                context.Result = $"Deleted {count} record(s)";
-                context.SetIsSuccess(true);
-            }
-            catch (Exception ex)
-            {
-                throw new JobExecutionException("Failed to delete execution logs", ex);
-            }
+            throw new JobExecutionException("Failed to delete execution logs", ex);
         }
     }
 }

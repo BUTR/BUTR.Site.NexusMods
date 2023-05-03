@@ -8,54 +8,53 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Client.Models
+namespace BUTR.Site.NexusMods.Client.Models;
+
+public static class DemoUser
 {
-    public static class DemoUser
+    private static readonly ProfileModel _profile = new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true, ApplicationRoles.User, null);
+    private static readonly List<ModModel> _mods = new()
     {
-        private static readonly ProfileModel _profile = new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true, ApplicationRoles.User, null);
-        private static readonly List<ModModel> _mods = new()
+        new("Demo Mod 1", 1, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
+        new("Demo Mod 2", 2, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
+        new("Demo Mod 3", 3, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
+        new("Demo Mod 4", 4, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
+    };
+    private static List<CrashReportModel>? _crashReports;
+
+    public static Task<ProfileModel> GetProfile() => Task.FromResult(_profile);
+    public static IAsyncEnumerable<ModModel> GetMods() => _mods.ToAsyncEnumerable();
+    public static async IAsyncEnumerable<CrashReportModel> GetCrashReports(IHttpClientFactory factory)
+    {
+        static async Task<CrashReport> DownloadReport(HttpClient client, string id)
         {
-            new("Demo Mod 1", 1, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-            new("Demo Mod 2", 2, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-            new("Demo Mod 3", 3, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-            new("Demo Mod 4", 4, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-        };
-        private static List<CrashReportModel>? _crashReports;
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{id}.html");
+            var response = await client.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+            return CrashReportParser.Parse(id, content);
+        }
 
-        public static Task<ProfileModel> GetProfile() => Task.FromResult(_profile);
-        public static IAsyncEnumerable<ModModel> GetMods() => _mods.ToAsyncEnumerable();
-        public static async IAsyncEnumerable<CrashReportModel> GetCrashReports(IHttpClientFactory factory)
+        if (_crashReports is null)
         {
-            static async Task<CrashReport> DownloadReport(HttpClient client, string id)
+            var crm = new List<CrashReportModel>();
+            const string baseUrl = "https://report.butr.link/";
+            var client = factory.CreateClient("InternalReports");
+            var reports = new[] { "4DDA8D", "6FB0EF", "2AE0EA", "F966E3" };
+            var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, r)));
+            foreach (var cr in contents)
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{id}.html");
-                var response = await client.SendAsync(request);
-                var content = await response.Content.ReadAsStringAsync();
-                return CrashReportParser.Parse(id, content);
-            }
+                var report = new CrashReportModel(cr.Id, cr.Version, cr.GameVersion, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html", cr.Modules.Select(x => x.Id).ToArray(), CrashReportStatus.New, string.Empty);
+                crm.Add(report);
+                yield return report;
 
-            if (_crashReports is null)
-            {
-                var crm = new List<CrashReportModel>();
-                const string baseUrl = "https://report.butr.link/";
-                var client = factory.CreateClient("InternalReports");
-                var reports = new[] { "4DDA8D", "6FB0EF", "2AE0EA", "F966E3" };
-                var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, r)));
-                foreach (var cr in contents)
-                {
-                    var report = new CrashReportModel(cr.Id, cr.Version, cr.GameVersion, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html", cr.Modules.Select(x => x.Id).ToArray(), CrashReportStatus.New, string.Empty);
-                    crm.Add(report);
-                    yield return report;
-
-                }
-                _crashReports = crm;
             }
-            else
+            _crashReports = crm;
+        }
+        else
+        {
+            foreach (var crashReport in _crashReports)
             {
-                foreach (var crashReport in _crashReports)
-                {
-                    yield return crashReport;
-                }
+                yield return crashReport;
             }
         }
     }

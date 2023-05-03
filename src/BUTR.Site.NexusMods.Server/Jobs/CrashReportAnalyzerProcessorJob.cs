@@ -10,35 +10,35 @@ using Quartz;
 using System;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Jobs
+namespace BUTR.Site.NexusMods.Server.Jobs;
+
+[DisallowConcurrentExecution]
+public sealed class CrashReportAnalyzerProcessorJob : IJob
 {
-    [DisallowConcurrentExecution]
-    public sealed class CrashReportAnalyzerProcessorJob : IJob
+    private readonly ILogger _logger;
+    private readonly AppDbContext _dbContext;
+
+    public CrashReportAnalyzerProcessorJob(ILogger<CrashReportAnalyzerProcessorJob> logger, AppDbContext dbContext)
     {
-        private readonly ILogger _logger;
-        private readonly AppDbContext _dbContext;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    }
 
-        public CrashReportAnalyzerProcessorJob(ILogger<CrashReportAnalyzerProcessorJob> logger, AppDbContext dbContext)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        }
+    public async Task Execute(IJobExecutionContext context)
+    {
+        var crashReportEntity = _dbContext.Model.FindEntityType(typeof(CrashReportEntity))!;
+        var crashReportEntityTable = crashReportEntity.GetSchemaQualifiedTableName();
+        var modIds = crashReportEntity.GetProperty(nameof(CrashReportEntity.ModIds)).GetColumnName();
+        var involvedModIds = crashReportEntity.GetProperty(nameof(CrashReportEntity.InvolvedModIds)).GetColumnName();
+        var gameVersion = crashReportEntity.GetProperty(nameof(CrashReportEntity.GameVersion)).GetColumnName();
+        var modIdToVersion = crashReportEntity.GetProperty(nameof(CrashReportEntity.ModIdToVersion)).GetColumnName();
 
-        public async Task Execute(IJobExecutionContext context)
-        {
-            var crashReportEntity = _dbContext.Model.FindEntityType(typeof(CrashReportEntity))!;
-            var crashReportEntityTable = crashReportEntity.GetSchemaQualifiedTableName();
-            var modIds = crashReportEntity.GetProperty(nameof(CrashReportEntity.ModIds)).GetColumnName();
-            var involvedModIds = crashReportEntity.GetProperty(nameof(CrashReportEntity.InvolvedModIds)).GetColumnName();
-            var gameVersion = crashReportEntity.GetProperty(nameof(CrashReportEntity.GameVersion)).GetColumnName();
-            var modIdToVersion = crashReportEntity.GetProperty(nameof(CrashReportEntity.ModIdToVersion)).GetColumnName();
+        var crashScoreInvolvedEntity = _dbContext.Model.FindEntityType(typeof(StatisticsCrashScoreInvolvedEntity))!;
+        var crashScoreInvolvedEntityTable = crashScoreInvolvedEntity.GetSchemaQualifiedTableName();
 
-            var crashScoreInvolvedEntity = _dbContext.Model.FindEntityType(typeof(StatisticsCrashScoreInvolvedEntity))!;
-            var crashScoreInvolvedEntityTable = crashScoreInvolvedEntity.GetSchemaQualifiedTableName();
+        if (!_dbContext.Database.IsNpgsql()) return;
 
-            if (!_dbContext.Database.IsNpgsql()) return;
-
-            var sql = $"""
+        var sql = $"""
 TRUNCATE TABLE {crashScoreInvolvedEntityTable};
 WITH
 -- Get a list of all distinct mod versions in the database
@@ -104,10 +104,9 @@ ORDER BY
     all_mod_versions.mod_id,
     all_mod_versions.version;
 """;
-            _dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
-            await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { }, context.CancellationToken);
-            context.Result = "Updated Crash Report Statistics Data";
-            context.SetIsSuccess(true);
-        }
+        _dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
+        await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { }, context.CancellationToken);
+        context.Result = "Updated Crash Report Statistics Data";
+        context.SetIsSuccess(true);
     }
 }

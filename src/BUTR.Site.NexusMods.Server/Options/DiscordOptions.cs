@@ -2,23 +2,24 @@
 
 using FluentValidation;
 
-namespace BUTR.Site.NexusMods.Server.Options
-{
-    public sealed class DiscordOptionsValidator : AbstractValidator<DiscordOptions>
-    {
-        public DiscordOptionsValidator()
-        {
-            RuleFor(x => x.ClientId).NotEmpty();
-            RuleFor(x => x.ClientSecret).NotEmpty();
-            RuleFor(x => x.RedirectUri).NotEmpty().IsUri();
-        }
-    }
+using System.Net.Http;
 
-    public sealed record DiscordOptions
+namespace BUTR.Site.NexusMods.Server.Options;
+
+public sealed class DiscordOptionsValidator : AbstractValidator<DiscordOptions>
+{
+    public DiscordOptionsValidator(HttpClient client)
     {
-        public required string ClientId { get; init; }
-        public required string ClientSecret { get; init; }
-        public required string RedirectUri { get; init; }
-        public required string BotToken { get; init; }
+        RuleFor(x => x.ClientId).NotEmpty();
+        RuleFor(x => x.ClientSecret).NotEmpty();
+        RuleFor(x => x.RedirectUri).NotEmpty().IsUri();
     }
+}
+
+public sealed record DiscordOptions
+{
+    public required string ClientId { get; init; }
+    public required string ClientSecret { get; init; }
+    public required string RedirectUri { get; init; }
+    public required string BotToken { get; init; }
 }

@@ -2,13 +2,12 @@
 
 using Microsoft.AspNetCore.Builder;
 
-namespace BUTR.Site.NexusMods.Server.Extensions
+namespace BUTR.Site.NexusMods.Server.Extensions;
+
+public static class MetadataMiddlewareExtensions
 {
-    public static class MetadataMiddlewareExtensions
+    public static IApplicationBuilder UseMetadata(this IApplicationBuilder builder)
     {
-        public static IApplicationBuilder UseMetadata(this IApplicationBuilder builder)
-        {
-            return builder.UseMiddleware<MetadataMiddleware>();
-        }
+        return builder.UseMiddleware<MetadataMiddleware>();
     }
 }

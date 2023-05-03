@@ -3,18 +3,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace BUTR.Site.NexusMods.Server.Contexts.Config
+namespace BUTR.Site.NexusMods.Server.Contexts.Config;
+
+public class NexusModsArticleEntityConfiguration : BaseEntityConfiguration<NexusModsArticleEntity>
 {
-    public class NexusModsArticleEntityConfiguration : BaseEntityConfiguration<NexusModsArticleEntity>
+    protected override void ConfigureModel(EntityTypeBuilder<NexusModsArticleEntity> builder)
     {
-        protected override void ConfigureModel(EntityTypeBuilder<NexusModsArticleEntity> builder)
-        {
-            builder.ToTable("nexusmods_article_entity").HasKey(p => p.NexusModsArticleId).HasName("nexusmods_article_entity_pkey");
-            builder.Property(p => p.NexusModsArticleId).HasColumnName("id").IsRequired();
-            builder.Property(p => p.Title).HasColumnName("title").IsRequired();
-            builder.Property(p => p.NexusModsUserId).HasColumnName("author_id").IsRequired();
-            builder.Property(p => p.AuthorName).HasColumnName("author_name").IsRequired();
-            builder.Property(p => p.CreateDate).HasColumnName("create_date").IsRequired();
-        }
+        builder.ToTable("nexusmods_article_entity").HasKey(p => p.NexusModsArticleId).HasName("nexusmods_article_entity_pkey");
+        builder.Property(p => p.NexusModsArticleId).HasColumnName("id").IsRequired();
+        builder.Property(p => p.Title).HasColumnName("title").IsRequired();
+        builder.Property(p => p.NexusModsUserId).HasColumnName("author_id").IsRequired();
+        builder.Property(p => p.AuthorName).HasColumnName("author_name").IsRequired();
+        builder.Property(p => p.CreateDate).HasColumnName("create_date").IsRequired();
     }
 }

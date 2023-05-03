@@ -1,8 +1,7 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models
+﻿namespace BUTR.Site.NexusMods.Server.Models;
+
+public sealed record TextSearchFiltering
 {
-    public sealed record TextSearchFiltering
-    {
-        public required TextSearchFilteringType Type { get; init; }
-        public required string Value { get; init; }
-    }
+    public required TextSearchFilteringType Type { get; init; }
+    public required string Value { get; init; }
 }
