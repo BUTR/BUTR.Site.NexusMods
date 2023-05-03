@@ -112,10 +112,10 @@
     
     private async Task<bool> DoManualLink(ManualLinkModel model)
     {
-        if (!ModsUtils.TryParse(model.NexusModsUrl, out _, out var nexusModsId))
+        if (!ModsUtils.TryParse(model.NexusModsUrl, out _, out var nexusModsId) && !int.TryParse(model.NexusModsUrl, out nexusModsId))
             return false;
         
-        return await _modClient.ModManualLinkAsync(model.ModId, nexusModsId.Value) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        return await _modClient.ModManualLinkAsync(model.ModId, nexusModsId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
     }
     private async Task<bool> DoManualUnlink(ModNexusModsManualLinkModel model)
     {

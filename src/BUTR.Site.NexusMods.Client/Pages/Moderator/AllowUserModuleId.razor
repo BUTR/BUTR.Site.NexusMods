@@ -161,10 +161,10 @@
     
     private async Task<bool> DoUserAllowMod(AllowUserModel model)
     {
-        if (!ModsUtils.TryParse(model.UserUrl, out _, out var nexusModsId))
+        if (!ModsUtils.TryParse(model.UserUrl, out _, out var nexusModsId) && !int.TryParse(model.UserUrl, out nexusModsId))
             return false;
         
-        return await _modClient.AllowUserAModuleIdAsync((int) nexusModsId, model.ModuleId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        return await _modClient.AllowUserAModuleIdAsync(nexusModsId, model.ModuleId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
     }
     private async Task<bool> DoUserDisallowMod(UserAllowedModuleIdsModel model)
     {

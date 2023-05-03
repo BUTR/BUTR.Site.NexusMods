@@ -59,7 +59,7 @@ namespace BUTR.Site.NexusMods.Server.Jobs
                         ModIdToVersion = report.Modules.Select(item => new { item.Id, item.Version }).Distinct().ToDictionary(x => x.Id, x => x.Version),
                         InvolvedModIds = report.InvolvedModules.Select(x => x.Id).ToImmutableArray().AsArray(),
                         ModNexusModsIds = report.Modules
-                            .Select(x => ModsUtils.TryParse(x.Url, out _, out var modId) ? modId.GetValueOrDefault(-1) : -1)
+                            .Select(x => ModsUtils.TryParse(x.Url, out _, out var modId) ? modId : -1)
                             .Where(x => x != -1)
                             .ToImmutableArray().AsArray(),
                         Metadata = new CrashReportEntityMetadata
