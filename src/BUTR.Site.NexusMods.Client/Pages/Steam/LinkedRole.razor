@@ -1,0 +1,17 @@
+﻿@attribute [Authorize]
+@page "/steam-linked-role"
+
+@inject ISteamClient _steamClient;
+@inject NavigationManager _navigationManager;
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        var response = await _steamClient.GetOpenIdUrlAsync(_navigationManager.BaseUri, "steam-openid-callback");
+        _navigationManager.NavigateTo(response.Data.Url);
+    }
+
+}

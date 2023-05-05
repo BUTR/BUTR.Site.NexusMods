@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace BUTR.Site.NexusMods.Shared.Helpers;
 
-public static class ModsUtils
+public static class NexusModsUtils
 {
     public static bool TryParse(string url, [NotNullWhen(true)] out string? gameDomain, out int modId)
     {

@@ -12,7 +12,7 @@ namespace BUTR.Site.NexusMods.Client.Models;
 
 public static class DemoUser
 {
-    private static readonly ProfileModel _profile = new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true, ApplicationRoles.User, null);
+    private static readonly ProfileModel _profile = new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true, ApplicationRoles.User, null, null, true);
     private static readonly List<ModModel> _mods = new()
     {
         new("Demo Mod 1", 1, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),

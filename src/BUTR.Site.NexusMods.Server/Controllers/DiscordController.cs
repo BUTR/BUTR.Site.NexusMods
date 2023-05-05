@@ -81,7 +81,6 @@ public sealed class DiscordController : ControllerExtended
             return APIResponseError<string>("Failed to unlink!");
 
         return APIResponse("Unlinked successful!");
-
     }
 
     [HttpPost("UpdateMetadata")]

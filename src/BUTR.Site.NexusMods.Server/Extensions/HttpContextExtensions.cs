@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 
 namespace BUTR.Site.NexusMods.Server.Extensions;
@@ -23,7 +24,9 @@ public static class HttpContextExtensions
         IsPremium = context.GetIsPremium(),
         IsSupporter = context.GetIsSupporter(),
         Role = role,
-        DiscordUserId = context.GetDiscordTokens()?.UserId
+        DiscordUserId = context.GetDiscordTokens()?.UserId,
+        SteamUserId = context.GetSteamTokens()?.UserId,
+        HasBannerlord = context.GetHasBannerlord()
     };
 
     public static int GetUserId(this HttpContext context) =>
@@ -55,6 +58,15 @@ public static class HttpContextExtensions
         var options = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;
         return context.GetMetadata().TryGetValue("DiscordTokens", out var json) ? JsonSerializer.Deserialize<DiscordUserTokens>(json, options) : null;
     }
+
+    public static SteamUserTokens? GetSteamTokens(this HttpContext context)
+    {
+        var options = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;
+        return context.GetMetadata().TryGetValue("SteamTokens", out var json) ? JsonSerializer.Deserialize<SteamUserTokens>(json, options) : null;
+    }
+
+    public static bool GetHasBannerlord(this HttpContext context) =>
+        context.GetMetadata().Any(x => x.Key == "MB2B");
 
     public static Dictionary<string, string> GetMetadata(this HttpContext context)
     {

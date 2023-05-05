@@ -1,5 +1,7 @@
 ﻿@typeparam TItem where TItem : class
 
+@inject ILocalStorageService _localStorage
+
 <DataGrid @ref="@_dataGridRef" @attributes="@AdditionalAttributes"
          TItem="TItem"
          Data="@Values"
@@ -75,10 +77,16 @@
     public Func<int, int, ICollection<Filtering>, ICollection<Sorting>, CancellationToken, Task<ItemsResponse>>? GetItems { get; set; }
 
     [Parameter]
-    public IEnumerable<int> PageSizes { get; set; } = new[] { 5, 10, 25, 50 };
+    public int DefaultPageSize { get; set; } = UserSettings.DefaultPageSize;
     
     [Parameter]
-    public PagingMetadata Metadata { get; set; } = new(1, 0, 25, 0);
+    public IEnumerable<int> PageSizes { get; set; } = UserSettings.AvailablePageSizes;
+
+    [Parameter]
+    public Func<UserSettings, int>? GetPageSize { get; set; } = (settings => settings.PageSize); 
+    
+    [Parameter]
+    public PagingMetadata Metadata { get; set; }
     
 
     public TItem? Value;
@@ -88,6 +96,17 @@
 
     private DataGrid<TItem> _dataGridRef = default!;
     private Progress _progressRef = default!;
+
+    public DataGridPaging()
+    {
+        Metadata = new PagingMetadata(1, 0, DefaultPageSize, 0);
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        Metadata = new(1, 0, await GetPageSizeInternal(), 0);
+    }
 
     public Task Reload() => _dataGridRef.Reload();
 
@@ -111,6 +130,12 @@
         var response = (GetItems is not null ? await GetItems(page, pageSize, filterings, sortings, ct) : null) ?? new(Array.Empty<TItem>(), PagingMetadata.Empty);
         Values = response.Items;
         Metadata = response.Metadata;
+    }
+
+    private async Task<int> GetPageSizeInternal()
+    {
+        var userSettings = await _localStorage.GetItemAsync<UserSettings>("settings") ?? new();
+        return GetPageSize?.Invoke(userSettings) ?? userSettings.PageSize;
     }
 
     private static bool OnCustomFilter(TItem model) => true;

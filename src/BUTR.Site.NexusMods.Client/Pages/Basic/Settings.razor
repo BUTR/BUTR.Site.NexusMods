@@ -1,0 +1,97 @@
+@attribute [Authorize]
+@page "/settings"
+
+@inject INotificationService _notificationService
+@inject ILocalStorageService _localStorage
+
+<Container>
+    <Card Margin="@Margin.Is4" Shadow="@Shadow.Small">
+        <CardHeader>
+            <CardTitle Size="4" Margin="@Margin.Is0">Settings</CardTitle>
+        </CardHeader>
+        <CardBody>
+            <!--
+            <AuthorizeView Roles="@(ApplicationRoles.Administrator)">
+                <Row>
+                    <Column ColumnSize="ColumnSize.Is4">
+                        <Card Shadow="@Shadow.Small">
+                            <CardHeader>
+                                <CardTitle Size="5" Margin="@Margin.Is0">Administrator Settings</CardTitle>
+                            </CardHeader>
+                            <CardBody>
+                            </CardBody>
+                        </Card>
+                    </Column>
+                </Row>
+            </AuthorizeView>
+            -->
+            <Row>
+                <Column ColumnSize="ColumnSize.Is4">
+                    <Card Shadow="@Shadow.Small">
+                        <CardHeader>
+                            <CardTitle Size="5" Margin="@Margin.Is0">Page Sizes</CardTitle>
+                        </CardHeader>
+                        <CardBody>
+                            <Field>
+                                <FieldLabel>Default Page Size</FieldLabel>
+                                <Select TValue="int" @bind-SelectedValue="@_userSettings.PageSize">
+                                    @foreach (var item in UserSettings.AvailablePageSizes)
+                                    {
+                                        <SelectItem Value="@item">@item</SelectItem>
+                                    }
+                                </Select>
+                            </Field>
+                            <Field>
+                                <FieldLabel>Crash Reports Page Size</FieldLabel>
+                                <Select TValue="int" @bind-SelectedValue="@_userSettings.CrashReportPageSize">
+                                    @foreach (var item in UserSettings.AvailableCrashReportPageSizes)
+                                    {
+                                        <SelectItem Value="@item">@item</SelectItem>
+                                    }
+                                </Select>
+                            </Field>
+                        </CardBody>
+                    </Card>
+                </Column>
+            </Row>
+            <Row>
+                <Column Flex="Flex.ReverseRow" Gap="Gap.Is1">
+                    <Button Border="Border.RoundedPill"
+                            Color="Color.Primary"
+                            Clicked="OnCancel">Cancel</Button>
+                    <Button Border="Border.RoundedPill"
+                            Color="Color.Primary"
+                            Clicked="OnSave">Save</Button>
+                </Column>
+            </Row>
+        </CardBody>
+    </Card>
+</Container>
+
+@code {
+
+    private UserSettings _userSettings = new();
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        _userSettings = await _localStorage.GetItemAsync<UserSettings>("settings") ?? new();
+    }
+
+    private async Task OnSave()
+    {
+        await _localStorage.SetItemAsync("settings", _userSettings);
+        await _notificationService.Success(
+            "Saved the settings!",
+            "Success!");
+    }
+
+    private async Task OnCancel()
+    {
+        _userSettings = await _localStorage.GetItemAsync<UserSettings>("settings") ?? new();
+        await _notificationService.Success(
+            $"Reloaded the settings!",
+            "Success!");
+    }
+
+}

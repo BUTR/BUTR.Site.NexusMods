@@ -31,7 +31,7 @@
         <CardTitle Size="4" Margin="Margin.Is0">Linked Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="ModModel" GetItems="GetMods" PageSizes="@(new[] { 5, 10, 20 })">
+        <DataGridPaging @ref="@_dataGridRef" TItem="ModModel" GetItems="GetMods">
             <DataGridColumns>
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ModId)" Caption="Mod Id"/>
                 <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name"/>
@@ -105,7 +105,7 @@
 
     private async Task<bool> DoLinkMod(LinkModModel model)
     {
-        if (!ModsUtils.TryParse(model.ModUrl, out _, out var modId) && !int.TryParse(model.ModUrl, out modId))
+        if (!NexusModsUtils.TryParse(model.ModUrl, out _, out var modId) && !int.TryParse(model.ModUrl, out modId))
             return false;
 
         return await _modClient.ModLinkAsync(modId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);

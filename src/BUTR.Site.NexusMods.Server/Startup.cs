@@ -48,6 +48,7 @@ public sealed class Startup
     private const string NexusModsSectionName = "NexusMods";
     private const string JwtSectionName = "Jwt";
     private const string DiscordSectionName = "Discord";
+    private const string SteamAPISectionName = "SteamAPI";
 
     private static JsonSerializerOptions Configure(JsonSerializerOptions opt)
     {
@@ -75,12 +76,14 @@ public sealed class Startup
         var nexusModsSection = _configuration.GetSection(NexusModsSectionName);
         var jwtSection = _configuration.GetSection(JwtSectionName);
         var discordSection = _configuration.GetSection(DiscordSectionName);
+        var steamAPISection = _configuration.GetSection(SteamAPISectionName);
 
         services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>(connectionStringSection);
         services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>(crashReporterSection);
         services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>(nexusModsSection);
         services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>(jwtSection);
         services.AddValidatedOptions<DiscordOptions, DiscordOptionsValidator>(discordSection);
+        services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>(steamAPISection);
 
         services.AddHttpClient(string.Empty).ConfigureHttpClient((sp, client) =>
         {
@@ -109,6 +112,16 @@ public sealed class Startup
         });
         services.AddHttpClient<DiscordClient>().ConfigureHttpClient((sp, client) =>
         {
+            client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+        });
+        services.AddHttpClient<SteamCommunityClient>().ConfigureHttpClient((sp, client) =>
+        {
+            client.BaseAddress = new Uri("https://steamcommunity.com");
+            client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+        });
+        services.AddHttpClient<SteamAPIClient>().ConfigureHttpClient((sp, client) =>
+        {
+            client.BaseAddress = new Uri("https://api.steampowered.com");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
 
@@ -163,6 +176,7 @@ public sealed class Startup
 
         services.AddHostedService<DiscordLinkedRolesService>();
         services.AddScoped<IDiscordStorage, DatabaseDiscordStorage>();
+        services.AddScoped<ISteamStorage, DatabaseSteamStorage>();
 
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHttpMessageHandlerBuilderFilter, SyncLoggingHttpMessageHandlerBuilderFilter>());
         services.AddTransient<NexusModsInfo>();

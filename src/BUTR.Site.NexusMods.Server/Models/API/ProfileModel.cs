@@ -11,4 +11,7 @@ public sealed record ProfileModel
     public required string Role { get; init; }
 
     public required string? DiscordUserId { get; init; }
+    public required string? SteamUserId { get; init; }
+
+    public required bool HasBannerlord { get; init; }
 }

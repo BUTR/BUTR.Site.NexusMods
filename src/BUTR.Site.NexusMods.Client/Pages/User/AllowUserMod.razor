@@ -70,7 +70,7 @@
         <CardTitle Size="4" Margin="Margin.Is0">Allowed Mods to Users</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModsModel" GetItems="GetAllowUserMods" PageSizes="@(new[] { 5, 10, 20 })">
+        <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModsModel" GetItems="GetAllowUserMods" >
             <DataGridColumns>
                 <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.ModId)" Caption="Mod Id"/>
                 <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.AllowedUserIds)" Caption="Allowed User Ids">
@@ -161,10 +161,10 @@
     
     private async Task<bool> DoUserAllowMod(AllowUserModel model)
     {
-        if (!ModsUtils.TryParse(model.UserUrl, out _, out var nexusModsUserId) && !int.TryParse(model.UserUrl, out nexusModsUserId))
+        if (!NexusModsUtils.TryParse(model.UserUrl, out _, out var nexusModsUserId) && !int.TryParse(model.UserUrl, out nexusModsUserId))
             return false;
         
-        if (!ModsUtils.TryParse(model.ModUrl, out _, out var nexusModsModId) && !int.TryParse(model.ModUrl, out nexusModsModId))
+        if (!NexusModsUtils.TryParse(model.ModUrl, out _, out var nexusModsModId) && !int.TryParse(model.ModUrl, out nexusModsModId))
             return false;
         
         return await _modClient.AllowUserAModAsync(nexusModsUserId, nexusModsModId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);

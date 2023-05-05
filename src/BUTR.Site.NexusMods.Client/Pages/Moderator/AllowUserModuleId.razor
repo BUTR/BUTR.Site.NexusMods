@@ -70,7 +70,7 @@
         <CardTitle Size="4" Margin="Margin.Is0">Allowed User Module Ids</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModuleIdsModel" GetItems="GetAllowUserMods" PageSizes="@(new[] { 5, 10, 20 })">
+        <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModuleIdsModel" GetItems="GetAllowUserMods">
             <DataGridColumns>
                 <DataGridColumnText TItem="UserAllowedModuleIdsModel" Field="@nameof(UserAllowedModuleIdsModel.UserId)" Caption="User Id"/>
                 <DataGridColumnText TItem="UserAllowedModuleIdsModel" Field="@nameof(UserAllowedModuleIdsModel.AllowedModuleIds)" Caption="Allowed Module Ids">
@@ -161,7 +161,7 @@
     
     private async Task<bool> DoUserAllowMod(AllowUserModel model)
     {
-        if (!ModsUtils.TryParse(model.UserUrl, out _, out var nexusModsId) && !int.TryParse(model.UserUrl, out nexusModsId))
+        if (!NexusModsUtils.TryParse(model.UserUrl, out _, out var nexusModsId) && !int.TryParse(model.UserUrl, out nexusModsId))
             return false;
         
         return await _modClient.AllowUserAModuleIdAsync(nexusModsId, model.ModuleId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);

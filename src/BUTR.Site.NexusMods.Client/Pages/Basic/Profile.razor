@@ -4,6 +4,7 @@
 @inject NavigationManager _navigationManager
 @inject IUserClient _userClient
 @inject IDiscordClient _discordClient
+@inject ISteamClient _steamClient
 
 @if (_user is null)
 {
@@ -82,20 +83,63 @@ else
                 <Divider/>
                 <Row>
                     <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Discord</Column>
-                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary"><Anchor Style="text-decoration: none" To="@(_discordUser?.Url ?? "discord-linked-role")" Target="@Target.Blank">@(_discordUser?.Name ?? "Not Linked")</Anchor></Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">
+                        <Anchor Style="text-decoration: none" To="@(_discordUser?.Url ?? "discord-linked-role")" Target="@Target.Blank">
+                            @if (_user.DiscordUserId is not null && _discordUser?.Name is not null)
+                            {
+                                @(_discordUser.Name)
+                            }
+                            else if (_user.DiscordUserId is not null && _discordUser?.Name is null)
+                            {
+                                @("Needs Relinking")
+                            }
+                            else
+                            {
+                                @("Not Linked")
+                            }
+                        </Anchor>
+                    </Column>
+                </Row>
+                <Divider/>
+                <Row>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Steam</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">
+                        <Anchor Style="text-decoration: none" To="@(_steamUser?.Url ?? "steam-linked-role")" Target="@Target.Blank">
+                            @if (_user.SteamUserId is not null && _steamUser?.Name is not null)
+                            {
+                                @(_steamUser.Name)
+                            }
+                            else if (_user.SteamUserId is not null && _steamUser?.Name is null)
+                            {
+                                @("Needs Relinking")
+                            }
+                            else
+                            {
+                                @("Not Linked")
+                            }
+                        </Anchor>
+                    </Column>
+                </Row>
+                <Divider/>
+                <Row>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Has Bannerlord</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.HasBannerlord</Column>
                 </Row>
             </CardBody>
         </Card>;
 
     private ProfileModel? _user;
     private DiscordUserInfo2? _discordUser;
+    private SteamUserInfo2? _steamUser;
     private Row? _gutterRow;
 
     protected override async Task OnInitializedAsync()
     {
         _user = (await _userClient.ProfileAsync()).Data;
         var discordUserInfo = _user?.DiscordUserId is not null ? await _discordClient.GetUserInfoAsync() : null;
-        _discordUser = discordUserInfo is { Data: { } data } ? new DiscordUserInfo2(data) : null;
+        _discordUser = discordUserInfo is { Data: { } dataDiscord } ? new DiscordUserInfo2(dataDiscord) : null;
+        var steamUserInfo = _user?.SteamUserId is not null ? await _steamClient.GetUserInfoAsync() : null;
+        _steamUser = steamUserInfo is { Data: { } dataSteam } ? new SteamUserInfo2(dataSteam) : null;
         if (_gutterRow is not null)
             _gutterRow.Gutter = (5,5);
     }

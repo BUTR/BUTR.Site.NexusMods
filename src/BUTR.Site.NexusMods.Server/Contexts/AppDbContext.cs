@@ -36,6 +36,8 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new CrashReportIgnoredFilesEntityConfiguration());
         modelBuilder.ApplyConfiguration(new CrashScoreInvolvedEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NexusModsUserToDiscordEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NexusModsUserToSteamEntityConfiguration());
         modelBuilder.ApplyConfiguration(new DiscordLinkedRoleTokensEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SteamLinkedRoleTokensEntityConfiguration());
     }
 }

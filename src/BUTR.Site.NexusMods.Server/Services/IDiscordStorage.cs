@@ -55,13 +55,13 @@ public sealed class DatabaseDiscordStorage : IDiscordStorage
                 UserId = discordUserId,
                 RefreshToken = tokens.RefreshToken,
                 AccessToken = tokens.AccessToken,
-                AccessTokenExpiresAt = tokens.ExpiresAt
+                AccessTokenExpiresAt = tokens.ExpiresAt.ToUniversalTime()
             },
             _ => existing with
             {
                 RefreshToken = tokens.RefreshToken,
                 AccessToken = tokens.AccessToken,
-                AccessTokenExpiresAt = tokens.ExpiresAt
+                AccessTokenExpiresAt = tokens.ExpiresAt.ToUniversalTime()
             }
         };
         if (!_dbContext.AddUpdateRemoveAndSave<DiscordLinkedRoleTokensEntity>(x => x.UserId == discordUserId, ApplyChanges2))
@@ -86,7 +86,7 @@ public sealed class DatabaseDiscordStorage : IDiscordStorage
             //},
             _ => existing with
             {
-                Metadata = existing.Metadata.SetAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt)))
+                Metadata = existing.Metadata.SetAndReturn("DiscordTokens", JsonSerializer.Serialize(new DiscordUserTokens(discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt.ToUniversalTime())))
             },
         };
         if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges3))

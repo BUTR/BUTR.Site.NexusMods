@@ -87,6 +87,14 @@ public partial class DiscordClient
     }
 }
 
+public partial class SteamClient
+{
+    public SteamClient(HttpClient client, JsonSerializerOptions options) : this(client)
+    {
+        _settings = new Lazy<JsonSerializerOptions>(options);
+    }
+}
+
 public partial class StatisticsClient
 {
     public StatisticsClient(HttpClient client, JsonSerializerOptions options) : this(client)
