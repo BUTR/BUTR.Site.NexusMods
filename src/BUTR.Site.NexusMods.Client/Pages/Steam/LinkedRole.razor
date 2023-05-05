@@ -10,7 +10,7 @@
     {
         await base.OnInitializedAsync();
         
-        var response = await _steamClient.GetOpenIdUrlAsync(_navigationManager.BaseUri, "steam-openid-callback");
+        var response = await _steamClient.GetOpenIdUrlAsync();
         _navigationManager.NavigateTo(response.Data.Url);
     }
 

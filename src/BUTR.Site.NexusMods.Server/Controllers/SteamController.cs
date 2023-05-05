@@ -3,12 +3,14 @@ using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
@@ -28,27 +30,29 @@ public sealed class SteamController : ControllerExtended
 {
     private readonly ISteamStorage _steamStorage;
     private readonly AppDbContext _dbContext;
+    private readonly SteamAPIOptions _options;
     private readonly SteamCommunityClient _steamCommunityClient;
     private readonly SteamAPIClient _steamAPIClient;
 
-    public SteamController(ISteamStorage steamStorage, AppDbContext dbContext, SteamCommunityClient steamCommunityClient, SteamAPIClient steamAPIClient)
+    public SteamController(ISteamStorage steamStorage, AppDbContext dbContext, IOptions<SteamAPIOptions> options, SteamCommunityClient steamCommunityClient, SteamAPIClient steamAPIClient)
     {
         _steamStorage = steamStorage ?? throw new ArgumentNullException(nameof(steamStorage));
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
         _steamCommunityClient = steamCommunityClient ?? throw new ArgumentNullException(nameof(steamCommunityClient));
         _steamAPIClient = steamAPIClient ?? throw new ArgumentNullException(nameof(steamAPIClient));
     }
 
     [HttpGet("GetOpenIdUrl")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<SteamOpenIdUrlModel?>> GetOpenIdUrl(string realm, string redirectUrl)
+    public ActionResult<APIResponse<SteamOpenIdUrlModel?>> GetOpenIdUrl()
     {
         var query = QueryString.Create(new KeyValuePair<string, string?>[]
         {
             new("openid.ns", "http://specs.openid.net/auth/2.0"),
             new("openid.mode", "checkid_setup"),
-            new("openid.return_to", $"{realm}/{redirectUrl}"),
-            new("openid.realm", realm),
+            new("openid.return_to", _options.RedirectUri),
+            new("openid.realm", _options.Realm),
             new("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select"),
             new("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select"),
         });
