@@ -147,9 +147,9 @@ public sealed class Startup
 
             // Manual
             //opt.AddJobAtStartup<NexusModsArticleProcessorJob>();
-                opt.AddJobAtStartup<TopExceptionsTypesAnalyzerProcessorJob>();
-                opt.AddJobAtStartup<CrashReportAnalyzerProcessorJob>();
-                opt.AddJobAtStartup<AutocompleteProcessorProcessorJob>();
+            opt.AddJobAtStartup<TopExceptionsTypesAnalyzerProcessorJob>();
+            opt.AddJobAtStartup<CrashReportAnalyzerProcessorJob>();
+            opt.AddJobAtStartup<AutocompleteProcessorProcessorJob>();
 #else
                 // Hourly
                 opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
