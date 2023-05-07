@@ -32,7 +32,7 @@ public sealed class BannerlordBinaryCache
         if (await _distributedCache.GetStringAsync(path, ct) is { } filesRaw)
             return filesRaw.Split(';');
         
-        await _steamDepotDownloader.DownloadAsync(branch, path, ct);
+        await _steamDepotDownloader.DownloadAsync(branch, path, CancellationToken.None);
         var files = Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories).ToArray();
         
         await _distributedCache.SetStringAsync(path, string.Join(';', files), new DistributedCacheEntryOptions
