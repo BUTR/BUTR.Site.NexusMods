@@ -21,12 +21,11 @@ RUN dotnet publish "BUTR.Site.NexusMods.Server.csproj" -c Release -o /app/publis
 
 FROM base AS final
 
-RUN apt-get -y update \
-    && apt-get install -y curl unzip \
-    && curl https://github.com/SteamRE/DepotDownloader/releases/download/DepotDownloader_2.4.7/depotdownloader-2.4.7.zip -O tmp \
-    && unzip tmp/depotdownloader-2.4.7.zip -d /depotdownloader \
-    && rm tmp/depotdownloader-2.4.7.zip \
-    && apt-get remove -y curl unzip \
+RUN apt-get -y update && apt-get install -y wget unzip \
+    && wget https://github.com/SteamRE/DepotDownloader/releases/download/DepotDownloader_2.4.7/depotdownloader-2.4.7.zip \
+    && unzip depotdownloader-2.4.7.zip -d /depotdownloader \
+    && rm depotdownloader-2.4.7.zip \
+    && apt-get remove -y wget unzip \
     && apt-get clean
 
 WORKDIR /app
