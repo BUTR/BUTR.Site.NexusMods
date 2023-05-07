@@ -128,6 +128,7 @@ public sealed class Startup
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
 
+        services.AddSingleton<BannerlordBinaryCache>();
         services.AddSingleton<SteamDepotDownloader>();
         services.AddSingleton<QuartzEventProviderService>();
         services.AddHostedService<QuartzListenerBackgroundService>();
