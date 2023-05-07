@@ -44,8 +44,8 @@ public sealed class RecreateStacktraceController : ControllerExtended
         return APIResponse(recreatedStacktrace);
     }
     
-    [HttpGet("{id}.html")]
-    [Produces("text/html")]
+    [HttpGet("Html/{id}")]
+    [Produces("text/plain")]
     public async Task<ActionResult<string>> Html(string id, CancellationToken ct)
     {
         var crashReportContent = await _crashReporterClient.GetCrashReportAsync(id, ct);

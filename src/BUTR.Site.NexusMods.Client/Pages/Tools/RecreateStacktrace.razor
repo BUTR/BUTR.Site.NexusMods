@@ -15,7 +15,7 @@
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        html = await _recreateStacktraceClient.RecreateStacktraceAsync(Id, CancellationToken.None);
+        html = await _recreateStacktraceClient.HtmlAsync(Id, CancellationToken.None);
     }
 
 }
