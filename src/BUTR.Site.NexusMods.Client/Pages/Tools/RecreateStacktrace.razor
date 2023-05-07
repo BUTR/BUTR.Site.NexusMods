@@ -3,14 +3,19 @@
 
 @inject IRecreateStacktraceClient _recreateStacktraceClient
 
-@((MarkupString) html)
+@if (!string.IsNullOrEmpty(html))
+{
+    <iframe srcdoc="@html" height="100%" width="100%">
+        Your browser doesn't support iframes
+    </iframe>
+}
 
 @code {
     
     [Parameter]
     public string Id { get; set; }
 
-    private string html = string.Empty;
+    private string? html;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
