@@ -36,6 +36,12 @@
     <ProjectReference Include="..\BUTR.Site.NexusMods.Shared\BUTR.Site.NexusMods.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="FileFilters.regexp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <Target Name="_ResolveCopyLocalNuGetPkgXmls" AfterTargets="ResolveReferences">
     <ItemGroup>
       <!-- Copy XML files from all PackageReferences to output dir -->
