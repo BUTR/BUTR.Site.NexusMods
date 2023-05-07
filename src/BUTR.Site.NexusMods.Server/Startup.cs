@@ -49,6 +49,7 @@ public sealed class Startup
     private const string JwtSectionName = "Jwt";
     private const string DiscordSectionName = "Discord";
     private const string SteamAPISectionName = "SteamAPI";
+    private const string DepotDownloaderSectionName = "DepotDownloader";
 
     private static JsonSerializerOptions Configure(JsonSerializerOptions opt)
     {
@@ -77,6 +78,7 @@ public sealed class Startup
         var jwtSection = _configuration.GetSection(JwtSectionName);
         var discordSection = _configuration.GetSection(DiscordSectionName);
         var steamAPISection = _configuration.GetSection(SteamAPISectionName);
+        var depotDownloaderSection = _configuration.GetSection(DepotDownloaderSectionName);
 
         services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>(connectionStringSection);
         services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>(crashReporterSection);
@@ -84,6 +86,7 @@ public sealed class Startup
         services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>(jwtSection);
         services.AddValidatedOptions<DiscordOptions, DiscordOptionsValidator>(discordSection);
         services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>(steamAPISection);
+        services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>(depotDownloaderSection);
 
         services.AddHttpClient(string.Empty).ConfigureHttpClient((sp, client) =>
         {
@@ -125,6 +128,7 @@ public sealed class Startup
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
 
+        services.AddSingleton<SteamDepotDownloader>();
         services.AddSingleton<QuartzEventProviderService>();
         services.AddHostedService<QuartzListenerBackgroundService>();
         services.AddQuartz(opt =>

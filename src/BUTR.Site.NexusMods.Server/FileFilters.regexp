@@ -1,0 +1,2 @@
+regex:bin\/Win64_Shipping_Client\/[^\/]*TaleWorlds[^\/]+dll
+regex:Modules\/[^\/]+\/bin\/Win64_Shipping_Client\/[^\/]+dll

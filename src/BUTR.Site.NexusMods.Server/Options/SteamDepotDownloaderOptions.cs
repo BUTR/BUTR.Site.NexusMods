@@ -17,6 +17,7 @@ public sealed class SteamDepotDownloaderOptionsValidator : AbstractValidator<Ste
 public sealed record SteamDepotDownloaderOptions
 {
     public required string BinaryPath { get; init; }
+    public required string DownloadPath { get; init; }
     public required int AppId { get; init; }
     public required int[] Depots { get; init; }
     public required string Filelist { get; init; }

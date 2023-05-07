@@ -20,6 +20,9 @@ RUN dotnet publish "BUTR.Site.NexusMods.Server.csproj" -c Release -o /app/publis
 
 
 FROM base AS final
+
+ADD https://github.com/SteamRE/DepotDownloader/releases/download/DepotDownloader_2.4.7/depotdownloader-2.4.7.zip /depotdownloader
+
 WORKDIR /app
 COPY --from=publish /app/publish .
 

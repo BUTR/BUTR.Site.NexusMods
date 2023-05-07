@@ -13,26 +13,39 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Threading;
 
 namespace BUTR.Site.NexusMods.Server.Utils;
 
 internal static class CSharpILMixedLanguage
 {
-    public static ReflectionDisassembler CreateDisassembler(ITextOutput output) =>
-        new(output, new MixedMethodBodyDisassembler(output) { DetectControlStructure = true, ShowSequencePoints = false }, CancellationToken.None)
+    public static ReflectionDisassembler CreateDisassembler(ITextOutput output, CancellationToken ct)
+    {
+        var methodBodyDisassembler = new MixedMethodBodyDisassembler(output, ct)
         {
             ShowMetadataTokens = false,
             ShowMetadataTokensInBase10 = false,
             ShowRawRVAOffsetAndBytes = false,
-            ExpandMemberDefinitions = false
+            ShowSequencePoints = false,
+            DetectControlStructure = true,
         };
+        
+        return new(output, methodBodyDisassembler, ct)
+        {
+            ShowMetadataTokens = false,
+            ShowMetadataTokensInBase10 = false,
+            ShowRawRVAOffsetAndBytes = false,
+            ShowSequencePoints = false,
+            DetectControlStructure = true,
+            ExpandMemberDefinitions = false,
+        };
+    }
 
-    private static CSharpDecompiler CreateDecompiler(PEFile module)
+    private static CSharpDecompiler CreateDecompiler(PEFile module, DecompilerSettings settings, CancellationToken ct)
     {
-        var resolver = new UniversalAssemblyResolver(module.Name, false, module.DetectTargetFrameworkId());
-        var decompiler = new CSharpDecompiler(module, resolver, new DecompilerSettings()) { CancellationToken = CancellationToken.None };
-        return decompiler;
+        var resolver = new UniversalAssemblyResolver(module.Name, false, module.DetectTargetFrameworkId(), module.DetectRuntimePack(), PEStreamOptions.Default, MetadataReaderOptions.None);
+        return new CSharpDecompiler(module, resolver, settings) { CancellationToken = ct };
     }
 
     private static void WriteCode(TextWriter output, DecompilerSettings settings, SyntaxTree syntaxTree)
@@ -51,16 +64,22 @@ internal static class CSharpILMixedLanguage
         // lines of raw c# source code
         private string[]? codeLines;
 
-        public MixedMethodBodyDisassembler(ITextOutput output) : base(output, CancellationToken.None) { }
+        private readonly CancellationToken cancellationToken;
+
+        public MixedMethodBodyDisassembler(ITextOutput output, CancellationToken ct) : base(output, ct)
+        {
+            cancellationToken = ct;
+        }
 
         public override void Disassemble(PEFile module, MethodDefinitionHandle handle)
         {
             try
             {
-                var csharpOutput = new StringWriter();
-                var decompiler = CreateDecompiler(module);
+                var settings = new DecompilerSettings(LanguageVersion.Latest);
+                using var csharpOutput = new StringWriter();
+                var decompiler = CreateDecompiler(module, settings, cancellationToken);
                 var st = decompiler.Decompile(handle);
-                WriteCode(csharpOutput, new DecompilerSettings(), st);
+                WriteCode(csharpOutput, settings, st);
                 var mapping = decompiler.CreateSequencePoints(st).FirstOrDefault(kvp => (kvp.Key.MoveNextMethod ?? kvp.Key.Method)?.MetadataToken == handle);
                 sequencePoints = mapping.Value ?? (IList<ICSharpCode.Decompiler.DebugInfo.SequencePoint>) EmptyList<ICSharpCode.Decompiler.DebugInfo.SequencePoint>.Instance;
                 codeLines = csharpOutput.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);

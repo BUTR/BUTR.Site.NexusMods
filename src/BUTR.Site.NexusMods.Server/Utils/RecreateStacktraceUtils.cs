@@ -1,89 +1,108 @@
-﻿using BUTR.Site.NexusMods.Shared.Helpers;
+﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Shared.Helpers;
 
 using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.Metadata;
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using System.Runtime.Loader;
+using System.Text;
+using System.Threading;
 
 namespace BUTR.Site.NexusMods.Server.Utils;
 
-public record RecreatedStacktrace(string Method, string CSharpWithIL, int InstructionIndex);
+public record RecreatedStacktrace(string Method, string CSharpWithIL, int LineNumber);
 
 public static class RecreateStacktraceUtils
 {
-    public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktrace(IEnumerable<string> binaryFiles, CrashReport crashReport)
+    private static unsafe Span<byte> GetReaderSpan(in BlobReader reader) => new(reader.CurrentPointer, reader.Length);
+
+    public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktrace(IEnumerable<string> assemblyFiles, CrashReport crashReport, CancellationToken ct)
     {
-        const BindingFlags all = BindingFlags.Public |
-                                 BindingFlags.NonPublic |
-                                 BindingFlags.Instance |
-                                 BindingFlags.Static |
-                                 BindingFlags.GetField |
-                                 BindingFlags.SetField |
-                                 BindingFlags.GetProperty |
-                                 BindingFlags.SetProperty;
-
-        var alc = new AssemblyLoadContext(crashReport.GameVersion, true);
-        foreach (var binaryFile in binaryFiles)
+        static int GetCodeLineNumber(string code, int ilOffset)
         {
-            try
+            var lineNumber = 1;
+            var toSearch = $"IL_{ilOffset:x4}:";
+            foreach (ReadOnlySpan<char> line in code.SplitLines())
             {
-                alc.LoadFromAssemblyPath(binaryFile);
+                if (line.IndexOf(toSearch) != -1)
+                    return lineNumber;
+                lineNumber++;
             }
-            catch (Exception) { }
+            return -1;
         }
-
-        var methodWithFoundMethodInfo = crashReport.EnhancedStacktrace.SelectMany(x => x.Methods).Select(x =>
+        
+        static IEnumerable<PEFile> GetPEFiles(IEnumerable<string> assemblyFiles)
         {
-            var found = alc.Assemblies.SelectMany(y =>
+            foreach (var assemblyFile in assemblyFiles)
             {
-                Type?[] types;
-                try
-                {
-                    types = y.GetTypes();
-                }
-                catch (ReflectionTypeLoadException e)
-                {
-                    types = e.Types;
-                }
-                return types.SelectMany(z => z?.GetMethods(all) ?? Array.Empty<MethodInfo>());
-            }).FirstOrDefault(y => $"{y.DeclaringType?.FullName}.{y.Name}" == x.Method);
-            return (x.Method, found);
-        }).ToArray();
-
-        foreach (var (method, methodInfo) in methodWithFoundMethodInfo)
-        {
-            if (methodInfo is null || methodInfo.DeclaringType is null) continue;
-
-            var ilOffset = crashReport.EnhancedStacktrace.First(x => x.Methods.Any(y => y.Method == method)).ILOffset;
-
-            var path = methodInfo.DeclaringType.Assembly.Location;
-            var moduleDefinition = new PEFile(path);
-            var resolver = new UniversalAssemblyResolver(Path.GetFileNameWithoutExtension(path), false, moduleDefinition.DetectTargetFrameworkId(), null, PEStreamOptions.PrefetchEntireImage);
-            var decompiler = new CSharpDecompiler(moduleDefinition, resolver, new DecompilerSettings());
-
-            var foundType = decompiler.TypeSystem.MainModule.TypeDefinitions.FirstOrDefault(x => x.Namespace == methodInfo.DeclaringType.Namespace && x.Name == methodInfo.DeclaringType.Name);
-            if (foundType is null) continue;
-            var foundMethod = foundType.Methods.FirstOrDefault(x => x.Name == methodInfo.Name);
-            if (foundMethod is null) continue;
-
-            var output = new PlainTextOutput();
-            var disassembler = CSharpILMixedLanguage.CreateDisassembler(output);
-            disassembler.DisassembleMethod(moduleDefinition, (MethodDefinitionHandle) foundMethod.MetadataToken);
-            var code = output.ToString();
-            var idx = code.IndexOf($"IL_{ilOffset:x4}:", StringComparison.Ordinal);
-
-            yield return new RecreatedStacktrace(method, code, idx);
+                PEFile moduleDefinition;
+                try { moduleDefinition = new PEFile(assemblyFile, PEStreamOptions.Default, MetadataReaderOptions.None); }
+                catch (Exception) { continue; }
+                yield return moduleDefinition;
+            }
         }
 
-        alc.Unload();
-    }
+        static IEnumerable<RecreatedStacktrace> RecreatedStacktrace(PEFile moduleDefinition, CrashReport crashReport, CancellationToken ct)
+        {
+            const int dotLength = 1;
+            
+            using var _ = moduleDefinition;
+            foreach (var frame in crashReport.EnhancedStacktrace.SelectMany(y => y.Methods))
+            {
+                var utf8MethodName = Encoding.UTF8.GetBytes(frame.Method);
+                var foundMethodHandle = moduleDefinition.Metadata.TypeDefinitions.Select(moduleDefinition.Metadata.GetTypeDefinition).Where(x =>
+                {
+                    var methodNameSpan = utf8MethodName.AsSpan();
 
+                    var typeNamespaceReader = moduleDefinition.Metadata.GetBlobReader(x.Namespace);
+                    var typeNameReader = moduleDefinition.Metadata.GetBlobReader(x.Name);
+                    if (methodNameSpan.Length < typeNamespaceReader.Length + dotLength + typeNameReader.Length + dotLength) return false;
+
+                    if (!methodNameSpan.Slice(0, typeNamespaceReader.Length).SequenceEqual(GetReaderSpan(typeNamespaceReader))) return false;
+
+                    return methodNameSpan.Slice(typeNamespaceReader.Length + dotLength, typeNameReader.Length).SequenceEqual(GetReaderSpan(typeNameReader));
+                }).Select(x => (Type: x, Methods: x.GetMethods())).Select(x =>
+                {
+                    var type = x.Type;
+
+                    var typeNamespaceReader = moduleDefinition.Metadata.GetBlobReader(type.Namespace);
+                    var typeNameReader = moduleDefinition.Metadata.GetBlobReader(type.Name);
+
+                    return x.Methods.Where(y =>
+                    {
+                        var methodNameSpan = utf8MethodName.AsSpan();
+
+                        var method = moduleDefinition.Metadata.GetMethodDefinition(y);
+
+                        var methodNameReader = moduleDefinition.Metadata.GetBlobReader(method.Name);
+                        if (methodNameSpan.Length != typeNamespaceReader.Length + dotLength + typeNameReader.Length + dotLength + methodNameReader.Length) return false;
+
+                        return methodNameSpan.Slice(typeNamespaceReader.Length + dotLength + typeNameReader.Length + dotLength, methodNameReader.Length).SequenceEqual(GetReaderSpan(methodNameReader));
+                    });
+                }).SelectMany(x => x).FirstOrDefault();
+                if (foundMethodHandle.Equals(default)) continue;
+
+                // The section above takes about 1ms and 2MB
+                // The section below takes about 23ms and 150MB
+                var output = new PlainTextOutput();
+                var disassembler = CSharpILMixedLanguage.CreateDisassembler(output, ct);
+                disassembler.DisassembleMethod(moduleDefinition, foundMethodHandle);
+
+                var code = output.ToString();
+                var ilOffset = crashReport.EnhancedStacktrace.First(x => x.Methods.Any(y => y == frame)).ILOffset;
+                var lineNumber = GetCodeLineNumber(code, ilOffset);
+
+                yield return new RecreatedStacktrace(frame.Method, code, lineNumber);
+            }
+        }
+
+        var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
+        return GetPEFiles(assemblyFiles).AsParallel().AsUnordered().WithCancellation(ct)
+            .SelectMany(moduleDefinition => RecreatedStacktrace(moduleDefinition, crashReport, ct))
+            .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
+    }
 }
