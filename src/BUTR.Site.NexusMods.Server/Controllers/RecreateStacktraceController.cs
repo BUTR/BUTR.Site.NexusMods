@@ -30,7 +30,7 @@ public sealed class RecreateStacktraceController : ControllerExtended
         _bannerlordBinaryCache = bannerlordBinaryCache ?? throw new ArgumentNullException(nameof(bannerlordBinaryCache));
     }
 
-    [HttpGet("{id}.json")]
+    [HttpGet("Json/{id}")]
     [Produces("application/json")]
     public async Task<ActionResult<APIResponse<IEnumerable<RecreatedStacktrace>?>>> Json(string id, CancellationToken ct)
     {

@@ -111,6 +111,14 @@ public partial class QuartzClient
     }
 }
 
+public partial class RecreateStacktraceClient
+{
+    public RecreateStacktraceClient(HttpClient client, JsonSerializerOptions options) : this(client)
+    {
+        _settings = new Lazy<JsonSerializerOptions>(options);
+    }
+}
+
 public partial record CrashReportModel
 {
     [JsonIgnore]

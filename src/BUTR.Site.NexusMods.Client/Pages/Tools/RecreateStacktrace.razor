@@ -1,0 +1,21 @@
+﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")]
+@page "/recreate-stacktrace/{Id}"
+
+@inject IRecreateStacktraceClient _recreateStacktraceClient
+
+@((MarkupString) html)
+
+@code {
+    
+    [Parameter]
+    public string Id { get; set; }
+
+    private string html = string.Empty;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        html = await _recreateStacktraceClient.RecreateStacktraceAsync(Id, CancellationToken.None);
+    }
+
+}
