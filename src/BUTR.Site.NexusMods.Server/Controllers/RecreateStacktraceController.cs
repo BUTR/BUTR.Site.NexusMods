@@ -78,15 +78,17 @@ public sealed class RecreateStacktraceController : ControllerExtended
         static string GetEnhancedStacktraceHtml(IEnumerable<RecreatedStacktrace> stacktrace)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("<ul>");
+            sb.AppendLine("<ol reversed>");
             foreach (var stacktraceEntry in stacktrace)
             {
                 sb.Append("<li>")
-                    .Append($"{stacktraceEntry.Method}</br>")
-                    .Append($"<pre class=\"line-numbers\" data-line=\"{stacktraceEntry.LineNumber}\"><code class=\"language-cil\">{stacktraceEntry.CSharpWithIL}</code></pre>");
-                sb.AppendLine("</li>");
+                    .Append("<details>")
+                    .Append($"<summary>{stacktraceEntry.Method}</summary>")
+                    .Append($"<pre class=\"line-numbers\" data-line=\"{stacktraceEntry.LineNumber}\"><code class=\"language-cil\">{stacktraceEntry.CSharpWithIL}</code></pre>")
+                    .Append("</details>")
+                    .AppendLine("</li>");
             }
-            sb.AppendLine("</ul>");
+            sb.AppendLine("</ol>");
             return sb.ToString();
         }
 
