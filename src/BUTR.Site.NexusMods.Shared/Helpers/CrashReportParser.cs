@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace BUTR.Site.NexusMods.Shared.Helpers;
 
@@ -90,6 +91,41 @@ public static class CrashReportParser
         var content = await response.Content.ReadAsStringAsync();
         return Parse(id, content);
     }
+
+    private delegate bool MatchSpan(ReadOnlySpan<char> span);
+    private static IEnumerable<string> GetAllOpenTags(ReadOnlySpan<char> content, MatchSpan matcher)
+    {
+        var toReplace = new List<string>();
+        var span = content;
+        while (span.IndexOf('<') is var idxOpen and not -1 && span.Slice(idxOpen).IndexOf('>') is var idxClose and not -1)
+        {
+            var tag = span.Slice(idxOpen, idxClose + 1);
+            span = span.Slice(idxOpen + idxClose + 1);
+            if (tag.Length < 2 || tag[1] == '/' || tag[^2] == '/') continue;
+            if (matcher(tag)) toReplace.Add(tag.ToString());
+        }
+        return toReplace;
+    }
+
+    private static ImmutableArray<EnhancedStacktraceFrame> GetEnhancedStacktrace(ReadOnlySpan<char> rawContent, int version, HtmlNode node)
+    {
+        if (version < 1000)
+        {
+            const string enhancedStacktraceStartDelimiter = "<div id='enhanced-stacktrace' class='headers-container'>";
+            const string enhancedStacktraceEndDelimiter = "</div>";
+            var enhancedStacktraceStartIdx= rawContent.IndexOf(enhancedStacktraceStartDelimiter);
+            var enhancedStacktraceEndIdx= rawContent.Slice(enhancedStacktraceStartIdx).IndexOf(enhancedStacktraceEndDelimiter) - enhancedStacktraceEndDelimiter.Length;
+            var enhancedStacktraceRaw = rawContent.Slice(enhancedStacktraceStartIdx, enhancedStacktraceEndIdx).ToString();
+            var toEscape = GetAllOpenTags(enhancedStacktraceRaw, span => !span.SequenceEqual(enhancedStacktraceStartDelimiter) && span is not "<ul>" and not "<li>" and not "<br>").ToArray();
+            enhancedStacktraceRaw = toEscape.Aggregate(enhancedStacktraceRaw, (current, s) => current.Replace(s, s.Replace("<", "&lt;").Replace(">", "&gt;")));
+            //var openTags = GetAllOpenTags(enhancedStacktraceRaw, span => !span.SequenceEqual("<ul>")  && !span.SequenceEqual("<li>") && !span.SequenceEqual("<br>")).ToArray();
+            var enhancedStacktraceDoc = new HtmlDocument();
+            enhancedStacktraceDoc.LoadHtml(enhancedStacktraceRaw);
+            node = enhancedStacktraceDoc.DocumentNode;
+        }
+        
+        return node.SelectSingleNode("descendant::div[@id=\"enhanced-stacktrace\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseEnhancedStacktrace).ToImmutableArray() ?? ImmutableArray<EnhancedStacktraceFrame>.Empty;
+    }
     public static CrashReport Parse(string id2, string content)
     {
         var html = new HtmlDocument();
@@ -103,7 +139,8 @@ public static class CrashReportParser
         var exception = document.SelectSingleNode("descendant::div[@id=\"exception\"]")?.InnerText ?? string.Empty;
         var installedModules = document.SelectSingleNode("descendant::div[@id=\"installed-modules\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseModule).ToImmutableArray() ?? ImmutableArray<Module>.Empty;
         var involvedModules = document.SelectSingleNode("descendant::div[@id=\"involved-modules\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseInvolvedModule).ToImmutableArray() ?? ImmutableArray<InvolvedModule>.Empty;
-        var enhancedStacktrace = document.SelectSingleNode("descendant::div[@id=\"enhanced-stacktrace\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseEnhancedStacktrace).ToImmutableArray() ?? ImmutableArray<EnhancedStacktraceFrame>.Empty;
+        var enhancedStacktrace = GetEnhancedStacktrace(content.AsSpan(), version, document);
+
         //var assemblies = document.SelectSingleNode("descendant::div[@id=\"assemblies\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();
         //var harmonyPatches = document.SelectSingleNode("descendant::div[@id=\"harmony-patches\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();
         var launcherType = document.SelectSingleNode("descendant::launcher")?.Attributes?["type"]?.Value ?? string.Empty;
@@ -208,7 +245,7 @@ public static class CrashReportParser
         var methodsBuilder = ImmutableArray.CreateBuilder<EnhancedStacktraceFrameMethod>();
         foreach (var childNode in node.ChildNodes.FirstOrDefault(x => x.Name == "ul")?.ChildNodes ?? Enumerable.Empty<HtmlNode>())
         {
-            var lines = childNode.InnerHtml.Trim().Split("<br>", StringSplitOptions.RemoveEmptyEntries);
+            var lines = childNode.InnerHtml.Replace("&lt;", "<").Replace("&gt;", ">").Trim().Split("<br>", StringSplitOptions.RemoveEmptyEntries);
             var module = lines?.Length > 0 ? lines[0].Substring(8) : string.Empty;
             var methodFullName = lines?.Length > 1 ? lines[1].Substring(8).Replace("::", ".") : string.Empty;
             var idx1 = methodFullName.IndexOf("(", StringComparison.Ordinal);
