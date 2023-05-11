@@ -1,3 +1,7 @@
+/**
+ * @param {string} id
+ * @return void
+ */
 function BlazorScrollToId(id) {
     const element = document.getElementById(id);
     if (element instanceof HTMLElement) {

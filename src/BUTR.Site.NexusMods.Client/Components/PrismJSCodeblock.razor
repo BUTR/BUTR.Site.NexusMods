@@ -1,0 +1,31 @@
+﻿@inject PrismJSService _prismJSService
+@inject ILogger<PrismJSCodeblock> _logger
+
+<pre class="line-numbers" data-line="@Line"><code class="@Language">@Code</code></pre>
+
+@code {
+    
+    [Parameter]
+    public string Language { get; set; }
+    
+    [Parameter]
+    public string Code { get; set; }
+    
+    [Parameter]
+    public int? Line { get; set; }
+    
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+    
+    [CascadingParameter]
+    private PrismJSHighlighterState State { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        if (!State.IsInitialized)
+        {
+            _logger.LogError("PrismJSService was not initialized! Ensure that <PrismJSCodeblock> is inside <PrismJSHighlighter>!");
+        }
+    }
+
+}

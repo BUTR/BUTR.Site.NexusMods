@@ -1,0 +1,25 @@
+﻿@inject PrismJSService _prismJSService
+
+<CascadingValue Value="@State">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private PrismJSHighlighterState State { get; set; } = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await _prismJSService.Initialize();
+        State.IsInitialized = true;
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await _prismJSService.HighlightAll();
+    }
+
+}

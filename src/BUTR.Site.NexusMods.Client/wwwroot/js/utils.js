@@ -1,3 +1,9 @@
+/**
+ * @param {string} filename
+ * @param {string} contentType
+ * @param {Blob} compressedStreamReference
+ * @return Promise
+ */
 export async function downloadFile(filename, contentType, compressedStreamReference) {
     const arrayBuffer = await compressedStreamReference.arrayBuffer();
 
