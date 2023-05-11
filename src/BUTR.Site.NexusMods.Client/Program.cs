@@ -111,6 +111,7 @@ public static class Program
 
             services.AddScoped<StorageCache>();
 
+            services.AddTransient<PrismJSService>();
             services.AddTransient<BrotliDecompressorService>();
             services.AddTransient<DownloadFileService>();
             services.AddScoped<DiffService>();
@@ -121,7 +122,7 @@ public static class Program
             services.AddAuthorizationCore();
             services.AddScoped<AuthenticationStateProvider, SimpleAuthenticationStateProvider>();
 
-            services.AddScoped<HighlightJS>();
+            services.AddScoped<HighlightJSService>();
 
             services.AddBlazorise(options =>
             {

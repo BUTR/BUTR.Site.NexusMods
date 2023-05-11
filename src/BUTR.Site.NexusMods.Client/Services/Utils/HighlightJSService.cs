@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Client.Services;
 
-public sealed class HighlightJS : IAsyncDisposable
+public sealed class HighlightJSService : IAsyncDisposable
 {
     private sealed class Container
     {
@@ -23,7 +23,7 @@ public sealed class HighlightJS : IAsyncDisposable
     private readonly TaskCompletionSource _tcs;
     private readonly Lazy<ValueTask<IJSUnmarshalledObjectReference>> _moduleTask;
 
-    public HighlightJS(IJSRuntime runtime)
+    public HighlightJSService(IJSRuntime runtime)
     {
         _tcs = new();
         _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", "../js/highlight.js"));

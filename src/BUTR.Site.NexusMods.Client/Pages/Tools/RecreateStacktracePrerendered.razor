@@ -1,0 +1,26 @@
+﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")]
+@page "/recreate-stacktrace-prerendered/{Id}"
+
+@inject IRecreateStacktraceClient _recreateStacktraceClient
+
+@if (!string.IsNullOrEmpty(html))
+{
+    <iframe srcdoc="@html" height="100%" width="100%">
+        Your browser doesn't support iframes
+    </iframe>
+}
+
+@code {
+    
+    [Parameter]
+    public string Id { get; set; }
+
+    private string? html;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        html = await _recreateStacktraceClient.HtmlAsync(Id, CancellationToken.None);
+    }
+
+}

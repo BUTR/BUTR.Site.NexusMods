@@ -3,24 +3,36 @@
 
 @inject IRecreateStacktraceClient _recreateStacktraceClient
 
-@if (!string.IsNullOrEmpty(html))
-{
-    <iframe srcdoc="@html" height="100%" width="100%">
-        Your browser doesn't support iframes
-    </iframe>
-}
+<PrismJSHighlighter>
+    <Accordion>
+        @foreach (var stacktrace in recreatedStacktraces ?? Array.Empty<RecreatedStacktrace>())
+        {
+            <Collapse>
+                <CollapseHeader>
+                    <Heading Size="HeadingSize.Is5">
+                        <AccordionToggle>@stacktrace.Method</AccordionToggle>
+                    </Heading>
+                </CollapseHeader>
+                <CollapseBody>
+                    <PrismJSCodeblock Language="language-cil" Line="@stacktrace.LineNumber" Code="@stacktrace.CSharpWithIL" />
+                </CollapseBody>
+            </Collapse>
+        }
+    </Accordion>
+</PrismJSHighlighter>
 
 @code {
-    
+
     [Parameter]
     public string Id { get; set; }
 
-    private string? html;
-
-    /// <inheritdoc />
+    private ICollection<RecreatedStacktrace>? recreatedStacktraces;
+    
     protected override async Task OnInitializedAsync()
     {
-        html = await _recreateStacktraceClient.HtmlAsync(Id, CancellationToken.None);
+        var response = await _recreateStacktraceClient.JsonAsync(Id, CancellationToken.None);
+        if (response.Data is null) return;
+        recreatedStacktraces = response.Data;
     }
 
 }

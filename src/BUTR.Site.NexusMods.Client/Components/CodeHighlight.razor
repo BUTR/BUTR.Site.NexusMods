@@ -1,4 +1,4 @@
-﻿@inject HighlightJS HighlightJS
+﻿@inject HighlightJSService HighlightJsService
 
 <pre class="code">
     <code @ref="@element" class="@Language">
@@ -18,7 +18,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await HighlightJS.HighlightElement(element);
+        await HighlightJsService.HighlightElement(element);
     }
 
 }

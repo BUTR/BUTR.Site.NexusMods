@@ -124,12 +124,13 @@ public sealed class DiffService : IAsyncDisposable
 
         await module.InvokeVoidAsync("render", elementId, diffContent, new HtmlConfiguration
         {
-            DiffStyle = style.Value,
-            Matching = matching?.Value,
+            Highlight = true,
+            FileContentToggle = false,
+
             OutputFormat = outputFormat.Value,
             DrawFileList = false,
-            FileContentToggle = false,
-            Highlight = true,
+            Matching = matching?.Value,
+            DiffStyle = style.Value,
             Lazy = true,
         });
     }

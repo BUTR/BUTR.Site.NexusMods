@@ -37,7 +37,7 @@
                                         <Text Italic @onclick="@(() => diffContent.Visible = !diffContent.Visible)">@diffContent.Title</Text>
                                     </CollapseHeader>
                                     <CollapseBody>
-                                        <Diff DiffContent="@diffContent.Content"></Diff>
+                                        <Diff Content="@diffContent.Content"></Diff>
                                     </CollapseBody>
                                 </Collapse>
                                 <Divider Margin="Margin.Is0"/>

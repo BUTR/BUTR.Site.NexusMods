@@ -1,17 +1,16 @@
-﻿@inject IJSRuntime _jsRuntime
-@inject DiffService _diffService
+﻿@inject DiffService _diffService
 
-<div id="@(DivId)"></div>
+<div id="@DivId"></div>
 
 
 @code {
 
     private Guid _rand = Guid.NewGuid();
 
-    public string DivId => $"diff2html-ui-{_rand}";
+    private string DivId => $"diff2html-ui-{_rand}";
 
     [Parameter]
-    public string DiffContent { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
 
     [Parameter]
     public OutputFormat OutputFormat { get; set; } = OutputFormat.LineByLine;
@@ -21,16 +20,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
-
-        await _diffService.RenderDiffToElement(DivId, DiffContent, OutputFormat, Style);
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await base.OnParametersSetAsync();
-
-        await _diffService.RenderDiffToElement(DivId, DiffContent, OutputFormat, Style);
+        await _diffService.Initialize();
+        await _diffService.RenderDiffToElement(DivId, Content, OutputFormat, Style);
     }
 
 }
