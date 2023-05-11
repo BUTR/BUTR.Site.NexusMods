@@ -20,25 +20,25 @@ internal class MetadataNameFormatter : DisassemblingTypeProvider
         _metadataReader = metadataReader;
     }
 
-    public static SignatureType FormatHandle(MetadataReader metadataReader, Handle handle, bool namespaceQualified = true, SignatureType? owningTypeOverride = null, string signaturePrefix = "")
+    public static SignatureType FormatHandle(MetadataReader metadataReader, Handle handle, bool namespaceQualified = true, SignatureType? owningTypeOverride = null, MetadataGenericContext? genericContext = null, string signaturePrefix = "")
     {
         var formatter = new MetadataNameFormatter(metadataReader);
-        return formatter.EmitHandleName(handle, namespaceQualified, owningTypeOverride, signaturePrefix);
+        return formatter.EmitHandleName(handle, namespaceQualified, owningTypeOverride, genericContext, signaturePrefix);
     }
 
-    private SignatureType EmitHandleName(Handle handle, bool namespaceQualified, SignatureType? owningTypeOverride, string signaturePrefix = "")
+    private SignatureType EmitHandleName(Handle handle, bool namespaceQualified, SignatureType? owningTypeOverride, MetadataGenericContext? genericContext, string signaturePrefix = "")
     {
         try
         {
             return handle.Kind switch
             {
-                HandleKind.MemberReference => EmitMemberReferenceName((MemberReferenceHandle) handle, owningTypeOverride, signaturePrefix),
-                HandleKind.MethodSpecification => EmitMethodSpecificationName((MethodSpecificationHandle) handle, owningTypeOverride, signaturePrefix),
-                HandleKind.MethodDefinition => EmitMethodDefinitionName((MethodDefinitionHandle) handle, owningTypeOverride, signaturePrefix),
-                HandleKind.TypeReference => EmitTypeReferenceName((TypeReferenceHandle) handle, namespaceQualified, signaturePrefix),
-                HandleKind.TypeSpecification => EmitTypeSpecificationName((TypeSpecificationHandle) handle, namespaceQualified, signaturePrefix),
-                HandleKind.TypeDefinition => EmitTypeDefinitionName((TypeDefinitionHandle) handle, namespaceQualified, signaturePrefix),
-                HandleKind.FieldDefinition => EmitFieldDefinitionName((FieldDefinitionHandle) handle, namespaceQualified, owningTypeOverride, signaturePrefix),
+                HandleKind.MemberReference => EmitMemberReferenceName((MemberReferenceHandle) handle, owningTypeOverride, genericContext, signaturePrefix),
+                HandleKind.MethodSpecification => EmitMethodSpecificationName((MethodSpecificationHandle) handle, owningTypeOverride, genericContext, signaturePrefix),
+                HandleKind.MethodDefinition => EmitMethodDefinitionName((MethodDefinitionHandle) handle, owningTypeOverride, genericContext, signaturePrefix),
+                HandleKind.TypeReference => EmitTypeReferenceName((TypeReferenceHandle) handle, namespaceQualified, genericContext, signaturePrefix),
+                HandleKind.TypeSpecification => EmitTypeSpecificationName((TypeSpecificationHandle) handle, namespaceQualified, genericContext, signaturePrefix),
+                HandleKind.TypeDefinition => EmitTypeDefinitionName((TypeDefinitionHandle) handle, namespaceQualified, genericContext, signaturePrefix),
+                HandleKind.FieldDefinition => EmitFieldDefinitionName((FieldDefinitionHandle) handle, namespaceQualified, owningTypeOverride, genericContext, signaturePrefix),
                 _ => throw new NotImplementedException(),
             };
         }
@@ -58,37 +58,36 @@ internal class MetadataNameFormatter : DisassemblingTypeProvider
         }
     }
 
-    private SignatureType EmitMethodSpecificationName(MethodSpecificationHandle methodSpecHandle, SignatureType? owningTypeOverride, string signaturePrefix)
+    private SignatureType EmitMethodSpecificationName(MethodSpecificationHandle methodSpecHandle, SignatureType? owningTypeOverride, MetadataGenericContext? genericContext, string signaturePrefix)
     {
         ValidateHandle(methodSpecHandle, TableIndex.MethodSpec);
         var methodSpec = _metadataReader.GetMethodSpecification(methodSpecHandle);
-        var type = EmitHandleName(methodSpec.Method, namespaceQualified: true, owningTypeOverride: owningTypeOverride, signaturePrefix: signaturePrefix);
-        return type;
+        return EmitHandleName(methodSpec.Method, namespaceQualified: true, owningTypeOverride: owningTypeOverride, genericContext, signaturePrefix: signaturePrefix);
     }
 
-    private SignatureType EmitMemberReferenceName(MemberReferenceHandle memberRefHandle, SignatureType? owningTypeOverride, string signaturePrefix)
+    private SignatureType EmitMemberReferenceName(MemberReferenceHandle memberRefHandle, SignatureType? owningTypeOverride, MetadataGenericContext? genericContext, string signaturePrefix)
     {
         ValidateHandle(memberRefHandle, TableIndex.MemberRef);
         var memberRef = _metadataReader.GetMemberReference(memberRefHandle);
-        var builder = new StringBuilder();
+        var sb = new StringBuilder();
         switch (memberRef.GetKind())
         {
             case MemberReferenceKind.Field:
             {
-                var fieldSig = memberRef.DecodeFieldSignature(this, EmptyContext);
-                builder.Append(fieldSig);
-                builder.Append(" ");
-                builder.Append(EmitContainingTypeAndMemberName(memberRef, owningTypeOverride, signaturePrefix));
+                var fieldSig = memberRef.DecodeFieldSignature(this, genericContext ?? EmptyContext);
+                sb.Append(fieldSig);
+                sb.Append(' ');
+                sb.Append(EmitContainingTypeAndMemberName(memberRef, owningTypeOverride, genericContext, signaturePrefix));
                 break;
             }
 
             case MemberReferenceKind.Method:
             {
-                var methodSig = memberRef.DecodeMethodSignature(this, EmptyContext);
-                builder.Append(methodSig.ReturnType);
-                builder.Append(" ");
-                builder.Append(EmitContainingTypeAndMemberName(memberRef, owningTypeOverride, signaturePrefix));
-                builder.Append(EmitMethodSignature(methodSig));
+                var methodSig = memberRef.DecodeMethodSignature(this, genericContext ?? EmptyContext);
+                sb.Append(methodSig.ReturnType);
+                sb.Append(' ');
+                sb.Append(EmitContainingTypeAndMemberName(memberRef, owningTypeOverride, genericContext, signaturePrefix));
+                sb.Append(EmitMethodSignature(methodSig));
                 break;
             }
 
@@ -96,32 +95,31 @@ internal class MetadataNameFormatter : DisassemblingTypeProvider
                 throw new NotImplementedException(memberRef.GetKind().ToString());
         }
 
-        return SignatureType.FromString(builder.ToString());
+        return SignatureType.FromString(sb.ToString());
     }
 
-    private SignatureType EmitMethodDefinitionName(MethodDefinitionHandle methodDefinitionHandle, SignatureType? owningTypeOverride, string signaturePrefix)
+    private SignatureType EmitMethodDefinitionName(MethodDefinitionHandle methodDefinitionHandle, SignatureType? owningTypeOverride, MetadataGenericContext? genericContext, string signaturePrefix)
     {
         ValidateHandle(methodDefinitionHandle, TableIndex.MethodDef);
         var methodDef = _metadataReader.GetMethodDefinition(methodDefinitionHandle);
-        var methodSig = methodDef.DecodeSignature(this, new MetadataGenericContext(methodDefinitionHandle, _metadataReader));
-        var builder = new StringBuilder();
-        builder.Append(methodSig.ReturnType);
-        builder.Append(" ");
-        owningTypeOverride ??= EmitHandleName(methodDef.GetDeclaringType(), namespaceQualified: true, owningTypeOverride: null);
-        builder.Append(owningTypeOverride);
-        builder.Append(".");
-        builder.Append(signaturePrefix);
-        builder.Append(EmitString(methodDef.Name));
-        builder.Append(EmitMethodSignature(methodSig));
-        return SignatureType.FromString(builder.ToString());
+        var methodSig = methodDef.DecodeSignature(this, genericContext ?? new MetadataGenericContext(methodDefinitionHandle, _metadataReader));
+        var sb = new StringBuilder()
+            .Append(methodSig.ReturnType)
+            .Append(' ')
+            .Append(owningTypeOverride ?? EmitHandleName(methodDef.GetDeclaringType(), namespaceQualified: true, owningTypeOverride: null, genericContext))
+            .Append('.')
+            .Append(signaturePrefix)
+            .Append(EmitString(methodDef.Name))
+            .Append(EmitMethodSignature(methodSig));
+        return SignatureType.FromString(sb.ToString());
     }
 
     private SignatureType EmitMethodSignature(MethodSignature<SignatureType> methodSignature)
     {
-        var builder = new StringBuilder();
+        var sb = new StringBuilder();
         if (methodSignature.GenericParameterCount != 0)
         {
-            builder.Append("<");
+            sb.Append('<');
             var firstTypeArg = true;
             for (var typeArgIndex = 0; typeArgIndex < methodSignature.GenericParameterCount; typeArgIndex++)
             {
@@ -131,14 +129,14 @@ internal class MetadataNameFormatter : DisassemblingTypeProvider
                 }
                 else
                 {
-                    builder.Append(", ");
+                    sb.Append(", ");
                 }
-                builder.Append("!!");
-                builder.Append(typeArgIndex);
+                sb.Append("!!");
+                sb.Append(typeArgIndex);
             }
-            builder.Append(">");
+            sb.Append('>');
         }
-        builder.Append("(");
+        sb.Append('(');
         var firstMethodArg = true;
         foreach (var paramType in methodSignature.ParameterTypes)
         {
@@ -148,90 +146,80 @@ internal class MetadataNameFormatter : DisassemblingTypeProvider
             }
             else
             {
-                builder.Append(", ");
+                sb.Append(", ");
             }
-            builder.Append(paramType);
+            sb.Append(paramType);
         }
-        builder.Append(")");
-        return SignatureType.FromString(builder.ToString());
+        sb.Append(')');
+        return SignatureType.FromString(sb.ToString());
     }
 
-    private SignatureType EmitContainingTypeAndMemberName(MemberReference memberRef, SignatureType? owningTypeOverride, string signaturePrefix)
+    private SignatureType EmitContainingTypeAndMemberName(MemberReference memberRef, SignatureType? owningTypeOverride, MetadataGenericContext? genericContext, string signaturePrefix)
     {
-        owningTypeOverride ??= EmitHandleName(memberRef.Parent, namespaceQualified: true, owningTypeOverride: null);
+        owningTypeOverride ??= EmitHandleName(memberRef.Parent, namespaceQualified: true, owningTypeOverride: null, genericContext);
         return owningTypeOverride with { Name = $"{owningTypeOverride.Name}.{signaturePrefix}{EmitString(memberRef.Name)}" }; // No idea what emits this
     }
 
-    private SignatureType EmitTypeReferenceName(TypeReferenceHandle typeRefHandle, bool namespaceQualified, string signaturePrefix)
+    private SignatureType EmitTypeReferenceName(TypeReferenceHandle typeRefHandle, bool namespaceQualified, MetadataGenericContext? genericContext, string signaturePrefix)
     {
         ValidateHandle(typeRefHandle, TableIndex.TypeRef);
         var typeRef = _metadataReader.GetTypeReference(typeRefHandle);
-        var typeName = EmitString(typeRef.Name);
-        var output = "";
         if (typeRef.ResolutionScope.Kind != HandleKind.AssemblyReference)
         {
             // Nested type - format enclosing type followed by the nested type
-            var originalType = EmitHandleName(typeRef.ResolutionScope, namespaceQualified, owningTypeOverride: null);
-            return originalType with { IsNested = true, Name = $"{originalType.Name}+{typeName}" };
+            var originalType = EmitHandleName(typeRef.ResolutionScope, namespaceQualified, owningTypeOverride: null, genericContext);
+            return originalType with { IsNested = true, Name = $"{originalType.Name}+{EmitString(typeRef.Name)}" };
         }
+        var sb = new StringBuilder();
         if (namespaceQualified)
         {
-            output = EmitString(typeRef.Namespace);
-            if (!string.IsNullOrEmpty(output))
-            {
-                output += ".";
-            }
+            sb.Append(EmitString(typeRef.Namespace));
+            if (sb.Length > 0) sb.Append('.');
         }
-        return SignatureType.FromString(output + signaturePrefix + typeName);
+        sb.Append(signaturePrefix).Append(EmitString(typeRef.Name));
+        return SignatureType.FromString(sb.ToString());
     }
 
-    private SignatureType EmitTypeDefinitionName(TypeDefinitionHandle typeDefHandle, bool namespaceQualified, string signaturePrefix)
+    private SignatureType EmitTypeDefinitionName(TypeDefinitionHandle typeDefHandle, bool namespaceQualified, MetadataGenericContext? genericContext, string signaturePrefix)
     {
         ValidateHandle(typeDefHandle, TableIndex.TypeDef);
         var typeDef = _metadataReader.GetTypeDefinition(typeDefHandle);
-        var typeName = signaturePrefix + EmitString(typeDef.Name);
         if (typeDef.IsNested)
         {
             // Nested type
-            var originalType = EmitHandleName(typeDef.GetDeclaringType(), namespaceQualified, owningTypeOverride: null);
-            return originalType with { IsNested = true, Name = $"{originalType.Name}+{typeName}" };
+            var originalType = EmitHandleName(typeDef.GetDeclaringType(), namespaceQualified, owningTypeOverride: null, genericContext);
+            return originalType with { IsNested = true, Name = $"{originalType.Name}+{signaturePrefix}{EmitString(typeDef.Name)}" };
         }
 
-        string output;
+        var sb = new StringBuilder();
         if (namespaceQualified)
         {
-            output = EmitString(typeDef.Namespace);
-            if (!string.IsNullOrEmpty(output))
-            {
-                output += ".";
-            }
+            sb.Append(EmitString(typeDef.Namespace));
+            if (sb.Length > 0) sb.Append('.');
         }
-        else
-        {
-            output = "";
-        }
-        return SignatureType.FromString(output + typeName);
+        sb.Append(signaturePrefix).Append(EmitString(typeDef.Name));
+        return SignatureType.FromString(sb.ToString());
     }
 
-    private SignatureType EmitTypeSpecificationName(TypeSpecificationHandle typeSpecHandle, bool namespaceQualified, string signaturePrefix)
+    private SignatureType EmitTypeSpecificationName(TypeSpecificationHandle typeSpecHandle, bool namespaceQualified, MetadataGenericContext? genericContext, string signaturePrefix)
     {
         ValidateHandle(typeSpecHandle, TableIndex.TypeSpec);
         var typeSpec = _metadataReader.GetTypeSpecification(typeSpecHandle);
-        return typeSpec.DecodeSignature(this, EmptyContext);
+        return typeSpec.DecodeSignature(this, genericContext ?? EmptyContext);
     }
 
-    private SignatureType EmitFieldDefinitionName(FieldDefinitionHandle fieldDefHandle, bool namespaceQualified, SignatureType? owningTypeOverride, string signaturePrefix)
+    private SignatureType EmitFieldDefinitionName(FieldDefinitionHandle fieldDefHandle, bool namespaceQualified, SignatureType? owningTypeOverride, MetadataGenericContext? genericContext, string signaturePrefix)
     {
         ValidateHandle(fieldDefHandle, TableIndex.Field);
         var fieldDef = _metadataReader.GetFieldDefinition(fieldDefHandle);
-        var output = new StringBuilder();
-        output.Append(fieldDef.DecodeSignature(this, EmptyContext));
-        output.Append(' ');
-        output.Append(EmitHandleName(fieldDef.GetDeclaringType(), namespaceQualified, owningTypeOverride));
-        output.Append('.');
-        output.Append(signaturePrefix);
-        output.Append(_metadataReader.GetString(fieldDef.Name));
-        return SignatureType.FromString(output.ToString());
+        var sb = new StringBuilder()
+            .Append(fieldDef.DecodeSignature(this, genericContext ?? EmptyContext))
+            .Append(' ')
+            .Append(EmitHandleName(fieldDef.GetDeclaringType(), namespaceQualified, owningTypeOverride, genericContext))
+            .Append('.')
+            .Append(signaturePrefix)
+            .Append(_metadataReader.GetString(fieldDef.Name));
+        return SignatureType.FromString(sb.ToString());
     }
 
     private string EmitString(StringHandle handle)
