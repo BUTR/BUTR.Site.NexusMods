@@ -32,7 +32,7 @@ public sealed class DiscordLinkedRolesService : BackgroundService
             new(DiscordConstants.BUTRModerator, "BUTR Moderator", "Moderator of BUTR Site", 7),
             new(DiscordConstants.BUTRAdministrator, "BUTR Administrator", "Administrator of BUTR Site", 7),
             new(DiscordConstants.BUTRLinkedMods, "Linked Mods", "Minimal amount of linked mods required", 2),
-        });
+        }, CancellationToken.None);
         if (!result)
             _logger.LogError("Failed to update Discord's global role-connection metadata!");
     }

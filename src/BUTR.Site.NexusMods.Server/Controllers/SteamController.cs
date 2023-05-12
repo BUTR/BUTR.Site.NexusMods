@@ -63,11 +63,11 @@ public sealed class SteamController : ControllerExtended
 
     [HttpGet("Link")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> Link([FromQuery] Dictionary<string, string> _)
+    public async Task<ActionResult<APIResponse<string?>>> Link([FromQuery] Dictionary<string, string> _, CancellationToken ct)
     {
         var queries = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value[0] ?? string.Empty);
 
-        var isValid = await _steamCommunityClient.ConfirmIdentity(queries, CancellationToken.None);
+        var isValid = await _steamCommunityClient.ConfirmIdentity(queries, ct);
         if (!isValid)
             return APIResponseError<string>("Failed to link!");
 
@@ -75,9 +75,9 @@ public sealed class SteamController : ControllerExtended
             return APIResponseError<string>("Failed to link!");
 
         var userId = HttpContext.GetUserId();
-        var userInfo = await _steamAPIClient.GetUserInfo(steamId, CancellationToken.None);
+        var userInfo = await _steamAPIClient.GetUserInfo(steamId, ct);
 
-        var ownsBannerlord = await _steamAPIClient.IsOwningGame(steamId, 261550, CancellationToken.None);
+        var ownsBannerlord = await _steamAPIClient.IsOwningGame(steamId, 261550, ct);
         if (ownsBannerlord)
         {
             NexusModsUserMetadataEntity? ApplyChanges(NexusModsUserMetadataEntity? existing) => existing switch
@@ -88,7 +88,7 @@ public sealed class SteamController : ControllerExtended
                     Metadata = existing.Metadata.SetAndReturn("MB2B", "")
                 },
             };
-            if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == userId, ApplyChanges))
+            if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == userId, ApplyChanges, CancellationToken.None))
                 return APIResponseError<string>("Failed to link!");
         }
 
@@ -116,14 +116,14 @@ public sealed class SteamController : ControllerExtended
 
     [HttpPost("GetUserInfo")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<SteamUserInfo?>>> GetUserInfoByAccessToken()
+    public async Task<ActionResult<APIResponse<SteamUserInfo?>>> GetUserInfoByAccessToken(CancellationToken ct)
     {
         var tokens = HttpContext.GetSteamTokens();
 
         if (tokens?.Data is null)
             return APIResponseError<SteamUserInfo>("Failed to get the token!");
 
-        var result = await _steamAPIClient.GetUserInfo(tokens.ExternalId, CancellationToken.None);
+        var result = await _steamAPIClient.GetUserInfo(tokens.ExternalId, ct);
         return APIResponse(result);
     }
 }

@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
@@ -42,17 +43,17 @@ public sealed class AuthenticationController : ControllerExtended
     [Produces("application/json")]
     [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> Authenticate([FromHeader] string? apiKey)
+    public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> Authenticate([FromHeader] string? apiKey, CancellationToken ct)
     {
         if (apiKey is null)
             return StatusCode(StatusCodes.Status401Unauthorized);
 
-        if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey) is not { } validateResponse)
+        if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey, ct) is not { } validateResponse)
             return StatusCode(StatusCodes.Status401Unauthorized);
 
-        var roleEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserRoleEntity>(x => x.NexusModsUserId == validateResponse.UserId);
+        var roleEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserRoleEntity>(x => x.NexusModsUserId == validateResponse.UserId, ct);
         var role = roleEntity?.Role ?? ApplicationRoles.User;
-        var metadataEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == validateResponse.UserId);
+        var metadataEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == validateResponse.UserId, ct);
         var metadata = metadataEntity?.Metadata ?? new();
 
         var generatedToken = await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
@@ -74,15 +75,15 @@ public sealed class AuthenticationController : ControllerExtended
     [Produces("application/json")]
     [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> Validate()
+    public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> Validate(CancellationToken ct)
     {
-        if (HttpContext.GetAPIKey() is not { } apikey || string.IsNullOrEmpty(apikey) || await _nexusModsAPIClient.ValidateAPIKeyAsync(apikey) is not { } validateResponse)
+        if (HttpContext.GetAPIKey() is not { } apikey || string.IsNullOrEmpty(apikey) || await _nexusModsAPIClient.ValidateAPIKeyAsync(apikey, ct) is not { } validateResponse)
             return StatusCode(StatusCodes.Status401Unauthorized);
 
-        var roleEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserRoleEntity>(x => x.NexusModsUserId == validateResponse.UserId);
+        var roleEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserRoleEntity>(x => x.NexusModsUserId == validateResponse.UserId, ct: ct);
         var role = roleEntity?.Role ?? ApplicationRoles.User;
 
-        var metadataEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == validateResponse.UserId);
+        var metadataEntity = await _dbContext.FirstOrDefaultAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == validateResponse.UserId, ct: ct);
         var metadata = metadataEntity?.Metadata ?? new();
         var existingMetadata = HttpContext.GetMetadata();
         var isMetadataEqual = metadata.Count == existingMetadata.Count && metadata.All(

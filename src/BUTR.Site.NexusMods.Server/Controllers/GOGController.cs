@@ -46,15 +46,15 @@ public sealed class GOGController : ControllerExtended
 
     [HttpGet("Link")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> Link([FromQuery] string code)
+    public async Task<ActionResult<APIResponse<string?>>> Link([FromQuery] string code, CancellationToken ct)
     {
-        var tokens = await _gogAuthClient.GetToken(code, CancellationToken.None);
+        var tokens = await _gogAuthClient.CreateTokens(code, ct);
         if (tokens is null)
             return APIResponseError<string>("Failed to link!");
         
         var userId = HttpContext.GetUserId();
 
-        var games = await _gogEmbedClient.GetGames(tokens.AccessToken, CancellationToken.None);
+        var games = await _gogEmbedClient.GetGames(tokens.AccessToken, ct);
         if (games is null)
             return APIResponseError<string>("Failed to link!");
         
@@ -69,7 +69,7 @@ public sealed class GOGController : ControllerExtended
                     Metadata = existing.Metadata.SetAndReturn("MB2B", "")
                 },
             };
-            if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == userId, ApplyChanges))
+            if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == userId, ApplyChanges, CancellationToken.None))
                 return APIResponseError<string>("Failed to link!");
         }
 
@@ -97,14 +97,22 @@ public sealed class GOGController : ControllerExtended
 
     [HttpPost("GetUserInfo")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<GOGUserInfo?>>> GetUserInfoByAccessToken()
+    public async Task<ActionResult<APIResponse<GOGUserInfo?>>> GetUserInfoByAccessToken(CancellationToken ct)
     {
+        var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetGOGTokens();
 
         if (tokens?.Data is null)
             return APIResponseError<GOGUserInfo>("Failed to get the token!");
 
-        var result = await _gogEmbedClient.GetUserInfo(tokens.Data.AccessToken, CancellationToken.None);
+        var refreshed = await _gogAuthClient.GetOrRefreshTokens(tokens.Data, ct);
+        if (refreshed is null)
+            return APIResponse<GOGUserInfo>(null);
+        
+        if (tokens.Data.AccessToken != refreshed.AccessToken)
+            _gogStorage.Upsert(userId, refreshed.UserId, refreshed);
+        
+        var result = await _gogEmbedClient.GetUserInfo(refreshed.AccessToken, ct);
         return APIResponse(result);
     }
 }

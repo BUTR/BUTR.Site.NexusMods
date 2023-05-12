@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -40,16 +41,14 @@ public sealed class DiscordClient
 
     private readonly HttpClient _httpClient;
     private readonly DiscordOptions _options;
-    private readonly IDiscordStorage _storage;
 
-    public DiscordClient(HttpClient httpClient, IOptions<DiscordOptions> options, IDiscordStorage storage)
+    public DiscordClient(HttpClient httpClient, IOptions<DiscordOptions> options)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-        _storage = storage ?? throw new ArgumentNullException(nameof(storage));
     }
 
-    public async Task<bool> SetGlobalMetadata(IReadOnlyList<DiscordGlobalMetadata> metadata)
+    public async Task<bool> SetGlobalMetadata(IReadOnlyList<DiscordGlobalMetadata> metadata, CancellationToken ct)
     {
         using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/applications/{_options.ClientId}/role-connections/metadata")
         {
@@ -58,7 +57,7 @@ public sealed class DiscordClient
                 {"Authorization", $"Bot {_options.BotToken}"},
             },
             Content = new StringContent(JsonSerializer.Serialize(metadata), Encoding.UTF8, "application/json"),
-        });
+        }, ct);
         return response.IsSuccessStatusCode;
     }
 
@@ -78,7 +77,7 @@ public sealed class DiscordClient
         return (url.ToString(), state);
     }
 
-    public async Task<DiscordOAuthTokens?> GetOAuthTokens(string code)
+    public async Task<DiscordOAuthTokens?> CreateTokens(string code, CancellationToken ct)
     {
         var data = new List<KeyValuePair<string, string>>()
         {
@@ -88,15 +87,15 @@ public sealed class DiscordClient
             new("grant_type", "authorization_code"),
             new("code", code),
         };
-        using var response = await _httpClient.PostAsync("https://discord.com/api/v10/oauth2/token", new FormUrlEncodedContent(data));
-        var tokens = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync());
+        using var response = await _httpClient.PostAsync("https://discord.com/api/v10/oauth2/token", new FormUrlEncodedContent(data), ct);
+        var tokens = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
         return tokens is not null ? new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokens.ExpiresIn)) : null;
     }
 
-    private async Task<string?> GetAccessToken(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
+    public async Task<DiscordOAuthTokens?> GetOrRefreshTokens(DiscordOAuthTokens tokens, CancellationToken ct)
     {
         if (DateTimeOffset.Now <= tokens.ExpiresAt)
-            return tokens.AccessToken;
+            return tokens;
 
         var data = new List<KeyValuePair<string, string>>
         {
@@ -105,48 +104,36 @@ public sealed class DiscordClient
             new("grant_type", "refresh_token"),
             new("refresh_token", tokens.RefreshToken),
         };
-        using var response = await _httpClient.PostAsync("https://discord.com/api/v10/oauth2/token", new FormUrlEncodedContent(data));
-        if (response.IsSuccessStatusCode && await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync()) is { } tokensNew)
-        {
-            _storage.Upsert(nexusModsUserId, discordUserId, new DiscordOAuthTokens(tokensNew.AccessToken, tokensNew.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokensNew.ExpiresIn)));
-            return tokensNew.AccessToken;
-        }
-
-        return null;
+        using var response = await _httpClient.PostAsync("https://discord.com/api/v10/oauth2/token", new FormUrlEncodedContent(data), ct);
+        if (!response.IsSuccessStatusCode) return null;
+        var responseData = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+        if (responseData is null) return null;
+        
+        return new DiscordOAuthTokens(responseData.AccessToken, responseData.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(responseData.ExpiresIn));
     }
-
-    public async Task<DiscordUserInfo?> GetUserInfo(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
-    {
-        var accessToken = await GetAccessToken(nexusModsUserId, discordUserId, tokens);
-        if (accessToken is null)
-            return null;
-        return await GetUserInfo(accessToken);
-    }
-
-    public async Task<DiscordUserInfo?> GetUserInfo(string accessToken)
+    
+    public async Task<DiscordUserInfo?> GetUserInfo(DiscordOAuthTokens tokens, CancellationToken ct)
     {
         using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/v10/oauth2/@me")
         {
             Headers =
             {
-                {"Authorization", $"Bearer {accessToken}"}
+                {"Authorization", $"Bearer {tokens.AccessToken}"}
             }
-        });
-        return await JsonSerializer.DeserializeAsync<DiscordUserInfo>(await response.Content.ReadAsStreamAsync());
+        }, ct);
+        return await JsonSerializer.DeserializeAsync<DiscordUserInfo>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
     }
 
-    public async Task<bool> PushMetadata<T>(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens, T metadata)
+    public async Task<bool> PushMetadata<T>(DiscordOAuthTokens tokens, T metadata, CancellationToken ct)
     {
-        var accessToken = await GetAccessToken(nexusModsUserId, discordUserId, tokens);
-
         using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/users/@me/applications/{_options.ClientId}/role-connection")
         {
             Headers =
             {
-                {"Authorization", $"Bearer {accessToken}"},
+                {"Authorization", $"Bearer {tokens.AccessToken}"},
             },
             Content = new StringContent(JsonSerializer.Serialize(new PutMetadata<T>("BUTR", metadata)), Encoding.UTF8, "application/json"),
-        });
+        }, ct);
         return response.IsSuccessStatusCode;
     }
 }

@@ -46,27 +46,27 @@ public sealed class NexusModsAPIClient
         return Convert.ToBase64String(data);
     }
 
-    public async Task<NexusModsValidateResponse?> ValidateAPIKeyAsync(string apiKey)
+    public async Task<NexusModsValidateResponse?> ValidateAPIKeyAsync(string apiKey, CancellationToken ct)
     {
         var apiKeyKey = HashString(apiKey);
         try
         {
-            if (await _cache.GetStringAsync(apiKeyKey) is { } json)
+            if (await _cache.GetStringAsync(apiKeyKey, token: ct) is { } json)
                 return string.IsNullOrEmpty(json) ? null : JsonSerializer.Deserialize<NexusModsValidateResponse>(json, _jsonSerializerOptions);
 
             var request = new HttpRequestMessage(HttpMethod.Get, "v1/users/validate.json");
             request.Headers.Add("apikey", apiKey);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var response = await _httpClient.SendAsync(request);
+            var response = await _httpClient.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            json = await response.Content.ReadAsStringAsync();
+            json = await response.Content.ReadAsStringAsync(ct);
             var responseType = JsonSerializer.Deserialize<NexusModsValidateResponse>(json, _jsonSerializerOptions);
             if (responseType is null || responseType.Key != apiKey)
                 return null;
 
-            await _cache.SetStringAsync(apiKeyKey, json, _apiKeyExpiration);
+            await _cache.SetStringAsync(apiKeyKey, json, _apiKeyExpiration, token: ct);
             return responseType;
         }
         catch (Exception)

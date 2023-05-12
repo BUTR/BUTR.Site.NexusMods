@@ -33,11 +33,23 @@ public sealed class GOGAuthClient
 
     public string GetOAuth2Url() => OAuth2Url;
     
-    public async Task<GOGOAuthTokens?> GetToken(string code, CancellationToken ct)
+    public async Task<GOGOAuthTokens?> CreateTokens(string code, CancellationToken ct)
     {
         var url = $"token?client_id={ClientId}&client_secret={ClientSecret}&grant_type=authorization_code&code={code}&redirect_uri={RedirectUri}";
         var response = await _httpClient.GetFromJsonAsync<TokenResponse>(url, ct);
         if (response is null) return null;
         return new GOGOAuthTokens(response.UserId, response.AccessToken, response.RefreshToken, DateTimeOffset.UtcNow.AddMinutes(response.ExpiresIn ?? 0));
+    }
+    
+    public async Task<GOGOAuthTokens?> GetOrRefreshTokens(GOGOAuthTokens tokens, CancellationToken ct)
+    {
+        if (DateTimeOffset.Now <= tokens.ExpiresAt)
+            return tokens;
+
+        var url = $"token?client_id={ClientId}&client_secret={ClientSecret}&grant_type=refresh_token&refresh_token={tokens.RefreshToken}";
+        var responseData = await _httpClient.GetFromJsonAsync<TokenResponse>(url, ct);
+        if (responseData is null) return null;
+        
+        return new GOGOAuthTokens(responseData.UserId, responseData.AccessToken, responseData.RefreshToken, DateTimeOffset.UtcNow.AddMinutes(responseData.ExpiresIn ?? 0));
     }
 }
