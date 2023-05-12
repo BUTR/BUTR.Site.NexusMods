@@ -1,6 +1,6 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
-using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
+using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Http;
@@ -24,8 +24,9 @@ public static class HttpContextExtensions
         IsPremium = context.GetIsPremium(),
         IsSupporter = context.GetIsSupporter(),
         Role = role,
-        DiscordUserId = context.GetDiscordTokens()?.UserId,
-        SteamUserId = context.GetSteamTokens()?.UserId,
+        DiscordUserId = context.GetDiscordTokens()?.ExternalId,
+        SteamUserId = context.GetSteamTokens()?.ExternalId,
+        GOGUserId = context.GetGOGTokens()?.ExternalId,
         HasBannerlord = context.GetHasBannerlord()
     };
 
@@ -53,16 +54,22 @@ public static class HttpContextExtensions
     public static string GetRole(this HttpContext context) =>
         context.User.FindFirst(ButrNexusModsClaimTypes.Role)?.Value ?? ApplicationRoles.User;
 
-    public static DiscordUserTokens? GetDiscordTokens(this HttpContext context)
+    public static ExternalDataHolder<DiscordOAuthTokens>? GetDiscordTokens(this HttpContext context)
     {
         var options = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;
-        return context.GetMetadata().TryGetValue("DiscordTokens", out var json) ? JsonSerializer.Deserialize<DiscordUserTokens>(json, options) : null;
+        return context.GetMetadata().TryGetValue(ExternalStorageConstants.Discord, out var json) ? JsonSerializer.Deserialize<ExternalDataHolder<DiscordOAuthTokens>>(json, options) : null;
     }
 
-    public static SteamUserTokens? GetSteamTokens(this HttpContext context)
+    public static ExternalDataHolder<Dictionary<string, string>>? GetSteamTokens(this HttpContext context)
     {
         var options = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;
-        return context.GetMetadata().TryGetValue("SteamTokens", out var json) ? JsonSerializer.Deserialize<SteamUserTokens>(json, options) : null;
+        return context.GetMetadata().TryGetValue(ExternalStorageConstants.Steam, out var json) ? JsonSerializer.Deserialize<ExternalDataHolder<Dictionary<string, string>>>(json, options) : null;
+    }
+
+    public static ExternalDataHolder<GOGOAuthTokens>? GetGOGTokens(this HttpContext context)
+    {
+        var options = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;
+        return context.GetMetadata().TryGetValue(ExternalStorageConstants.GOG, out var json) ? JsonSerializer.Deserialize<ExternalDataHolder<GOGOAuthTokens>>(json, options) : null;
     }
 
     public static bool GetHasBannerlord(this HttpContext context) =>

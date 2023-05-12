@@ -1,7 +1,7 @@
 ﻿@attribute [Authorize]
-@page "/discord-oauth-callback"
+@page "/gog-oauth-callback"
 
-@inject IDiscordClient _discordClient;
+@inject IGOGClient _gogClient;
 @inject AuthenticationProvider _authenticationProvider;
 @inject ILocalStorageService _localStorage;
 @inject NavigationManager _navigationManager;
@@ -39,26 +39,6 @@
                                 <FigureImage Margin="Margin.Is0" Source="@_image" AlternateText="A meme image displaying success or failure. Success is Brent Rambo giving a thumbs up. Failure is a horse failing to play with a gymnastics by kinda lying onto it ball and falling."></FigureImage>
                             </Row>
                         }
-                    
-                        <Row Margin="@Margin.Is2">
-                            <Span>Use the "Linked Roles" option in servers with the BUTR Discord bot to claim your roles.</Span>
-                        </Row>
-                        <Row Margin="@Margin.Is2">
-                            <Button Border="@Border.RoundedPill"
-                                    TextTransform="@TextTransform.Uppercase"
-                                    Padding="@Padding.Is2"
-                                    TextWeight="@TextWeight.Bold"
-                                    Color="@Color.Primary"
-                                    Type="ButtonType.Link"
-                                    To="discord://-/"
-                                    rel="noreferrer"
-                                    Target="@Target.Blank">
-                                <Figure Margin="@Margin.Is0" Size="@FigureSize.Is32x32">
-                                    <FigureImage Margin="Margin.Is0" AlternateText="Discord app icon." Source="images/discord.svg"/>
-                                </Figure>
-                                Back to Discord
-                            </Button>
-                        </Row>
                 </CardBody>
             </Card>
         </Column>
@@ -73,40 +53,22 @@
     private string _status = string.Empty;
     private string _message = string.Empty;
     private string _image = string.Empty;
-    private DiscordUserInfo2? _userInfo;
+    private GOGUserInfo2? _userInfo;
     
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
-        if (!await _localStorage.ContainKeyAsync("discord_state"))
-        {
-            _status = "FAILURE";
-            _message = "State verification failed.";
-            _image = Failure;
-            return;
-        }
-
         var queries = _navigationManager.QueryString();
-        var queryStatRaw = queries["state"];
         var queryCode = queries["code"];
 
         try
         {
-            var state = await _localStorage.GetItemAsync<Guid>("discord_state");
-            if (!Guid.TryParse(queryStatRaw, out var queryState) || state != queryState)
-            {
-                _status = "FAILURE";
-                _message = "State verification failed.";
-                _image = Failure;
-                return;
-            }
-
-            await _discordClient.LinkAsync(queryCode);
+            await _gogClient.LinkAsync(queryCode);
             _ = await _authenticationProvider.ValidateAsync();
 
-            var userInfo = await _discordClient.GetUserInfoAsync();
-            _userInfo = new DiscordUserInfo2(userInfo.Data);
+            var userInfo = await _gogClient.GetUserInfoAsync();
+            _userInfo = new GOGUserInfo2(userInfo.Data);
             _status = "SUCCESS";
             _image = Success;
         }
@@ -115,10 +77,6 @@
             _status = "FAILURE";
             _message = "Failed to link!";
             _image = Failure;
-        }
-        finally
-        {
-            await _localStorage.RemoveItemAsync("discord_state");
         }
     }
 

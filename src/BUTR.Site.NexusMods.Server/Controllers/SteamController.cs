@@ -105,10 +105,10 @@ public sealed class SteamController : ControllerExtended
         var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetSteamTokens();
 
-        if (tokens is null)
+        if (tokens?.Data is null)
             return APIResponseError<string>("Unlinked successful!");
 
-        if (!_steamStorage.Remove(userId, tokens.UserId))
+        if (!_steamStorage.Remove(userId, tokens.ExternalId))
             return APIResponseError<string>("Failed to unlink!");
 
         return APIResponse("Unlinked successful!");
@@ -118,13 +118,12 @@ public sealed class SteamController : ControllerExtended
     [Produces("application/json")]
     public async Task<ActionResult<APIResponse<SteamUserInfo?>>> GetUserInfoByAccessToken()
     {
-        var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetSteamTokens();
 
-        if (tokens is null)
+        if (tokens?.Data is null)
             return APIResponseError<SteamUserInfo>("Failed to get the token!");
 
-        var result = await _steamAPIClient.GetUserInfo(tokens.UserId, CancellationToken.None);
+        var result = await _steamAPIClient.GetUserInfo(tokens.ExternalId, CancellationToken.None);
         return APIResponse(result);
     }
 }

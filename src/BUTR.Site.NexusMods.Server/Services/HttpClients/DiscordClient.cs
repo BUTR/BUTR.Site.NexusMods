@@ -13,8 +13,6 @@ using System.Web;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public sealed record DiscordOAuthTokens(string AccessToken, string RefreshToken, DateTimeOffset ExpiresAt);
-
 public sealed record DiscordUserInfoUser(
     [property: JsonPropertyName("id")] string Id,
     [property: JsonPropertyName("username")] string Username,

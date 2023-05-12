@@ -1,0 +1,59 @@
+@attribute [Authorize]
+@page "/gog-linked-role"
+
+@inject IGOGClient _gogClient;
+@inject NavigationManager _navigationManager;
+
+<Container>
+    @if (!string.IsNullOrEmpty(Url))
+    {
+        <br/>
+        <Card>
+            <CardBody>
+                <Text>GOG auth is partially supported.</Text>
+                <br/>
+                <Text>Please login to GOG by clicking the Login button and paste the url after redirect to here</Text>
+                <br/>
+                <Button TextWeight="@TextWeight.Bold"
+                        Color="@Color.Primary"
+                        Type="@ButtonType.Link"
+                        To="@Url"
+                        Target="@Target.Blank">
+                    Login
+                </Button>
+                <Divider/>
+                <Field>
+                    <FieldLabel>Callback Url</FieldLabel>
+                    <TextEdit @bind-Text="@CallbackUrl" Placeholder="https://embed.gog.com/on_login_success?..."></TextEdit>
+                </Field>
+                <Button TextWeight="@TextWeight.Bold"
+                        Color="@Color.Primary"
+                        Clicked="Callback">
+                    Confirm
+                </Button>
+            </CardBody>
+        </Card>
+    } 
+</Container>
+
+@code {
+
+    private string Url = string.Empty;
+    private string CallbackUrl = string.Empty;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        var response = await _gogClient.GetOAuthUrlAsync();
+        
+        Url = response.Data.Url;
+    }
+
+    private void Callback()
+    {
+        var url = new Uri(CallbackUrl);
+        _navigationManager.NavigateTo($"/gog-oauth-callback{url.Query}");
+    }
+
+}

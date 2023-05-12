@@ -5,6 +5,7 @@
 @inject IUserClient _userClient
 @inject IDiscordClient _discordClient
 @inject ISteamClient _steamClient
+@inject IGOGClient _gogClient
 
 @if (_user is null)
 {
@@ -122,6 +123,26 @@ else
                 </Row>
                 <Divider/>
                 <Row>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">GOG</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">
+                        <Anchor Style="text-decoration: none" To="@(_gogUser?.Url ?? "gog-linked-role")" Target="@Target.Blank">
+                            @if (_user.GogUserId is not null && _gogUser?.Name is not null)
+                            {
+                                @(_gogUser.Name)
+                            }
+                            else if (_user.GogUserId is not null && _gogUser?.Name is null)
+                            {
+                                @("Needs Relinking")
+                            }
+                            else
+                            {
+                                @("Not Linked")
+                            }
+                        </Anchor>
+                    </Column>
+                </Row>
+                <Divider/>
+                <Row>
                     <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Has Bannerlord</Column>
                     <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.HasBannerlord</Column>
                 </Row>
@@ -131,6 +152,7 @@ else
     private ProfileModel? _user;
     private DiscordUserInfo2? _discordUser;
     private SteamUserInfo2? _steamUser;
+    private GOGUserInfo2? _gogUser;
     private Row? _gutterRow;
 
     protected override async Task OnInitializedAsync()
@@ -140,6 +162,8 @@ else
         _discordUser = discordUserInfo is { Data: { } dataDiscord } ? new DiscordUserInfo2(dataDiscord) : null;
         var steamUserInfo = _user?.SteamUserId is not null ? await _steamClient.GetUserInfoAsync() : null;
         _steamUser = steamUserInfo is { Data: { } dataSteam } ? new SteamUserInfo2(dataSteam) : null;
+        var gogUserInfo = _user?.GogUserId is not null ? await _gogClient.GetUserInfoAsync() : null;
+        _gogUser = gogUserInfo is { Data: { } dataGog } ? new GOGUserInfo2(dataGog) : null;
         if (_gutterRow is not null)
             _gutterRow.Gutter = (5,5);
     }

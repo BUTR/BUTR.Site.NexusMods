@@ -1,7 +1,9 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Services;
 
-public sealed record NexusModsUserToDiscordEntity : IEntity
+namespace BUTR.Site.NexusMods.Server.Models.Database;
+
+public sealed record NexusModsUserToDiscordEntity : INexusModsToExternalEntity
 {
     public required int NexusModsUserId { get; init; }
-    public required string DiscordId { get; init; }
+    public required string UserId { get; init; }
 }

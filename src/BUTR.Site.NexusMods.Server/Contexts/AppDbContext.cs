@@ -37,7 +37,9 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new CrashScoreInvolvedEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NexusModsUserToDiscordEntityConfiguration());
         modelBuilder.ApplyConfiguration(new NexusModsUserToSteamEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new NexusModsUserToGOGEntityConfiguration());
         modelBuilder.ApplyConfiguration(new DiscordLinkedRoleTokensEntityConfiguration());
         modelBuilder.ApplyConfiguration(new SteamLinkedRoleTokensEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new GOGLinkedRoleTokensEntityConfiguration());
     }
 }

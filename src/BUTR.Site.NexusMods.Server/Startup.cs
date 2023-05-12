@@ -127,6 +127,16 @@ public sealed class Startup
             client.BaseAddress = new Uri("https://api.steampowered.com");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
+        services.AddHttpClient<GOGAuthClient>().ConfigureHttpClient((sp, client) =>
+        {
+            client.BaseAddress = new Uri("https://auth.gog.com");
+            client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+        });
+        services.AddHttpClient<GOGEmbedClient>().ConfigureHttpClient((sp, client) =>
+        {
+            client.BaseAddress = new Uri("https://embed.gog.com");
+            client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+        });
 
         services.AddSingleton<BannerlordBinaryCache>();
         services.AddSingleton<SteamDepotDownloader>();
@@ -182,6 +192,7 @@ public sealed class Startup
         services.AddHostedService<DiscordLinkedRolesService>();
         services.AddScoped<IDiscordStorage, DatabaseDiscordStorage>();
         services.AddScoped<ISteamStorage, DatabaseSteamStorage>();
+        services.AddScoped<IGOGStorage, DatabaseGOGStorage>();
 
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHttpMessageHandlerBuilderFilter, SyncLoggingHttpMessageHandlerBuilderFilter>());
         services.AddTransient<NexusModsInfo>();

@@ -1,8 +1,10 @@
-﻿using System;
+﻿using BUTR.Site.NexusMods.Server.Services;
+
+using System;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database;
 
-public sealed record DiscordLinkedRoleTokensEntity : IEntity
+public sealed record DiscordLinkedRoleTokensEntity : IExternalEntity
 {
     public required string UserId { get; init; }
 

@@ -95,6 +95,14 @@ public partial class SteamClient
     }
 }
 
+public partial class GOGClient
+{
+    public GOGClient(HttpClient client, JsonSerializerOptions options) : this(client)
+    {
+        _settings = new Lazy<JsonSerializerOptions>(options);
+    }
+}
+
 public partial class StatisticsClient
 {
     public StatisticsClient(HttpClient client, JsonSerializerOptions options) : this(client)

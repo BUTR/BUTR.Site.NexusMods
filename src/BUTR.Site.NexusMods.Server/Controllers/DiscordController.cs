@@ -71,13 +71,13 @@ public sealed class DiscordController : ControllerExtended
         var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetDiscordTokens();
 
-        if (tokens is null)
+        if (tokens?.Data is null)
             return APIResponseError<string>("Unlinked successful!");
 
-        if (!await _discordClient.PushMetadata(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt), new Metadata(0, 0, 0, 0)))
+        if (!await _discordClient.PushMetadata(userId, tokens.ExternalId, tokens.Data, new Metadata(0, 0, 0, 0)))
             return APIResponseError<string>("Failed to unlink!");
 
-        if (!_discordStorage.Remove(userId, tokens.UserId))
+        if (!_discordStorage.Remove(userId, tokens.ExternalId))
             return APIResponseError<string>("Failed to unlink!");
 
         return APIResponse("Unlinked successful!");
@@ -100,10 +100,10 @@ public sealed class DiscordController : ControllerExtended
         var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetDiscordTokens();
 
-        if (tokens is null)
+        if (tokens?.Data is null)
             return APIResponseError<DiscordUserInfo>("Failed to get the token!");
 
-        var result = await _discordClient.GetUserInfo(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt));
+        var result = await _discordClient.GetUserInfo(userId, tokens.ExternalId, tokens.Data);
         return APIResponse(result);
     }
 
@@ -113,7 +113,7 @@ public sealed class DiscordController : ControllerExtended
         var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetDiscordTokens();
 
-        if (tokens is null)
+        if (tokens?.Data is null)
             return null;
 
         var linkedModsCount = await _dbContext
@@ -123,7 +123,7 @@ public sealed class DiscordController : ControllerExtended
             .Set<NexusModsUserAllowedModuleIdsEntity>()
             .CountAsync(y => y.NexusModsUserId == userId);
 
-        return await _discordClient.PushMetadata(userId, tokens.UserId, new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt), new Metadata(
+        return await _discordClient.PushMetadata(userId, tokens.ExternalId, tokens.Data, new Metadata(
             1,
             role == ApplicationRoles.Moderator ? 1 : 0,
             role == ApplicationRoles.Administrator ? 1 : 0,

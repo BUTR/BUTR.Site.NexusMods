@@ -11,6 +11,6 @@ public class NexusModsUserToSteamEntityConfiguration : BaseEntityConfiguration<N
     {
         builder.ToTable("nexusmods_to_steam").HasKey(p => p.NexusModsUserId).HasName("nexusmods_to_steam_pkey");
         builder.Property(p => p.NexusModsUserId).HasColumnName("nexusmods_user_id").ValueGeneratedNever().IsRequired();
-        builder.Property(p => p.SteamId).HasColumnName("steam_user_id").IsRequired();
+        builder.Property(p => p.UserId).HasColumnName("steam_user_id").IsRequired();
     }
 }

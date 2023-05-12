@@ -101,6 +101,7 @@ public static class Program
             services.AddTransient<IExposedModsClient, ExposedModsClient>(sp => ConfigureClient(sp, (http, opt) => new ExposedModsClient(http, opt)));
             services.AddTransient<IDiscordClient, DiscordClient>(sp => ConfigureClient(sp, (http, opt) => new DiscordClient(http, opt)));
             services.AddTransient<ISteamClient, SteamClient>(sp => ConfigureClient(sp, (http, opt) => new SteamClient(http, opt)));
+            services.AddTransient<IGOGClient, GOGClient>(sp => ConfigureClient(sp, (http, opt) => new GOGClient(http, opt)));
             services.AddTransient<IStatisticsClient, StatisticsClient>(sp => ConfigureClient(sp, (http, opt) => new StatisticsClient(http, opt)));
             services.AddTransient<IQuartzClient, QuartzClient>(sp => ConfigureClient(sp, (http, opt) => new QuartzClient(http, opt)));
             services.AddTransient<IRecreateStacktraceClient, RecreateStacktraceClient>(sp => ConfigureClient(sp, (http, opt) => new RecreateStacktraceClient(http, opt)));
