@@ -2,14 +2,15 @@
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
 public interface ISteamStorage
 {
-    Dictionary<string, string>? Get(string userId);
-    bool Upsert(int nexusModsUserId, string steamUserId, Dictionary<string, string> data);
-    bool Remove(int nexusModsUserId, string steamUserId);
+    Task<Dictionary<string, string>?> GetAsync(string userId);
+    Task<bool> UpsertAsync(int nexusModsUserId, string steamUserId, Dictionary<string, string> data);
+    Task<bool> RemoveAsync(int nexusModsUserId, string steamUserId);
 }
 
 public sealed class DatabaseSteamStorage : BaseDatabaseStorage<Dictionary<string, string>, SteamLinkedRoleTokensEntity, NexusModsUserToSteamEntity>, ISteamStorage

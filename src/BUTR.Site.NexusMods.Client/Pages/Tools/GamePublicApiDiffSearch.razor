@@ -6,17 +6,17 @@
 @inject IGamePublicApiDiffClient _gamePublicApiClient
 @inject DiffService _diffService
 
-<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+<Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Public API Diff</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">Public API Diff</CardTitle>
     </CardHeader>
     <CardBody>
-        <TextEdit Role="@TextRole.Search" Debounce="true" DebounceInterval="500" TextChanged="OnSearch"></TextEdit>
+        <TextEdit Role="@TextRole.Search" Debounce="@true" DebounceInterval="500" TextChanged="@OnSearch"></TextEdit>
         <Divider/>
         <Accordion>
             @foreach (var diffContent in _diffs)
             {
-                <Collapse Border="Border.Is0" Visible="@diffContent.Visible">
+                <Collapse Border="@Border.Is0" Visible="@diffContent.Visible">
                     <CollapseHeader>
                         <Text Italic @onclick="@(() => diffContent.Visible = !diffContent.Visible)">@diffContent.Title</Text>
                     </CollapseHeader>
@@ -24,7 +24,7 @@
                         <Diff Content="@diffContent.Content"></Diff>
                     </CollapseBody>
                 </Collapse>
-                <Divider Margin="Margin.Is0"/>
+                <Divider Margin="@Margin.Is0"/>
             }
         </Accordion>
     </CardBody>

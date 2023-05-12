@@ -16,7 +16,7 @@
                                   SelectionMode="@AutocompleteSelectionMode.Multiple"
                                   Placeholder="v1.0.0"
                                   SelectedValues="@_gameVersions"
-                                  SelectedTextsChanged="OnGameVersionChanged"
+                                  SelectedTextsChanged="@OnGameVersionChanged"
                                   FreeTyping>
                     </Autocomplete>
                 </FieldBody>
@@ -33,7 +33,7 @@
                                   SelectionMode="@AutocompleteSelectionMode.Multiple"
                                   Placeholder="Bannerlord.Harmony"
                                   SelectedValues="@_modIds"
-                                  SelectedTextsChanged="OnModIdChanged"
+                                  SelectedTextsChanged="@OnModIdChanged"
                                   FreeTyping>
                     </Autocomplete>
                 </FieldBody>

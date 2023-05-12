@@ -73,7 +73,7 @@ public sealed class GOGController : ControllerExtended
                 return APIResponseError<string>("Failed to link!");
         }
 
-        if (!_gogStorage.Upsert(userId, tokens.UserId, tokens))
+        if (!await _gogStorage.UpsertAsync(userId, tokens.UserId, tokens))
             return APIResponseError<string>("Failed to link!");
 
         return APIResponse("Linked successful!");
@@ -89,7 +89,7 @@ public sealed class GOGController : ControllerExtended
         if (tokens?.Data is null)
             return APIResponseError<string>("Unlinked successful!");
 
-        if (!_gogStorage.Remove(userId, tokens.ExternalId))
+        if (!await _gogStorage.RemoveAsync(userId, tokens.ExternalId))
             return APIResponseError<string>("Failed to unlink!");
 
         return APIResponse("Unlinked successful!");
@@ -110,7 +110,7 @@ public sealed class GOGController : ControllerExtended
             return APIResponse<GOGUserInfo>(null);
         
         if (tokens.Data.AccessToken != refreshed.AccessToken)
-            _gogStorage.Upsert(userId, refreshed.UserId, refreshed);
+            await _gogStorage.UpsertAsync(userId, refreshed.UserId, refreshed);
         
         var result = await _gogEmbedClient.GetUserInfo(refreshed.AccessToken, ct);
         return APIResponse(result);

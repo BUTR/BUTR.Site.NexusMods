@@ -5,6 +5,7 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
@@ -49,18 +50,18 @@ public abstract class BaseDatabaseStorage<TData, TExternalEntity, TNexusModsToEx
     };
     
     
-    public TData? Get(string userId)
+    public async Task<TData?> GetAsync(string userId)
     {
-        var entity = _dbContext.FirstOrDefault<TExternalEntity>(x => x.UserId == userId);
+        var entity = await _dbContext.FirstOrDefaultAsync<TExternalEntity>(x => x.UserId == userId);
         return entity is not null ? FromExternalEntity(entity) : null;
     }
 
-    public bool Upsert(int nexusModsUserId, string externalUserId, TData data)
+    public async Task<bool> UpsertAsync(int nexusModsUserId, string externalUserId, TData data)
     {
-        if (!_dbContext.AddUpdateRemoveAndSave<TNexusModsToExternalEntity>(x => x.NexusModsUserId == nexusModsUserId, entity => Upsert(nexusModsUserId, externalUserId, entity)))
+        if (!await _dbContext.AddUpdateRemoveAndSaveAsync<TNexusModsToExternalEntity>(x => x.NexusModsUserId == nexusModsUserId, entity => Upsert(nexusModsUserId, externalUserId, entity)))
             return false;
 
-        if (!_dbContext.AddUpdateRemoveAndSave<TExternalEntity>(x => x.UserId == externalUserId, entity => Upsert(externalUserId, data, entity)))
+        if (!await _dbContext.AddUpdateRemoveAndSaveAsync<TExternalEntity>(x => x.UserId == externalUserId, entity => Upsert(externalUserId, data, entity)))
             return false;
 
         NexusModsUserMetadataEntity? ApplyChanges(NexusModsUserMetadataEntity? existing) => existing switch
@@ -85,18 +86,18 @@ public abstract class BaseDatabaseStorage<TData, TExternalEntity, TNexusModsToEx
                 Metadata = existing.Metadata.SetAndReturn(ExternalMetadataId, JsonSerializer.Serialize(new ExternalDataHolder<TData>(externalUserId, data)))
             },
         };
-        if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges))
+        if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges))
             return false;
 
         return true;
     }
 
-    public bool Remove(int nexusModsUserId, string externalUserId)
+    public async Task<bool> RemoveAsync(int nexusModsUserId, string externalUserId)
     {
-        if (!_dbContext.AddUpdateRemoveAndSave<TNexusModsToExternalEntity>(x => x.NexusModsUserId == nexusModsUserId, Remove))
+        if (!await _dbContext.AddUpdateRemoveAndSaveAsync<TNexusModsToExternalEntity>(x => x.NexusModsUserId == nexusModsUserId, Remove))
             return false;
 
-        if (!_dbContext.AddUpdateRemoveAndSave<TExternalEntity>(x => x.UserId == externalUserId, Remove))
+        if (!await _dbContext.AddUpdateRemoveAndSaveAsync<TExternalEntity>(x => x.UserId == externalUserId, Remove))
             return false;
 
         NexusModsUserMetadataEntity? ApplyChanges(NexusModsUserMetadataEntity? existing) => existing switch
@@ -108,7 +109,7 @@ public abstract class BaseDatabaseStorage<TData, TExternalEntity, TNexusModsToEx
             },
             _ => existing
         };
-        if (!_dbContext.AddUpdateRemoveAndSave<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges))
+        if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == nexusModsUserId, ApplyChanges))
             return false;
 
         return true;

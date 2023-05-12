@@ -3,9 +3,9 @@
 
 @inject IQuartzClient _quartzClient;
 
-<Card Margin="Margin.Is4">
+<Card Margin="@Margin.Is4">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Trigger Job</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">Trigger Job</CardTitle>
     </CardHeader>
     <CardBody>
         <Form>
@@ -16,7 +16,7 @@
                 </FieldBody>
             </Field>
             <Field>
-                <Button Color="Color.Primary" Type="@ButtonType.Submit" Clicked="@OnSubmit" PreventDefaultOnSubmit>
+                <Button Color="@Color.Primary" Type="@ButtonType.Submit" Clicked="@OnSubmit" PreventDefaultOnSubmit>
                     Link
                 </Button>
             </Field>
@@ -24,43 +24,43 @@
     </CardBody>
 </Card>
 
-<Card Margin="Margin.Is4">
+<Card Margin="@Margin.Is4">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Job History</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">Job History</CardTitle>
     </CardHeader>
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef" TItem="QuartzExecutionLogEntity" DetailRowTrigger="@(x => x.Item.LogId == _dataGridRef.Value?.LogId)" GetFilters="@GetFilters" GetItems="@Paging" Sortable Filterable>
             <DataGridColumns>
-                <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="" Filterable="false" Sortable="false" >
+                <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="" Filterable="@false" Sortable="@false" >
                     <DisplayTemplate>
                         @if (context.IsSuccess == true)
                         {
-                            <Icon Name="IconName.CheckCircle" Style="@($"color: {Theme.ColorOptions.Success}")" />
+                            <Icon Name="@IconName.CheckCircle" Style="@($"color: {Theme.ColorOptions.Success}")" />
                         }
                         else if (context.IsVetoed == true)
                         {
-                            <Icon Name="IconName.MinusCircle" Style="@($"color: {Theme.ColorOptions.Warning}")" />
+                            <Icon Name="@IconName.MinusCircle" Style="@($"color: {Theme.ColorOptions.Warning}")" />
                         }
                         else if (context.IsException == true)
                         {
-                            <Icon Name="IconName.TimesCircle" Style="@($"color: {Theme.ColorOptions.Danger}")" />
+                            <Icon Name="@IconName.TimesCircle" Style="@($"color: {Theme.ColorOptions.Danger}")" />
                         }
                         else
                         {
-                            <Icon Name="IconName.Circle" Style="@($"color: {Theme.ColorOptions.Info}")" />
+                            <Icon Name="@IconName.Circle" Style="@($"color: {Theme.ColorOptions.Info}")" />
                         }
                     </DisplayTemplate>
                 </DataGridColumn>
                 <DataGridColumnText TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.MachineName)" Caption="Machine Name" Filterable Sortable SortField="@nameof(EntityFields.MachineName)" />
                 <DataGridColumnText TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="Job" Filterable Sortable SortField="@nameof(EntityFields.JobName)" />
-                <DataGridColumnText TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.TriggerName)" Caption="Trigger" Filterable="false" Sortable="false" />
-                <DataGridColumnDateTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.ScheduleFireTimeUtc)" Caption="Schedule Fire Time" Filterable="false" Sortable="false" >
+                <DataGridColumnText TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.TriggerName)" Caption="Trigger" Filterable="@false" Sortable="@false" />
+                <DataGridColumnDateTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.ScheduleFireTimeUtc)" Caption="Schedule Fire Time" Filterable="@false" Sortable="@false" >
                     <DisplayTemplate>@(context.ScheduleFireTimeUtc?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)</DisplayTemplate>
                 </DataGridColumnDateTime>
                 <DataGridColumnDateTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.FireTimeUtc)" Caption="Actual Fire Time" Filterable Sortable SortField="@nameof(EntityFields.FireTimeUtc)" >
                     <DisplayTemplate>@(context.FireTimeUtc?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)</DisplayTemplate>
                 </DataGridColumnDateTime>
-                <DataGridColumnTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobRunTime)" Caption="Run Time" Filterable="false" Sortable SortField="@nameof(EntityFields.JobRunTime)" >
+                <DataGridColumnTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobRunTime)" Caption="Run Time" Filterable="@false" Sortable SortField="@nameof(EntityFields.JobRunTime)" >
                 </DataGridColumnTime>
             </DataGridColumns>
             <DetailRowTemplate>

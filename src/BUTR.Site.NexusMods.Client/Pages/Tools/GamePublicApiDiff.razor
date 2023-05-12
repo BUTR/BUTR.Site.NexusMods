@@ -6,14 +6,14 @@
 @inject IGamePublicApiDiffClient _gamePublicApiClient
 @inject DiffService _diffService
 
-<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+<Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Public API Diff</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">Public API Diff</CardTitle>
     </CardHeader>
     <CardBody>
         <TreeView TNode="Node"
-                  Nodes="Nodes"
-                  GetChildNodes="GetChildNodes"
+                  Nodes="@Nodes"
+                  GetChildNodes="@GetChildNodes"
                   HasChildNodes="@(node => node.Type is NodeType.Root or NodeType.Directory or NodeType.File)"
                   SelectedNode="@SelectedNode"
                   SelectedNodeChanged="@(_ => SelectedNode = null)"
@@ -32,7 +32,7 @@
                         <Accordion>
                             @foreach (var diffContent in context.Content)
                             {
-                                <Collapse Border="Border.Is0" Visible="@diffContent.Visible">
+                                <Collapse Border="@Border.Is0" Visible="@diffContent.Visible">
                                     <CollapseHeader>
                                         <Text Italic @onclick="@(() => diffContent.Visible = !diffContent.Visible)">@diffContent.Title</Text>
                                     </CollapseHeader>
@@ -40,7 +40,7 @@
                                         <Diff Content="@diffContent.Content"></Diff>
                                     </CollapseBody>
                                 </Collapse>
-                                <Divider Margin="Margin.Is0"/>
+                                <Divider Margin="@Margin.Is0"/>
                             }
                         </Accordion>
                     }

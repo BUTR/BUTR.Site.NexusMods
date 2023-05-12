@@ -2,6 +2,7 @@
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using System;
+using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
@@ -9,9 +10,9 @@ public sealed record DiscordOAuthTokens(string AccessToken, string RefreshToken,
 
 public interface IDiscordStorage
 {
-    DiscordOAuthTokens? Get(string userId);
-    bool Upsert(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens);
-    bool Remove(int nexusModsUserId, string discordUserId);
+    Task<DiscordOAuthTokens?> GetAsync(string userId);
+    Task<bool> UpsertAsync(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens);
+    Task<bool> RemoveAsync(int nexusModsUserId, string discordUserId);
 }
 
 public sealed class DatabaseDiscordStorage : BaseDatabaseStorage<DiscordOAuthTokens, DiscordLinkedRoleTokensEntity, NexusModsUserToDiscordEntity>, IDiscordStorage

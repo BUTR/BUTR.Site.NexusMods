@@ -5,8 +5,8 @@
 @inject ICrashReportsClient _crashReportsClient
 @inject IJSRuntime _jsRuntime;
 
-<Modal ShowBackdrop @ref="_modalRef">
-    <ModalContent Size="ModalSize.ExtraLarge" Centered>
+<Modal @ref="_modalRef">
+    <ModalContent Size="@ModalSize.ExtraLarge" Centered>
         <ModalHeader>
             <ModalTitle>Crash Report Entry</ModalTitle>
             <CloseButton />
@@ -40,29 +40,29 @@
                     </Field>
                     <Field>
                         <FieldLabel>Comment</FieldLabel>
-                        <FieldBody Width="Width.Is25">
-                            <MemoEdit AutoSize @bind-Text="@_datagridPagingRef.Value.Comment" />
+                        <FieldBody Width="@Width.Is25">
+                            <MemoEdit @bind-Text="@_datagridPagingRef.Value.Comment" />
                         </FieldBody>
                     </Field>
                 </Form> 
             }
         </ModalBody>
         <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@(async () => await @HideModal(false))">Cancel</Button>
-            <Button Color="Color.Primary" Clicked="@(async () => await @HideModal(true))">Done</Button>
+            <Button Color="@Color.Secondary" Clicked="@(async () => await HideModal(false))">Cancel</Button>
+            <Button Color="@Color.Primary" Clicked="@(async () => await HideModal(true))">Done</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
 
-<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+<Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Crash Reports</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">Crash Reports</CardTitle>
     </CardHeader>
     <CardBody>
         <DataGridPaging @ref="@_datagridPagingRef" TItem="CrashReportModel" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable DefaultPageSize="@UserSettings.DefaultCrashReportPageSize" PageSizes="@UserSettings.AvailableCrashReportPageSizes" GetPageSize="@(x => x.CrashReportPageSize)">
             <DataGridColumns>
                 <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="Game Version" Filterable Placeholder="v1.0.0" Sortable SortField="@nameof(EntityFields.GameVersion)"/>
-                <DataGridColumnTextAutocomplete TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Filterable Sortable SortField="@nameof(EntityFields.InvolvedModIds)" GetAutocompleteValues="GetAutocompleteValues">
+                <DataGridColumnTextAutocomplete TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Filterable Sortable SortField="@nameof(EntityFields.InvolvedModIds)" GetAutocompleteValues="@GetAutocompleteValues">
                     <DisplayTemplate>@(context.InvolvedModules.FirstOrDefault())</DisplayTemplate>
                 </DataGridColumnTextAutocomplete>
                 <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Exception" Filterable Placeholder="System.NullReferenceException" Sortable SortField="@nameof(EntityFields.Exception)"/>
@@ -77,8 +77,8 @@
             </DataGridColumns>
 
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_datagridPagingRef?.Value is null)" Clicked="@ShowModal">Check</Button>
-                <Button Color="Color.Primary" Disabled="@(_datagridPagingRef?.Value is null)" Clicked="@OnClick">Open HTML</Button>
+                <Button Color="@Color.Primary" Disabled="@(_datagridPagingRef?.Value is null)" Clicked="@ShowModal">Check</Button>
+                <Button Color="@Color.Primary" Disabled="@(_datagridPagingRef?.Value is null)" Clicked="@OnClick">Open HTML</Button>
             </ButtonRowTemplate>
         </DataGridPaging>
     </CardBody>

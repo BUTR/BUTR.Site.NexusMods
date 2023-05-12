@@ -16,7 +16,7 @@ else
     <Container>
         <Card Margin="@Margin.Is4" Shadow="@Shadow.Small">
             <CardHeader>
-                <CardTitle Size="@(4)" Margin="@Margin.Is0">Profile</CardTitle>
+                <CardTitle Size="4" Margin="@Margin.Is0">Profile</CardTitle>
             </CardHeader>
             <CardBody>
                 @* Mobile *@
@@ -51,7 +51,7 @@ else
         @<Card Shadow="@Shadow.Small">
             <CardBody TextAlignment="@TextAlignment.Center">
                 <CardImage Width="@Width.Is50" Source="@user.ProfileUrl.Replace(@"{BASE}", _navigationManager.BaseUri)" Border="@Border.RoundedCircle" Alt="@("Profile Image")"/>
-                <CardTitle Size="@(5)"><Blazorise.Link To="@user.Url">@user.Name</Blazorise.Link></CardTitle>
+                <CardTitle Size="5"><Blazorise.Link To="@user.Url">@user.Name</Blazorise.Link></CardTitle>
                 <CardText TextColor="@TextColor.Secondary">@user.Role</CardText>
                 @if (user.IsPremium)
                 {

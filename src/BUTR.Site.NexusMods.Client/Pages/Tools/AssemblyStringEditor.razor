@@ -11,23 +11,23 @@
 
 @inject DownloadFileService _downloadFileService
 
-<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+<Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Assembly String Editor</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">Assembly String Editor</CardTitle>
     </CardHeader>
     <CardBody>
         <Fields>
             <Field>
-                <FieldLabel ColumnSize="ColumnSize.Is1">Files</FieldLabel>
+                <FieldLabel ColumnSize="@ColumnSize.Is1">Files</FieldLabel>
                 <FieldBody>
                     <FileEdit Changed="@OnFileSelected"/>
                 </FieldBody>
             </Field>
         </Fields>
         <Field>
-            <DataGridInMemory @ref="@_dataGridRef" TItem="LocalizationString" Editable EditMode="DataGridEditMode.Inline" Resizable ResizeMode="TableResizeMode.Header">
+            <DataGridInMemory @ref="@_dataGridRef" TItem="LocalizationString" Editable EditMode="@DataGridEditMode.Inline" Resizable ResizeMode="@TableResizeMode.Header">
                 <DataGridColumns>
-                    <DataGridCommandColumn TItem="LocalizationString" NewCommandAllowed="false" DeleteCommandAllowed="false"/>
+                    <DataGridCommandColumn TItem="LocalizationString" NewCommandAllowed="@false" DeleteCommandAllowed="@false"/>
                     <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Assembly)" Caption="@nameof(LocalizationString.Assembly)"/>
                     <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Text)" Caption="@nameof(LocalizationString.Text)" Editable>
                         <EditTemplate>
@@ -37,8 +37,8 @@
                     <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Location)" Caption="@nameof(LocalizationString.Location)"/>
                 </DataGridColumns>
             </DataGridInMemory>
-            <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
-            <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnExport)">Export Assembly</Button>
+            <Button Color="@Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@OnClear">Clear</Button>
+            <Button Color="@Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@OnExport">Export Assembly</Button>
         </Field>
     </CardBody>
 </Card>

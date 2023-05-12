@@ -92,7 +92,7 @@ public sealed class SteamController : ControllerExtended
                 return APIResponseError<string>("Failed to link!");
         }
 
-        if (userInfo is null || !_steamStorage.Upsert(userId, userInfo.Id, queries))
+        if (userInfo is null || !await _steamStorage.UpsertAsync(userId, userInfo.Id, queries))
             return APIResponseError<string>("Failed to link!");
 
         return APIResponse("Linked successful!");
@@ -108,7 +108,7 @@ public sealed class SteamController : ControllerExtended
         if (tokens?.Data is null)
             return APIResponseError<string>("Unlinked successful!");
 
-        if (!_steamStorage.Remove(userId, tokens.ExternalId))
+        if (!await _steamStorage.RemoveAsync(userId, tokens.ExternalId))
             return APIResponseError<string>("Failed to unlink!");
 
         return APIResponse("Unlinked successful!");

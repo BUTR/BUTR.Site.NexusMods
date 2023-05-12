@@ -13,7 +13,7 @@
             <!--
             <AuthorizeView Roles="@(ApplicationRoles.Administrator)">
                 <Row>
-                    <Column ColumnSize="ColumnSize.Is4">
+                    <Column ColumnSize="@ColumnSize.Is4">
                         <Card Shadow="@Shadow.Small">
                             <CardHeader>
                                 <CardTitle Size="5" Margin="@Margin.Is0">Administrator Settings</CardTitle>
@@ -26,7 +26,7 @@
             </AuthorizeView>
             -->
             <Row>
-                <Column ColumnSize="ColumnSize.Is4">
+                <Column ColumnSize="@ColumnSize.Is4">
                     <Card Shadow="@Shadow.Small">
                         <CardHeader>
                             <CardTitle Size="5" Margin="@Margin.Is0">Page Sizes</CardTitle>
@@ -55,12 +55,12 @@
                 </Column>
             </Row>
             <Row>
-                <Column Flex="Flex.ReverseRow" Gap="Gap.Is1">
-                    <Button Border="Border.RoundedPill"
-                            Color="Color.Primary"
+                <Column Flex="@Flex.ReverseRow" Gap="Gap.Is1">
+                    <Button Border="@Border.RoundedPill"
+                            Color="@Color.Primary"
                             Clicked="OnCancel">Cancel</Button>
-                    <Button Border="Border.RoundedPill"
-                            Color="Color.Primary"
+                    <Button Border="@Border.RoundedPill"
+                            Color="@Color.Primary"
                             Clicked="OnSave">Save</Button>
                 </Column>
             </Row>

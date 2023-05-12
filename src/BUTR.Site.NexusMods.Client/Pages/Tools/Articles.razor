@@ -4,9 +4,9 @@
 @inject IArticlesClient _articlesClient
 @inject IJSRuntime _jsRuntime;
 
-<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+<Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">NexusMods Articles</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">NexusMods Articles</CardTitle>
     </CardHeader>
     <CardBody>
         <DataGridPaging TItem="ArticleModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetArticles" Sortable Filterable>
@@ -20,7 +20,7 @@
             </DataGridColumns>
 
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_dataGridPagingRef?.Value is null)" Clicked="@(async () => await OnClick(_dataGridPagingRef!.Value))">Open Article</Button>
+                <Button Color="@Color.Primary" Disabled="@(_dataGridPagingRef?.Value is null)" Clicked="@(async () => await OnClick(_dataGridPagingRef!.Value))">Open Article</Button>
             </ButtonRowTemplate>
         </DataGridPaging>
     </CardBody>

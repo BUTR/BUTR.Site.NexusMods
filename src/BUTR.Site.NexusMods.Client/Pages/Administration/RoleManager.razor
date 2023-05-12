@@ -5,18 +5,18 @@
 @inject IUserClient _userClient
 
 <Container>
-    <Row Flex="Flex.JustifyContent.Center">
-        <Column ColumnSize="ColumnSize.Is6.OnDesktop.IsAuto.OnMobile">
-            <Card Margin="Margin.Is5.OnDesktop.Is3.OnMobile" Border="Border.Is0.Rounded" Shadow="Shadow.Small">
+    <Row Flex="@Flex.JustifyContent.Center">
+        <Column ColumnSize="@ColumnSize.Is6.OnDesktop.IsAuto.OnMobile">
+            <Card Margin="@Margin.Is5.OnDesktop.Is3.OnMobile" Border="@Border.Is0.Rounded" Shadow="@Shadow.Small">
                 <CardHeader>
-                    <CardTitle Size="4" Margin="Margin.Is0">Set User Role</CardTitle>
+                    <CardTitle Size="4" Margin="@Margin.Is0">Set User Role</CardTitle>
                 </CardHeader>
                 <CardBody>
                     <Form>
                         <Field>
                             <FieldLabel>User Id</FieldLabel>
                             <FieldBody>
-                                <NumericEdit TValue="uint" @bind-Value="@_model.UserId" EnableStep="false"/>
+                                <NumericEdit TValue="uint" @bind-Value="@_model.UserId"/>
                             </FieldBody>
                         </Field>
                         <Field>
@@ -30,7 +30,7 @@
                             </FieldBody>
                         </Field>
                         <Field>
-                            <Button Block Color="Color.Primary" Type="@ButtonType.Submit" Clicked="@OnSubmit" PreventDefaultOnSubmit>Set</Button>
+                            <Button Block Color="@Color.Primary" Type="@ButtonType.Submit" Clicked="@OnSubmit" PreventDefaultOnSubmit>Set</Button>
                         </Field>
                     </Form>
                 </CardBody>

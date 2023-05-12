@@ -5,8 +5,8 @@
         <DatePicker TValue="DateTime?"
                     TimeAs24hr
                     Placeholder="yyyy-MM-dd"
-                    InputMode="DateInputMode.DateTime"
-                    SelectionMode="DateInputSelectionMode.Range"
+                    InputMode="@DateInputMode.DateTime"
+                    SelectionMode="@DateInputSelectionMode.Range"
                     DatesChanged="@(range => OnDatesChanged(range, context))">
         </DatePicker>
     </FilterTemplate>

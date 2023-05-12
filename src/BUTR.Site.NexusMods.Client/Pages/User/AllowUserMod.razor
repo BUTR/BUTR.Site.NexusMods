@@ -4,8 +4,8 @@
 @inject INotificationService _notificationService
 @inject IModClient _modClient
 
-<Modal ShowBackdrop @ref="_modalRef">
-    <ModalContent Size="ModalSize.ExtraLarge" Centered>
+<Modal @ref="_modalRef">
+    <ModalContent Size="@ModalSize.ExtraLarge" Centered>
         <ModalHeader>
             <ModalTitle>Remove Allowed Mod Id</ModalTitle>
             <CloseButton />
@@ -32,15 +32,15 @@
             }
         </ModalBody>
         <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@(async () => await @HideModal(false))">Cancel</Button>
-            <Button Color="Color.Primary" Clicked="@(async () => await @HideModal(true))">Done</Button>
+            <Button Color="@Color.Secondary" Clicked="@(async () => await HideModal(false))">Cancel</Button>
+            <Button Color="@Color.Primary" Clicked="@(async () => await HideModal(true))">Done</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
 
-<Card Margin="Margin.Is4">
+<Card Margin="@Margin.Is4">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Allow User Mod</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">Allow User Mod</CardTitle>
     </CardHeader>
     <CardBody>
         <Form>
@@ -57,7 +57,7 @@
                 </FieldBody>
             </Field>
             <Field>
-                <Button Color="Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSubmit" PreventDefaultOnSubmit>
+                <Button Color="@Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSubmit" PreventDefaultOnSubmit>
                     <LoadingTemplate>Allowing...</LoadingTemplate>
                     <ChildContent>Allow</ChildContent>
                 </Button>
@@ -65,12 +65,12 @@
         </Form>
     </CardBody>
 </Card>
-<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+<Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Allowed Mods to Users</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">Allowed Mods to Users</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModsModel" GetItems="GetAllowUserMods" >
+        <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModsModel" GetItems="@GetAllowUserMods" >
             <DataGridColumns>
                 <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.ModId)" Caption="Mod Id"/>
                 <DataGridColumnText TItem="UserAllowedModsModel" Field="@nameof(UserAllowedModsModel.AllowedUserIds)" Caption="Allowed User Ids">
@@ -78,7 +78,7 @@
                 </DataGridColumnText>
             </DataGridColumns>
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnDisallow(context))">
+                <Button Color="@Color.Primary" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnDisallow(context))">
                     Disallow
                 </Button>
             </ButtonRowTemplate>

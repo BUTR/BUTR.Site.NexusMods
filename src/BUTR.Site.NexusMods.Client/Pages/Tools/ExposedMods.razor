@@ -4,9 +4,9 @@
 @inject IExposedModsClient _exposedModsClient
 @inject IJSRuntime _jsRuntime;
 
-<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+<Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Exposed Mods</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">Exposed Mods</CardTitle>
     </CardHeader>
     <CardBody>
         <DataGridPaging TItem="ExposedModModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetExposedMods" Sortable Filterable>
@@ -21,7 +21,7 @@
             </DataGridColumns>
 
             <ButtonRowTemplate>
-                <Button Color="Color.Primary" Disabled="@(_dataGridPagingRef?.Value is null)" Clicked="@(async () => await OnClick(_dataGridPagingRef!.Value))">Open Mod</Button>
+                <Button Color="@Color.Primary" Disabled="@(_dataGridPagingRef?.Value is null)" Clicked="@(async () => await OnClick(_dataGridPagingRef!.Value))">Open Mod</Button>
             </ButtonRowTemplate>
         </DataGridPaging>
     </CardBody>

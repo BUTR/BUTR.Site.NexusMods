@@ -1,10 +1,10 @@
 ﻿@typeparam TItem where TItem : class
 
-<DataGrid @ref="_dataGridRef" @attributes="@AdditionalAttributes"
+<DataGrid @ref="@_dataGridRef" @attributes="@AdditionalAttributes"
           TItem="TItem"
           Data="@Values"
           SelectedRowChanged="@(model => { DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
-          SelectionMode="DataGridSelectionMode.Single"
+          SelectionMode="@DataGridSelectionMode.Single"
           Responsive
           ShowPager
           ShowPageSizes

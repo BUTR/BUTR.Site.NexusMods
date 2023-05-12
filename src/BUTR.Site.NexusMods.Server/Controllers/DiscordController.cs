@@ -57,7 +57,7 @@ public sealed class DiscordController : ControllerExtended
         var userId = HttpContext.GetUserId();
         var userInfo = await _discordClient.GetUserInfo(tokens, ct);
 
-        if (userInfo is null || !_discordStorage.Upsert(userId, userInfo.User.Id, tokens))
+        if (userInfo is null || !await _discordStorage.UpsertAsync(userId, userInfo.User.Id, tokens))
             return APIResponseError<string>("Failed to link!");
 
         await UpdateMetadataInternal(ct);
@@ -80,12 +80,12 @@ public sealed class DiscordController : ControllerExtended
             return APIResponseError<string>("Failed to unlink!");
         
         if (tokens.Data.AccessToken != refreshed.AccessToken)
-            _discordStorage.Upsert(userId, tokens.ExternalId, refreshed);
+            await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
         
         if (!await _discordClient.PushMetadata(refreshed, new Metadata(0, 0, 0, 0), ct))
             return APIResponseError<string>("Failed to unlink!");
 
-        if (!_discordStorage.Remove(userId, tokens.ExternalId))
+        if (!await _discordStorage.RemoveAsync(userId, tokens.ExternalId))
             return APIResponseError<string>("Failed to unlink!");
 
         return APIResponse("Unlinked successful!");
@@ -116,7 +116,7 @@ public sealed class DiscordController : ControllerExtended
             return APIResponse<DiscordUserInfo>(null);
         
         if (tokens.Data.AccessToken != refreshed.AccessToken)
-            _discordStorage.Upsert(userId, tokens.ExternalId, refreshed);
+            await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
         
         var result = await _discordClient.GetUserInfo(refreshed, ct);
         return APIResponse(result);
@@ -143,7 +143,7 @@ public sealed class DiscordController : ControllerExtended
             return false;
         
         if (tokens.Data.AccessToken != refreshed.AccessToken)
-            _discordStorage.Upsert(userId, tokens.ExternalId, refreshed);
+            await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
         
         return await _discordClient.PushMetadata(refreshed, new Metadata(
             1,

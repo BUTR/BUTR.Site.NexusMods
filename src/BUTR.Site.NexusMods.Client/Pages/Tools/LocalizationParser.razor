@@ -6,28 +6,28 @@
 
 @inject DownloadFileService _downloadFileService
 
-<Card Margin="Margin.Is4" Overflow="Overflow.Auto">
+<Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="Margin.Is0">Localization Parser</CardTitle>
+        <CardTitle Size="4" Margin="@Margin.Is0">Localization Parser</CardTitle>
     </CardHeader>
     <CardBody>
         <Fields>
             <Field>
-                <FieldLabel ColumnSize="ColumnSize.Is1">Files</FieldLabel>
+                <FieldLabel ColumnSize="@ColumnSize.Is1">Files</FieldLabel>
                 <FieldBody>
-                    <FileEdit Changed="@OnFileSelected" Multiple="true" />
+                    <FileEdit Changed="@OnFileSelected" Multiple />
                 </FieldBody>
             </Field>
         </Fields>
         <Field>
-            <DataGridInMemory @ref="@_dataGridRef" TItem="LocalizationString" Resizable ResizeMode="TableResizeMode.Header">
+            <DataGridInMemory @ref="@_dataGridRef" TItem="LocalizationString" Resizable ResizeMode="@TableResizeMode.Header">
                 <DataGridColumns>
                     <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Assembly)" Caption="@nameof(LocalizationString.Assembly)"/>
                     <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Text)" Caption="@nameof(LocalizationString.Text)"/>
                 </DataGridColumns>
             </DataGridInMemory>
-            <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnClear)">Clear</Button>
-            <Button Color="Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@(OnExport)">Export as CSV</Button>
+            <Button Color="@Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@OnClear">Clear</Button>
+            <Button Color="@Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@OnExport">Export as CSV</Button>
         </Field>
     </CardBody>
 </Card>

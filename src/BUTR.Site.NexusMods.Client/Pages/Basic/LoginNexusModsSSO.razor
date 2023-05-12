@@ -11,27 +11,27 @@
 @inject INotificationService _notificationService
 
 <Container>
-    <Row Flex="Flex.JustifyContent.Center">
-        <Column ColumnSize="ColumnSize.Is6.OnDesktop.IsAuto.OnMobile">
-            <Card Margin="Margin.Is5.OnDesktop.Is3.OnMobile" Border="Border.Is0.Rounded" Shadow="Shadow.Small">
+    <Row Flex="@Flex.JustifyContent.Center">
+        <Column ColumnSize="@ColumnSize.Is6.OnDesktop.IsAuto.OnMobile">
+            <Card Margin="@Margin.Is5.OnDesktop.Is3.OnMobile" Border="@Border.Is0.Rounded" Shadow="@Shadow.Small">
                 <CardHeader>
-                    <CardTitle Size="4" Margin="Margin.Is0">NexusMods SSO Log In</CardTitle>
+                    <CardTitle Size="4" Margin="@Margin.Is0">NexusMods SSO Log In</CardTitle>
                 </CardHeader>
                 <CardBody>
                     <Steps SelectedStep="@_selectedStep" SelectedStepChanged="@OnSelectedStepChanged">
                         <Items>
-                            <Step Name="InitializingSSO" Completed="_stepIndex > 0" @onclick="_ => null!">
+                            <Step Name="InitializingSSO" Completed="@(_stepIndex > 0)">
                                 <Text Style="@TextStyle" >Initializing SSO</Text>
                             </Step>
-                            <Step Name="ButtonClick" Completed="_stepIndex > 1" @onclick="_ => null!">
+                            <Step Name="ButtonClick" Completed="@(_stepIndex > 1)">
                                 <Text Style="@TextStyle" >Open NexusMods</Text>
                             </Step>
-                            <Step Name="Authorise" Completed="_stepIndex > 2" @onclick="_ => null!">
+                            <Step Name="Authorise" Completed="@(_stepIndex > 2)">
                                 <Text Style="@TextStyle" >Allow in NexusMods</Text>
                             </Step>
-                            <Step Name="Finalizing" Completed="_stepIndex > 3" @onclick="_ => null!">
+                            <Step Name="Finalizing" Completed="@(_stepIndex > 3)">
                                 <Marker>
-                                    <Icon Name="IconName.Flag" />
+                                    <Icon Name="@IconName.Flag" />
                                 </Marker>
                                 <Caption>
                                     <Text Style="@TextStyle" >Finalizing</Text>
@@ -41,7 +41,7 @@
                         <Content>
                             <StepPanel Name="InitializingSSO">Initializing NexusMods SSO...</StepPanel>
                             <StepPanel Name="ButtonClick">
-                                <Button Block Color="Color.Primary" Type="@ButtonType.Submit" Clicked="@OpenUrl" PreventDefaultOnSubmit>Open NexusMods Site</Button>
+                                <Button Block Color="@Color.Primary" Type="@ButtonType.Submit" Clicked="@OpenUrl" PreventDefaultOnSubmit>Open NexusMods Site</Button>
                             </StepPanel>
                             <StepPanel Name="Authorise">Click the yellow 'Authorise' button on NexusMods!</StepPanel>
                             <StepPanel Name="Finalizing">Final authorization...</StepPanel>
@@ -55,7 +55,7 @@
 
 @code {
 
-    private static string TextStyle = $"word-break: normal;";
+    private static string TextStyle = "word-break: normal;";
 
     private record SSORequest([property: JsonPropertyName("id")] Guid Id, [property: JsonPropertyName("token")] string? Token, [property: JsonPropertyName("protocol")] int Protocol);
     private record SSOResponse([property: JsonPropertyName("success")] bool Success, [property: JsonPropertyName("data")] SSOResponseData? Data);
@@ -156,7 +156,7 @@
     {
         _cancellationTokenSource.Cancel();
         try { await _client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None); }
-        catch (Exception) { }
+        catch (Exception) { /* ignored */ }
         await Task.WhenAny(_receiveTask, Task.Delay(2000));
         _client.Dispose();
     }

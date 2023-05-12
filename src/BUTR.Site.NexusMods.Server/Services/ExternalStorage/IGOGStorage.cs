@@ -2,6 +2,7 @@
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using System;
+using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
@@ -9,9 +10,9 @@ public sealed record GOGOAuthTokens(string UserId, string AccessToken, string Re
 
 public interface IGOGStorage
 {
-    GOGOAuthTokens? Get(string userId);
-    bool Upsert(int nexusModsUserId, string discordUserId, GOGOAuthTokens tokens);
-    bool Remove(int nexusModsUserId, string discordUserId);
+    Task<GOGOAuthTokens?> GetAsync(string userId);
+    Task<bool> UpsertAsync(int nexusModsUserId, string discordUserId, GOGOAuthTokens tokens);
+    Task<bool> RemoveAsync(int nexusModsUserId, string discordUserId);
 }
 
 public sealed class DatabaseGOGStorage : BaseDatabaseStorage<GOGOAuthTokens, GOGLinkedRoleTokensEntity, NexusModsUserToGOGEntity>, IGOGStorage
