@@ -2,7 +2,7 @@
 
 <DataGridColumn TItem="TItem" Field="@Field" Caption="@Caption" Filterable="@Filterable" SortField="@SortField" Sortable="@Sortable" DisplayTemplate="@DisplayTemplate" @attributes="@AdditionalAttributes">
     <FilterTemplate>
-        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Placeholder="@Placeholder" Debounce DebounceInterval="500" />
+        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Placeholder="@Placeholder" Debounce="true" DebounceInterval="500" />
     </FilterTemplate>
 </DataGridColumn>
 

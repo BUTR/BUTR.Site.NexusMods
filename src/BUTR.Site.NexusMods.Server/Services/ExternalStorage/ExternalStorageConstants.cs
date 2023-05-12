@@ -1,4 +1,4 @@
-namespace BUTR.Site.NexusMods.Server.Services
+﻿namespace BUTR.Site.NexusMods.Server.Services
 {
     public class ExternalStorageConstants
     {

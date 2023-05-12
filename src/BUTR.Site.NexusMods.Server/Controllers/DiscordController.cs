@@ -78,10 +78,10 @@ public sealed class DiscordController : ControllerExtended
         var refreshed = await _discordClient.GetOrRefreshTokens(tokens.Data, ct);
         if (refreshed is null)
             return APIResponseError<string>("Failed to unlink!");
-        
+
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
-        
+
         if (!await _discordClient.PushMetadata(refreshed, new Metadata(0, 0, 0, 0), ct))
             return APIResponseError<string>("Failed to unlink!");
 
@@ -114,10 +114,10 @@ public sealed class DiscordController : ControllerExtended
         var refreshed = await _discordClient.GetOrRefreshTokens(tokens.Data, ct);
         if (refreshed is null)
             return APIResponse<DiscordUserInfo>(null);
-        
+
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
-        
+
         var result = await _discordClient.GetUserInfo(refreshed, ct);
         return APIResponse(result);
     }
@@ -141,10 +141,10 @@ public sealed class DiscordController : ControllerExtended
         var refreshed = await _discordClient.GetOrRefreshTokens(tokens.Data, ct);
         if (refreshed is null)
             return false;
-        
+
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
-        
+
         return await _discordClient.PushMetadata(refreshed, new Metadata(
             1,
             role == ApplicationRoles.Moderator ? 1 : 0,

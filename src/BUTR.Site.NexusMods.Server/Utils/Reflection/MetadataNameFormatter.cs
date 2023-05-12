@@ -1,4 +1,4 @@
-using ICSharpCode.Decompiler.Metadata;
+﻿using ICSharpCode.Decompiler.Metadata;
 
 using System;
 using System.Reflection.Metadata;
@@ -224,6 +224,6 @@ internal class MetadataNameFormatter : DisassemblingTypeProvider
 
     private string EmitString(StringHandle handle)
     {
-        return  _metadataReader.GetString(handle);
+        return _metadataReader.GetString(handle);
     }
 }

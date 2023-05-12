@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.Server.Contexts;
+﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -28,7 +28,7 @@ public abstract class BaseDatabaseStorage<TData, TExternalEntity, TNexusModsToEx
     where TNexusModsToExternalEntity : class, INexusModsToExternalEntity
 {
     protected abstract string ExternalMetadataId { get; }
-    
+
     private readonly AppDbContext _dbContext;
 
     protected BaseDatabaseStorage(AppDbContext dbContext)
@@ -37,7 +37,7 @@ public abstract class BaseDatabaseStorage<TData, TExternalEntity, TNexusModsToEx
     }
 
     protected abstract TData FromExternalEntity(TExternalEntity externalEntity);
-    
+
     protected abstract TNexusModsToExternalEntity? Upsert(int nexusModsUserId, string externalId, TNexusModsToExternalEntity? existing);
     protected abstract TExternalEntity? Upsert(string externalId, TData data, TExternalEntity? existing);
     private TNexusModsToExternalEntity? Remove(TNexusModsToExternalEntity? existing) => existing switch
@@ -48,8 +48,8 @@ public abstract class BaseDatabaseStorage<TData, TExternalEntity, TNexusModsToEx
     {
         _ => null
     };
-    
-    
+
+
     public async Task<TData?> GetAsync(string userId)
     {
         var entity = await _dbContext.FirstOrDefaultAsync<TExternalEntity>(x => x.UserId == userId);

@@ -18,7 +18,7 @@ public interface IDiscordStorage
 public sealed class DatabaseDiscordStorage : BaseDatabaseStorage<DiscordOAuthTokens, DiscordLinkedRoleTokensEntity, NexusModsUserToDiscordEntity>, IDiscordStorage
 {
     protected override string ExternalMetadataId => ExternalStorageConstants.Discord;
-    
+
     public DatabaseDiscordStorage(AppDbContext dbContext) : base(dbContext) { }
 
     protected override DiscordOAuthTokens FromExternalEntity(DiscordLinkedRoleTokensEntity externalEntity) =>

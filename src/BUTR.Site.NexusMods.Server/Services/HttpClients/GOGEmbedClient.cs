@@ -19,7 +19,7 @@ public sealed class GOGEmbedClient
         [property: JsonPropertyName("userId")] string UserId,
         [property: JsonPropertyName("username")] string Username
     );
-    
+
     public record GamesOwned(
         [property: JsonPropertyName("owned")] IReadOnlyList<int?> Owned
     );

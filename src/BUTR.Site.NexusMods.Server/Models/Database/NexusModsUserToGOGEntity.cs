@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.Server.Services;
+﻿using BUTR.Site.NexusMods.Server.Services;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database
 {

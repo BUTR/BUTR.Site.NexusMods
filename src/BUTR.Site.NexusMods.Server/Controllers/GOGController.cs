@@ -23,7 +23,7 @@ public sealed record GOGUserInfo(
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public sealed class GOGController : ControllerExtended
 {
-   
+
     private readonly IGOGStorage _gogStorage;
     private readonly AppDbContext _dbContext;
     private readonly GOGAuthClient _gogAuthClient;
@@ -51,13 +51,13 @@ public sealed class GOGController : ControllerExtended
         var tokens = await _gogAuthClient.CreateTokens(code, ct);
         if (tokens is null)
             return APIResponseError<string>("Failed to link!");
-        
+
         var userId = HttpContext.GetUserId();
 
         var games = await _gogEmbedClient.GetGames(tokens.AccessToken, ct);
         if (games is null)
             return APIResponseError<string>("Failed to link!");
-        
+
         var ownsBannerlord = games.Owned.Contains(1802539526) || games.Owned.Contains(1564781494);
         if (ownsBannerlord)
         {
@@ -108,10 +108,10 @@ public sealed class GOGController : ControllerExtended
         var refreshed = await _gogAuthClient.GetOrRefreshTokens(tokens.Data, ct);
         if (refreshed is null)
             return APIResponse<GOGUserInfo>(null);
-        
+
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _gogStorage.UpsertAsync(userId, refreshed.UserId, refreshed);
-        
+
         var result = await _gogEmbedClient.GetUserInfo(refreshed.AccessToken, ct);
         return APIResponse(result);
     }

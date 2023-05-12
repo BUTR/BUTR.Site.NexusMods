@@ -108,10 +108,10 @@ public sealed class DiscordClient
         if (!response.IsSuccessStatusCode) return null;
         var responseData = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
         if (responseData is null) return null;
-        
+
         return new DiscordOAuthTokens(responseData.AccessToken, responseData.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(responseData.ExpiresIn));
     }
-    
+
     public async Task<DiscordUserInfo?> GetUserInfo(DiscordOAuthTokens tokens, CancellationToken ct)
     {
         using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/v10/oauth2/@me")

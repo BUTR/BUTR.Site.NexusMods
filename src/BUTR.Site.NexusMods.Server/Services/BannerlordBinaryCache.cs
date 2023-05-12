@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.Server.Options;
+﻿using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
@@ -24,17 +24,17 @@ public sealed class BannerlordBinaryCache
         _options = options.Value;
         _distributedCache = distributedCache;
     }
-    
+
     public async Task<IEnumerable<string>> GetBranchAssemblyFiles(string branch, CancellationToken ct)
     {
         var path = Path.Combine(_options.DownloadPath, branch);
 
         if (await _distributedCache.GetStringAsync(path, ct) is { } filesRaw)
             return filesRaw.Split(';');
-        
+
         await _steamDepotDownloader.DownloadAsync(branch, path, CancellationToken.None);
         var files = Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories).ToArray();
-        
+
         await _distributedCache.SetStringAsync(path, string.Join(';', files), new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(8)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Text.Unicode;
@@ -21,7 +21,7 @@ public static class MetadataReaderExtensions
         Utf8.ToUtf16(utf8, data, out _, out _);
         return data;
     }
-    
+
     public static unsafe Span<byte> GetStringRawSpan(this MetadataReader metadataReader, StringHandle stringHandle)
     {
         var reader = metadataReader.GetBlobReader(stringHandle);
