@@ -53,30 +53,30 @@ public sealed class PrismJSService : IAsyncDisposable
             await module.InvokeVoidAsync("deinit");
         }
     }
-    
+
     public async ValueTask HighlightAll()
     {
         var module = await _moduleTask.Value;
-        
+
         if (_tcs.Task.Status == TaskStatus.WaitingForActivation)
         {
             await Initialize();
         }
         await _tcs.Task;
-        
+
         await module.InvokeVoidAsync("highlightAll");
     }
-    
+
     public async ValueTask<MarkupString> HighlightCIL(string code)
     {
         var module = await _moduleTask.Value;
-        
+
         if (_tcs.Task.Status == TaskStatus.WaitingForActivation)
         {
             await Initialize();
         }
         await _tcs.Task;
-        
+
         return new MarkupString(await module.InvokeAsync<string>("highlightCIL", code));
     }
 

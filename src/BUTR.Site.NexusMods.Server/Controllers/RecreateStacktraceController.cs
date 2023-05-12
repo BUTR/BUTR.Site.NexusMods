@@ -46,15 +46,15 @@ public sealed class RecreateStacktraceController : ControllerExtended
         var currentMethods = crashReport.EnhancedStacktrace.SelectMany(x => x.Methods).Select(x => x.Method).ToArray();
         var newMethods = recreatedStacktrace.Select(x => x.Method).ToHashSet();
         var missingMethods = currentMethods.Except(newMethods).ToHashSet();
-                
+
         var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
         var ilOffsets = crashReport.EnhancedStacktrace.Select(x => x.Methods.Select(y => (x.ILOffset, y.Method))).SelectMany(x => x).DistinctBy(x => x.Method).ToDictionary(x => x.Method, x => x.ILOffset);
         var recreatedStacktraceWithMissing = recreatedStacktrace.Concat(missingMethods.Select(x => new RecreatedStacktrace(x, $"No Code Available. IL Offset: {ilOffsets[x]}", 1)))
             .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
-        
+
         return APIResponse(recreatedStacktraceWithMissing);
     }
-    
+
     [HttpGet("Html/{id}")]
     [Produces("text/plain")]
     public async Task<ActionResult<string>> Html(string id, CancellationToken ct)
@@ -69,12 +69,12 @@ public sealed class RecreateStacktraceController : ControllerExtended
         var currentMethods = crashReport.EnhancedStacktrace.SelectMany(x => x.Methods).Select(x => x.Method).ToArray();
         var newMethods = recreatedStacktrace.Select(x => x.Method).ToHashSet();
         var missingMethods = currentMethods.Except(newMethods).ToHashSet();
-                
+
         var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
         var ilOffsets = crashReport.EnhancedStacktrace.Select(x => x.Methods.Select(y => (x.ILOffset, y.Method))).SelectMany(x => x).DistinctBy(x => x.Method).ToDictionary(x => x.Method, x => x.ILOffset);
         var recreatedStacktraceWithMissing = recreatedStacktrace.Concat(missingMethods.Select(x => new RecreatedStacktrace(x, $"No Code Available. IL Offset: {ilOffsets[x]}", 1)))
             .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
-        
+
         static string GetEnhancedStacktraceHtml(IEnumerable<RecreatedStacktrace> stacktrace)
         {
             var sb = new StringBuilder();
@@ -113,7 +113,7 @@ Prism.languages.cil={comment:/\/\/.*/,string:{pattern:/(["'])(?:\\(?:\r\n|[\s\S]
 
     </script>
 """;
-        
+
         var html = $"""
 <html>
   <head>
@@ -127,7 +127,7 @@ Prism.languages.cil={comment:/\/\/.*/,string:{pattern:/(["'])(?:\\(?:\r\n|[\s\S]
   </body>
 </html>
 """;
-        
+
         return Content(html, "text/html", Encoding.UTF8);
     }
 }

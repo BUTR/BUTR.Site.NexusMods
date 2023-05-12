@@ -30,7 +30,7 @@ internal static class CSharpILMixedLanguage
             ShowSequencePoints = false,
             DetectControlStructure = true,
         };
-        
+
         return new(output, methodBodyDisassembler, ct)
         {
             ShowMetadataTokens = false,

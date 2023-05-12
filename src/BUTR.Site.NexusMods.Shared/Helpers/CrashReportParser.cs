@@ -113,8 +113,8 @@ public static class CrashReportParser
         {
             const string enhancedStacktraceStartDelimiter = "<div id='enhanced-stacktrace' class='headers-container'>";
             const string enhancedStacktraceEndDelimiter = "</div>";
-            var enhancedStacktraceStartIdx= rawContent.IndexOf(enhancedStacktraceStartDelimiter);
-            var enhancedStacktraceEndIdx= rawContent.Slice(enhancedStacktraceStartIdx).IndexOf(enhancedStacktraceEndDelimiter) - enhancedStacktraceEndDelimiter.Length;
+            var enhancedStacktraceStartIdx = rawContent.IndexOf(enhancedStacktraceStartDelimiter);
+            var enhancedStacktraceEndIdx = rawContent.Slice(enhancedStacktraceStartIdx).IndexOf(enhancedStacktraceEndDelimiter) - enhancedStacktraceEndDelimiter.Length;
             var enhancedStacktraceRaw = rawContent.Slice(enhancedStacktraceStartIdx, enhancedStacktraceEndIdx).ToString();
             var toEscape = GetAllOpenTags(enhancedStacktraceRaw, span => !span.SequenceEqual(enhancedStacktraceStartDelimiter) && span is not "<ul>" and not "<li>" and not "<br>").ToArray();
             enhancedStacktraceRaw = toEscape.Aggregate(enhancedStacktraceRaw, (current, s) => current.Replace(s, s.Replace("<", "&lt;").Replace(">", "&gt;")));
@@ -123,7 +123,7 @@ public static class CrashReportParser
             enhancedStacktraceDoc.LoadHtml(enhancedStacktraceRaw);
             node = enhancedStacktraceDoc.DocumentNode;
         }
-        
+
         return node.SelectSingleNode("descendant::div[@id=\"enhanced-stacktrace\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseEnhancedStacktrace).ToImmutableArray() ?? ImmutableArray<EnhancedStacktraceFrame>.Empty;
     }
     public static CrashReport Parse(string id2, string content)

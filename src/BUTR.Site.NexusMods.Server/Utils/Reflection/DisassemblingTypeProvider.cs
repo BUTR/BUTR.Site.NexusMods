@@ -1,4 +1,4 @@
-using ICSharpCode.Decompiler.Metadata;
+﻿using ICSharpCode.Decompiler.Metadata;
 
 using System.Reflection.Metadata;
 
@@ -9,7 +9,7 @@ namespace BUTR.Site.NexusMods.Server.Utils.Reflection;
 internal class DisassemblingTypeProvider : StringTypeProviderBase<MetadataGenericContext>
 {
     public static readonly MetadataGenericContext EmptyContext = new();
-        
+
     public override SignatureType GetGenericMethodParameter(MetadataGenericContext genericContext, int index)
     {
         return SignatureType.FromString(genericContext.GetGenericMethodTypeParameterName(index));
