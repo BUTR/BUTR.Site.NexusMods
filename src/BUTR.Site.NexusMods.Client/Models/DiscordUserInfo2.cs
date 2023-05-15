@@ -10,6 +10,6 @@ public sealed record DiscordUserInfo2
     public DiscordUserInfo2(DiscordUserInfo userInfo)
     {
         Url = $"discord://discordapp.com/users/{userInfo.User.Id}";
-        Name = $"@{userInfo.User.Username}#{userInfo.User.Discriminator}";
+        Name = $"{userInfo.User.Username}#{userInfo.User.Discriminator}";
     }
 };
