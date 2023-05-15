@@ -23,12 +23,10 @@ namespace BUTR.Site.NexusMods.Server.Extensions;
 
 public static class QueryableExtensions
 {
-    private static readonly IQueryable<string> Empty = Enumerable.Empty<string>().AsQueryable();
-
     public static IQueryable<string> AutocompleteStartsWith<TEntity, TProperty>(this AppDbContext dbContext, Expression<Func<TEntity, TProperty>> property, string value)
     {
-        if (property is not LambdaExpression { Body: MemberExpression { Member: PropertyInfo propertyInfo } }) return Empty;
-        if (!property.Type.IsGenericType || property.Type.GenericTypeArguments.Length != 2) return Empty;
+        if (property is not LambdaExpression { Body: MemberExpression { Member: PropertyInfo propertyInfo } }) return Enumerable.Empty<string>().AsQueryable();
+        if (!property.Type.IsGenericType || property.Type.GenericTypeArguments.Length != 2) Enumerable.Empty<string>().AsQueryable();
 
         var autocompleteEntity = dbContext.Model.FindEntityType(typeof(AutocompleteEntity))!;
         var autocompleteEntityTable = autocompleteEntity.GetSchemaQualifiedTableName();
@@ -86,15 +84,27 @@ WHERE
             .PaginatedAsync(page, pageSize, ct);
     }
 
+    public static Paging<TEntity> Paginated<TEntity>(this IQueryable<TEntity> queryable, uint page, uint pageSize) where TEntity : class
+    {
+        var count = queryable.Count();
+        var items = queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).ToImmutableArray();
+        return new()
+        {
+            Items = items,
+            Metadata = new()
+            {
+                PageSize = pageSize,
+                CurrentPage = page,
+                TotalCount = (uint) count,
+                TotalPages = (uint) Math.Floor((double) count / (double) pageSize)
+            }
+        };
+    }
+
     public static async Task<Paging<TEntity>> PaginatedAsync<TEntity>(this IQueryable<TEntity> queryable, uint page, uint pageSize, CancellationToken ct = default) where TEntity : class
     {
-        var countTask = queryable.CountAsync(ct);
-        var itemsTask = queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).ToImmutableArrayAsync(ct);
-        await Task.WhenAll(countTask, itemsTask);
-
-        var count = await countTask;
-        var items = await itemsTask;
-        
+        var count = await queryable.CountAsync(ct);
+        var items = await queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).ToImmutableArrayAsync(ct);
         return new()
         {
             Items = items,
@@ -148,28 +158,44 @@ WHERE
         if (type.IsArray)
             type = type.GetElementType()!;
 
-        if (type is { IsGenericType: true, GenericTypeArguments.Length: 1})
+        if (type.IsGenericType && type.GenericTypeArguments.Length == 1)
             type = type.GenericTypeArguments[0];
 
-        return Type.GetTypeCode(type) switch
+        switch (Type.GetTypeCode(type))
         {
-            TypeCode.String => rawValue,
-            TypeCode.Byte => byte.Parse(rawValue),
-            TypeCode.SByte => sbyte.Parse(rawValue),
-            TypeCode.UInt16 => ushort.Parse(rawValue),
-            TypeCode.UInt32 => uint.Parse(rawValue),
-            TypeCode.UInt64 => ulong.Parse(rawValue),
-            TypeCode.Int16 => short.Parse(rawValue),
-            TypeCode.Int32 => int.Parse(rawValue),
-            TypeCode.Int64 => long.Parse(rawValue),
-            TypeCode.Decimal => decimal.Parse(rawValue),
-            TypeCode.Double => double.Parse(rawValue),
-            TypeCode.Single => float.Parse(rawValue),
-            TypeCode.Boolean => bool.Parse(rawValue),
-            TypeCode.Char => rawValue[0],
-            TypeCode.DateTime => DateTime.SpecifyKind(DateTime.Parse(rawValue, null, DateTimeStyles.RoundtripKind), DateTimeKind.Utc),
-            _ => rawValue
-        };
+            case TypeCode.String:
+                return rawValue;
+            case TypeCode.Byte:
+                return byte.Parse(rawValue);
+            case TypeCode.SByte:
+                return sbyte.Parse(rawValue);
+            case TypeCode.UInt16:
+                return ushort.Parse(rawValue);
+            case TypeCode.UInt32:
+                return uint.Parse(rawValue);
+            case TypeCode.UInt64:
+                return ulong.Parse(rawValue);
+            case TypeCode.Int16:
+                return short.Parse(rawValue);
+            case TypeCode.Int32:
+                return int.Parse(rawValue);
+            case TypeCode.Int64:
+                return long.Parse(rawValue);
+            case TypeCode.Decimal:
+                return decimal.Parse(rawValue);
+            case TypeCode.Double:
+                return double.Parse(rawValue);
+            case TypeCode.Single:
+                return float.Parse(rawValue);
+            case TypeCode.Boolean:
+                return bool.Parse(rawValue);
+            case TypeCode.Char:
+                return rawValue[0];
+            case TypeCode.DateTime:
+                return DateTime.SpecifyKind(DateTime.Parse(rawValue, null, DateTimeStyles.RoundtripKind), DateTimeKind.Utc);
+        }
+
+        return rawValue;
     }
 
     private static Expression<Func<TEntity, bool>>? GetFilteringPredicate<TEntity>(Filtering filter)
