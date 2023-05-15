@@ -23,7 +23,7 @@
 
                 @if (context.Type == NodeType.File && context.Visible)
                 {
-                    @if (context.Content.Count == 0)
+                    if (context.Content.Count == 0)
                     {
                         <Spinner/>
                     }

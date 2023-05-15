@@ -2,7 +2,6 @@
 @page "/discord-oauth-callback"
 
 @inject NavigationManager _navigationManager;
-@inject IPageProgressService _pageProgressService
 @inject ILocalStorageService _localStorage;
 @inject AuthenticationProvider _authenticationProvider;
 @inject IDiscordClient _discordClient;
@@ -80,7 +79,6 @@
     {
         await base.OnInitializedAsync();
 
-        await _pageProgressService.Go(0, options => options.Color = Color.Info);
         if (!await _localStorage.ContainKeyAsync("discord_state"))
         {
             _status = "FAILURE";
@@ -104,12 +102,9 @@
                 return;
             }
 
-            await _pageProgressService.Go(25, options => options.Color = Color.Info);
             await _discordClient.LinkAsync(queryCode);
-            await _pageProgressService.Go(50, options => options.Color = Color.Info);
             _ = await _authenticationProvider.ValidateAsync();
 
-            await _pageProgressService.Go(75, options => options.Color = Color.Info);
             var userInfo = await _discordClient.GetUserInfoAsync();
             _userInfo = new DiscordUserInfo2(userInfo.Data);
             _status = "SUCCESS";
@@ -124,7 +119,6 @@
         finally
         {
             await _localStorage.RemoveItemAsync("discord_state");
-            await _pageProgressService.Go(null);
         }
     }
 

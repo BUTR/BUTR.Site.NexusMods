@@ -2,7 +2,6 @@
 @page "/profile"
 
 @inject NavigationManager _navigationManager
-@inject IPageProgressService _pageProgressService
 @inject IUserClient _userClient
 @inject IDiscordClient _discordClient
 @inject ISteamClient _steamClient
@@ -158,15 +157,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await _pageProgressService.Go(null, options => options.Color = Color.Info);
-        //await _pageProgressService.Go(25, options => options.Color = Color.Info);
         _user = (await _userClient.ProfileAsync()).Data;
         
         var discordTask = _user?.DiscordUserId is not null ? _discordClient.GetUserInfoAsync() : Task.FromResult<DiscordUserInfoAPIResponse>(new(null!, string.Empty));
         var steamTask = _user?.SteamUserId is not null ? _steamClient.GetUserInfoAsync() : Task.FromResult<SteamUserInfoAPIResponse>(new(null!, string.Empty));
         var gogTask = _user?.GogUserId is not null ? _gogClient.GetUserInfoAsync() : Task.FromResult<GOGUserInfoAPIResponse>(new(null!, string.Empty));
         await Task.WhenAll(discordTask, steamTask, gogTask);
-        //await _pageProgressService.Go(75, options => options.Color = Color.Info);
  
         _discordUser = await discordTask is { Data: { } dataDiscord } ? new DiscordUserInfo2(dataDiscord) : null;
         _steamUser = await steamTask is { Data: { } dataSteam } ? new SteamUserInfo2(dataSteam) : null;
@@ -174,7 +170,6 @@ else
         
         if (_gutterRow is not null)
             _gutterRow.Gutter = (5,5);
-        await _pageProgressService.Go(-1);
     }
 
     protected override Task OnParametersSetAsync()
