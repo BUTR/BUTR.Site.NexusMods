@@ -3,7 +3,7 @@
 
 <Blazorise.ThemeProvider Theme="@_theme">
     <CascadingAuthenticationState>
-        <Router AppAssembly="typeof(App).Assembly" OnNavigateAsync="@OnNavigateAsync" AdditionalAssemblies="@_lazyLoadedAssemblies">
+        <Router AppAssembly="@typeof(App).Assembly" OnNavigateAsync="@OnNavigateAsync" AdditionalAssemblies="@_lazyLoadedAssemblies">
             <Found Context="routeData">
                 <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(DefaultLayout)">
                     <Authorizing>
@@ -20,7 +20,7 @@
                 </LayoutView>
             </NotFound>
         </Router>
-        <NotificationProvider Location="NotificationLocation.Start" />
+        <NotificationProvider Location="@NotificationLocation.Start" />
     </CascadingAuthenticationState>
 </Blazorise.ThemeProvider>
 

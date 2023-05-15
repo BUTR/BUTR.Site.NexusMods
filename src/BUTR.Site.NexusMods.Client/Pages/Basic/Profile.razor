@@ -158,12 +158,16 @@ else
     protected override async Task OnInitializedAsync()
     {
         _user = (await _userClient.ProfileAsync()).Data;
-        var discordUserInfo = _user?.DiscordUserId is not null ? await _discordClient.GetUserInfoAsync() : null;
-        _discordUser = discordUserInfo is { Data: { } dataDiscord } ? new DiscordUserInfo2(dataDiscord) : null;
-        var steamUserInfo = _user?.SteamUserId is not null ? await _steamClient.GetUserInfoAsync() : null;
-        _steamUser = steamUserInfo is { Data: { } dataSteam } ? new SteamUserInfo2(dataSteam) : null;
-        var gogUserInfo = _user?.GogUserId is not null ? await _gogClient.GetUserInfoAsync() : null;
-        _gogUser = gogUserInfo is { Data: { } dataGog } ? new GOGUserInfo2(dataGog) : null;
+        
+        var discordTask = _user?.DiscordUserId is not null ? _discordClient.GetUserInfoAsync() : Task.FromResult<DiscordUserInfoAPIResponse>(new(null!, string.Empty));
+        var steamTask = _user?.SteamUserId is not null ? _steamClient.GetUserInfoAsync() : Task.FromResult<SteamUserInfoAPIResponse>(new(null!, string.Empty));
+        var gogTask = _user?.GogUserId is not null ? _gogClient.GetUserInfoAsync() : Task.FromResult<GOGUserInfoAPIResponse>(new(null!, string.Empty));
+        await Task.WhenAll(discordTask, steamTask, gogTask);
+        
+        _discordUser = await discordTask is { Data: { } dataDiscord } ? new DiscordUserInfo2(dataDiscord) : null;
+        _steamUser = await steamTask is { Data: { } dataSteam } ? new SteamUserInfo2(dataSteam) : null;
+        _gogUser = await gogTask is { Data: { } dataGog } ? new GOGUserInfo2(dataGog) : null;
+        
         if (_gutterRow is not null)
             _gutterRow.Gutter = (5,5);
     }

@@ -3,15 +3,15 @@
 @inject AuthenticationStateProvider _authenticationStateProvider
 @inject IUserClient _userClient
 
-<Bar Mode="BarMode.Horizontal"
-     Breakpoint="Breakpoint.Desktop"
-     Background="Background.Dark"
-     ThemeContrast="ThemeContrast.Dark">
-    <BarBrand Margin="Margin.Is0.FromEnd">
-        <BarItem TextAlignment="TextAlignment.Center">
-            <BarLink To="" Padding="Padding.Is0.OnY">
-                <Figure Margin="Margin.Is0" Size="FigureSize.Is48x48">
-                    <FigureImage Margin="Margin.Is0" Source="favicon.svg" AlternateText="BUTR Logo" />
+<Bar Mode="@BarMode.Horizontal"
+     Breakpoint="@Breakpoint.Desktop"
+     Background="@Background.Dark"
+     ThemeContrast="@ThemeContrast.Dark">
+    <BarBrand Margin="@Margin.Is0.FromEnd">
+        <BarItem TextAlignment="@TextAlignment.Center">
+            <BarLink To="" Padding="@Padding.Is0.OnY">
+                <Figure Margin="@Margin.Is0" Size="@FigureSize.Is48x48">
+                    <FigureImage Margin="@Margin.Is0" Source="favicon.svg" AlternateText="BUTR Logo" />
                 </Figure>
             </BarLink>
         </BarItem>
@@ -33,16 +33,16 @@
         </BarStart>
 
         <BarEnd>
-            <AuthorizeView Context="context2" Roles="@($"{ApplicationRoles.Moderator}")">
+            <AuthorizeView Roles="@($"{ApplicationRoles.Moderator}")">
                 <Authorized>
                     <BarItem>
                         <BarDropdown RightAligned>
                             <BarDropdownToggle>Moderation</BarDropdownToggle>
-                            <BarDropdownMenu Background="Background.Dark">
-                                <BarDropdownItem Background="Background.Dark">
+                            <BarDropdownMenu Background="@Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="manual-module-id-link">Manual Module Id Link</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="allow-user-module-id">Allow User Module Id</BarLink>
                                 </BarDropdownItem>
                             </BarDropdownMenu>
@@ -50,22 +50,22 @@
                     </BarItem>
                 </Authorized>
             </AuthorizeView>
-            <AuthorizeView Context="context3" Roles="@($"{ApplicationRoles.Administrator}")">
+            <AuthorizeView Roles="@($"{ApplicationRoles.Administrator}")">
                 <Authorized>
                     <BarItem>
                         <BarDropdown RightAligned>
                             <BarDropdownToggle>Administration</BarDropdownToggle>
-                            <BarDropdownMenu Background="Background.Dark">
-                                <BarDropdownItem Background="Background.Dark">
+                            <BarDropdownMenu Background="@Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="quartz-manager">Quartz.NET Manager</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="role-manager">Role Manager</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="manual-module-id-link">Manual Module Id Link</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="allow-user-module-id">Allow User Module Id</BarLink>
                                 </BarDropdownItem>
                             </BarDropdownMenu>
@@ -78,41 +78,41 @@
                     <BarDropdownToggle>
                         Tools
                     </BarDropdownToggle>
-                    <BarDropdownMenu Background="Background.Dark">
-                        <AuthorizeView Context="context4" Roles="@($"{ApplicationRoles.User},{ApplicationRoles.Moderator},{ApplicationRoles.Administrator}")">
+                    <BarDropdownMenu Background="@Background.Dark">
+                        <AuthorizeView Roles="@($"{ApplicationRoles.User},{ApplicationRoles.Moderator},{ApplicationRoles.Administrator}")">
                             <Authorized>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="allow-user-mod">Allow User Mod</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="articles">NexusMods Articles</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="exposed-mods">NexusMods Exposed Mods</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="statistics-top-exception-types">Statistics Top Exception Types</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="statistics-involved-mods">Statistics Involved Mods</BarLink>
                                 </BarDropdownItem>
                                 <!--
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="game-public-api-diff">Public API Diff</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="game-public-api-diff-search">Public API Diff Search</BarLink>
                                 </BarDropdownItem>
                                 -->
                             </Authorized>
                         </AuthorizeView>
-                        <BarDropdownItem Background="Background.Dark">
+                        <BarDropdownItem Background="@Background.Dark">
                             <BarLink To="localization-parser">Localization Parser</BarLink>
                         </BarDropdownItem>
-                        <BarDropdownItem Background="Background.Dark">
+                        <BarDropdownItem Background="@Background.Dark">
                             <BarLink To="localizer">Localizer</BarLink>
                         </BarDropdownItem>
-                        <BarDropdownItem Background="Background.Dark">
+                        <BarDropdownItem Background="@Background.Dark">
                             <BarLink To="assembly-string-editor">Assembly String Editor</BarLink>
                         </BarDropdownItem>
                     </BarDropdownMenu>
@@ -125,19 +125,19 @@
                     <BarItem>
                         <BarDropdown RightAligned>
                             <BarDropdownToggle>
-                                <Figure Margin="Margin.Is0" Size="FigureSize.Is48x48">
-                                    <FigureImage Margin="Margin.Is0" Source="@(_user?.ProfileUrl ?? FallbackIcon)" Border="Border.RoundedCircle" AlternateText="BUTR Logo"/>
+                                <Figure Margin="@Margin.Is0" Size="@FigureSize.Is48x48">
+                                    <FigureImage Margin="@Margin.Is0" Source="@(_user?.ProfileUrl ?? FallbackIcon)" Border="@Border.RoundedCircle" AlternateText="BUTR Logo"/>
                                 </Figure>
                             </BarDropdownToggle>
-                            <BarDropdownMenu Background="Background.Dark">
-                                <BarDropdownItem Background="Background.Dark">
+                            <BarDropdownMenu Background="@Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="profile">My Profile</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="settings">Settings</BarLink>
                                 </BarDropdownItem>
-                                <BarDropdownDivider Background="Background.Light"/>
-                                <BarDropdownItem Background="Background.Dark">
+                                <BarDropdownDivider Background="@Background.Light"/>
+                                <BarDropdownItem Background="@Background.Dark">
                                     <BarLink To="logout">Logout</BarLink>
                                 </BarDropdownItem>
                             </BarDropdownMenu>
