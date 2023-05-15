@@ -53,14 +53,24 @@ else
                 <CardImage Width="@Width.Is50" Source="@user.ProfileUrl.Replace(@"{BASE}", _navigationManager.BaseUri)" Border="@Border.RoundedCircle" Alt="@("Profile Image")"/>
                 <CardTitle Size="5"><Blazorise.Link To="@user.Url">@user.Name</Blazorise.Link></CardTitle>
                 <CardText TextColor="@TextColor.Secondary">@user.Role</CardText>
+                @if (user.HasBannerlord)
+                {
+                    <CardText TextColor="@TextColor.Secondary">Owns Bannerlord</CardText>
+                }
+
                 @if (user.IsPremium)
                 {
-                    <CardText TextColor="@TextColor.Secondary">Premium</CardText>
+                    <CardText TextColor="@TextColor.Secondary">NexusMods Premium</CardText>
                 }
                 @if (user.IsSupporter)
                 {
-                    <CardText TextColor="@TextColor.Secondary">Supporter</CardText>
+                    <CardText TextColor="@TextColor.Secondary">NexusMods Supporter</CardText>
                 }
+                <Divider/>
+                <Row>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Owns Bannerlord</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.HasBannerlord</Column>
+                </Row>
             </CardBody>
         </Card>;
 
@@ -73,12 +83,12 @@ else
                 </Row>
                 <Divider/>
                 <Row>
-                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Name</Column>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">NexusMods Name</Column>
                     <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.Name</Column>
                 </Row>
                 <Divider/>
                 <Row>
-                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Email</Column>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">NexusMods Email</Column>
                     <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.Email</Column>
                 </Row>
                 <Divider/>
@@ -140,11 +150,6 @@ else
                             }
                         </Anchor>
                     </Column>
-                </Row>
-                <Divider/>
-                <Row>
-                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Has Bannerlord</Column>
-                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.HasBannerlord</Column>
                 </Row>
             </CardBody>
         </Card>;
