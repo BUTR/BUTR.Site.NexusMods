@@ -53,18 +53,17 @@ else
                 <CardImage Width="@Width.Is50" Source="@user.ProfileUrl.Replace(@"{BASE}", _navigationManager.BaseUri)" Border="@Border.RoundedCircle" Alt="@("Profile Image")"/>
                 <CardTitle Size="5"><Blazorise.Link To="@user.Url">@user.Name</Blazorise.Link></CardTitle>
                 <CardText TextColor="@TextColor.Secondary">@user.Role</CardText>
-                @if (user.HasBannerlord)
-                {
-                    <CardText TextColor="@TextColor.Secondary">Owns Bannerlord</CardText>
-                }
-
                 @if (user.IsPremium)
                 {
-                    <CardText TextColor="@TextColor.Secondary">NexusMods Premium</CardText>
+                    <CardText TextColor="@TextColor.Secondary">Premium</CardText>
                 }
                 @if (user.IsSupporter)
                 {
-                    <CardText TextColor="@TextColor.Secondary">NexusMods Supporter</CardText>
+                    <CardText TextColor="@TextColor.Secondary">Supporter</CardText>
+                }
+                @if (user.HasBannerlord)
+                {
+                    <CardText TextColor="@TextColor.Secondary">Owns Mount & Blade II: Bannerlord</CardText>
                 }
             </CardBody>
         </Card>;
