@@ -1,10 +1,10 @@
 ﻿@attribute [Authorize]
 @page "/gog-oauth-callback"
 
-@inject IGOGClient _gogClient;
-@inject AuthenticationProvider _authenticationProvider;
-@inject ILocalStorageService _localStorage;
 @inject NavigationManager _navigationManager;
+@inject IPageProgressService _pageProgressService
+@inject AuthenticationProvider _authenticationProvider;
+@inject IGOGClient _gogClient;
 
 <Container>
     <Row Flex="@Flex.JustifyContent.Center">
@@ -59,14 +59,19 @@
     {
         await base.OnInitializedAsync();
 
+        await _pageProgressService.Go(0, options => options.Color = Color.Info);
+        
         var queries = _navigationManager.QueryString();
         var queryCode = queries["code"];
 
         try
         {
+            await _pageProgressService.Go(25, options => options.Color = Color.Info);
             await _gogClient.LinkAsync(queryCode);
+            await _pageProgressService.Go(50, options => options.Color = Color.Info);
             _ = await _authenticationProvider.ValidateAsync();
 
+            await _pageProgressService.Go(75, options => options.Color = Color.Info);
             var userInfo = await _gogClient.GetUserInfoAsync();
             _userInfo = new GOGUserInfo2(userInfo.Data);
             _status = "SUCCESS";
@@ -77,6 +82,10 @@
             _status = "FAILURE";
             _message = "Failed to link!";
             _image = Failure;
+        }
+        finally
+        {
+            await _pageProgressService.Go(null);
         }
     }
 

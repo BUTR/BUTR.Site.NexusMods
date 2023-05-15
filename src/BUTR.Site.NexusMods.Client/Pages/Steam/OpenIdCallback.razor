@@ -1,9 +1,10 @@
 ﻿@attribute [Authorize]
 @page "/steam-openid-callback"
 
-@inject ISteamClient _steamClient;
-@inject AuthenticationProvider _authenticationProvider;
 @inject NavigationManager _navigationManager;
+@inject IPageProgressService _pageProgressService
+@inject AuthenticationProvider _authenticationProvider;
+@inject ISteamClient _steamClient;
 
 <Container>
     <Row Flex="@Flex.JustifyContent.Center">
@@ -80,13 +81,18 @@
     {
         await base.OnInitializedAsync();
 
+        await _pageProgressService.Go(0, options => options.Color = Color.Info);
+        
         var queries = _navigationManager.QueryString();
 
         try
         {
-            await _steamClient.LinkAsync(queries.AllKeys.Select(x => new { Key = x, Value = queries[x] }).ToDictionary(x => x.Key, x => x.Value));
+            await _pageProgressService.Go(25, options => options.Color = Color.Info);
+            await _steamClient.LinkAsync(queries.AllKeys.Select(x => new {Key = x, Value = queries[x]}).ToDictionary(x => x.Key, x => x.Value));
+            await _pageProgressService.Go(50, options => options.Color = Color.Info);
             _ = await _authenticationProvider.ValidateAsync();
 
+            await _pageProgressService.Go(75, options => options.Color = Color.Info);
             var userInfo = await _steamClient.GetUserInfoAsync();
             _userInfo = new SteamUserInfo2(userInfo.Data);
             _status = "SUCCESS";
@@ -97,6 +103,10 @@
             _status = "FAILURE";
             _message = "Failed to link!";
             _image = Failure;
+        }
+        finally
+        {
+            await _pageProgressService.Go(null);
         }
     }
 

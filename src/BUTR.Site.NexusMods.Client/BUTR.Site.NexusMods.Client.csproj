@@ -45,4 +45,8 @@
     <ProjectReference Include="..\BUTR.Site.NexusMods.Shared\BUTR.Site.NexusMods.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Components\Modals\" />
+  </ItemGroup>
+
 </Project>
