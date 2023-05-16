@@ -28,7 +28,7 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-            return new CrashReportModelPagingDataAPIResponse(new CrashReportModelPagingData(crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count)), string.Empty);
+            return new CrashReportModelPagingDataAPIResponse(new CrashReportModelPagingData(crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count, 0)), string.Empty);
         }
 
         return await _implementation.PaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);

@@ -165,5 +165,5 @@ public partial record ExposedModModel
 
 public partial record PagingMetadata
 {
-    public static PagingMetadata Empty => new(1, 1, 0, 0);
+    public static PagingMetadata Empty => new(1, 1, 0, 0, 0);
 }

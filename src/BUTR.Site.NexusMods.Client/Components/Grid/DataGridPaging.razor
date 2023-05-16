@@ -3,36 +3,44 @@
 @inject ILocalStorageService _localStorage
 
 <DataGrid @ref="@_dataGridRef" @attributes="@AdditionalAttributes"
-         TItem="TItem"
-         Data="@Values"
-         SelectedRowChanged="@(model => { DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
-         ReadData="@OnReadData"
-         TotalItems="@Metadata.TotalCount"
-         CurrentPage="@Metadata.CurrentPage"
-         PageSize="@Metadata.PageSize"
-         SelectionMode="@DataGridSelectionMode.Single"
-         ShowPager
-         ShowPageSizes
-         PageSizes="@PageSizes"
-         Filterable="@Filterable"
-         CustomFilter="@OnCustomFilter"
-         Sortable="@Sortable"
-         Responsive
-         Editable="@Editable"
-         EditMode="@EditMode"
-         Resizable="@Resizable"
-         ResizeMode="@ResizeMode"
-         DataGridColumns="@DataGridColumns"
-         ButtonRowTemplate="@ButtonRowTemplate"
-         DetailRowTemplate="@DetailRowTemplate"
-         DetailRowTrigger="@DetailRowTrigger" >
-   <EmptyTemplate>
-       No result!
-   </EmptyTemplate>
-
-   <LoadingTemplate>
-       <Progress @ref="@_progressRef" Color="@Color.Primary" Value="@_progressValue" Max="100"></Progress>
-   </LoadingTemplate>
+          TItem="TItem"
+          Data="@Values"
+          SelectedRowChanged="@(model => { DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
+          ReadData="@OnReadData"
+          TotalItems="@Metadata.TotalCount"
+          CurrentPage="@Metadata.CurrentPage"
+          PageSize="@Metadata.PageSize"
+          SelectionMode="@DataGridSelectionMode.Single"
+          ShowPager
+          ShowPageSizes
+          PageSizes="@PageSizes"
+          Filterable="@Filterable"
+          CustomFilter="@OnCustomFilter"
+          Sortable="@Sortable"
+          Responsive
+          Editable="@Editable"
+          EditMode="@EditMode"
+          Resizable="@Resizable"
+          ResizeMode="@ResizeMode"
+          DataGridColumns="@DataGridColumns"
+          ButtonRowTemplate="@ButtonRowTemplate"
+          DetailRowTemplate="@DetailRowTemplate"
+          DetailRowTrigger="@DetailRowTrigger">
+    <TotalItemsTemplate>
+        @if (Metadata.TotalCount == 0)
+        {
+            <Text>@($"No available items. Time {Metadata.QueryExecutionTimeMilliseconds}ms")</Text>
+        }
+        else
+        {
+            var curStart = (Metadata.CurrentPage - 1) * Metadata.PageSize + 1;
+            var curEnd = Math.Min(Metadata.CurrentPage * Metadata.PageSize, Metadata.TotalCount);
+            <Text>@($"{curStart} - {curEnd} of {Metadata.TotalCount} items. Time {Metadata.QueryExecutionTimeMilliseconds}ms")</Text>
+        }
+    </TotalItemsTemplate>
+    <LoadingTemplate>
+        <Progress @ref="@_progressRef" Color="@Color.Primary" Value="@_progressValue" Max="100"></Progress>
+    </LoadingTemplate>
 </DataGrid> 
 
 @code {
@@ -99,13 +107,13 @@
 
     public DataGridPaging()
     {
-        Metadata = new PagingMetadata(1, 0, DefaultPageSize, 0);
+        Metadata = new PagingMetadata(1, 0, DefaultPageSize, 0, 0);
     }
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        Metadata = new(1, 0, await GetPageSizeInternal(), 0);
+        Metadata = new(1, 0, await GetPageSizeInternal(), 0, 0);
     }
 
     public Task Reload() => _dataGridRef.Reload();

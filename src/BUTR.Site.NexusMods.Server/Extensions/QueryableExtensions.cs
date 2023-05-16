@@ -12,6 +12,7 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -88,8 +89,10 @@ WHERE
 
     public static async Task<Paging<TEntity>> PaginatedAsync<TEntity>(this IQueryable<TEntity> queryable, uint page, uint pageSize, CancellationToken ct = default) where TEntity : class
     {
+        var startTime = Stopwatch.GetTimestamp();
         var count = await queryable.CountAsync(ct);
         var items = await queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).ToImmutableArrayAsync(ct);
+        var elapsed = Stopwatch.GetElapsedTime(startTime);
         
         return new()
         {
@@ -99,7 +102,8 @@ WHERE
                 PageSize = pageSize,
                 CurrentPage = page,
                 TotalCount = (uint) count,
-                TotalPages = (uint) Math.Floor((double) count / (double) pageSize)
+                TotalPages = (uint) Math.Floor((double) count / (double) pageSize),
+                QueryExecutionTimeMilliseconds = (uint) elapsed.Milliseconds
             }
         };
     }
