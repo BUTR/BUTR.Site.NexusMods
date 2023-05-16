@@ -107,7 +107,7 @@ public sealed class CrashReportProcessorJob : IJob
 
         var filenames = await _client.GetCrashReportNamesAsync(ct);
 
-        var ignored = dbContext.Set<CrashReportIgnoredFilesEntity>().AsNoTracking().Select(x => x.Filename).ToHashSet();
+        var ignored = dbContext.Set<CrashReportIgnoredFilesEntity>().Select(x => x.Filename).ToHashSet();
         filenames.ExceptWith(ignored);
 
         for (var skip = 0; skip < filenames.Count; skip += 1000)
@@ -122,7 +122,6 @@ FROM
     unnest(@filenames) as {filenameName}
 WHERE
     {filenameName} NOT IN (SELECT {filenameName} FROM {tableName})", toFindFilenames)
-                .AsNoTracking()
                 .Select(x => x.Filename);
 
             var missingFilenames = await query.ToImmutableArrayAsync(ct);

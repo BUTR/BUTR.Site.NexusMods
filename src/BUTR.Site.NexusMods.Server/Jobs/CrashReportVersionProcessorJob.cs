@@ -35,7 +35,7 @@ public sealed class CrashReportVersionProcessorJob : IJob
     public async Task Execute(IJobExecutionContext context)
     {
         var ct = context.CancellationToken;
-        var query = _dbContext.Set<CrashReportEntity>().Where(x => x.Version == 0).Take(500).AsNoTracking();
+        var query = _dbContext.Set<CrashReportEntity>().Where(x => x.Version == 0).Take(500);
         var processed = 0;
         try
         {
