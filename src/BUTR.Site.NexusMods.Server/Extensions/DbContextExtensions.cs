@@ -75,17 +75,7 @@ public static class DbContextExtensions
         await dbContext.AddUpdateRemoveAsync(predicate, applyChanges, ct);
         return await dbContext.SaveChangesAsync(ct) > 0;
     }
-
-
-    public static TEntity? FirstOrDefault<TEntity>(this DbContext dbContext, Expression<Func<TEntity, bool>> predicate) where TEntity : class
-    {
-        return dbContext.Set<TEntity>().FirstOrDefault(predicate);
-    }
-
-    public static Task<TEntity?> FirstOrDefaultAsync<TEntity>(this DbContext dbContext, Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default) where TEntity : class
-    {
-        return dbContext.Set<TEntity>().FirstOrDefaultAsync(predicate, ct);
-    }
-
+    
+    
     public static IQueryable<T> Prepare<T>(this IQueryable<T> query) => query.TagWith(PrepareCommandInterceptor.Tag);
 }

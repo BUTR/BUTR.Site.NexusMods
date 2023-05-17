@@ -60,7 +60,7 @@ public sealed class StatisticsController : ControllerExtended
     [Produces("application/json")]
     public async Task<ActionResult<APIResponse<IEnumerable<TopExceptionsEntry>?>>> TopExceptionsTypes(CancellationToken ct)
     {
-        var types = await _dbContext.Set<StatisticsTopExceptionsTypeEntity>().ToArrayAsync(ct);
+        var types = await _dbContext.Set<StatisticsTopExceptionsTypeEntity>().AsNoTracking().ToArrayAsync(ct);
         var total = (decimal) types.Sum(x => x.Count);
         return APIResponse(types.Select(x => new TopExceptionsEntry(x.Type, ((decimal) x.Count / total) * 100M)));
     }

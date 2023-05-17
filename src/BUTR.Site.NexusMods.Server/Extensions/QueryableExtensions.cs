@@ -96,7 +96,7 @@ WHERE
         return new()
         {
             StartTime = startTime,
-            Items = queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).AsAsyncEnumerable(),
+            Items = queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).AsNoTracking().AsAsyncEnumerable(),
             Metadata = new()
             {
                 PageSize = pageSize,

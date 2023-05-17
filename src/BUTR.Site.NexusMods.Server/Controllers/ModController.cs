@@ -353,7 +353,8 @@ public sealed class ModController : ControllerExtended
 
         var ownedModIs = await _dbContext.Set<NexusModsModEntity>()
             .Where(y => y.UserIds.Contains(userId))
-            .Select(x => x.NexusModsModId).ToArrayAsync(ct);
+            .Select(x => x.NexusModsModId)
+            .ToArrayAsync(ct);
 
         var paginated = await _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
             .Where(x => ownedModIs.Contains(x.NexusModsModId))

@@ -187,7 +187,6 @@ public sealed class Startup
 
         services.AddDbContext<AppDbContext>(x => x
             .UseNpgsql(_configuration.GetConnectionString("Main"), opt => opt.EnableRetryOnFailure())
-            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .AddPrepareInterceptor());
 
         services.AddNexusModsDefaultServices();

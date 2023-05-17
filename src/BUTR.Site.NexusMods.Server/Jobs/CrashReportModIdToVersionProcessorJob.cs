@@ -37,7 +37,7 @@ public sealed class CrashReportModIdToVersionProcessorJob : IJob
     public async Task Execute(IJobExecutionContext context)
     {
         var ct = context.CancellationToken;
-        var query = _dbContext.Set<CrashReportEntity>().Where(x => DbFunctionsExtensions.HasKeyValue(x.ModIdToVersion, "ignore", "=", "ignore")).Take(500);
+        var query = _dbContext.Set<CrashReportEntity>().Where(x => DbFunctionsExtensions.HasKeyValue(x.ModIdToVersion, "ignore", "=", "ignore")).AsNoTracking().Take(500);
         var processed = 0;
         try
         {

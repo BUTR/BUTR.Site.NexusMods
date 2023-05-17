@@ -2,6 +2,8 @@
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
+using Microsoft.EntityFrameworkCore;
+
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -52,7 +54,7 @@ public abstract class BaseDatabaseStorage<TData, TExternalEntity, TNexusModsToEx
 
     public async Task<TData?> GetAsync(string userId)
     {
-        var entity = await _dbContext.FirstOrDefaultAsync<TExternalEntity>(x => x.UserId == userId);
+        var entity = await _dbContext.Set<TExternalEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId);
         return entity is not null ? FromExternalEntity(entity) : null;
     }
 

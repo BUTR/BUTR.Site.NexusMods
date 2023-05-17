@@ -41,7 +41,7 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var updatesStoredWithinDay = await _dbContext.Set<NexusModsFileUpdateEntity>().Where(x => x.LastCheckedDate > DateTime.UtcNow.AddDays(-1)).ToListAsync(context.CancellationToken);
+        var updatesStoredWithinDay = await _dbContext.Set<NexusModsFileUpdateEntity>().Where(x => x.LastCheckedDate > DateTime.UtcNow.AddDays(-1)).AsNoTracking().ToListAsync(context.CancellationToken);
         var updatedWithinDay = await _client.GetAllModUpdatesAsync("mountandblade2bannerlord", _options.ApiKey) ?? Array.Empty<NexusModsUpdatedModsResponse>();
         var newUpdates = updatedWithinDay.Where(x =>
         {

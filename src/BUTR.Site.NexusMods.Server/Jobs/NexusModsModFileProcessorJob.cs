@@ -40,7 +40,7 @@ public sealed class NexusModsModFileProcessorJob : IJob
     public async Task Execute(IJobExecutionContext context)
     {
         var modId = 0;
-        var updateDate = await _dbContext.Set<NexusModsFileUpdateEntity>().FirstOrDefaultAsync(x => x.NexusModsModId == modId, context.CancellationToken);
+        var updateDate = await _dbContext.Set<NexusModsFileUpdateEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.NexusModsModId == modId, context.CancellationToken);
         var files = await _client.GetModFileInfosAsync("mountandblade2bannerlord", modId, _options.ApiKey);
         if (files is not null)
         {

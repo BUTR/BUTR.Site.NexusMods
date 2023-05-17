@@ -3,6 +3,7 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Services;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using Quartz;
@@ -34,7 +35,7 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
 
         var ct = context.CancellationToken;
 
-        var articleId = _dbContext.Set<NexusModsArticleEntity>().OrderBy(x => x.NexusModsArticleId).LastOrDefault()?.NexusModsArticleId ?? 0;
+        var articleId = _dbContext.Set<NexusModsArticleEntity>().OrderBy(x => x.NexusModsArticleId).AsNoTracking().LastOrDefault()?.NexusModsArticleId ?? 0;
         var notFoundArticles = 0;
         var processed = 0;
         try
