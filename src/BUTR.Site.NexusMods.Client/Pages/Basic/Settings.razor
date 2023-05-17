@@ -72,7 +72,6 @@
 
     private UserSettings _userSettings = new();
 
-    /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
         _userSettings = await _localStorage.GetItemAsync<UserSettings>("settings") ?? new();

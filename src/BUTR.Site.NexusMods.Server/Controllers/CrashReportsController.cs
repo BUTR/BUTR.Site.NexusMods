@@ -98,22 +98,18 @@ public sealed class CrashReportsController : ControllerExtended
 
         var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
 
-        return APIResponse(new PagingData<CrashReportModel>
+        return APIPagingResponse(paginated, items => items.Select(x => new CrashReportModel
         {
-            Items = paginated.Items.Select(x => new CrashReportModel
-            {
-                Id = x.Id,
-                Version = x.Version,
-                GameVersion = x.GameVersion,
-                Exception = x.Exception,
-                Date = x.CreatedAt,
-                Url = x.Url,
-                InvolvedModules = x.InvolvedModIds.ToImmutableArray(),
-                Status = x.Status,
-                Comment = x.Comment
-            }).ToAsyncEnumerable(),
-            Metadata = paginated.Metadata
-        });
+            Id = x.Id,
+            Version = x.Version,
+            GameVersion = x.GameVersion,
+            Exception = x.Exception,
+            Date = x.CreatedAt,
+            Url = x.Url,
+            InvolvedModules = x.InvolvedModIds.ToImmutableArray(),
+            Status = x.Status,
+            Comment = x.Comment
+        }));
     }
 
     [HttpGet("Autocomplete")]

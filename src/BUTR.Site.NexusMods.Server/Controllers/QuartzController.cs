@@ -41,11 +41,7 @@ public sealed class QuartzController : ControllerExtended
             .Where(x => x.LogType == QuartzLogType.ScheduleJob)
             .PaginatedAsync(query, 100, new() { Property = nameof(QuartzExecutionLogEntity.DateAddedUtc), Type = SortingType.Descending }, ct);
 
-        return APIResponse(new PagingData<QuartzExecutionLogEntity>
-        {
-            Items = paginated.Items.ToAsyncEnumerable(),
-            Metadata = paginated.Metadata
-        });
+        return APIPagingResponse(paginated);
     }
 
     [HttpGet("Delete")]

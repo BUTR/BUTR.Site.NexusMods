@@ -36,11 +36,7 @@ public class ExposedModsController : ControllerExtended
             .Where(x => x.ModuleIds.Length > 0)
             .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsExposedModsEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
-        return APIResponse(new PagingData<ExposedModModel>
-        {
-            Items = paginated.Items.Select(x => new ExposedModModel(x.NexusModsModId, x.ModuleIds, x.LastCheckedDate)).ToAsyncEnumerable(),
-            Metadata = paginated.Metadata
-        });
+        return APIPagingResponse(paginated, items => items.Select(x => new ExposedModModel(x.NexusModsModId, x.ModuleIds, x.LastCheckedDate)));
     }
 
     [HttpGet("Autocomplete")]

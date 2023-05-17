@@ -35,11 +35,7 @@ public class ArticlesController : ControllerExtended
         var paginated = await _dbContext.Set<NexusModsArticleEntity>()
             .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsArticleEntity.NexusModsArticleId), Type = SortingType.Ascending }, ct);
 
-        return APIResponse(new PagingData<ArticleModel>
-        {
-            Items = paginated.Items.Select(x => new ArticleModel(x.NexusModsArticleId, x.Title, x.NexusModsUserId, x.AuthorName, x.CreateDate)).ToAsyncEnumerable(),
-            Metadata = paginated.Metadata
-        });
+        return APIPagingResponse(paginated, items => items.Select(x => new ArticleModel(x.NexusModsArticleId, x.Title, x.NexusModsUserId, x.AuthorName, x.CreateDate)));
     }
 
     [HttpGet("Autocomplete")]

@@ -17,7 +17,6 @@
 
     private string? html;
 
-    /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
         html = await _recreateStacktraceClient.HtmlAsync(Id, CancellationToken.None);

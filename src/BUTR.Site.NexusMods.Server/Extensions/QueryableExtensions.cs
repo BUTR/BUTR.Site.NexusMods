@@ -87,23 +87,22 @@ WHERE
             .PaginatedAsync(page, pageSize, ct);
     }
 
+    // This implementation will introduce a little desync of count because items are lazily evaluated
     public static async Task<Paging<TEntity>> PaginatedAsync<TEntity>(this IQueryable<TEntity> queryable, uint page, uint pageSize, CancellationToken ct = default) where TEntity : class
     {
         var startTime = Stopwatch.GetTimestamp();
         var count = await queryable.CountAsync(ct);
-        var items = await queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).ToImmutableArrayAsync(ct);
-        var elapsed = Stopwatch.GetElapsedTime(startTime);
         
         return new()
         {
-            Items = items,
+            StartTime = startTime,
+            Items = queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).AsAsyncEnumerable(),
             Metadata = new()
             {
                 PageSize = pageSize,
                 CurrentPage = page,
                 TotalCount = (uint) count,
                 TotalPages = (uint) Math.Floor((double) count / (double) pageSize),
-                QueryExecutionTimeMilliseconds = (uint) elapsed.Milliseconds
             }
         };
     }

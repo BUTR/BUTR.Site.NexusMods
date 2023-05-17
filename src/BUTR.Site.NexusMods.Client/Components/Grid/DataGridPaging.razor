@@ -1,4 +1,5 @@
-﻿@typeparam TItem where TItem : class
+﻿@using System.Diagnostics
+@typeparam TItem where TItem : class
 
 @inject ILocalStorageService _localStorage
 
@@ -29,13 +30,13 @@
     <TotalItemsTemplate>
         @if (Metadata.TotalCount == 0)
         {
-            <Text>@($"No available items. Time {Metadata.QueryExecutionTimeMilliseconds}ms")</Text>
+            <Text>@($"No available items. Time {QueryExecutionTimeMilliseconds}ms")</Text>
         }
         else
         {
             var curStart = (Metadata.CurrentPage - 1) * Metadata.PageSize + 1;
             var curEnd = Math.Min(Metadata.CurrentPage * Metadata.PageSize, Metadata.TotalCount);
-            <Text>@($"{curStart} - {curEnd} of {Metadata.TotalCount} items. Time {Metadata.QueryExecutionTimeMilliseconds}ms")</Text>
+            <Text>@($"{curStart} - {curEnd} of {Metadata.TotalCount} items. Time {QueryExecutionTimeMilliseconds}ms")</Text>
         }
     </TotalItemsTemplate>
     <LoadingTemplate>
@@ -45,7 +46,7 @@
 
 @code {
 
-    public sealed record ItemsResponse(ICollection<TItem> Items, PagingMetadata Metadata);
+    public sealed record ItemsResponse(int QueryExecutionTimeMilliseconds, ICollection<TItem> Items, PagingMetadata Metadata);
 
     [Parameter]
     public bool Resizable { get; set; } = false;
@@ -97,6 +98,8 @@
     public PagingMetadata Metadata { get; set; }
     
 
+    public int QueryExecutionTimeMilliseconds;
+
     public TItem? Value;
     public ICollection<TItem> Values = default!;
 
@@ -107,13 +110,12 @@
 
     public DataGridPaging()
     {
-        Metadata = new PagingMetadata(1, 0, DefaultPageSize, 0, 0);
+        Metadata = new PagingMetadata(1, 0, DefaultPageSize, 0);
     }
 
-    /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        Metadata = new(1, 0, await GetPageSizeInternal(), 0, 0);
+        Metadata = new(1, 0, await GetPageSizeInternal(), 0);
     }
 
     public Task Reload() => _dataGridRef.Reload();
@@ -135,7 +137,8 @@
     private async Task LoadItems(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
         await using var progress = ProgressUtils.DoProgress(x => _progressValue = x, () => _progressValue, () => InvokeAsync(StateHasChanged));
-        var response = (GetItems is not null ? await GetItems(page, pageSize, filterings, sortings, ct) : null) ?? new(Array.Empty<TItem>(), PagingMetadata.Empty);
+        var response = (GetItems is not null ? await GetItems(page, pageSize, filterings, sortings, ct) : null) ?? new(0, Array.Empty<TItem>(), PagingMetadata.Empty);
+        QueryExecutionTimeMilliseconds = response.QueryExecutionTimeMilliseconds;
         Values = response.Items;
         Metadata = response.Metadata;
     }

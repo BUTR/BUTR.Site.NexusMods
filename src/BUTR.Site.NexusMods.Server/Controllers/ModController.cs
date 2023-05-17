@@ -113,25 +113,21 @@ public sealed class ModController : ControllerExtended
         var paginated = await mainQuery
             .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
-        var nexusModsModIds = paginated.Items.Select(x => x.NexusModsModId).ToArray();
+        var nexusModsModIds = await paginated.Items.Select(x => x.NexusModsModId).ToArrayAsync(ct);
         var manuallyLinkedUserIds = await manuallyLinkedUserIdsQuery
             .Where(x => nexusModsModIds.Contains(x.NexusModsModId))
             .GroupBy(x => x.NexusModsModId, x => x.NexusModsUserId)
             .ToDictionaryAsync(x => x.Key, x => x.ToArray(), ct);
 
-        return APIResponse(new PagingData<ModModel>
-        {
-            Items = paginated.Items.Select(m => new ModModel(
-                m.Name,
-                m.NexusModsModId,
-                m.AllowedNexusModsUserIds?.AsImmutableArray() ?? ImmutableArray<int>.Empty,
-                //ImmutableArray<int>.Empty,
-                //m.ManuallyLinkedUserIds?.AsImmutableArray() ?? ImmutableArray<int>.Empty,
-                manuallyLinkedUserIds.TryGetValue(m.NexusModsModId, out var arr) ? arr.AsImmutableArray() : ImmutableArray<int>.Empty,
-                m.ManuallyLinkedModuleIds?.AsImmutableArray() ?? ImmutableArray<string>.Empty,
-                m.KnownModuleIds?.AsImmutableArray() ?? ImmutableArray<string>.Empty)).ToAsyncEnumerable(),
-            Metadata = paginated.Metadata
-        });
+        return APIPagingResponse(paginated, items => items.Select(m => new ModModel(
+            m.Name,
+            m.NexusModsModId,
+            m.AllowedNexusModsUserIds?.AsImmutableArray() ?? ImmutableArray<int>.Empty,
+            //ImmutableArray<int>.Empty,
+            //m.ManuallyLinkedUserIds?.AsImmutableArray() ?? ImmutableArray<int>.Empty,
+            manuallyLinkedUserIds.TryGetValue(m.NexusModsModId, out var arr) ? arr.AsImmutableArray() : ImmutableArray<int>.Empty,
+            m.ManuallyLinkedModuleIds?.AsImmutableArray() ?? ImmutableArray<string>.Empty,
+            m.KnownModuleIds?.AsImmutableArray() ?? ImmutableArray<string>.Empty)));
     }
 
     [HttpPost("ModUpdate")]
@@ -255,11 +251,7 @@ public sealed class ModController : ControllerExtended
         var paginated = await _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>()
             .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModManualLinkedModuleIdEntity.ModuleId), Type = SortingType.Ascending }, ct);
 
-        return APIResponse(new PagingData<ModNexusModsManualLinkModel>
-        {
-            Items = paginated.Items.Select(m => new ModNexusModsManualLinkModel(m.ModuleId, m.NexusModsModId)).ToAsyncEnumerable(),
-            Metadata = paginated.Metadata
-        });
+        return APIPagingResponse(paginated, items => items.Select(m => new ModNexusModsManualLinkModel(m.ModuleId, m.NexusModsModId)));
     }
 
 
@@ -306,11 +298,7 @@ public sealed class ModController : ControllerExtended
         var paginated = await _dbContext.Set<NexusModsUserAllowedModuleIdsEntity>()
             .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsUserAllowedModuleIdsEntity.NexusModsUserId), Type = SortingType.Ascending }, ct);
 
-        return APIResponse(new PagingData<UserAllowedModuleIdsModel>
-        {
-            Items = paginated.Items.Select(m => new UserAllowedModuleIdsModel(m.NexusModsUserId, m.AllowedModuleIds.AsImmutableArray())).ToAsyncEnumerable(),
-            Metadata = paginated.Metadata
-        });
+        return APIPagingResponse(paginated, items => items.Select(m => new UserAllowedModuleIdsModel(m.NexusModsUserId, m.AllowedModuleIds.AsImmutableArray())));
     }
 
 
@@ -371,11 +359,7 @@ public sealed class ModController : ControllerExtended
             .Where(x => ownedModIs.Contains(x.NexusModsModId))
             .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModManualLinkedNexusModsUsersEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
-        return APIResponse(new PagingData<UserAllowedModsModel>
-        {
-            Items = paginated.Items.Select(m => new UserAllowedModsModel(m.NexusModsModId, m.AllowedNexusModsUserIds.AsImmutableArray())).ToAsyncEnumerable(),
-            Metadata = paginated.Metadata
-        });
+        return APIPagingResponse(paginated, items => items.Select(m => new UserAllowedModsModel(m.NexusModsModId, m.AllowedNexusModsUserIds.AsImmutableArray())));
     }
 
 
@@ -413,10 +397,6 @@ public sealed class ModController : ControllerExtended
         var paginated = await mainQuery
             .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
-        return APIResponse(new PagingData<AvailableModModel>
-        {
-            Items = paginated.Items.Select(x => new AvailableModModel(x.NexusModsModId, x.Name)).ToAsyncEnumerable(),
-            Metadata = paginated.Metadata
-        });
+        return APIPagingResponse(paginated, items => items.Select(x => new AvailableModModel(x.NexusModsModId, x.Name)));
     }
 }
