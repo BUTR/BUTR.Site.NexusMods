@@ -53,7 +53,7 @@
     private void Callback()
     {
         var url = new Uri(CallbackUrl);
-        _navigationManager.NavigateTo($"/gog-oauth-callback{url.Query}");
+        _navigationManager.NavigateTo($"gog-oauth-callback{url.Query}");
     }
 
 }
