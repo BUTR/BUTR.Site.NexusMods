@@ -109,11 +109,11 @@ public static class CrashReportParser
 
     private static ImmutableArray<EnhancedStacktraceFrame> GetEnhancedStacktrace(ReadOnlySpan<char> rawContent, int version, HtmlNode node)
     {
-        if (version < 1000)
+        const string enhancedStacktraceStartDelimiter = "<div id='enhanced-stacktrace' class='headers-container'>";
+        const string enhancedStacktraceEndDelimiter = "</div>";
+        
+        if (version < 1000 && rawContent.IndexOf(enhancedStacktraceStartDelimiter) is var enhancedStacktraceStartIdx and not -1)
         {
-            const string enhancedStacktraceStartDelimiter = "<div id='enhanced-stacktrace' class='headers-container'>";
-            const string enhancedStacktraceEndDelimiter = "</div>";
-            var enhancedStacktraceStartIdx = rawContent.IndexOf(enhancedStacktraceStartDelimiter);
             var enhancedStacktraceEndIdx = rawContent.Slice(enhancedStacktraceStartIdx).IndexOf(enhancedStacktraceEndDelimiter) - enhancedStacktraceEndDelimiter.Length;
             var enhancedStacktraceRaw = rawContent.Slice(enhancedStacktraceStartIdx, enhancedStacktraceEndIdx).ToString();
             var toEscape = GetAllOpenTags(enhancedStacktraceRaw, span => !span.SequenceEqual(enhancedStacktraceStartDelimiter) && span is not "<ul>" and not "<li>" and not "<br>").ToArray();
