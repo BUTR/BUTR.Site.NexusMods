@@ -111,7 +111,7 @@ public static class CrashReportParser
     {
         const string enhancedStacktraceStartDelimiter = "<div id='enhanced-stacktrace' class='headers-container'>";
         const string enhancedStacktraceEndDelimiter = "</div>";
-        
+
         if (version < 1000 && rawContent.IndexOf(enhancedStacktraceStartDelimiter) is var enhancedStacktraceStartIdx and not -1)
         {
             var enhancedStacktraceEndIdx = rawContent.Slice(enhancedStacktraceStartIdx).IndexOf(enhancedStacktraceEndDelimiter) - enhancedStacktraceEndDelimiter.Length;

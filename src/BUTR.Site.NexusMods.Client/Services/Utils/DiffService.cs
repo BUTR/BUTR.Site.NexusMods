@@ -1,4 +1,5 @@
-﻿using Microsoft.JSInterop;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 using System;
 using System.Text.Json.Serialization;
@@ -83,20 +84,22 @@ public sealed class DiffService : IAsyncDisposable
         public Task OnError() => Task.CompletedTask;
     }
 
+    private readonly NavigationManager _navigationManager;
     private readonly TaskCompletionSource _tcs;
     private readonly Lazy<ValueTask<IJSUnmarshalledObjectReference>> _moduleTask;
 
-    public DiffService(IJSRuntime runtime)
+    public DiffService(NavigationManager navigationManager, IJSRuntime runtime)
     {
+        _navigationManager = navigationManager;
         _tcs = new();
-        _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", "../js/diff2html.js"));
+        _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", $"{navigationManager.BaseUri}js/diff2html.js"));
     }
 
     public async Task Initialize()
     {
         var module = await _moduleTask.Value;
 
-        await module.InvokeVoidAsync("init", DotNetObjectReference.Create(new Container(() =>
+        await module.InvokeVoidAsync("init", _navigationManager.BaseUri, DotNetObjectReference.Create(new Container(() =>
         {
             _tcs.TrySetResult();
             return Task.CompletedTask;

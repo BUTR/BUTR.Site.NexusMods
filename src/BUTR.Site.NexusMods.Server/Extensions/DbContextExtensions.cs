@@ -75,7 +75,7 @@ public static class DbContextExtensions
         await dbContext.AddUpdateRemoveAsync(predicate, applyChanges, ct);
         return await dbContext.SaveChangesAsync(ct) > 0;
     }
-    
-    
+
+
     public static IQueryable<T> Prepare<T>(this IQueryable<T> query) => query.TagWith(PrepareCommandInterceptor.Tag);
 }

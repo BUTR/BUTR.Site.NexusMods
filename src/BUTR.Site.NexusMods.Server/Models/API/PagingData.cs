@@ -38,14 +38,14 @@ public sealed record PagingData<T> where T : class
         Metadata = data.Metadata,
         Items = data.Items,
     };
-    
+
     // Keep as classes because of state machine boxing
     private class AsyncEnumerableWrapper : IAsyncEnumerable<T>
     {
         private class AsyncEnumeratorWrapper : IAsyncEnumerator<T>
         {
             public T Current => _inner.Current;
-        
+
             private readonly IAsyncEnumerator<T> _inner;
             private readonly Action _onLastItem;
 
@@ -60,23 +60,23 @@ public sealed record PagingData<T> where T : class
 
             public ValueTask DisposeAsync() => _inner.DisposeAsync();
         }
-        
+
         private readonly IAsyncEnumerable<T> _inner;
         private readonly Action _onLastItem;
 
         public AsyncEnumerableWrapper(IAsyncEnumerable<T> inner, Action onLastItem) => (_inner, _onLastItem) = (inner, onLastItem);
-        
+
         public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new AsyncEnumeratorWrapper(_inner.GetAsyncEnumerator(cancellationToken), _onLastItem);
     }
-    
+
     [JsonIgnore]
     private long StartTime { get; set; }
     [JsonIgnore]
     private long EndTime { get; set; }
-    
+
     [JsonPropertyOrder(3)]
     public uint QueryExecutionTimeMilliseconds => (uint) Stopwatch.GetElapsedTime(StartTime, EndTime).TotalMilliseconds;
-    
+
     private readonly IAsyncEnumerable<T> _items = default!;
     [JsonPropertyOrder(2)]
     public required IAsyncEnumerable<T> Items { get => _items; init => _items = new AsyncEnumerableWrapper(value, () => EndTime = Stopwatch.GetTimestamp()); }

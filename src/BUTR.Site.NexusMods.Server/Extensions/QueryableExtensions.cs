@@ -92,7 +92,7 @@ WHERE
     {
         var startTime = Stopwatch.GetTimestamp();
         var count = await queryable.CountAsync(ct);
-        
+
         return new()
         {
             StartTime = startTime,
@@ -147,7 +147,7 @@ WHERE
         if (type.IsArray)
             type = type.GetElementType()!;
 
-        if (type is { IsGenericType: true, GenericTypeArguments.Length: 1})
+        if (type is { IsGenericType: true, GenericTypeArguments.Length: 1 })
             type = type.GenericTypeArguments[0];
 
         return Type.GetTypeCode(type) switch

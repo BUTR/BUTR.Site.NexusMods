@@ -1,4 +1,5 @@
-﻿using Microsoft.JSInterop;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 using System;
 using System.IO;
@@ -10,9 +11,9 @@ public sealed class BrotliDecompressorService : IAsyncDisposable
 {
     private readonly Lazy<ValueTask<IJSUnmarshalledObjectReference>> _moduleTask;
 
-    public BrotliDecompressorService(IJSRuntime runtime)
+    public BrotliDecompressorService(NavigationManager navigationManager, IJSRuntime runtime)
     {
-        _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", "../js/brotli.js"));
+        _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", $"{navigationManager.BaseUri}js/brotli.js"));
     }
 
     public async ValueTask<Stream> DecompileAsync(Stream compressed)

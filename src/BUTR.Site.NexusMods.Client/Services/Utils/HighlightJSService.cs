@@ -20,13 +20,15 @@ public sealed class HighlightJSService : IAsyncDisposable
         public Task OnError() => Task.CompletedTask;
     }
 
+    private readonly NavigationManager _navigationManager;
     private readonly TaskCompletionSource _tcs;
     private readonly Lazy<ValueTask<IJSUnmarshalledObjectReference>> _moduleTask;
 
-    public HighlightJSService(IJSRuntime runtime)
+    public HighlightJSService(NavigationManager navigationManager, IJSRuntime runtime)
     {
+        _navigationManager = navigationManager;
         _tcs = new();
-        _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", "../js/highlight.js"));
+        _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", $"{navigationManager.BaseUri}js/highlight.js"));
     }
 
     public async ValueTask HighlightElement(ElementReference element)
@@ -46,7 +48,7 @@ public sealed class HighlightJSService : IAsyncDisposable
     {
         var module = await _moduleTask.Value;
 
-        await module.InvokeVoidAsync("init", DotNetObjectReference.Create(new Container(() =>
+        await module.InvokeVoidAsync("init", _navigationManager.BaseUri, DotNetObjectReference.Create(new Container(() =>
         {
             _tcs.TrySetResult();
             return Task.CompletedTask;

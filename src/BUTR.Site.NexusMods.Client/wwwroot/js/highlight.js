@@ -6,10 +6,11 @@ const js = '//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.6.0/build/highlight
 let state = { };
 
 /**
+ * @param {string} baseUri
  * @param {DotNetObject} delegate
  * @return Promise
  */
-export async function init(delegate) {
+export async function init(baseUri, delegate) {
     state.scopeId = makeid(5);
     loadCss(css, state.scopeId);
     loadJs(js, state.scopeId, delegate);

@@ -25,20 +25,22 @@ public sealed class PrismJSService : IAsyncDisposable
         public Task OnError() => Task.CompletedTask;
     }
 
+    private readonly NavigationManager _navigationManager;
     private readonly TaskCompletionSource _tcs;
     private readonly Lazy<ValueTask<IJSUnmarshalledObjectReference>> _moduleTask;
 
-    public PrismJSService(IJSRuntime runtime)
+    public PrismJSService(NavigationManager navigationManager, IJSRuntime runtime)
     {
+        _navigationManager = navigationManager;
         _tcs = new();
-        _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", "../js/prismjs.js"));
+        _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", $"{navigationManager.BaseUri}js/prismjs.js"));
     }
 
     public async Task Initialize()
     {
         var module = await _moduleTask.Value;
 
-        await module.InvokeVoidAsync("init", DotNetObjectReference.Create(new Container(() =>
+        await module.InvokeVoidAsync("init", _navigationManager.BaseUri, DotNetObjectReference.Create(new Container(() =>
         {
             _tcs.TrySetResult();
             return Task.CompletedTask;

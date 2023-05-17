@@ -8,10 +8,11 @@ const js = '//cdn.jsdelivr.net/npm/diff2html@3.4.35/bundles/js/diff2html-ui.min.
 let state = { };
 
 /**
+ * @param {string} baseUri
  * @param {DotNetObject} delegate
  * @return Promise
  */
-export async function init(delegate) {
+export async function init(baseUri, delegate) {
     state.scopeId = makeid(5);
     loadCss(cssGitHub, state.scopeId);
     loadCss(css, state.scopeId);

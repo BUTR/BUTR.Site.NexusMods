@@ -1,4 +1,5 @@
-﻿using Microsoft.JSInterop;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 using System;
 using System.IO;
@@ -10,9 +11,9 @@ public sealed class DownloadFileService : IAsyncDisposable
 {
     private readonly Lazy<ValueTask<IJSUnmarshalledObjectReference>> _moduleTask;
 
-    public DownloadFileService(IJSRuntime runtime)
+    public DownloadFileService(NavigationManager navigationManager, IJSRuntime runtime)
     {
-        _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", "../js/utils.js"));
+        _moduleTask = new(() => runtime.InvokeAsync<IJSUnmarshalledObjectReference>("import", $"{navigationManager.BaseUri}js/utils.js"));
     }
 
     public async ValueTask DownloadFileAsync(string file, string contentType, Stream compressed)
