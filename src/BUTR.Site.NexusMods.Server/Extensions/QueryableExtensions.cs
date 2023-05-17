@@ -93,7 +93,7 @@ WHERE
         var count = await queryable.CountAsync(ct);
         var items = await queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).ToImmutableArrayAsync(ct);
         var elapsed = Stopwatch.GetElapsedTime(startTime);
-        
+
         return new()
         {
             Items = items,
@@ -148,7 +148,7 @@ WHERE
         if (type.IsArray)
             type = type.GetElementType()!;
 
-        if (type is { IsGenericType: true, GenericTypeArguments.Length: 1})
+        if (type is { IsGenericType: true, GenericTypeArguments.Length: 1 })
             type = type.GenericTypeArguments[0];
 
         return Type.GetTypeCode(type) switch
