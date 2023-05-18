@@ -74,7 +74,7 @@ public partial class StatisticsInvolved
         await _lineChart.Clear();
         if (_modIds.Count == 0) return;
 
-        var data = (await StatisticsClient.InvolvedAsync(_gameVersions, _modIds, Array.Empty<string>())).Data ?? Array.Empty<GameStorage>();
+        var data = (await StatisticsClient.InvolvedAsync(_gameVersions, _modIds, Array.Empty<string>()))?.Data ?? Array.Empty<GameStorage>();
 
         var allGameVersions = data.Select(x => x.GameVersion).ToArray();
         var allModIdsWithVersions = data
