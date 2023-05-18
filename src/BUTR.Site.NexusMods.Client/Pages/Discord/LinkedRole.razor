@@ -12,6 +12,12 @@
         await base.OnInitializedAsync();
         
         var response = await _discordClient.GetOAuthUrlAsync();
+        if (response?.Data?.Url is null)
+        {
+            _navigationManager.NavigateTo("profile");
+            return;
+        }
+        
         await _localStorage.SetItemAsync("discord_state", response.Data.State);
         _navigationManager.NavigateTo(response.Data.Url);
     }

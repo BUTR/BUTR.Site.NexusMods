@@ -46,6 +46,11 @@
         await base.OnInitializedAsync();
         
         var response = await _gogClient.GetOAuthUrlAsync();
+        if (response?.Data?.Url is null)
+        {
+            _navigationManager.NavigateTo("profile");
+            return;
+        }
         
         Url = response.Data.Url;
     }
