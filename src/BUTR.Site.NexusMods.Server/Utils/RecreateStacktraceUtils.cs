@@ -1,5 +1,6 @@
 ﻿using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Utils.Reflection;
+using BUTR.Site.NexusMods.Shared.Extensions;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using ICSharpCode.Decompiler;
