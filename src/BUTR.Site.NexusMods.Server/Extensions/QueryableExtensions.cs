@@ -1,13 +1,11 @@
-﻿using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Utils.Npgsql;
 
 using DynamicExpressions;
 
 using Microsoft.EntityFrameworkCore;
-
-using Npgsql;
 
 using System;
 using System.Collections.Generic;
@@ -16,7 +14,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,33 +21,6 @@ namespace BUTR.Site.NexusMods.Server.Extensions;
 
 public static class QueryableExtensions
 {
-    private static readonly IQueryable<string> Empty = Enumerable.Empty<string>().AsQueryable();
-
-    public static IQueryable<string> AutocompleteStartsWith<TEntity, TProperty>(this AppDbContext dbContext, Expression<Func<TEntity, TProperty>> property, string value)
-    {
-        if (property is not LambdaExpression { Body: MemberExpression { Member: PropertyInfo propertyInfo } }) return Empty;
-        if (!property.Type.IsGenericType || property.Type.GenericTypeArguments.Length != 2) return Empty;
-
-        var autocompleteEntity = dbContext.Model.FindEntityType(typeof(AutocompleteEntity))!;
-        var autocompleteEntityTable = autocompleteEntity.GetSchemaQualifiedTableName();
-        var typeProperty = autocompleteEntity.GetProperty(nameof(AutocompleteEntity.Type)).GetColumnName();
-        var valuesProperty = autocompleteEntity.GetProperty(nameof(AutocompleteEntity.Values)).GetColumnName();
-
-        var entityType = property.Type.GenericTypeArguments[0];
-        var name = $"{entityType.Name}.{propertyInfo.Name}";
-
-        var tableNameParam = new NpgsqlParameter<string>("tableName", name);
-        var valParam = new NpgsqlParameter<string>("val", value);
-        return dbContext.Set<AutocompleteEntity>().FromSqlRaw(@$"
-WITH values AS (SELECT unnest({valuesProperty}) as value FROM {autocompleteEntityTable} WHERE type = @tableName ORDER BY {valuesProperty})
-SELECT
-    value as {typeProperty}
-FROM
-    values
-WHERE
-    value ILIKE @val || '%'", tableNameParam, valParam).Select(x => x.Type);
-    }
-
     public static async IAsyncEnumerable<ImmutableArray<T>> BatchedAsync<T>(this IQueryable<T> query, int batchSize = 3000)
     {
         var processed = 0;
@@ -106,21 +76,10 @@ WHERE
             }
         };
     }
-
-    public static async Task<ImmutableArray<TSource>> ToImmutableArrayAsync<TSource>(this IAsyncEnumerable<TSource> source, CancellationToken ct = default)
+    
+    public static Task<ImmutableArray<TSource>> ToImmutableArrayAsync<TSource>(this IQueryable<TSource> source, CancellationToken ct = default)
     {
-        var builder = ImmutableArray.CreateBuilder<TSource>();
-        await foreach (var element in source.AsAsyncEnumerable().WithCancellation(ct))
-            builder.Add(element);
-        return builder.ToImmutable();
-    }
-
-    public static async Task<ImmutableArray<TSource>> ToImmutableArrayAsync<TSource>(this IQueryable<TSource> source, CancellationToken ct = default)
-    {
-        var builder = ImmutableArray.CreateBuilder<TSource>();
-        await foreach (var element in source.AsAsyncEnumerable().WithCancellation(ct))
-            builder.Add(element);
-        return builder.ToImmutable();
+        return source.AsAsyncEnumerable().ToImmutableArrayAsync(ct);
     }
 
 
@@ -210,5 +169,10 @@ WHERE
         }
 
         return ordered ?? queryable;
+    }
+
+    public static IQueryable<T> Prepare<T>(this IQueryable<T> query)
+    {
+        return query.TagWith(PrepareCommandInterceptor.Tag);
     }
 }

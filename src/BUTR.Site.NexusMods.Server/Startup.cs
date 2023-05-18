@@ -70,7 +70,7 @@ public sealed class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        var userAgent = $"{_assemblyName.Name ?? "ERROR"} v{_assemblyName.Version?.ToString() ?? "ERROR"} (github.com/BUTR)";
+        var userAgent = $"{(_assemblyName.Name ?? "ERROR")} v{(_assemblyName.Version?.ToString() ?? "ERROR")} (github.com/BUTR)";
 
         var connectionStringSection = _configuration.GetSection(ConnectionStringsSectionName);
         var crashReporterSection = _configuration.GetSection(CrashReporterSectionName);
@@ -88,20 +88,18 @@ public sealed class Startup
         services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>(steamAPISection);
         services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>(depotDownloaderSection);
 
-        services.AddHttpClient(string.Empty).ConfigureHttpClient((sp, client) =>
+        services.AddHttpClient(string.Empty).ConfigureHttpClient((_, client) =>
         {
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
-        services.AddHttpClient<NexusModsClient>().ConfigureHttpClient((sp, client) =>
+        services.AddHttpClient<NexusModsClient>().ConfigureHttpClient((_, client) =>
         {
-            var opts = sp.GetRequiredService<IOptions<NexusModsOptions>>().Value;
-            client.BaseAddress = new Uri(opts.Endpoint);
+            client.BaseAddress = new Uri("https://nexusmods./");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
-        services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((sp, client) =>
+        services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((_, client) =>
         {
-            var opts = sp.GetRequiredService<IOptions<NexusModsOptions>>().Value;
-            client.BaseAddress = new Uri(opts.APIEndpoint);
+            client.BaseAddress = new Uri("https://api.nexusmods.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
         services.AddHttpClient<CrashReporterClient>().ConfigureHttpClient((sp, client) =>
@@ -113,28 +111,29 @@ public sealed class Startup
                 "Basic",
                 Convert.ToBase64String(Encoding.ASCII.GetBytes($"{opts.Username}:{opts.Password}")));
         });
-        services.AddHttpClient<DiscordClient>().ConfigureHttpClient((sp, client) =>
+        services.AddHttpClient<DiscordClient>().ConfigureHttpClient((_, client) =>
         {
+            client.BaseAddress = new Uri("https://discord.com/api/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
-        services.AddHttpClient<SteamCommunityClient>().ConfigureHttpClient((sp, client) =>
+        services.AddHttpClient<SteamCommunityClient>().ConfigureHttpClient((_, client) =>
         {
-            client.BaseAddress = new Uri("https://steamcommunity.com");
+            client.BaseAddress = new Uri("https://steamcommunity.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
-        services.AddHttpClient<SteamAPIClient>().ConfigureHttpClient((sp, client) =>
+        services.AddHttpClient<SteamAPIClient>().ConfigureHttpClient((_, client) =>
         {
-            client.BaseAddress = new Uri("https://api.steampowered.com");
+            client.BaseAddress = new Uri("https://api.steampowered.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
-        services.AddHttpClient<GOGAuthClient>().ConfigureHttpClient((sp, client) =>
+        services.AddHttpClient<GOGAuthClient>().ConfigureHttpClient((_, client) =>
         {
-            client.BaseAddress = new Uri("https://auth.gog.com");
+            client.BaseAddress = new Uri("https://auth.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
-        services.AddHttpClient<GOGEmbedClient>().ConfigureHttpClient((sp, client) =>
+        services.AddHttpClient<GOGEmbedClient>().ConfigureHttpClient((_, client) =>
         {
-            client.BaseAddress = new Uri("https://embed.gog.com");
+            client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
 
@@ -187,7 +186,8 @@ public sealed class Startup
 
         services.AddDbContext<AppDbContext>(x => x
             .UseNpgsql(_configuration.GetConnectionString("Main"), opt => opt.EnableRetryOnFailure())
-            .AddPrepareInterceptor());
+            .AddPrepareInterceptor()
+        );
 
         services.AddNexusModsDefaultServices();
 

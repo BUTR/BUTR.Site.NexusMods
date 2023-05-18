@@ -52,9 +52,9 @@ public sealed class AuthenticationController : ControllerExtended
         if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey, ct) is not { } validateResponse)
             return StatusCode(StatusCodes.Status401Unauthorized);
 
-        var roleEntity = await _dbContext.Set<NexusModsUserRoleEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.NexusModsUserId == validateResponse.UserId, ct);
+        var roleEntity = await _dbContext.Set<NexusModsUserRoleEntity>().AsNoTracking().Prepare().FirstOrDefaultAsync(x => x.NexusModsUserId == validateResponse.UserId, ct);
         var role = roleEntity?.Role ?? ApplicationRoles.User;
-        var metadataEntity = await _dbContext.Set<NexusModsUserMetadataEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.NexusModsUserId == validateResponse.UserId, ct);
+        var metadataEntity = await _dbContext.Set<NexusModsUserMetadataEntity>().AsNoTracking().Prepare().FirstOrDefaultAsync(x => x.NexusModsUserId == validateResponse.UserId, ct);
         var metadata = metadataEntity?.Metadata ?? new();
 
         var generatedToken = await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
@@ -81,10 +81,10 @@ public sealed class AuthenticationController : ControllerExtended
         if (HttpContext.GetAPIKey() is not { } apikey || string.IsNullOrEmpty(apikey) || await _nexusModsAPIClient.ValidateAPIKeyAsync(apikey, ct) is not { } validateResponse)
             return StatusCode(StatusCodes.Status401Unauthorized);
 
-        var roleEntity = await _dbContext.Set<NexusModsUserRoleEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.NexusModsUserId == validateResponse.UserId, ct);
+        var roleEntity = await _dbContext.Set<NexusModsUserRoleEntity>().AsNoTracking().Prepare().FirstOrDefaultAsync(x => x.NexusModsUserId == validateResponse.UserId, ct);
         var role = roleEntity?.Role ?? ApplicationRoles.User;
 
-        var metadataEntity = await _dbContext.Set<NexusModsUserMetadataEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.NexusModsUserId == validateResponse.UserId, ct);
+        var metadataEntity = await _dbContext.Set<NexusModsUserMetadataEntity>().AsNoTracking().Prepare().FirstOrDefaultAsync(x => x.NexusModsUserId == validateResponse.UserId, ct);
         var metadata = metadataEntity?.Metadata ?? new();
         var existingMetadata = HttpContext.GetMetadata();
         var isMetadataEqual = metadata.Count == existingMetadata.Count && metadata.All(

@@ -96,7 +96,7 @@ public sealed class CrashReportsController : ControllerExtended
                                _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().Any(y => _dbContext.Set<NexusModsModEntity>().Any(z => z.UserIds.Contains(userId) && z.NexusModsModId == y.NexusModsModId) && x.ModIds.Contains(y.ModuleId)) ||
                                _dbContext.Set<NexusModsUserAllowedModuleIdsEntity>().Any(y => y.NexusModsUserId == userId && x.ModIds.Any(z => y.AllowedModuleIds.Contains(z))));
 
-        var paginated = await dbQuery.PaginatedAsync(page, pageSize, ct);
+        var paginated = await dbQuery.Prepare().PaginatedAsync(page, pageSize, ct);
 
         return APIPagingResponse(paginated, items => items.Select(x => new CrashReportModel
         {
@@ -116,7 +116,7 @@ public sealed class CrashReportsController : ControllerExtended
     [Produces("application/json")]
     public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] string modId)
     {
-        return APIResponse(_dbContext.AutocompleteStartsWith<CrashReportEntity, string[]>(x => x.ModIds, modId));
+        return APIResponse(_dbContext.AutocompleteStartsWith<CrashReportEntity, string[]>(x => x.ModIds, modId).Prepare());
     }
 
     [HttpPost("Update")]

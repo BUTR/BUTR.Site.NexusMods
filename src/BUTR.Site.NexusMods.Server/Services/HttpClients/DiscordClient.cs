@@ -50,7 +50,7 @@ public sealed class DiscordClient
 
     public async Task<bool> SetGlobalMetadata(IReadOnlyList<DiscordGlobalMetadata> metadata, CancellationToken ct)
     {
-        using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/applications/{_options.ClientId}/role-connections/metadata")
+        using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"v10/applications/{_options.ClientId}/role-connections/metadata")
         {
             Headers =
             {
@@ -65,7 +65,7 @@ public sealed class DiscordClient
     {
         var state = Guid.NewGuid();
 
-        var url = new UriBuilder("https://discord.com/api/oauth2/authorize");
+        var url = new UriBuilder($"{_httpClient.BaseAddress}oauth2/authorize");
         var query = HttpUtility.ParseQueryString(url.Query);
         query["client_id"] = _options.ClientId;
         query["redirect_uri"] = _options.RedirectUri;
@@ -79,7 +79,7 @@ public sealed class DiscordClient
 
     public async Task<DiscordOAuthTokens?> CreateTokens(string code, CancellationToken ct)
     {
-        var data = new List<KeyValuePair<string, string>>()
+        var data = new List<KeyValuePair<string, string>>
         {
             new("client_id", _options.ClientId),
             new("client_secret", _options.ClientSecret),
@@ -87,7 +87,7 @@ public sealed class DiscordClient
             new("grant_type", "authorization_code"),
             new("code", code),
         };
-        using var response = await _httpClient.PostAsync("https://discord.com/api/v10/oauth2/token", new FormUrlEncodedContent(data), ct);
+        using var response = await _httpClient.PostAsync("v10/oauth2/token", new FormUrlEncodedContent(data), ct);
         var tokens = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
         return tokens is not null ? new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokens.ExpiresIn)) : null;
     }
@@ -104,7 +104,7 @@ public sealed class DiscordClient
             new("grant_type", "refresh_token"),
             new("refresh_token", tokens.RefreshToken),
         };
-        using var response = await _httpClient.PostAsync("https://discord.com/api/v10/oauth2/token", new FormUrlEncodedContent(data), ct);
+        using var response = await _httpClient.PostAsync("v10/oauth2/token", new FormUrlEncodedContent(data), ct);
         if (!response.IsSuccessStatusCode) return null;
         var responseData = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
         if (responseData is null) return null;
@@ -114,7 +114,7 @@ public sealed class DiscordClient
 
     public async Task<DiscordUserInfo?> GetUserInfo(DiscordOAuthTokens tokens, CancellationToken ct)
     {
-        using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/v10/oauth2/@me")
+        using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "v10/oauth2/@me")
         {
             Headers =
             {
@@ -126,7 +126,7 @@ public sealed class DiscordClient
 
     public async Task<bool> PushMetadata<T>(DiscordOAuthTokens tokens, T metadata, CancellationToken ct)
     {
-        using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"https://discord.com/api/v10/users/@me/applications/{_options.ClientId}/role-connection")
+        using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"v10/users/@me/applications/{_options.ClientId}/role-connection")
         {
             Headers =
             {

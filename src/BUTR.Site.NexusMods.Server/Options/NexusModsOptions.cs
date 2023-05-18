@@ -10,15 +10,11 @@ public sealed class NexusModsOptionsValidator : AbstractValidator<NexusModsOptio
 {
     public NexusModsOptionsValidator(HttpClient client)
     {
-        RuleFor(x => x.Endpoint).NotEmpty().IsUri();
-        RuleFor(x => x.APIEndpoint).NotEmpty().IsUri();
         RuleFor(x => x.ApiKey).NotEmpty();
     }
 }
 
 public sealed record NexusModsOptions
 {
-    public required string Endpoint { get; init; }
-    public required string APIEndpoint { get; init; }
     public required string ApiKey { get; init; }
 }
