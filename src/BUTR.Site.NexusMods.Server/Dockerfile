@@ -23,7 +23,7 @@ RUN apk update && apk add --no-cache wget unzip \
     && wget https://github.com/SteamRE/DepotDownloader/releases/download/DepotDownloader_2.4.7/depotdownloader-2.4.7.zip \
     && unzip depotdownloader-2.4.7.zip -d /depotdownloader \
     && rm depotdownloader-2.4.7.zip \
-    && apk remove -y wget unzip
+    && apk del wget unzip
 
 WORKDIR /app
 COPY --from=publish /app/publish .
