@@ -3,7 +3,7 @@
 
 <Blazorise.ThemeProvider Theme="@_theme">
     <CascadingAuthenticationState>
-        <Router AppAssembly="@typeof(App).Assembly" OnNavigateAsync="@OnNavigateAsync" AdditionalAssemblies="@_lazyLoadedAssemblies" >
+        <Router AppAssembly="@typeof(App).Assembly" OnNavigateAsync="@OnNavigateAsync" AdditionalAssemblies="@_lazyLoadedAssemblies">
             <Found Context="routeData">
                 <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(DefaultLayout)">
                     <Authorizing>
@@ -107,15 +107,14 @@
         },
     };
 
-    private List<Assembly> _lazyLoadedAssemblies = new();
+    private readonly List<Assembly> _lazyLoadedAssemblies = new();
 
     private async Task OnNavigateAsync(NavigationContext args)
     {
-        return;
-        
+        /*
         try
         {
-            if (args.Path is "localization-parser" or "assembly-string-editor")
+            if (args.Path is "localization-parser")
             {
                 var assemblies = await _assemblyLoader.LoadAssembliesAsync(new[]
                 {
@@ -123,7 +122,7 @@
                 });
                 _lazyLoadedAssemblies.AddRange(assemblies);
             }
-            if (args.Path is "localizer" or "localization-parser")
+            if (args.Path is "assembly-string-editor")
             {
                 var assemblies = await _assemblyLoader.LoadAssembliesAsync(new[]
                 {
@@ -139,6 +138,7 @@
         {
             _logger.LogError("Error: {Message}", ex.Message);
         }
+        */
     }
 
 }
