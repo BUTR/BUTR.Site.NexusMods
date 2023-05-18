@@ -30,7 +30,6 @@ public class MetadataMiddleware
         }
 
         var endpoint = context.GetEndpoint();
-
         var metadataData = endpoint?.Metadata.GetOrderedMetadata<IMetadataData>();
         if (metadataData is null)
         {

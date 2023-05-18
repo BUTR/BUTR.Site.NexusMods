@@ -1,7 +1,7 @@
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-preview-alpine AS base
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-preview-alpine AS restore
 WORKDIR /src
 
 COPY ["BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj", "BUTR.Site.NexusMods.Server/"]
@@ -11,12 +11,10 @@ RUN dotnet restore "BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj
 
 COPY . .
 
+
+FROM restore AS publish
 WORKDIR "/src/BUTR.Site.NexusMods.Server"
-RUN dotnet build "BUTR.Site.NexusMods.Server.csproj" -c Release -o /app/build
-
-
-FROM build AS publish
-RUN dotnet publish "BUTR.Site.NexusMods.Server.csproj" -c Release -o /app/publish
+RUN dotnet publish "BUTR.Site.NexusMods.Server.csproj" -c Release -r linux-musl-x64 -p:PublishReadyToRun=true -o /app/publish
 
 
 FROM base AS final

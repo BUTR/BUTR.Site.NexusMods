@@ -67,7 +67,7 @@ public sealed class StatisticsController : ControllerExtended
 
     [HttpGet("Involved")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IEnumerable<GameStorage>?>> Involved([FromQuery] string[]? gameVersions, [FromQuery] string[]? modIds, [FromQuery] string[]? modVersions)
+    public ActionResult<APIResponse<IAsyncEnumerable<GameStorage>?>> Involved([FromQuery] string[]? gameVersions, [FromQuery] string[]? modIds, [FromQuery] string[]? modVersions)
     {
         //if (gameVersions?.Length == 0 && modIds?.Length == 0 && modVersions?.Length == 0)
         //    return StatusCode(StatusCodes.Status403Forbidden, Array.Empty<GameStorage>());
@@ -77,14 +77,14 @@ public sealed class StatisticsController : ControllerExtended
                 (gameVersions == null || gameVersions.Length == 0 || gameVersions.Contains(x.GameVersion)) &&
                 (modIds == null || modIds.Length == 0 || modIds.Contains(x.ModId)) &&
                 (modVersions == null || modVersions.Length == 0 || modVersions.Contains(x.ModVersion)))
-            .AsEnumerable()
-            .GroupBy(x => x.GameVersion, x => x)
-            .Select(x => new GameStorage(x.Key, x
+            .AsAsyncEnumerable()
+            .GroupBy(x => x.GameVersion)
+            .SelectAwait(async x => new GameStorage(x.Key, await x
                 .GroupBy(y => y.ModId)
-                .Select(y => new ModStorage(y.Key, y
+                .SelectAwait(async y => new ModStorage(y.Key, await y
                     .GroupBy(z => z.ModVersion)
                     .SelectMany(z => z)
-                    .Select(z => new ModVersionScore(z.ModVersion, 1 - z.Score, z.RawValue, z.NotInvolvedCount, z.InvolvedCount)).ToArray())).ToArray()));
+                    .Select(z => new ModVersionScore(z.ModVersion, 1 - z.Score, z.RawValue, z.NotInvolvedCount, z.InvolvedCount)).ToArrayAsync())).ToArrayAsync()));
 
         return APIResponse(data);
     }
