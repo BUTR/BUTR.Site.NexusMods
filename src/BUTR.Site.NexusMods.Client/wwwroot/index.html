@@ -58,7 +58,7 @@
                     totalCount++;
 
                     return (async function () {
-                        if (name === "blazor.boot.json"){
+                        if (name === "blazor.boot.json" || (name.startsWith("appsettings") && name.endsWith(".json"))){
                             return await fetch(defaultUri, {cache: 'no-cache'});
                         }
 
