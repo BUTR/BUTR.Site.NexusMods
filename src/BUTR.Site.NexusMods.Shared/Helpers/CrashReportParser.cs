@@ -91,16 +91,18 @@ public static class CrashReportParser
     }
 
     private delegate bool MatchSpan(ReadOnlySpan<char> span);
-    private static IEnumerable<string> GetAllOpenTags(ReadOnlySpan<char> content, MatchSpan matcher)
+    private static List<string> GetAllOpenTags(ReadOnlySpan<char> content, MatchSpan matcher)
     {
+        var toReplace = new List<string>();
         var span = content;
         while (span.IndexOf('<') is var idxOpen and not -1 && span.Slice(idxOpen).IndexOf('>') is var idxClose and not -1)
         {
             var tag = span.Slice(idxOpen, idxClose + 1);
             span = span.Slice(idxOpen + idxClose + 1);
             if (tag.Length < 2 || tag[1] == '/' || tag[^2] == '/') continue;
-            if (matcher(tag)) yield return tag.ToString();
+            if (matcher(tag)) toReplace.Add(tag.ToString());
         }
+        return toReplace;
     }
 
     private static ImmutableArray<EnhancedStacktraceFrame> GetEnhancedStacktrace(ReadOnlySpan<char> rawContent, int version, HtmlNode node)
@@ -112,7 +114,7 @@ public static class CrashReportParser
         {
             var enhancedStacktraceEndIdx = rawContent.Slice(enhancedStacktraceStartIdx).IndexOf(enhancedStacktraceEndDelimiter) - enhancedStacktraceEndDelimiter.Length;
             var enhancedStacktraceRaw = rawContent.Slice(enhancedStacktraceStartIdx, enhancedStacktraceEndIdx).ToString();
-            var toEscape = GetAllOpenTags(enhancedStacktraceRaw, span => !span.SequenceEqual(enhancedStacktraceStartDelimiter) && span is not "<ul>" and not "<li>" and not "<br>").ToArray();
+            var toEscape = GetAllOpenTags(enhancedStacktraceRaw, span => !span.SequenceEqual(enhancedStacktraceStartDelimiter) && span is not "<ul>" and not "<li>" and not "<br>");
             enhancedStacktraceRaw = toEscape.Aggregate(enhancedStacktraceRaw, (current, s) => current.Replace(s, s.Replace("<", "&lt;").Replace(">", "&gt;")));
             //var openTags = GetAllOpenTags(enhancedStacktraceRaw, span => !span.SequenceEqual("<ul>")  && !span.SequenceEqual("<li>") && !span.SequenceEqual("<br>")).ToArray();
             var enhancedStacktraceDoc = new HtmlDocument();
