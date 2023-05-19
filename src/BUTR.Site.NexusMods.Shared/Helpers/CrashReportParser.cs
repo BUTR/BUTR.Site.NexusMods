@@ -5,9 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace BUTR.Site.NexusMods.Shared.Helpers;
 
@@ -95,16 +93,14 @@ public static class CrashReportParser
     private delegate bool MatchSpan(ReadOnlySpan<char> span);
     private static IEnumerable<string> GetAllOpenTags(ReadOnlySpan<char> content, MatchSpan matcher)
     {
-        var toReplace = new List<string>();
         var span = content;
         while (span.IndexOf('<') is var idxOpen and not -1 && span.Slice(idxOpen).IndexOf('>') is var idxClose and not -1)
         {
             var tag = span.Slice(idxOpen, idxClose + 1);
             span = span.Slice(idxOpen + idxClose + 1);
             if (tag.Length < 2 || tag[1] == '/' || tag[^2] == '/') continue;
-            if (matcher(tag)) toReplace.Add(tag.ToString());
+            if (matcher(tag)) yield return tag.ToString();
         }
-        return toReplace;
     }
 
     private static ImmutableArray<EnhancedStacktraceFrame> GetEnhancedStacktrace(ReadOnlySpan<char> rawContent, int version, HtmlNode node)
