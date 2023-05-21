@@ -9,6 +9,7 @@ using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.Http.Logging;
+using BUTR.Site.NexusMods.Server.Utils.Http.Multipart;
 
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
@@ -80,6 +81,7 @@ public sealed class Startup
         var steamAPISection = _configuration.GetSection(SteamAPISectionName);
         var depotDownloaderSection = _configuration.GetSection(DepotDownloaderSectionName);
 
+        services.AddOptions<JsonSerializerOptions>().Configure(opt => Configure(opt));
         services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>(connectionStringSection);
         services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>(crashReporterSection);
         services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>(nexusModsSection);
@@ -136,6 +138,8 @@ public sealed class Startup
             client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         });
+
+        services.AddMultipartSupport();
 
         services.AddSingleton<BannerlordBinaryCache>();
         services.AddSingleton<SteamDepotDownloader>();

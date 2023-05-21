@@ -1,13 +1,31 @@
 ﻿using BUTR.Site.NexusMods.Client.Models;
 using BUTR.Site.NexusMods.ServerClient;
+using BUTR.Site.NexusMods.ServerClient.Utils;
+
+using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Client.Services;
+
+public sealed class CrashReportsClientWithStreaming : CrashReportsClient
+{
+    public CrashReportsClientWithStreaming(HttpClient client, JsonSerializerOptions options) : base(client, options) { }
+    public CrashReportsClientWithStreaming(HttpClient httpClient) : base(httpClient) { }
+
+    protected override void OnPrepareRequest(HttpClient client, HttpRequestMessage request, StringBuilder urlBuilder)
+    {
+        request.SetBrowserResponseStreamingEnabled(true);
+        
+        base.OnPrepareRequest(client, request, urlBuilder);
+    }
+}
 
 public sealed class CrashReportsClientWithDemo : ICrashReportsClient
 {
@@ -17,18 +35,30 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
 
     public CrashReportsClientWithDemo(IServiceProvider serviceProvider, ITokenContainer tokenContainer, IHttpClientFactory httpClientFactory)
     {
-        _implementation = Program.ConfigureClient(serviceProvider, (http, opt) => new CrashReportsClient(http, opt));
+        _implementation = Program.ConfigureClient(serviceProvider, (http, opt) => new CrashReportsClientWithStreaming(http, opt));
         _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     }
 
-    public async Task<CrashReportModelPagingDataAPIResponse> PaginatedAsync(PaginatedQuery? body, CancellationToken ct)
+    public async Task<PagingStreamingData<CrashReportModel>> Paginated2Async(PaginatedQuery? body = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-            return new CrashReportModelPagingDataAPIResponse(new CrashReportModelPagingData(0, crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count)), string.Empty);
+            return PagingStreamingData<CrashReportModel>.Create(PagingAdditionalMetadata.Empty, crashReports.ToAsyncEnumerable(), new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count));
+        }
+
+        return await _implementation.Paginated2Async(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);
+    }
+
+    public async Task<CrashReportModelPagingData> PaginatedAsync(PaginatedQuery? body, CancellationToken ct)
+    {
+        var token = await _tokenContainer.GetTokenAsync(ct);
+        if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
+            return new CrashReportModelPagingData(PagingAdditionalMetadata.Empty, crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count));
         }
 
         return await _implementation.PaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);

@@ -29,7 +29,7 @@ public sealed class ModClientWithDemo : IModClient
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var mods = await DemoUser.GetMods().ToListAsync(ct);
-            return new ModModelPagingDataAPIResponse(new ModModelPagingData(0, mods, new PagingMetadata(1, (int) Math.Ceiling((double) mods.Count / (double) body.PageSize), body.PageSize, mods.Count)), string.Empty);
+            return new ModModelPagingDataAPIResponse(new ModModelPagingData(PagingAdditionalMetadata.Empty, mods, new PagingMetadata(1, (int) Math.Ceiling((double) mods.Count / (double) body.PageSize), body.PageSize, mods.Count)), string.Empty);
         }
 
         return await _implementation.ModPaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>()), ct);
@@ -95,7 +95,7 @@ public sealed class ModClientWithDemo : IModClient
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
-            return new ModNexusModsManualLinkModelPagingDataAPIResponse(new ModNexusModsManualLinkModelPagingData(0, new List<ModNexusModsManualLinkModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), string.Empty);
+            return new ModNexusModsManualLinkModelPagingDataAPIResponse(new ModNexusModsManualLinkModelPagingData(PagingAdditionalMetadata.Empty, new List<ModNexusModsManualLinkModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), string.Empty);
 
         return await _implementation.ModManualLinkPaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>()), ct);
     }
@@ -128,7 +128,7 @@ public sealed class ModClientWithDemo : IModClient
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
-            return new UserAllowedModsModelPagingDataAPIResponse(new UserAllowedModsModelPagingData(0, new List<UserAllowedModsModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), string.Empty);
+            return new UserAllowedModsModelPagingDataAPIResponse(new UserAllowedModsModelPagingData(PagingAdditionalMetadata.Empty, new List<UserAllowedModsModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), string.Empty);
 
         return await _implementation.AllowUserAModPaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>()), ct);
     }

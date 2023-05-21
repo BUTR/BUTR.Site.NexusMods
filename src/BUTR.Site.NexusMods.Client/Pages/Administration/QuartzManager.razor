@@ -97,7 +97,7 @@
     private DataGridPaging<QuartzExecutionLogEntity> _dataGridRef = default!;
     
     private async Task<DataGridPaging<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _quartzClient.HistoryPaginatedAsync(new PaginatedQuery(page, pageSize, filters, sortings), ct) is { Data: { } data } ? new(data.QueryExecutionTimeMilliseconds, data.Items, data.Metadata) : null;
+        await _quartzClient.HistoryPaginatedAsync(new PaginatedQuery(page, pageSize, filters, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
     
     private async Task OnSubmit()
     {

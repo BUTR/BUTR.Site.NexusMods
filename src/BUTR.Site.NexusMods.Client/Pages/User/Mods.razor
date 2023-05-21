@@ -117,10 +117,10 @@
     }
 
     private async Task<DataGridPaging<ModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _modClient.ModPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.QueryExecutionTimeMilliseconds, data.Items, data.Metadata) : null;
+        await _modClient.ModPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
     private async Task<DataGridPaging<AvailableModModel>.ItemsResponse?> GetAllowedMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _modClient.AvailableModsPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.QueryExecutionTimeMilliseconds, data.Items, data.Metadata) : null;
+        await _modClient.AvailableModsPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
     private async Task OnClick(ModModel? mod)
     {

@@ -34,7 +34,7 @@
     private DataGridPaging<ExposedModModel>? _dataGridPagingRef;
 
     private async Task<DataGridPaging<ExposedModModel>.ItemsResponse?> GetExposedMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _exposedModsClient.PaginatedAsync(new PaginatedQuery(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.QueryExecutionTimeMilliseconds, data.Items, data.Metadata) : null;
+        await _exposedModsClient.PaginatedAsync(new PaginatedQuery(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
     private async Task OnClick(ExposedModModel? mod)
     {

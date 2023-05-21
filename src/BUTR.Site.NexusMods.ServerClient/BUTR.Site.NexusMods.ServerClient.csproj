@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+  </ItemGroup>
+
   <Target Name="RemoveGenerateSources" BeforeTargets="CoreClean">
     <Delete Files="Clients.g.cs" />
   </Target>

@@ -62,7 +62,7 @@
                             return await fetch(defaultUri, {cache: 'no-cache'});
                         }
 
-                        let response = await fetch(withoutCompression ? defaultUri : `${defaultUri}.br`, {cache: 'no-cache'});
+                        let response = await fetch(withoutCompression ? defaultUri : `${defaultUri}.br`, { cache: 'no-cache' });
                         if (!response.ok) {
                             throw new Error(response.statusText);
                         }
@@ -72,7 +72,7 @@
                             const originalResponseArray = new Int8Array(originalResponseBuffer);
                             const decompressedResponseArray = BrotliDecode(originalResponseArray);
                             const contentType = type === 'dotnetwasm' ? 'application/wasm' : 'application/octet-stream';
-                            response = new Response(decompressedResponseArray, {headers: {'content-type': contentType}});
+                            response = new Response(decompressedResponseArray, {headers: {'content-type': contentType } });
                         }
 
                         loadedCount++;

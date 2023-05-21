@@ -74,8 +74,12 @@ public sealed record PagingData<T> where T : class
     [JsonIgnore]
     private long EndTime { get; set; }
 
+    private PagingAdditionalMetadata? _additionalMetadata = default!;
     [JsonPropertyOrder(3)]
-    public uint QueryExecutionTimeMilliseconds => (uint) Stopwatch.GetElapsedTime(StartTime, EndTime).TotalMilliseconds;
+    public PagingAdditionalMetadata AdditionalMetadata => _additionalMetadata ??= new()
+    {
+        QueryExecutionTimeMilliseconds = (uint) Stopwatch.GetElapsedTime(StartTime, EndTime).TotalMilliseconds
+    };
 
     private readonly IAsyncEnumerable<T> _items = default!;
     [JsonPropertyOrder(2)]

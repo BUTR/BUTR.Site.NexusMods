@@ -1,5 +1,4 @@
-﻿@using System.Diagnostics
-@typeparam TItem where TItem : class
+﻿@typeparam TItem where TItem : class
 
 @inject ILocalStorageService _localStorage
 
@@ -37,17 +36,21 @@
         {
             var curStart = (Metadata.CurrentPage - 1) * Metadata.PageSize + 1;
             var curEnd = Math.Min(Metadata.CurrentPage * Metadata.PageSize, Metadata.TotalCount);
-            <Text>@($"{curStart} - {curEnd} of {Metadata.TotalCount} items. Time {AdditionalMetadata.QueryExecutionTimeMilliseconds}ms")</Text>
+            <Text>@($"{curStart} - {curEnd} ({Values.Count}) of {Metadata.TotalCount} items. Time {AdditionalMetadata.QueryExecutionTimeMilliseconds}ms")</Text>
         }
     </TotalItemsTemplate>
     <LoadingTemplate>
         <Progress @ref="@_progressRef" Color="@Color.Primary" Value="@_progressValue" Max="100"></Progress>
     </LoadingTemplate>
+    <EmptyTemplate>
+        @if (_loadCancellationTokenSource is not null)
+        {
+            <Progress @ref="@_progressRef" Color="@Color.Primary" Value="@_progressValue" Max="100"></Progress>
+        }
+    </EmptyTemplate>
 </DataGrid> 
 
 @code {
-
-    public sealed record ItemsResponse(PagingMetadata Metadata, ICollection<TItem> Items, PagingAdditionalMetadata AdditionalMetadata);
 
     [Parameter]
     public bool Resizable { get; set; } = false;
@@ -84,7 +87,7 @@
     public Func<IEnumerable<DataGridColumnInfo>, IEnumerable<Filtering>>? GetFilters { get; set; }
 
     [Parameter]
-    public Func<int, int, ICollection<Filtering>, ICollection<Sorting>, CancellationToken, Task<ItemsResponse>>? GetItems { get; set; }
+    public Func<int, int, ICollection<Filtering>, ICollection<Sorting>, CancellationToken, Task<PagingStreamingData<TItem>>>? GetItems { get; set; }
 
     [Parameter]
     public int DefaultPageSize { get; set; } = UserSettings.DefaultPageSize;
@@ -97,19 +100,20 @@
     
     [Parameter]
     public PagingMetadata Metadata { get; set; }
-
+    
     [Parameter]
     public PagingAdditionalMetadata AdditionalMetadata { get; set; }
 
     public TItem? Value;
-    public ICollection<TItem> Values = default!;
+    public List<TItem> Values = new();
 
+    private CancellationTokenSource? _loadCancellationTokenSource;
     private int _progressValue = default!;
 
     private DataGrid<TItem> _dataGridRef = default!;
     private Progress _progressRef = default!;
 
-    public DataGridPaging()
+    public DataGridStreamingPaging()
     {
         Metadata = new PagingMetadata(1, 0, DefaultPageSize, 0);
         AdditionalMetadata = PagingAdditionalMetadata.Empty;
@@ -132,17 +136,43 @@
                 .Select(x => new Sorting(x.SortField, x.SortDirection.ToSortingType()))
                 .ToArray();
             var filterings = GetFilters is not null ? GetFilters(e.Columns).ToArray() : Array.Empty<Filtering>();
-            await LoadItems(e.Page, e.PageSize, filterings, sortings, CancellationToken.None);
+            
+            if (_loadCancellationTokenSource is not null && !_loadCancellationTokenSource.IsCancellationRequested)
+            {
+                await _loadCancellationTokenSource.CancelAsync();
+                _loadCancellationTokenSource.Dispose();
+                _loadCancellationTokenSource = null;
+            }
+            
+            _loadCancellationTokenSource = new CancellationTokenSource();
+            await LoadItems(e.Page, e.PageSize, filterings, sortings, _loadCancellationTokenSource.Token);
         }
     }
 
     private async Task LoadItems(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
         await using var progress = ProgressUtils.DoProgress(x => _progressValue = x, () => _progressValue, () => InvokeAsync(StateHasChanged));
-        var response = (GetItems is not null ? await GetItems(page, pageSize, filterings, sortings, ct) : null) ?? new(PagingMetadata.Empty, Array.Empty<TItem>(), PagingAdditionalMetadata.Empty);
-        Metadata = response.Metadata;
-        Values = response.Items;
-        AdditionalMetadata = response.AdditionalMetadata;
+        
+        Values.Clear();
+        StateHasChanged();
+
+        var response = (GetItems is not null ? await GetItems(page, pageSize, filterings, sortings, ct) : null) ?? PagingStreamingData<TItem>.Empty;
+        Metadata = await response.Metadata;
+        var counter = 0;
+        var items = await response.Items;
+        await foreach (var item in items.WithCancellation(ct))
+        {
+            Values.Add(item);
+            
+            counter++;
+            if (counter >= 10)
+            {
+                counter = 0;
+                StateHasChanged();
+            }
+        }
+        AdditionalMetadata = await response.AdditionalMetadata;
+        StateHasChanged();
     }
 
     private async Task<int> GetPageSizeInternal()

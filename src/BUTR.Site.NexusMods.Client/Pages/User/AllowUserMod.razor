@@ -149,7 +149,7 @@
     }
 
     private async Task<DataGridPaging<UserAllowedModsModel>.ItemsResponse?> GetAllowUserMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _modClient.AllowUserAModPaginatedAsync(new(page, pageSize, filters, sortings), ct) is { Data: { } data } ? new(data.QueryExecutionTimeMilliseconds, data.Items, data.Metadata) : null;
+        await _modClient.AllowUserAModPaginatedAsync(new(page, pageSize, filters, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
     private async Task OnDisallow(ButtonRowContext<UserAllowedModsModel?> context)
     {

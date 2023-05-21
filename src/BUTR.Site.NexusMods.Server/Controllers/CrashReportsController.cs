@@ -4,18 +4,22 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -44,16 +48,19 @@ public sealed class CrashReportsController : ControllerExtended
 
     private readonly ILogger _logger;
     private readonly AppDbContext _dbContext;
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
 
-    public CrashReportsController(ILogger<CrashReportsController> logger, AppDbContext dbContext)
+    public CrashReportsController(ILogger<CrashReportsController> logger, AppDbContext dbContext, IOptions<JsonSerializerOptions> jsonSerializerOptions)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
     }
 
     [HttpPost("Paginated")]
-    [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<CrashReportModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    [Produces("application/x-butr-paging-json")]
+    [ProducesResponseType(typeof(PagingData<CrashReportModel>), 200)]
+    public async Task<StreamingJsonActionResult> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var page = query.Page;
         var pageSize = Math.Max(Math.Min(query.PageSize, 50), 5);
@@ -97,19 +104,36 @@ public sealed class CrashReportsController : ControllerExtended
                                _dbContext.Set<NexusModsUserAllowedModuleIdsEntity>().Any(y => y.NexusModsUserId == userId && x.ModIds.Any(z => y.AllowedModuleIds.Contains(z))));
 
         var paginated = await dbQuery.Prepare().PaginatedAsync(page, pageSize, ct);
-
-        return APIPagingResponse(paginated, items => items.Select(x => new CrashReportModel
+        
+        return Multipart(new Func<Stream, CancellationToken, Task>[]
         {
-            Id = x.Id,
-            Version = x.Version,
-            GameVersion = x.GameVersion,
-            Exception = x.Exception,
-            Date = x.CreatedAt,
-            Url = x.Url,
-            InvolvedModules = x.InvolvedModIds.ToImmutableArray(),
-            Status = x.Status,
-            Comment = x.Comment
-        }));
+            async (stream, ct2) =>
+            {
+                await JsonSerializer.SerializeAsync(stream, paginated.Metadata, _jsonSerializerOptions, ct2);
+            },
+            async (stream, ct2) =>
+            {
+                await JsonSerializer.SerializeAsync(stream, paginated.Items.Select(x => new CrashReportModel
+                {
+                    Id = x.Id,
+                    Version = x.Version,
+                    GameVersion = x.GameVersion,
+                    Exception = x.Exception,
+                    Date = x.CreatedAt,
+                    Url = x.Url,
+                    InvolvedModules = x.InvolvedModIds.AsImmutableArray(),
+                    Status = x.Status,
+                    Comment = x.Comment
+                }), _jsonSerializerOptions, ct2);
+            },
+            async (stream, ct2) =>
+            {
+                await JsonSerializer.SerializeAsync(stream, new
+                {
+                    QueryExecutionTimeMilliseconds = Stopwatch.GetElapsedTime(paginated.StartTime).Milliseconds
+                }, _jsonSerializerOptions, ct2);
+            }
+        });
     }
 
     [HttpGet("Autocomplete")]
