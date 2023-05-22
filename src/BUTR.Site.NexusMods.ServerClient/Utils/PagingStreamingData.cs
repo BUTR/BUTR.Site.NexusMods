@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.ServerClient.LazyTasks;
+﻿using BUTR.Site.NexusMods.ServerClient.LazyTasks;
 
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +11,7 @@ namespace BUTR.Site.NexusMods.ServerClient.Utils;
 public sealed record PagingStreamingData<T> where T : class
 {
     public static readonly PagingStreamingData<T> Empty = Create();
-    
+
     private static PagingStreamingData<T> Create()
     {
         LazyTask<APIStreamingResponse> GetStatus() => LazyTask<APIStreamingResponse>.FromResult(new APIStreamingResponse(string.Empty));
@@ -27,7 +27,7 @@ public sealed record PagingStreamingData<T> where T : class
             AdditionalMetadata = GetQueryExecutionTimeMilliseconds(),
         };
     }
-    
+
     public static PagingStreamingData<T> Create(PagingMetadata pagingMetadata, IAsyncEnumerable<T> items, PagingAdditionalMetadata additionalMetadata)
     {
         LazyTask<APIStreamingResponse> GetStatus() => LazyTask<APIStreamingResponse>.FromResult(new APIStreamingResponse(string.Empty));
@@ -43,7 +43,7 @@ public sealed record PagingStreamingData<T> where T : class
             AdditionalMetadata = GetQueryExecutionTimeMilliseconds(),
         };
     }
-    
+
     public static PagingStreamingData<T> Create(HttpResponseMessage response, JsonSerializerOptions jsonSerializerOptions, CancellationToken ct)
     {
         var streamingJsonContext = new StreamingJsonContext(response);
@@ -53,18 +53,18 @@ public sealed record PagingStreamingData<T> where T : class
         var getMetadata = GetMetadata();
         var getItems = GetItems();
         var getQueryExecutionTimeMilliseconds = GetQueryExecutionTimeMilliseconds();
-        
+
         async LazyTask<APIStreamingResponse> GetStatus()
         {
             var stream = await streamingJsonContext.ReadNewLineJsonAsync(ct);
             var result = await JsonSerializer.DeserializeAsync<APIStreamingResponse>(stream, jsonSerializerOptions, ct);
             hasError = result is null || !string.IsNullOrEmpty(result.HumanReadableError);
             return result!;
-        }        
+        }
         async LazyTask<PagingMetadata> GetMetadata()
         {
             if (hasError) return PagingMetadata.Empty;
-            
+
             await getStatus;
 
             var stream = await streamingJsonContext.ReadNewLineJsonAsync(ct);
@@ -74,28 +74,28 @@ public sealed record PagingStreamingData<T> where T : class
         async LazyTask<IAsyncEnumerable<T>> GetItems()
         {
             if (hasError) return AsyncEnumerable.Empty<T>();
-            
+
             await getStatus;
             await getMetadata;
-            
+
             var stream = await streamingJsonContext.ReadNewLineJsonAsync(ct);
             return new OneTimeEnumerable<T>(JsonSerializer.DeserializeAsyncEnumerable<T>(stream, jsonSerializerOptions, ct)!);
         }
         async LazyTask<PagingAdditionalMetadata> GetQueryExecutionTimeMilliseconds()
         {
             if (hasError) return PagingAdditionalMetadata.Empty;
-            
+
             await getStatus;
             await getMetadata;
             var items = (await getItems as OneTimeEnumerable<T>)!;
             await items.Enumeration.Task;
-            
+
             var stream = await streamingJsonContext.ReadNewLineJsonAsync(ct);
             var result = await JsonSerializer.DeserializeAsync<PagingAdditionalMetadata>(stream, jsonSerializerOptions, ct);
             await streamingJsonContext.DisposeAsync();
             return result!;
         }
-        
+
         return new PagingStreamingData<T>
         {
             Status = getStatus,
@@ -104,7 +104,7 @@ public sealed record PagingStreamingData<T> where T : class
             AdditionalMetadata = getQueryExecutionTimeMilliseconds,
         };
     }
-    
+
     public required LazyTask<APIStreamingResponse> Status { get; init; }
     public required LazyTask<PagingMetadata> Metadata { get; init; }
     public required LazyTask<IAsyncEnumerable<T>> Items { get; init; }

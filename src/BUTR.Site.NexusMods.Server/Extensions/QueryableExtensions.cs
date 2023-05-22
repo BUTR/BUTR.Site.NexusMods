@@ -76,7 +76,7 @@ public static class QueryableExtensions
             }
         };
     }
-    
+
     public static Task<ImmutableArray<TSource>> ToImmutableArrayAsync<TSource>(this IQueryable<TSource> source, CancellationToken ct = default)
     {
         return source.AsAsyncEnumerable().ToImmutableArrayAsync(ct);

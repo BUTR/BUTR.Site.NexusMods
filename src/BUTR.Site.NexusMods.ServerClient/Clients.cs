@@ -31,12 +31,12 @@ public partial class CrashReportsClient
     }
 
     protected virtual void OnPrepareRequest(HttpClient client, HttpRequestMessage request, System.Text.StringBuilder urlBuilder) { }
-    
+
     partial void PrepareRequest(HttpClient client, HttpRequestMessage request, System.Text.StringBuilder urlBuilder)
     {
         OnPrepareRequest(client, request, urlBuilder);
     }
-    
+
     public virtual async Task<PagingStreamingData<CrashReportModel>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken cancellationToken = default)
     {
         var urlBuilder_ = new System.Text.StringBuilder();
@@ -75,7 +75,7 @@ public partial class CrashReportsClient
 
                     ProcessResponse(client_, response_);
 
-                    var status_ = (int)response_.StatusCode;
+                    var status_ = (int) response_.StatusCode;
                     if (status_ == 200)
                     {
                         try
@@ -85,19 +85,19 @@ public partial class CrashReportsClient
                         catch (System.Text.Json.JsonException exception)
                         {
                             var message = "Could not deserialize the response body stream as " + typeof(PagingStreamingData<CrashReportModel>).FullName + ".";
-                            throw new ApiException(message, (int)response_.StatusCode, string.Empty, headers_, exception);
+                            throw new ApiException(message, (int) response_.StatusCode, string.Empty, headers_, exception);
                         }
                     }
                     else
                     if (status_ == 401)
                     {
-                        string responseText_ = ( response_.Content == null ) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
                         throw new ApiException("User not authenticated.", status_, responseText_, headers_, null);
                     }
                     else
                     if (status_ == 403)
                     {
-                        string responseText_ = ( response_.Content == null ) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
                         throw new ApiException("User not authorized to access this endpoint.", status_, responseText_, headers_, null);
                     }
                     else

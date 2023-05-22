@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -17,11 +17,11 @@ internal class StreamingJsonContext : IDisposable, IAsyncDisposable
     {
         _response = response;
     }
-    
+
     public async Task<Stream> ReadNewLineJsonAsync(CancellationToken ct)
     {
         _stream ??= await _response.Content.ReadAsStreamAsync(ct);
-            
+
         if (_current is null)
         {
             _current = new StreamWithNewLineEnding(_stream);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +33,6 @@ internal class OneTimeEnumerable<T> : IAsyncEnumerable<T>
     {
         _enumerator = new OneTimeEnumerator(inner.GetAsyncEnumerator(), () => Enumeration.SetResult());
     }
-            
+
     public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default) => _enumerator;
 }

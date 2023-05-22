@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.Server.Contexts;
+﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +18,7 @@ public static class AppDbContextExtensions
 
     public static IQueryable<string> AutocompleteStartsWith<TEntity, TProperty>(this AppDbContext dbContext, Expression<Func<TEntity, TProperty>> property, string value)
     {
-        if (property is not LambdaExpression {Body: MemberExpression {Member: PropertyInfo propertyInfo}}) return Empty;
+        if (property is not LambdaExpression { Body: MemberExpression { Member: PropertyInfo propertyInfo } }) return Empty;
         if (!property.Type.IsGenericType || property.Type.GenericTypeArguments.Length != 2) return Empty;
 
         var autocompleteEntity = dbContext.Model.FindEntityType(typeof(AutocompleteEntity))!;

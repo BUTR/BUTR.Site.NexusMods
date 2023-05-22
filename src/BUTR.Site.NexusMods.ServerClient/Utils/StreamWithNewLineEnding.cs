@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using System.IO;
 using System.Threading;
@@ -9,7 +9,7 @@ namespace BUTR.Site.NexusMods.ServerClient.Utils;
 internal sealed partial class StreamWithNewLineEnding : Stream
 {
     private static readonly byte[] NewLine = "\r\n"u8.ToArray();
-    
+
     private readonly Stream _streamImplementation;
     private bool _endRead = false;
 
@@ -31,7 +31,7 @@ internal sealed partial class StreamWithNewLineEnding : Stream
     public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
         if (_endRead) return 0;
-        
+
         if (!_endRead && _leftoverBytes is not null && !_leftoverBytes.Memory.IsEmpty)
         {
             var leftoverBytesLength = _leftoverBytesLength;
@@ -40,13 +40,13 @@ internal sealed partial class StreamWithNewLineEnding : Stream
             ResetLeftover();
             return leftoverBytesLength;
         }
-        
-        
+
+
         var length = await _streamImplementation.ReadAsync(buffer, cancellationToken);
         var memory = buffer.Slice(0, length);
         if (memory.Span.IndexOfAny(NewLine) is not (var idx and not -1)) return length;
-        
-        
+
+
         _endRead = true;
         var realLength = idx + NewLine.Length;
         var leftover = buffer.Slice(realLength, length - realLength);
@@ -60,7 +60,7 @@ internal sealed partial class StreamWithNewLineEnding : Stream
         leftover.CopyTo(_leftoverBytes.Memory);
         _leftoverBytesLength = leftover.Length;
     }
-    
+
     private void ResetLeftover()
     {
         _leftoverBytes!.Dispose();

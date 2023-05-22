@@ -8,7 +8,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions;
 public static class BlobReaderExtensions
 {
     public static unsafe Span<char> GetStringUTF16Span(this in BlobReader reader) => new(reader.CurrentPointer, reader.Length);
-    
+
     [SkipLocalsInit]
     public static unsafe Span<char> GetStringUTF8Span(this in BlobReader reader)
     {

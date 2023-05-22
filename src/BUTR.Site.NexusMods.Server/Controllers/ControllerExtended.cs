@@ -23,7 +23,7 @@ public class ControllerExtended : ControllerBase
     {
         return new StreamingJsonActionResult(contents, mime);
     }
-    
+
     [NonAction]
     protected ActionResult<APIResponse<PagingData<TResult>?>> APIPagingResponse<TResult, TSource>(Paging<TSource> data, Func<IAsyncEnumerable<TSource>, IAsyncEnumerable<TResult>> func)
         where TResult : class
@@ -31,7 +31,7 @@ public class ControllerExtended : ControllerBase
     {
         return APIResponse(PagingData<TResult>.Create<TSource>(data, func));
     }
-    
+
     [NonAction]
     protected StreamingJsonActionResult APIPagingResponseStreaming<TResult, TSource>(Paging<TSource> data, Func<IAsyncEnumerable<TSource>, IAsyncEnumerable<TResult>> func)
         where TResult : class

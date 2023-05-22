@@ -58,15 +58,15 @@ public sealed class CrashReportsController : ControllerExtended
         var pageSize = Math.Max(Math.Min(query.PageSize, 50), 5);
         var filters = query.Filters ?? Enumerable.Empty<Filtering>();
         var sortings = query.Sotings is null || query.Sotings.Count == 0
-            ? new List<Sorting> {new() {Property = nameof(CrashReportEntity.CreatedAt), Type = SortingType.Descending}}
+            ? new List<Sorting> { new() { Property = nameof(CrashReportEntity.CreatedAt), Type = SortingType.Descending } }
             : query.Sotings;
 
         IQueryable<UserCrashReportView> DbQueryBase(Expression<Func<CrashReportEntity, bool>> predicate)
         {
             return _dbContext.Set<CrashReportEntity>()
                 .Where(predicate)
-                .GroupJoin(_dbContext.Set<NexusModsUserCrashReportEntity>(), cre => cre.Id, ucr => ucr.CrashReport.Id, (cre, ucr) => new {cre, ucr})
-                .SelectMany(x => x.ucr.DefaultIfEmpty(), (cre, ucr) => new {cre.cre, ucr})
+                .GroupJoin(_dbContext.Set<NexusModsUserCrashReportEntity>(), cre => cre.Id, ucr => ucr.CrashReport.Id, (cre, ucr) => new { cre, ucr })
+                .SelectMany(x => x.ucr.DefaultIfEmpty(), (cre, ucr) => new { cre.cre, ucr })
                 .Select(x => new UserCrashReportView
                 {
                     Id = x.cre.Id,
@@ -110,15 +110,15 @@ public sealed class CrashReportsController : ControllerExtended
             Comment = x.Comment
         }));
     }
-    
+
     [HttpPost("Paginated")]
     [Produces("application/json")]
     public async Task<ActionResult<APIResponse<PagingData<CrashReportModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var (paginated, transform) = await PaginatedBase(query, ct);
         return APIPagingResponse(paginated, transform);
-    }    
-    
+    }
+
     [HttpPost("PaginatedStreaming")]
     [Produces("application/x-ndjson-butr-paging")]
     [ProducesResponseType(typeof(PagingData<CrashReportModel>), 200)]

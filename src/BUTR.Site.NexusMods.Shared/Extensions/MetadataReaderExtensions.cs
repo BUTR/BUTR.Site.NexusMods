@@ -12,7 +12,7 @@ public static class MetadataReaderExtensions
         var reader = metadataReader.GetBlobReader(stringHandle);
         return new(reader.CurrentPointer, reader.Length);
     }
-    
+
     [SkipLocalsInit]
     public static unsafe Span<char> GetStringUTF8Span(this MetadataReader metadataReader, StringHandle stringHandle)
     {
@@ -28,13 +28,13 @@ public static class MetadataReaderExtensions
         var reader = metadataReader.GetBlobReader(stringHandle);
         return new(reader.CurrentPointer, reader.Length);
     }
-    
+
     public static unsafe Span<char> GetStringUTF16Span(this MetadataReader metadataReader, BlobHandle blobHandle)
     {
         var reader = metadataReader.GetBlobReader(blobHandle);
         return new(reader.CurrentPointer, reader.Length);
     }
-    
+
     [SkipLocalsInit]
     public static unsafe Span<char> GetStringUTF8Span(this MetadataReader metadataReader, BlobHandle blobHandle)
     {
