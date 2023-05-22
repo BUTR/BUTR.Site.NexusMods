@@ -19,11 +19,6 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 
 public class ControllerExtended : ControllerBase
 {
-    protected StreamingJsonActionResult StreamingJson(IEnumerable<Func<Stream, CancellationToken, Task>> contents, string mime = "application/x-ndjson")
-    {
-        return new StreamingJsonActionResult(contents, mime);
-    }
-
     [NonAction]
     protected ActionResult<APIResponse<PagingData<TResult>?>> APIPagingResponse<TResult, TSource>(Paging<TSource> data, Func<IAsyncEnumerable<TSource>, IAsyncEnumerable<TResult>> func)
         where TResult : class
@@ -49,7 +44,7 @@ public class ControllerExtended : ControllerBase
             }, options.JsonSerializerOptions, ct_);
         }
         
-        return StreamingJson(GetContent(), "application/x-ndjson-butr-paging");
+        return new StreamingJsonActionResult(GetContent(), "application/x-ndjson-butr-paging");
     }
 
     [NonAction]
