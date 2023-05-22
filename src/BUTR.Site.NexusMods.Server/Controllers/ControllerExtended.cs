@@ -15,7 +15,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 
 public class ControllerExtended : ControllerBase
 {
-    protected StreamingJsonActionResult Multipart(IEnumerable<Func<Stream, CancellationToken, Task>> contents, string mime = "application/x-butr-paging-json")
+    protected StreamingJsonActionResult Multipart(IEnumerable<Func<Stream, CancellationToken, Task>> contents, string mime = "application/x-ndjson")
     {
         return new StreamingJsonActionResult(contents, mime);
     }

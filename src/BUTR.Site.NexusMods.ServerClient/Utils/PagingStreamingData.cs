@@ -81,7 +81,7 @@ public sealed record PagingStreamingData<T> where T : class
         };
     }
     
-    public required  LazyTask<PagingMetadata> Metadata { get; init; }
+    public required LazyTask<PagingMetadata> Metadata { get; init; }
     public required LazyTask<IAsyncEnumerable<T>> Items { get; init; }
     public required LazyTask<PagingAdditionalMetadata> AdditionalMetadata { get; init; }
 }

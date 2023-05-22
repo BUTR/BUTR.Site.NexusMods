@@ -58,7 +58,7 @@ public sealed class CrashReportsController : ControllerExtended
     }
 
     [HttpPost("Paginated")]
-    [Produces("application/x-butr-paging-json")]
+    [Produces("application/x-ndjson-butr-paging")]
     [ProducesResponseType(typeof(PagingData<CrashReportModel>), 200)]
     public async Task<StreamingJsonActionResult> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
     {
@@ -133,7 +133,7 @@ public sealed class CrashReportsController : ControllerExtended
                     QueryExecutionTimeMilliseconds = Stopwatch.GetElapsedTime(paginated.StartTime).Milliseconds
                 }, _jsonSerializerOptions, ct2);
             }
-        });
+        }, "application/x-ndjson-butr-paging");
     }
 
     [HttpGet("Autocomplete")]

@@ -53,7 +53,7 @@ public partial class CrashReportsClient
                 content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                 request_.Content = content_;
                 request_.Method = new System.Net.Http.HttpMethod("POST");
-                request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/x-butr-paging-json"));
+                request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/x-ndjson-butr-paging"));
 
                 PrepareRequest(client_, request_, urlBuilder_);
 

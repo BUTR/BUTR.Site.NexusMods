@@ -62,7 +62,7 @@ internal sealed partial class StreamWithNewLineEnding : Stream
     
     private void ResetLeftover()
     {
-        _leftoverBytes.Dispose();
+        _leftoverBytes!.Dispose();
         _leftoverBytes = null;
         _leftoverBytesLength = 0;
     }
