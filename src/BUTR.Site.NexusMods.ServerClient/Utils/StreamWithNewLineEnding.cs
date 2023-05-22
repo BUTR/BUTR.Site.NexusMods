@@ -32,23 +32,27 @@ internal sealed partial class StreamWithNewLineEnding : Stream
     {
         if (_endRead) return 0;
 
-        if (!_endRead && _leftoverBytes is not null && !_leftoverBytes.Memory.IsEmpty)
+        var length = 0;
+        var newLineIdx = -1;
+        if (_leftoverBytes is not null && !_leftoverBytes.Memory.IsEmpty)
         {
-            var leftoverBytesLength = _leftoverBytesLength;
+            length = _leftoverBytesLength;
             _leftoverBytes.Memory.CopyTo(buffer);
-            if (_leftoverBytes.Memory.Span.IndexOfAny(NewLine) != -1) _endRead = true;
             ResetLeftover();
-            return leftoverBytesLength;
+            var memory = buffer.Slice(0, length);
+            if (memory.Span.IndexOfAny(NewLine) is not (var idx and not -1)) return length;
+            newLineIdx = idx;
+        }
+        else
+        {
+            length = await _streamImplementation.ReadAsync(buffer, cancellationToken);
+            var memory = buffer.Slice(0, length);
+            if (memory.Span.IndexOfAny(NewLine) is not (var idx and not -1)) return length;
+            newLineIdx = idx;
         }
 
-
-        var length = await _streamImplementation.ReadAsync(buffer, cancellationToken);
-        var memory = buffer.Slice(0, length);
-        if (memory.Span.IndexOfAny(NewLine) is not (var idx and not -1)) return length;
-
-
         _endRead = true;
-        var realLength = idx + NewLine.Length;
+        var realLength = newLineIdx + NewLine.Length;
         var leftover = buffer.Slice(realLength, length - realLength);
         InitializeLeftover(leftover);
         return realLength;
