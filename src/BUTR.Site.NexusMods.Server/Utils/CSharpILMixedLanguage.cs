@@ -82,7 +82,7 @@ internal static class CSharpILMixedLanguage
                 WriteCode(csharpOutput, settings, st);
                 var mapping = decompiler.CreateSequencePoints(st).FirstOrDefault(kvp => (kvp.Key.MoveNextMethod ?? kvp.Key.Method)?.MetadataToken == handle);
                 sequencePoints = mapping.Value ?? (IList<ICSharpCode.Decompiler.DebugInfo.SequencePoint>) EmptyList<ICSharpCode.Decompiler.DebugInfo.SequencePoint>.Instance;
-                codeLines = csharpOutput.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                codeLines = csharpOutput.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None); // TODO:
                 base.Disassemble(module, handle);
             }
             finally

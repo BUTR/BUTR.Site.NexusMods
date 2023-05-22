@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.ServerClient.Utils;
 
-internal sealed partial class StreamWithNewLineEnding : Stream
+internal sealed partial class StreamWithCrLfEnding : Stream
 {
-    private static readonly byte[] NewLine = "\r\n"u8.ToArray();
+    private static readonly byte[] CrLf = "\r\n"u8.ToArray();
 
     private readonly Stream _streamImplementation;
     private bool _endRead = false;
@@ -16,11 +16,11 @@ internal sealed partial class StreamWithNewLineEnding : Stream
     public IMemoryOwner<byte>? _leftoverBytes;
     public int _leftoverBytesLength;
 
-    public StreamWithNewLineEnding(Stream stream)
+    public StreamWithCrLfEnding(Stream stream)
     {
         _streamImplementation = stream;
     }
-    public StreamWithNewLineEnding(IMemoryOwner<byte> leftoverBytes, int leftoverBytesLength, Stream stream)
+    public StreamWithCrLfEnding(IMemoryOwner<byte> leftoverBytes, int leftoverBytesLength, Stream stream)
     {
         _leftoverBytes = leftoverBytes;
         _leftoverBytesLength = leftoverBytesLength;
@@ -33,26 +33,26 @@ internal sealed partial class StreamWithNewLineEnding : Stream
         if (_endRead) return 0;
 
         var length = 0;
-        var newLineIdx = -1;
+        var crLfIdx = -1;
         if (_leftoverBytes is not null && !_leftoverBytes.Memory.IsEmpty)
         {
             length = _leftoverBytesLength;
             _leftoverBytes.Memory.CopyTo(buffer);
             ResetLeftover();
             var memory = buffer.Slice(0, length);
-            if (memory.Span.IndexOfAny(NewLine) is not (var idx and not -1)) return length;
-            newLineIdx = idx;
+            if (memory.Span.IndexOfAny(CrLf) is not (var idx and not -1)) return length;
+            crLfIdx = idx;
         }
         else
         {
             length = await _streamImplementation.ReadAsync(buffer, cancellationToken);
             var memory = buffer.Slice(0, length);
-            if (memory.Span.IndexOfAny(NewLine) is not (var idx and not -1)) return length;
-            newLineIdx = idx;
+            if (memory.Span.IndexOfAny(CrLf) is not (var idx and not -1)) return length;
+            crLfIdx = idx;
         }
 
         _endRead = true;
-        var realLength = newLineIdx + NewLine.Length;
+        var realLength = crLfIdx + CrLf.Length;
         var leftover = buffer.Slice(realLength, length - realLength);
         InitializeLeftover(leftover);
         return realLength;
