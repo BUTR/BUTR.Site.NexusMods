@@ -38,28 +38,18 @@ public class ControllerExtended : ControllerBase
         where TSource : class
     {
         var options = HttpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value;
-        return StreamingJson(new Func<Stream, CancellationToken, Task>[]
+        IEnumerable<Func<Stream, CancellationToken, Task>> GetContent()
         {
-            async (stream, ct_) =>
+            yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, new APIStreamingResponse(string.Empty), options.JsonSerializerOptions, ct_);
+            yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, data.Metadata, options.JsonSerializerOptions, ct_);
+            yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, func(data.Items), options.JsonSerializerOptions, ct_);
+            yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, new PagingAdditionalMetadata
             {
-                await JsonSerializer.SerializeAsync(stream, new APIStreamingResponse(string.Empty), options.JsonSerializerOptions, ct_);
-            },
-            async (stream, ct_) =>
-            {
-                await JsonSerializer.SerializeAsync(stream, data.Metadata, options.JsonSerializerOptions, ct_);
-            },
-            async (stream, ct_) =>
-            {
-                await JsonSerializer.SerializeAsync(stream, func(data.Items), options.JsonSerializerOptions, ct_);
-            },
-            async (stream, ct_) =>
-            {
-                await JsonSerializer.SerializeAsync(stream, new
-                {
-                    QueryExecutionTimeMilliseconds = Stopwatch.GetElapsedTime(data.StartTime).Milliseconds
-                }, options.JsonSerializerOptions, ct_);
-            }
-        }, "application/x-ndjson-butr-paging");
+                QueryExecutionTimeMilliseconds = (uint) Stopwatch.GetElapsedTime(data.StartTime).Milliseconds
+            }, options.JsonSerializerOptions, ct_);
+        }
+        
+        return StreamingJson(GetContent(), "application/x-ndjson-butr-paging");
     }
 
     [NonAction]

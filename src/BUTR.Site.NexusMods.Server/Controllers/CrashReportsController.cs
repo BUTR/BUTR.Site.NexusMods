@@ -121,7 +121,6 @@ public sealed class CrashReportsController : ControllerExtended
 
     [HttpPost("PaginatedStreaming")]
     [Produces("application/x-ndjson-butr-paging")]
-    [ProducesResponseType(typeof(PagingData<CrashReportModel>), 200)]
     [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<StreamingJsonActionResult> PaginatedStreaming([FromBody] PaginatedQuery query, CancellationToken ct)
     {
