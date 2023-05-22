@@ -117,7 +117,7 @@
     }
 
     private async Task<PagingStreamingData<CrashReportModel>?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _crashReportsClient.Paginated2Async(new(page, pageSize, filterings, sortings), ct);
+        await _crashReportsClient.PaginatedStreamingAsync(new(page, pageSize, filterings, sortings), ct);
 
     private async Task<ICollection<string>> GetAutocompleteValues(string filter) => await _crashReportsClient.AutocompleteAsync(filter) is { Data: { } data } ? data : Array.Empty<string>();
 

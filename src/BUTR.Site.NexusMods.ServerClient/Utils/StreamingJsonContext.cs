@@ -18,7 +18,7 @@ internal class StreamingJsonContext : IDisposable, IAsyncDisposable
         _response = response;
     }
     
-    public async Task<Stream> ReadJsonAsync(CancellationToken ct)
+    public async Task<Stream> ReadNewLineJsonAsync(CancellationToken ct)
     {
         _stream ??= await _response.Content.ReadAsStreamAsync(ct);
             

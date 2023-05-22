@@ -11,15 +11,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -48,33 +45,28 @@ public sealed class CrashReportsController : ControllerExtended
 
     private readonly ILogger _logger;
     private readonly AppDbContext _dbContext;
-    private readonly JsonSerializerOptions _jsonSerializerOptions;
 
-    public CrashReportsController(ILogger<CrashReportsController> logger, AppDbContext dbContext, IOptions<JsonSerializerOptions> jsonSerializerOptions)
+    public CrashReportsController(ILogger<CrashReportsController> logger, AppDbContext dbContext)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
     }
 
-    [HttpPost("Paginated")]
-    [Produces("application/x-ndjson-butr-paging")]
-    [ProducesResponseType(typeof(PagingData<CrashReportModel>), 200)]
-    public async Task<StreamingJsonActionResult> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    private async Task<BasePaginated<UserCrashReportView, CrashReportModel>> PaginatedBase(PaginatedQuery query, CancellationToken ct)
     {
         var page = query.Page;
         var pageSize = Math.Max(Math.Min(query.PageSize, 50), 5);
         var filters = query.Filters ?? Enumerable.Empty<Filtering>();
         var sortings = query.Sotings is null || query.Sotings.Count == 0
-            ? new List<Sorting> { new() { Property = nameof(CrashReportEntity.CreatedAt), Type = SortingType.Descending } }
+            ? new List<Sorting> {new() {Property = nameof(CrashReportEntity.CreatedAt), Type = SortingType.Descending}}
             : query.Sotings;
 
         IQueryable<UserCrashReportView> DbQueryBase(Expression<Func<CrashReportEntity, bool>> predicate)
         {
             return _dbContext.Set<CrashReportEntity>()
                 .Where(predicate)
-                .GroupJoin(_dbContext.Set<NexusModsUserCrashReportEntity>(), cre => cre.Id, ucr => ucr.CrashReport.Id, (cre, ucr) => new { cre, ucr })
-                .SelectMany(x => x.ucr.DefaultIfEmpty(), (cre, ucr) => new { cre.cre, ucr })
+                .GroupJoin(_dbContext.Set<NexusModsUserCrashReportEntity>(), cre => cre.Id, ucr => ucr.CrashReport.Id, (cre, ucr) => new {cre, ucr})
+                .SelectMany(x => x.ucr.DefaultIfEmpty(), (cre, ucr) => new {cre.cre, ucr})
                 .Select(x => new UserCrashReportView
                 {
                     Id = x.cre.Id,
@@ -99,41 +91,42 @@ public sealed class CrashReportsController : ControllerExtended
         var dbQuery = User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator)
             ? DbQueryBase(x => true)
             : DbQueryBase(x => _dbContext.Set<NexusModsModEntity>().Any(y => y.UserIds.Contains(userId) && x.ModNexusModsIds.Contains(y.NexusModsModId)) ||
-                               _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>().Any(y => x.ModNexusModsIds.Contains(y.NexusModsModId) && y.AllowedNexusModsUserIds.Contains(userId)) ||
-                               _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().Any(y => _dbContext.Set<NexusModsModEntity>().Any(z => z.UserIds.Contains(userId) && z.NexusModsModId == y.NexusModsModId) && x.ModIds.Contains(y.ModuleId)) ||
+                               _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
+                                   .Any(y => x.ModNexusModsIds.Contains(y.NexusModsModId) && y.AllowedNexusModsUserIds.Contains(userId)) ||
+                               _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().Any(y =>
+                                   _dbContext.Set<NexusModsModEntity>().Any(z => z.UserIds.Contains(userId) && z.NexusModsModId == y.NexusModsModId) && x.ModIds.Contains(y.ModuleId)) ||
                                _dbContext.Set<NexusModsUserAllowedModuleIdsEntity>().Any(y => y.NexusModsUserId == userId && x.ModIds.Any(z => y.AllowedModuleIds.Contains(z))));
 
-        var paginated = await dbQuery.Prepare().PaginatedAsync(page, pageSize, ct);
-        
-        return Multipart(new Func<Stream, CancellationToken, Task>[]
+        return new(await dbQuery.Prepare().PaginatedAsync(page, pageSize, ct), items => items.Select(x => new CrashReportModel
         {
-            async (stream, ct2) =>
-            {
-                await JsonSerializer.SerializeAsync(stream, paginated.Metadata, _jsonSerializerOptions, ct2);
-            },
-            async (stream, ct2) =>
-            {
-                await JsonSerializer.SerializeAsync(stream, paginated.Items.Select(x => new CrashReportModel
-                {
-                    Id = x.Id,
-                    Version = x.Version,
-                    GameVersion = x.GameVersion,
-                    Exception = x.Exception,
-                    Date = x.CreatedAt,
-                    Url = x.Url,
-                    InvolvedModules = x.InvolvedModIds.AsImmutableArray(),
-                    Status = x.Status,
-                    Comment = x.Comment
-                }), _jsonSerializerOptions, ct2);
-            },
-            async (stream, ct2) =>
-            {
-                await JsonSerializer.SerializeAsync(stream, new
-                {
-                    QueryExecutionTimeMilliseconds = Stopwatch.GetElapsedTime(paginated.StartTime).Milliseconds
-                }, _jsonSerializerOptions, ct2);
-            }
-        }, "application/x-ndjson-butr-paging");
+            Id = x.Id,
+            Version = x.Version,
+            GameVersion = x.GameVersion,
+            Exception = x.Exception,
+            Date = x.CreatedAt,
+            Url = x.Url,
+            InvolvedModules = x.InvolvedModIds.ToImmutableArray(),
+            Status = x.Status,
+            Comment = x.Comment
+        }));
+    }
+    
+    [HttpPost("Paginated")]
+    [Produces("application/json")]
+    public async Task<ActionResult<APIResponse<PagingData<CrashReportModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    {
+        var (paginated, transform) = await PaginatedBase(query, ct);
+        return APIPagingResponse(paginated, transform);
+    }    
+    
+    [HttpPost("PaginatedStreaming")]
+    [Produces("application/x-ndjson-butr-paging")]
+    [ProducesResponseType(typeof(PagingData<CrashReportModel>), 200)]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<StreamingJsonActionResult> PaginatedStreaming([FromBody] PaginatedQuery query, CancellationToken ct)
+    {
+        var (paginated, transform) = await PaginatedBase(query, ct);
+        return APIPagingResponseStreaming(paginated, transform);
     }
 
     [HttpGet("Autocomplete")]

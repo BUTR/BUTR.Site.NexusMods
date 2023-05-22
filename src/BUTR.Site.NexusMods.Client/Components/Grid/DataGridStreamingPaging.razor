@@ -157,6 +157,7 @@
         StateHasChanged();
 
         var response = (GetItems is not null ? await GetItems(page, pageSize, filterings, sortings, ct) : null) ?? PagingStreamingData<TItem>.Empty;
+        var status = await response.Status;
         Metadata = await response.Metadata;
         var counter = 0;
         var items = await response.Items;

@@ -36,6 +36,7 @@ internal sealed partial class StreamWithNewLineEnding : Stream
         {
             var leftoverBytesLength = _leftoverBytesLength;
             _leftoverBytes.Memory.CopyTo(buffer);
+            if (_leftoverBytes.Memory.Span.IndexOfAny(NewLine) != -1) _endRead = true;
             ResetLeftover();
             return leftoverBytesLength;
         }

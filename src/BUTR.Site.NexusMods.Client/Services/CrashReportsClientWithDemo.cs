@@ -40,25 +40,25 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     }
 
-    public async Task<PagingStreamingData<CrashReportModel>> Paginated2Async(PaginatedQuery? body = null, CancellationToken ct = default)
+    public async Task<PagingStreamingData<CrashReportModel>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-            return PagingStreamingData<CrashReportModel>.Create(PagingAdditionalMetadata.Empty, crashReports.ToAsyncEnumerable(), new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count));
+            return PagingStreamingData<CrashReportModel>.Create(new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count), crashReports.ToAsyncEnumerable(), PagingAdditionalMetadata.Empty);
         }
 
-        return await _implementation.Paginated2Async(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);
+        return await _implementation.PaginatedStreamingAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);
     }
 
-    public async Task<CrashReportModelPagingData> PaginatedAsync(PaginatedQuery? body, CancellationToken ct)
+    public async Task<CrashReportModelPagingDataAPIResponse> PaginatedAsync(PaginatedQuery? body, CancellationToken ct)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-            return new CrashReportModelPagingData(PagingAdditionalMetadata.Empty, crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count));
+            return new CrashReportModelPagingDataAPIResponse(new CrashReportModelPagingData(PagingAdditionalMetadata.Empty, crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count)), string.Empty);
         }
 
         return await _implementation.PaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);
