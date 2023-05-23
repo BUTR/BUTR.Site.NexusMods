@@ -21,8 +21,14 @@ public record RecreatedStacktrace(string Method, string CSharpWithIL, int LineNu
 
 public static class RecreateStacktraceUtils
 {
-
     public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktrace(IEnumerable<string> assemblyFiles, CrashReport crashReport, CancellationToken ct)
+    {
+        var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
+        return GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct)
+            .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
+
+    }
+    public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktraceUnordered(IEnumerable<string> assemblyFiles, CrashReport crashReport, CancellationToken ct)
     {
         // The Harmony Like Full Description
         static string FullDescription(PEFile moduleDefinition, MethodDefinitionHandle methodHandle, MethodDefinition method)
@@ -207,7 +213,7 @@ public static class RecreateStacktraceUtils
                 var disassembler = CSharpILMixedLanguage.CreateDisassembler(output, ct);
                 disassembler.DisassembleMethod(moduleDefinition, foundMethodHandle);
 
-                var code = output.ToString();
+                var code = output.ToString()!;
                 var ilOffset = crashReport.EnhancedStacktrace.First(x => x.Methods.Any(y => y == frame)).ILOffset;
                 var lineNumber = GetLineNumber(code, ilOffset);
 
@@ -215,9 +221,7 @@ public static class RecreateStacktraceUtils
             }
         }
 
-        var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
         return GetPEFiles(assemblyFiles).AsParallel().AsUnordered().WithCancellation(ct)
-            .SelectMany(moduleDefinition => RecreatedStacktrace(moduleDefinition, crashReport, ct))
-            .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
+            .SelectMany(moduleDefinition => RecreatedStacktrace(moduleDefinition, crashReport, ct));
     }
 }

@@ -48,7 +48,7 @@ public sealed class DiscordClient
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    public async Task<bool> SetGlobalMetadata(IReadOnlyList<DiscordGlobalMetadata> metadata, CancellationToken ct)
+    public async Task<bool> SetGlobalMetadataAsync(IReadOnlyList<DiscordGlobalMetadata> metadata, CancellationToken ct)
     {
         using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"v10/applications/{_options.ClientId}/role-connections/metadata")
         {
@@ -77,7 +77,7 @@ public sealed class DiscordClient
         return (url.ToString(), state);
     }
 
-    public async Task<DiscordOAuthTokens?> CreateTokens(string code, CancellationToken ct)
+    public async Task<DiscordOAuthTokens?> CreateTokensAsync(string code, CancellationToken ct)
     {
         var data = new List<KeyValuePair<string, string>>
         {
@@ -92,7 +92,7 @@ public sealed class DiscordClient
         return tokens is not null ? new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokens.ExpiresIn)) : null;
     }
 
-    public async Task<DiscordOAuthTokens?> GetOrRefreshTokens(DiscordOAuthTokens tokens, CancellationToken ct)
+    public async Task<DiscordOAuthTokens?> GetOrRefreshTokensAsync(DiscordOAuthTokens tokens, CancellationToken ct)
     {
         if (DateTimeOffset.Now <= tokens.ExpiresAt)
             return tokens;
@@ -112,7 +112,7 @@ public sealed class DiscordClient
         return new DiscordOAuthTokens(responseData.AccessToken, responseData.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(responseData.ExpiresIn));
     }
 
-    public async Task<DiscordUserInfo?> GetUserInfo(DiscordOAuthTokens tokens, CancellationToken ct)
+    public async Task<DiscordUserInfo?> GetUserInfoAsync(DiscordOAuthTokens tokens, CancellationToken ct)
     {
         using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "v10/oauth2/@me")
         {
@@ -124,7 +124,7 @@ public sealed class DiscordClient
         return await JsonSerializer.DeserializeAsync<DiscordUserInfo>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
     }
 
-    public async Task<bool> PushMetadata<T>(DiscordOAuthTokens tokens, T metadata, CancellationToken ct)
+    public async Task<bool> PushMetadataAsync<T>(DiscordOAuthTokens tokens, T metadata, CancellationToken ct)
     {
         using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Put, $"v10/users/@me/applications/{_options.ClientId}/role-connection")
         {

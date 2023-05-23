@@ -52,7 +52,7 @@ public sealed class CrashReportsController : ControllerExtended
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    private async Task<BasePaginated<UserCrashReportView, CrashReportModel>> PaginatedBase(PaginatedQuery query, CancellationToken ct)
+    private async Task<BasePaginated<UserCrashReportView, CrashReportModel>> PaginatedBaseAsync(PaginatedQuery query, CancellationToken ct)
     {
         var page = query.Page;
         var pageSize = Math.Max(Math.Min(query.PageSize, 50), 5);
@@ -113,18 +113,18 @@ public sealed class CrashReportsController : ControllerExtended
 
     [HttpPost("Paginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<CrashReportModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<CrashReportModel>?>>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
-        var (paginated, transform) = await PaginatedBase(query, ct);
+        var (paginated, transform) = await PaginatedBaseAsync(query, ct);
         return APIPagingResponse(paginated, transform);
     }
 
     [HttpPost("PaginatedStreaming")]
     [Produces("application/x-ndjson-butr-paging")]
     [ApiExplorerSettings(IgnoreApi = true)]
-    public async Task<StreamingJsonActionResult> PaginatedStreaming([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<StreamingJsonActionResult> PaginatedStreamingAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
-        var (paginated, transform) = await PaginatedBase(query, ct);
+        var (paginated, transform) = await PaginatedBaseAsync(query, ct);
         return APIPagingResponseStreaming(paginated, transform);
     }
 
@@ -137,7 +137,7 @@ public sealed class CrashReportsController : ControllerExtended
 
     [HttpPost("Update")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> Update([FromBody] CrashReportModel updatedCrashReport)
+    public async Task<ActionResult<APIResponse<string?>>> UpdateAsync([FromBody] CrashReportModel updatedCrashReport)
     {
         var userId = HttpContext.GetUserId();
 

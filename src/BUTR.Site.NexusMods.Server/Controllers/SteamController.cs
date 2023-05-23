@@ -63,11 +63,11 @@ public sealed class SteamController : ControllerExtended
 
     [HttpGet("Link")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> Link([FromQuery] Dictionary<string, string> _, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<string?>>> LinkAsync([FromQuery] Dictionary<string, string> _, CancellationToken ct)
     {
         var queries = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value[0] ?? string.Empty);
 
-        var isValid = await _steamCommunityClient.ConfirmIdentity(queries, ct);
+        var isValid = await _steamCommunityClient.ConfirmIdentityAsync(queries, ct);
         if (!isValid)
             return APIResponseError<string>("Failed to link!");
 
@@ -75,9 +75,9 @@ public sealed class SteamController : ControllerExtended
             return APIResponseError<string>("Failed to link!");
 
         var userId = HttpContext.GetUserId();
-        var userInfo = await _steamAPIClient.GetUserInfo(steamId, ct);
+        var userInfo = await _steamAPIClient.GetUserInfoAsync(steamId, ct);
 
-        var ownsBannerlord = await _steamAPIClient.IsOwningGame(steamId, 261550, ct);
+        var ownsBannerlord = await _steamAPIClient.IsOwningGameAsync(steamId, 261550, ct);
         if (ownsBannerlord)
         {
             NexusModsUserMetadataEntity? ApplyChanges(NexusModsUserMetadataEntity? existing) => existing switch
@@ -100,7 +100,7 @@ public sealed class SteamController : ControllerExtended
 
     [HttpPost("Unlink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> Unlink()
+    public async Task<ActionResult<APIResponse<string?>>> UnlinkAsync()
     {
         var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetSteamTokens();
@@ -116,14 +116,14 @@ public sealed class SteamController : ControllerExtended
 
     [HttpPost("GetUserInfo")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<SteamUserInfo?>>> GetUserInfoByAccessToken(CancellationToken ct)
+    public async Task<ActionResult<APIResponse<SteamUserInfo?>>> GetUserInfoByAccessTokenAsync(CancellationToken ct)
     {
         var tokens = HttpContext.GetSteamTokens();
 
         if (tokens?.Data is null)
             return APIResponseError<SteamUserInfo>("Failed to get the token!");
 
-        var result = await _steamAPIClient.GetUserInfo(tokens.ExternalId, ct);
+        var result = await _steamAPIClient.GetUserInfoAsync(tokens.ExternalId, ct);
         return APIResponse(result);
     }
 }

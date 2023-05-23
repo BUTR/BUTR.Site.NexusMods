@@ -25,7 +25,7 @@ public sealed class BannerlordBinaryCache
         _distributedCache = distributedCache;
     }
 
-    public async Task<IEnumerable<string>> GetBranchAssemblyFiles(string branch, CancellationToken ct)
+    public async Task<IEnumerable<string>> GetBranchAssemblyFilesAsync(string branch, CancellationToken ct)
     {
         var path = Path.Combine(_options.DownloadPath, branch);
 

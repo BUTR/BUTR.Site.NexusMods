@@ -52,7 +52,7 @@ public sealed class ModController : ControllerExtended
 
     [HttpGet("RawGet/{gameDomain}/{modId:int}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<RawModModel?>>> RawGet(string gameDomain, int modId, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<RawModModel?>>> RawGetAsync(string gameDomain, int modId, CancellationToken ct)
     {
         var userId = HttpContext.GetUserId();
         var apiKey = HttpContext.GetAPIKey();
@@ -68,7 +68,7 @@ public sealed class ModController : ControllerExtended
 
     [HttpPost("ModPaginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<ModModel>?>>> ModPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<ModModel>?>>> ModPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var userId = HttpContext.GetUserId();
 
@@ -132,7 +132,7 @@ public sealed class ModController : ControllerExtended
 
     [HttpPost("ModUpdate")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ModUpdate([FromBody] ModQuery query)
+    public async Task<ActionResult<APIResponse<string?>>> ModUpdateAsync([FromBody] ModQuery query)
     {
         var userId = HttpContext.GetUserId();
         var apiKey = HttpContext.GetAPIKey();
@@ -157,7 +157,7 @@ public sealed class ModController : ControllerExtended
 
     [HttpGet("ModLink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ModLink([FromQuery] ModQuery query)
+    public async Task<ActionResult<APIResponse<string?>>> ModLinkAsync([FromQuery] ModQuery query)
     {
         var userId = HttpContext.GetUserId();
         var apiKey = HttpContext.GetAPIKey();
@@ -194,7 +194,7 @@ public sealed class ModController : ControllerExtended
 
     [HttpGet("ModUnlink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ModUnlink([FromQuery] ModQuery query)
+    public async Task<ActionResult<APIResponse<string?>>> ModUnlinkAsync([FromQuery] ModQuery query)
     {
         var userId = HttpContext.GetUserId();
 
@@ -215,7 +215,7 @@ public sealed class ModController : ControllerExtended
     [HttpGet("ModManualLink")]
     [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ModManualLink([FromQuery] ManualLinkQuery query)
+    public async Task<ActionResult<APIResponse<string?>>> ModManualLinkAsync([FromQuery] ManualLinkQuery query)
     {
         NexusModsModManualLinkedModuleIdEntity? ApplyChanges(NexusModsModManualLinkedModuleIdEntity? existing) => existing switch
         {
@@ -231,7 +231,7 @@ public sealed class ModController : ControllerExtended
     [HttpGet("ModManualUnlink")]
     [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ModManualUnlink([FromQuery] ManualUnlinkQuery query)
+    public async Task<ActionResult<APIResponse<string?>>> ModManualUnlinkAsync([FromQuery] ManualUnlinkQuery query)
     {
         NexusModsModManualLinkedModuleIdEntity? ApplyChanges(NexusModsModManualLinkedModuleIdEntity? existing) => existing switch
         {
@@ -246,7 +246,7 @@ public sealed class ModController : ControllerExtended
     [HttpPost("ModManualLinkPaginated")]
     [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<ModNexusModsManualLinkModel>?>>> ModManualLinkPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<ModNexusModsManualLinkModel>?>>> ModManualLinkPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var paginated = await _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>()
             .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModManualLinkedModuleIdEntity.ModuleId), Type = SortingType.Ascending }, ct);
@@ -258,7 +258,7 @@ public sealed class ModController : ControllerExtended
     [HttpGet("AllowUserAModuleId")]
     [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> AllowUserAModuleId([FromQuery] AllowModuleIdQuery query)
+    public async Task<ActionResult<APIResponse<string?>>> AllowUserAModuleIdAsync([FromQuery] AllowModuleIdQuery query)
     {
         NexusModsUserAllowedModuleIdsEntity? ApplyChanges(NexusModsUserAllowedModuleIdsEntity? existing) => existing switch
         {
@@ -275,7 +275,7 @@ public sealed class ModController : ControllerExtended
     [HttpGet("DisallowUserAModuleId")]
     [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> DisallowUserAModuleId([FromQuery] DisallowModuleIdQuery query)
+    public async Task<ActionResult<APIResponse<string?>>> DisallowUserAModuleIdAsync([FromQuery] DisallowModuleIdQuery query)
     {
         NexusModsUserAllowedModuleIdsEntity? ApplyChanges(NexusModsUserAllowedModuleIdsEntity? existing) => existing switch
         {
@@ -293,7 +293,7 @@ public sealed class ModController : ControllerExtended
     [HttpPost("AllowUserAModuleIdPaginated")]
     [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<UserAllowedModuleIdsModel>?>>> AllowUserAModuleIdPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<UserAllowedModuleIdsModel>?>>> AllowUserAModuleIdPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var paginated = await _dbContext.Set<NexusModsUserAllowedModuleIdsEntity>()
             .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsUserAllowedModuleIdsEntity.NexusModsUserId), Type = SortingType.Ascending }, ct);
@@ -304,7 +304,7 @@ public sealed class ModController : ControllerExtended
 
     [HttpGet("AllowUserAMod")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> AllowUserAMod([FromQuery] AllowModQuery query)
+    public async Task<ActionResult<APIResponse<string?>>> AllowUserAModAsync([FromQuery] AllowModQuery query)
     {
         var userId = HttpContext.GetUserId();
         var apiKey = HttpContext.GetAPIKey();
@@ -330,7 +330,7 @@ public sealed class ModController : ControllerExtended
 
     [HttpGet("DisallowUserAMod")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> DisallowUserAMod([FromQuery] DisallowModQuery query)
+    public async Task<ActionResult<APIResponse<string?>>> DisallowUserAModAsync([FromQuery] DisallowModQuery query)
     {
         NexusModsModManualLinkedNexusModsUsersEntity? ApplyChanges(NexusModsModManualLinkedNexusModsUsersEntity? existing) => existing switch
         {
@@ -347,7 +347,7 @@ public sealed class ModController : ControllerExtended
 
     [HttpPost("AllowUserAModPaginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<UserAllowedModsModel>?>>> AllowUserAModPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<UserAllowedModsModel>?>>> AllowUserAModPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var userId = HttpContext.GetUserId();
 
@@ -366,7 +366,7 @@ public sealed class ModController : ControllerExtended
 
     [HttpPost("AvailableModsPaginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<AvailableModModel>?>>> AvailableModsPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<AvailableModModel>?>>> AvailableModsPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var userId = HttpContext.GetUserId();
 

@@ -44,7 +44,7 @@ public sealed class AuthenticationController : ControllerExtended
     [Produces("application/json")]
     [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> Authenticate([FromHeader] string? apiKey, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> AuthenticateAsync([FromHeader] string? apiKey, CancellationToken ct)
     {
         if (apiKey is null)
             return StatusCode(StatusCodes.Status401Unauthorized);
@@ -76,7 +76,7 @@ public sealed class AuthenticationController : ControllerExtended
     [Produces("application/json")]
     [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> Validate(CancellationToken ct)
+    public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> ValidateAsync(CancellationToken ct)
     {
         if (HttpContext.GetAPIKey() is not { } apikey || string.IsNullOrEmpty(apikey) || await _nexusModsAPIClient.ValidateAPIKeyAsync(apikey, ct) is not { } validateResponse)
             return StatusCode(StatusCodes.Status401Unauthorized);

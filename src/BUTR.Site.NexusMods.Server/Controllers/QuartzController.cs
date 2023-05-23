@@ -35,7 +35,7 @@ public sealed class QuartzController : ControllerExtended
 
     [HttpPost("HistoryPaginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<QuartzExecutionLogEntity>?>>> HistoryPaginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<QuartzExecutionLogEntity>?>>> HistoryPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var paginated = await _dbContext.Set<QuartzExecutionLogEntity>()
             .Where(x => x.LogType == QuartzLogType.ScheduleJob)
@@ -46,7 +46,7 @@ public sealed class QuartzController : ControllerExtended
 
     [HttpGet("Delete")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> Delete([FromQuery] long logId)
+    public async Task<ActionResult<APIResponse<string?>>> DeleteAsync([FromQuery] long logId)
     {
         QuartzExecutionLogEntity? ApplyChanges(QuartzExecutionLogEntity? existing) => existing switch
         {
@@ -60,7 +60,7 @@ public sealed class QuartzController : ControllerExtended
 
     [HttpGet("TriggerJob")]
     [Produces("application/json")]
-    public async Task<ActionResult> TriggerJob(string jobId, CancellationToken ct)
+    public async Task<ActionResult> TriggerJobAsync(string jobId, CancellationToken ct)
     {
         var scheduler = await _schedulerFactory.GetScheduler(ct);
         _ = scheduler.TriggerJob(new JobKey(jobId), CancellationToken.None);

@@ -82,7 +82,7 @@ public record InvolvedModule
 
 public static class CrashReportParser
 {
-    public static async Task<CrashReport> ParseUrl(HttpClient client, string id)
+    public static async Task<CrashReport> ParseUrlAsync(HttpClient client, string id)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, $"{id}.html");
         var response = await client.SendAsync(request);

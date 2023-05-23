@@ -25,7 +25,7 @@ public sealed class ReportsController : ControllerExtended
 
     [HttpGet("Get/{id}.html")]
     [Produces("text/html")]
-    public async Task<ActionResult<string>> GetAll(string id, CancellationToken ct) => Ok(await _crashReporterClient.GetCrashReportAsync(id, ct));
+    public async Task<ActionResult<string>> GetAllAsync(string id, CancellationToken ct) => Ok(await _crashReporterClient.GetCrashReportAsync(id, ct));
 
     [HttpGet("BlankRequest")]
     [Produces("text/plain")]

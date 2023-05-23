@@ -1,16 +1,12 @@
 ﻿using BUTR.Site.NexusMods.Server.Controllers;
 using BUTR.Site.NexusMods.Server.Options;
 
-using HtmlAgilityPack;
-
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -73,7 +69,7 @@ public sealed class SteamAPIClient
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
     }
 
-    public async Task<SteamUserInfo?> GetUserInfo(string steamId, CancellationToken ct)
+    public async Task<SteamUserInfo?> GetUserInfoAsync(string steamId, CancellationToken ct)
     {
         var json = await _httpClient.GetFromJsonAsync<GetUserInfoRoot>($"ISteamUser/GetPlayerSummaries/v0002/?key={_options.APIKey}&steamids={steamId}", ct);
         if (json is null)
@@ -82,7 +78,7 @@ public sealed class SteamAPIClient
         return new SteamUserInfo(json.Response.Players[0].Steamid, json.Response.Players[0].Personaname);
     }
 
-    public async Task<bool> IsOwningGame(string steamId, uint appId, CancellationToken ct)
+    public async Task<bool> IsOwningGameAsync(string steamId, uint appId, CancellationToken ct)
     {
         var json = await _httpClient.GetFromJsonAsync<IsOwningGameRoot>($"IPlayerService/GetOwnedGames/v1/?key={_options.APIKey}&steamid={steamId}&include_appinfo=false&include_played_free_games=false&appids_filter[0]={appId}", ct);
         return json?.Response.GameCount == 1;

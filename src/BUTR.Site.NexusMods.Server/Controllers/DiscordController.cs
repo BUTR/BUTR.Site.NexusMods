@@ -48,26 +48,26 @@ public sealed class DiscordController : ControllerExtended
 
     [HttpGet("Link")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> Link([FromQuery] string code, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<string?>>> LinkAsync([FromQuery] string code, CancellationToken ct)
     {
-        var tokens = await _discordClient.CreateTokens(code, ct);
+        var tokens = await _discordClient.CreateTokensAsync(code, ct);
         if (tokens is null)
             return APIResponseError<string>("Failed to link!");
 
         var userId = HttpContext.GetUserId();
-        var userInfo = await _discordClient.GetUserInfo(tokens, ct);
+        var userInfo = await _discordClient.GetUserInfoAsync(tokens, ct);
 
         if (userInfo is null || !await _discordStorage.UpsertAsync(userId, userInfo.User.Id, tokens))
             return APIResponseError<string>("Failed to link!");
 
-        await UpdateMetadataInternal(ct);
+        await UpdateMetadataInternalAsync(ct);
 
         return APIResponse("Linked successful!");
     }
 
     [HttpPost("Unlink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> Unlink(CancellationToken ct)
+    public async Task<ActionResult<APIResponse<string?>>> UnlinkAsync(CancellationToken ct)
     {
         var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetDiscordTokens();
@@ -75,14 +75,14 @@ public sealed class DiscordController : ControllerExtended
         if (tokens?.Data is null)
             return APIResponseError<string>("Unlinked successful!");
 
-        var refreshed = await _discordClient.GetOrRefreshTokens(tokens.Data, ct);
+        var refreshed = await _discordClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
             return APIResponseError<string>("Failed to unlink!");
 
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
 
-        if (!await _discordClient.PushMetadata(refreshed, new Metadata(0, 0, 0, 0), ct))
+        if (!await _discordClient.PushMetadataAsync(refreshed, new Metadata(0, 0, 0, 0), ct))
             return APIResponseError<string>("Failed to unlink!");
 
         if (!await _discordStorage.RemoveAsync(userId, tokens.ExternalId))
@@ -93,9 +93,9 @@ public sealed class DiscordController : ControllerExtended
 
     [HttpPost("UpdateMetadata")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> UpdateMetadata(CancellationToken ct)
+    public async Task<ActionResult<APIResponse<string?>>> UpdateMetadataAsync(CancellationToken ct)
     {
-        if (await UpdateMetadataInternal(ct) is not { } result)
+        if (await UpdateMetadataInternalAsync(ct) is not { } result)
             return APIResponseError<string>("Failed to update");
         return result ? APIResponse("") : APIResponseError<string>("Failed to update");
     }
@@ -103,7 +103,7 @@ public sealed class DiscordController : ControllerExtended
 
     [HttpPost("GetUserInfo")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<DiscordUserInfo?>>> GetUserInfoByAccessToken(CancellationToken ct)
+    public async Task<ActionResult<APIResponse<DiscordUserInfo?>>> GetUserInfoByAccessTokenAsync(CancellationToken ct)
     {
         var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetDiscordTokens();
@@ -111,18 +111,18 @@ public sealed class DiscordController : ControllerExtended
         if (tokens?.Data is null)
             return APIResponseError<DiscordUserInfo>("Failed to get the token!");
 
-        var refreshed = await _discordClient.GetOrRefreshTokens(tokens.Data, ct);
+        var refreshed = await _discordClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
             return APIResponse<DiscordUserInfo>(null);
 
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
 
-        var result = await _discordClient.GetUserInfo(refreshed, ct);
+        var result = await _discordClient.GetUserInfoAsync(refreshed, ct);
         return APIResponse(result);
     }
 
-    private async Task<bool?> UpdateMetadataInternal(CancellationToken ct)
+    private async Task<bool?> UpdateMetadataInternalAsync(CancellationToken ct)
     {
         var role = HttpContext.GetRole();
         var userId = HttpContext.GetUserId();
@@ -138,14 +138,14 @@ public sealed class DiscordController : ControllerExtended
             .Set<NexusModsUserAllowedModuleIdsEntity>()
             .CountAsync(y => y.NexusModsUserId == userId, ct);
 
-        var refreshed = await _discordClient.GetOrRefreshTokens(tokens.Data, ct);
+        var refreshed = await _discordClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
             return false;
 
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
 
-        return await _discordClient.PushMetadata(refreshed, new Metadata(
+        return await _discordClient.PushMetadataAsync(refreshed, new Metadata(
             1,
             role == ApplicationRoles.Moderator ? 1 : 0,
             role == ApplicationRoles.Administrator ? 1 : 0,

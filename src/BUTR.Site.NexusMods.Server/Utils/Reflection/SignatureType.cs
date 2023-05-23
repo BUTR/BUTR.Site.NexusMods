@@ -10,7 +10,7 @@ internal record SignatureType
     public static SignatureType FromString(string type) => new() { Name = type };
     public static SignatureType FromFunctionPointer(MethodSignature<SignatureType> signature) => new() { Name = string.Empty, IsFunctionPointer = true, FunctionPointerSignature = signature };
 
-    public string Name { get; set; }
+    public required string Name { get; init; }
 
     public bool IsRef { get; set; }
     public bool IsPointer { get; set; }

@@ -51,7 +51,7 @@ public class NexusModsInfo
         var fileInfos = await _apiClient.GetModFileInfosAsync(gameDomain, modId, apiKey);
         foreach (var fileInfo in fileInfos?.Files ?? Array.Empty<NexusModsModFilesResponse.File>())
         {
-            if (!await HasSubModuleXml(fileInfo)) continue;
+            if (!await HasSubModuleXmlAsync(fileInfo)) continue;
 
             var downloadLinks = await _apiClient.GetModFileLinksAsync(gameDomain, modId, fileInfo.Id, apiKey) ?? Array.Empty<NexusModsDownloadLinkResponse>();
 
@@ -131,7 +131,7 @@ public class NexusModsInfo
         }
     }
 
-    private async Task<bool> HasSubModuleXml(NexusModsModFilesResponse.File fileInfo)
+    private async Task<bool> HasSubModuleXmlAsync(NexusModsModFilesResponse.File fileInfo)
     {
         try
         {

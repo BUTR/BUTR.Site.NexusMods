@@ -34,22 +34,21 @@ public sealed class RecreateStacktraceController : ControllerExtended
 
     [HttpGet("Json/{id}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<IOrderedEnumerable<RecreatedStacktrace>?>>> Json(string id, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<IOrderedEnumerable<RecreatedStacktrace>?>>> JsonAsync(string id, CancellationToken ct)
     {
         var crashReportContent = await _crashReporterClient.GetCrashReportAsync(id, ct);
         var crashReport = CrashReportParser.Parse(id, crashReportContent);
         var gameVersion = crashReport.GameVersion;
 
-        var assemblyFiles = await _bannerlordBinaryCache.GetBranchAssemblyFiles(gameVersion, ct);
-        var recreatedStacktrace = RecreateStacktraceUtils.GetRecreatedStacktrace(assemblyFiles, crashReport, ct).ToImmutableArray();
+        var assemblyFiles = await _bannerlordBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);
+        var recreatedStacktrace = RecreateStacktraceUtils.GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct).ToImmutableArray();
 
-        var currentMethods = crashReport.EnhancedStacktrace.SelectMany(x => x.Methods).Select(x => x.Method).ToArray();
-        var newMethods = recreatedStacktrace.Select(x => x.Method).ToHashSet();
-        var missingMethods = currentMethods.Except(newMethods).ToHashSet();
+        var currentMethods = crashReport.EnhancedStacktrace.SelectMany(x => x.Methods).Select(x => x.Method).ToHashSet();
+        currentMethods.ExceptWith(recreatedStacktrace.Select(x => x.Method));
 
         var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
         var ilOffsets = crashReport.EnhancedStacktrace.Select(x => x.Methods.Select(y => (x.ILOffset, y.Method))).SelectMany(x => x).DistinctBy(x => x.Method).ToDictionary(x => x.Method, x => x.ILOffset);
-        var recreatedStacktraceWithMissing = recreatedStacktrace.Concat(missingMethods.Select(x => new RecreatedStacktrace(x, $"No Code Available. IL Offset: {ilOffsets[x]}", 1)))
+        var recreatedStacktraceWithMissing = recreatedStacktrace.Concat(currentMethods.Select(x => new RecreatedStacktrace(x, $"No Code Available. IL Offset: {ilOffsets[x]}", 1)))
             .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
 
         return APIResponse(recreatedStacktraceWithMissing);
@@ -57,22 +56,21 @@ public sealed class RecreateStacktraceController : ControllerExtended
 
     [HttpGet("Html/{id}")]
     [Produces("text/plain")]
-    public async Task<ActionResult<string>> Html(string id, CancellationToken ct)
+    public async Task<ActionResult<string>> HtmlAsync(string id, CancellationToken ct)
     {
         var crashReportContent = await _crashReporterClient.GetCrashReportAsync(id, ct);
         var crashReport = CrashReportParser.Parse(id, crashReportContent);
         var gameVersion = crashReport.GameVersion;
 
-        var assemblyFiles = await _bannerlordBinaryCache.GetBranchAssemblyFiles(gameVersion, ct);
-        var recreatedStacktrace = RecreateStacktraceUtils.GetRecreatedStacktrace(assemblyFiles, crashReport, ct).ToImmutableArray();
+        var assemblyFiles = await _bannerlordBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);
+        var recreatedStacktrace = RecreateStacktraceUtils.GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct).ToImmutableArray();
 
-        var currentMethods = crashReport.EnhancedStacktrace.SelectMany(x => x.Methods).Select(x => x.Method).ToArray();
-        var newMethods = recreatedStacktrace.Select(x => x.Method).ToHashSet();
-        var missingMethods = currentMethods.Except(newMethods).ToHashSet();
+        var currentMethods = crashReport.EnhancedStacktrace.SelectMany(x => x.Methods).Select(x => x.Method).ToHashSet();
+        currentMethods.ExceptWith(recreatedStacktrace.Select(x => x.Method));
 
         var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
         var ilOffsets = crashReport.EnhancedStacktrace.Select(x => x.Methods.Select(y => (x.ILOffset, y.Method))).SelectMany(x => x).DistinctBy(x => x.Method).ToDictionary(x => x.Method, x => x.ILOffset);
-        var recreatedStacktraceWithMissing = recreatedStacktrace.Concat(missingMethods.Select(x => new RecreatedStacktrace(x, $"No Code Available. IL Offset: {ilOffsets[x]}", 1)))
+        var recreatedStacktraceWithMissing = recreatedStacktrace.Concat(currentMethods.Select(x => new RecreatedStacktrace(x, $"No Code Available. IL Offset: {ilOffsets[x]}", 1)))
             .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
 
         static string GetEnhancedStacktraceHtml(IEnumerable<RecreatedStacktrace> stacktrace)

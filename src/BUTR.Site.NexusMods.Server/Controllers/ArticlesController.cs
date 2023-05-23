@@ -30,7 +30,7 @@ public class ArticlesController : ControllerExtended
 
     [HttpPost("Paginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<ArticleModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<ArticleModel>?>>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var paginated = await _dbContext.Set<NexusModsArticleEntity>()
             .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsArticleEntity.NexusModsArticleId), Type = SortingType.Ascending }, ct);

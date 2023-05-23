@@ -14,33 +14,33 @@ public sealed record PagingStreamingData<T> where T : class
 
     private static PagingStreamingData<T> Create()
     {
-        LazyTask<APIStreamingResponse> GetStatus() => LazyTask<APIStreamingResponse>.FromResult(new APIStreamingResponse(string.Empty));
-        LazyTask<PagingMetadata> GetMetadata() => LazyTask<PagingMetadata>.FromResult(PagingMetadata.Empty);
-        LazyTask<IAsyncEnumerable<T>> GetItems() => LazyTask<IAsyncEnumerable<T>>.FromResult(AsyncEnumerable.Empty<T>());
+        LazyTask<APIStreamingResponse> GetStatusAsync() => LazyTask<APIStreamingResponse>.FromResult(new APIStreamingResponse(string.Empty));
+        LazyTask<PagingMetadata> GetMetadataAsync() => LazyTask<PagingMetadata>.FromResult(PagingMetadata.Empty);
+        LazyTask<IAsyncEnumerable<T>> GetItemsAsync() => LazyTask<IAsyncEnumerable<T>>.FromResult(AsyncEnumerable.Empty<T>());
         LazyTask<PagingAdditionalMetadata> GetQueryExecutionTimeMilliseconds() => LazyTask<PagingAdditionalMetadata>.FromResult(PagingAdditionalMetadata.Empty);
 
         return new PagingStreamingData<T>
         {
-            Status = GetStatus(),
-            Metadata = GetMetadata(),
-            Items = GetItems(),
+            Status = GetStatusAsync(),
+            Metadata = GetMetadataAsync(),
+            Items = GetItemsAsync(),
             AdditionalMetadata = GetQueryExecutionTimeMilliseconds(),
         };
     }
 
     public static PagingStreamingData<T> Create(PagingMetadata pagingMetadata, IAsyncEnumerable<T> items, PagingAdditionalMetadata additionalMetadata)
     {
-        LazyTask<APIStreamingResponse> GetStatus() => LazyTask<APIStreamingResponse>.FromResult(new APIStreamingResponse(string.Empty));
-        LazyTask<PagingMetadata> GetMetadata() => LazyTask<PagingMetadata>.FromResult(pagingMetadata);
-        LazyTask<IAsyncEnumerable<T>> GetItems() => LazyTask<IAsyncEnumerable<T>>.FromResult(items);
-        LazyTask<PagingAdditionalMetadata> GetQueryExecutionTimeMilliseconds() => LazyTask<PagingAdditionalMetadata>.FromResult(additionalMetadata);
+        LazyTask<APIStreamingResponse> GetStatusAsync() => LazyTask<APIStreamingResponse>.FromResult(new APIStreamingResponse(string.Empty));
+        LazyTask<PagingMetadata> GetMetadataAsync() => LazyTask<PagingMetadata>.FromResult(pagingMetadata);
+        LazyTask<IAsyncEnumerable<T>> GetItemsAsync() => LazyTask<IAsyncEnumerable<T>>.FromResult(items);
+        LazyTask<PagingAdditionalMetadata> GetQueryExecutionTimeMillisecondsAsync() => LazyTask<PagingAdditionalMetadata>.FromResult(additionalMetadata);
 
         return new PagingStreamingData<T>
         {
-            Status = GetStatus(),
-            Metadata = GetMetadata(),
-            Items = GetItems(),
-            AdditionalMetadata = GetQueryExecutionTimeMilliseconds(),
+            Status = GetStatusAsync(),
+            Metadata = GetMetadataAsync(),
+            Items = GetItemsAsync(),
+            AdditionalMetadata = GetQueryExecutionTimeMillisecondsAsync(),
         };
     }
 
@@ -49,19 +49,19 @@ public sealed record PagingStreamingData<T> where T : class
         var streamingJsonContext = new StreamingJsonContext(response);
 
         var hasError = false;
-        var getStatus = GetStatus();
-        var getMetadata = GetMetadata();
-        var getItems = GetItems();
-        var getQueryExecutionTimeMilliseconds = GetQueryExecutionTimeMilliseconds();
+        var getStatus = GetStatusAsync();
+        var getMetadata = GetMetadataAsync();
+        var getItems = GetItemsAsync();
+        var getQueryExecutionTimeMilliseconds = GetQueryExecutionTimeMillisecondsAsync();
 
-        async LazyTask<APIStreamingResponse> GetStatus()
+        async LazyTask<APIStreamingResponse> GetStatusAsync()
         {
             var stream = await streamingJsonContext.ReadLfSeparatedJsonAsync(ct);
             var result = await JsonSerializer.DeserializeAsync<APIStreamingResponse>(stream, jsonSerializerOptions, ct);
             hasError = result is null || !string.IsNullOrEmpty(result.HumanReadableError);
             return result!;
         }
-        async LazyTask<PagingMetadata> GetMetadata()
+        async LazyTask<PagingMetadata> GetMetadataAsync()
         {
             if (hasError) return PagingMetadata.Empty;
 
@@ -71,7 +71,7 @@ public sealed record PagingStreamingData<T> where T : class
             var result = await JsonSerializer.DeserializeAsync<PagingMetadata>(stream, jsonSerializerOptions, ct);
             return result!;
         }
-        async LazyTask<IAsyncEnumerable<T>> GetItems()
+        async LazyTask<IAsyncEnumerable<T>> GetItemsAsync()
         {
             if (hasError) return AsyncEnumerable.Empty<T>();
 
@@ -81,7 +81,7 @@ public sealed record PagingStreamingData<T> where T : class
             var stream = await streamingJsonContext.ReadLfSeparatedJsonAsync(ct);
             return new OneTimeEnumerable<T>(JsonSerializer.DeserializeAsyncEnumerable<T>(stream, jsonSerializerOptions, ct)!);
         }
-        async LazyTask<PagingAdditionalMetadata> GetQueryExecutionTimeMilliseconds()
+        async LazyTask<PagingAdditionalMetadata> GetQueryExecutionTimeMillisecondsAsync()
         {
             if (hasError) return PagingAdditionalMetadata.Empty;
 

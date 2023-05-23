@@ -46,15 +46,15 @@ public sealed class GOGController : ControllerExtended
 
     [HttpGet("Link")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> Link([FromQuery] string code, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<string?>>> LinkAsync([FromQuery] string code, CancellationToken ct)
     {
-        var tokens = await _gogAuthClient.CreateTokens(code, ct);
+        var tokens = await _gogAuthClient.CreateTokensAsync(code, ct);
         if (tokens is null)
             return APIResponseError<string>("Failed to link!");
 
         var userId = HttpContext.GetUserId();
 
-        var games = await _gogEmbedClient.GetGames(tokens.AccessToken, ct);
+        var games = await _gogEmbedClient.GetGamesAsync(tokens.AccessToken, ct);
         if (games is null)
             return APIResponseError<string>("Failed to link!");
 
@@ -81,7 +81,7 @@ public sealed class GOGController : ControllerExtended
 
     [HttpPost("Unlink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> Unlink()
+    public async Task<ActionResult<APIResponse<string?>>> UnlinkAsync()
     {
         var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetGOGTokens();
@@ -97,7 +97,7 @@ public sealed class GOGController : ControllerExtended
 
     [HttpPost("GetUserInfo")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<GOGUserInfo?>>> GetUserInfoByAccessToken(CancellationToken ct)
+    public async Task<ActionResult<APIResponse<GOGUserInfo?>>> GetUserInfoByAccessTokenAsync(CancellationToken ct)
     {
         var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetGOGTokens();
@@ -105,14 +105,14 @@ public sealed class GOGController : ControllerExtended
         if (tokens?.Data is null)
             return APIResponseError<GOGUserInfo>("Failed to get the token!");
 
-        var refreshed = await _gogAuthClient.GetOrRefreshTokens(tokens.Data, ct);
+        var refreshed = await _gogAuthClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
             return APIResponse<GOGUserInfo>(null);
 
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _gogStorage.UpsertAsync(userId, refreshed.UserId, refreshed);
 
-        var result = await _gogEmbedClient.GetUserInfo(refreshed.AccessToken, ct);
+        var result = await _gogEmbedClient.GetUserInfoAsync(refreshed.AccessToken, ct);
         return APIResponse(result);
     }
 }

@@ -34,7 +34,7 @@ public sealed class GOGEmbedClient
         _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(httpClient));
     }
 
-    public async Task<GOGUserInfo?> GetUserInfo(string token, CancellationToken ct)
+    public async Task<GOGUserInfo?> GetUserInfoAsync(string token, CancellationToken ct)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, "/userData.json");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -48,7 +48,7 @@ public sealed class GOGEmbedClient
         return new GOGUserInfo(response2.UserId, response2.Username);
     }
 
-    public async Task<GamesOwned?> GetGames(string token, CancellationToken ct)
+    public async Task<GamesOwned?> GetGamesAsync(string token, CancellationToken ct)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, "/user/data/games");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);

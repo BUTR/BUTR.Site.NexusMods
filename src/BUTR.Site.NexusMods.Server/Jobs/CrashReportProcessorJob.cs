@@ -45,7 +45,7 @@ public sealed class CrashReportProcessorJob : IJob
         var processed = 0;
         try
         {
-            await foreach (var (report, date) in MissingFilenames(_dbContext, context.CancellationToken))
+            await foreach (var (report, date) in MissingFilenamesAsync(_dbContext, context.CancellationToken))
             {
                 var crashReportEntity = new CrashReportEntity
                 {
@@ -94,7 +94,7 @@ public sealed class CrashReportProcessorJob : IJob
         }
     }
 
-    private async IAsyncEnumerable<(CrashReport, DateTime)> MissingFilenames(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
+    private async IAsyncEnumerable<(CrashReport, DateTime)> MissingFilenamesAsync(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
     {
         var mapping = dbContext.Model.FindEntityType(typeof(CrashReportFileEntity));
         if (mapping?.GetTableName() is not { } table)

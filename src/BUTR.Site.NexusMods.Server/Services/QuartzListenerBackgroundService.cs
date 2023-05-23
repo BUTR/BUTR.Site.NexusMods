@@ -207,7 +207,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await MarkIncompleteExecution(stoppingToken);
+        await MarkIncompleteExecutionAsync(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -215,7 +215,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         }
     }
 
-    internal async Task MarkIncompleteExecution(CancellationToken stoppingToken)
+    internal async Task MarkIncompleteExecutionAsync(CancellationToken stoppingToken)
     {
         try
         {
@@ -243,7 +243,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
 
     internal async Task ProcessTaskAsync(CancellationToken stoppingToken = default)
     {
-        var batch = await GetBatch(stoppingToken);
+        var batch = await GetBatchAsync(stoppingToken);
 
         _logger.LogInformation("Got a batch with {taskCount} task(s). Saving to data store.",
             batch.Count);
@@ -330,7 +330,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         return log;
     }
 
-    private async Task<List<Func<AppDbContext, CancellationToken, ValueTask>>> GetBatch(CancellationToken cancellationToken)
+    private async Task<List<Func<AppDbContext, CancellationToken, ValueTask>>> GetBatchAsync(CancellationToken cancellationToken)
     {
         await _taskQueue.Reader.WaitToReadAsync(cancellationToken);
 

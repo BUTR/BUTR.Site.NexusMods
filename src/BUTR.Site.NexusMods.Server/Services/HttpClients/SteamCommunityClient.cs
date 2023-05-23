@@ -1,8 +1,4 @@
-﻿using HtmlAgilityPack;
-
-using Microsoft.AspNetCore.Http;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
@@ -19,7 +15,7 @@ public sealed class SteamCommunityClient
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
 
-    public async Task<bool> ConfirmIdentity(Dictionary<string, string> parameters, CancellationToken ct)
+    public async Task<bool> ConfirmIdentityAsync(Dictionary<string, string> parameters, CancellationToken ct)
     {
         var query = new Dictionary<string, string>()
         {

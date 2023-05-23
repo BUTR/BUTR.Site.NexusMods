@@ -30,7 +30,7 @@ public class ExposedModsController : ControllerExtended
 
     [HttpPost("Paginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<ExposedModModel>?>>> Paginated([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<ExposedModModel>?>>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var paginated = await _dbContext.Set<NexusModsExposedModsEntity>()
             .Where(x => x.ModuleIds.Length > 0)

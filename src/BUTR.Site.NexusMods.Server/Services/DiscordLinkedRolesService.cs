@@ -26,7 +26,7 @@ public sealed class DiscordLinkedRolesService : BackgroundService
         await using var scope = _scopeFactory.CreateAsyncScope();
         var client = scope.ServiceProvider.GetRequiredService<DiscordClient>();
 
-        var result = await client.SetGlobalMetadata(new DiscordGlobalMetadata[]
+        var result = await client.SetGlobalMetadataAsync(new DiscordGlobalMetadata[]
         {
             new(DiscordConstants.BUTRModAuthor, "BUTR Mod Author", "Linked with the BUTR Site", 7),
             new(DiscordConstants.BUTRModerator, "BUTR Moderator", "Moderator of BUTR Site", 7),

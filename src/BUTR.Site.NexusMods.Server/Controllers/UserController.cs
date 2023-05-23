@@ -39,7 +39,7 @@ public sealed class UserController : ControllerExtended
     [HttpPost("SetRole")]
     [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> SetRole([FromQuery] SetRoleBody body, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<string?>>> SetRoleAsync([FromQuery] SetRoleBody body, CancellationToken ct)
     {
         NexusModsUserRoleEntity? ApplyChanges(NexusModsUserRoleEntity? existing) => existing switch
         {
@@ -55,7 +55,7 @@ public sealed class UserController : ControllerExtended
     [HttpDelete("RemoveRole")]
     [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> RemoveRole([FromQuery] RemoveRoleBody body, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<string?>>> RemoveRoleAsync([FromQuery] RemoveRoleBody body, CancellationToken ct)
     {
         NexusModsUserRoleEntity? ApplyChanges(NexusModsUserRoleEntity? existing) => existing switch
         {

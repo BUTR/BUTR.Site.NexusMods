@@ -16,7 +16,7 @@ public class MetadataMiddleware
         _next = next ?? throw new ArgumentNullException(nameof(next));
     }
 
-    public async Task Invoke(HttpContext context)
+    public async Task InvokeAsync(HttpContext context)
     {
         Task Unauthorized()
         {
