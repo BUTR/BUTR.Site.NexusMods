@@ -3,7 +3,6 @@ using BUTR.Site.NexusMods.Server.Utils.Reflection;
 using BUTR.Site.NexusMods.Shared.Extensions;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
-using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.Metadata;
 
 using System;
@@ -204,7 +203,7 @@ public static class RecreateStacktraceUtils
 
                 // The section above takes about 1ms and 2MB
                 // The section below takes about 23ms and 150MB
-                var output = new PlainTextOutput();
+                var output = new PlainTextOutput2();
                 var disassembler = CSharpILMixedLanguage.CreateDisassembler(output, ct);
                 disassembler.DisassembleMethod(moduleDefinition, foundMethodHandle);
 
@@ -217,7 +216,7 @@ public static class RecreateStacktraceUtils
         }
 
         var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
-        return GetPEFiles(assemblyFiles) /*.AsParallel().AsUnordered().WithCancellation(ct)*/
+        return GetPEFiles(assemblyFiles).AsParallel().AsUnordered().WithCancellation(ct)
             .SelectMany(moduleDefinition => RecreatedStacktrace(moduleDefinition, crashReport, ct))
             .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
     }

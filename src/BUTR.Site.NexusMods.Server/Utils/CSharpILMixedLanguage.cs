@@ -1,12 +1,9 @@
-﻿using BUTR.Site.NexusMods.Server.Extensions;
-
-using ICSharpCode.Decompiler;
+﻿using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.CSharp.OutputVisitor;
 using ICSharpCode.Decompiler.CSharp.Syntax;
 using ICSharpCode.Decompiler.Disassembler;
 using ICSharpCode.Decompiler.Metadata;
-using ICSharpCode.Decompiler.Util;
 
 using System;
 using System.Collections.Generic;
@@ -14,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Text;
 using System.Threading;
 
 namespace BUTR.Site.NexusMods.Server.Utils;
@@ -58,11 +56,15 @@ internal static class CSharpILMixedLanguage
 
     private class MixedMethodBodyDisassembler : MethodBodyDisassembler
     {
+        private static readonly char[] CrLf = "\r\n".ToArray();
+        private static readonly List<ICSharpCode.Decompiler.DebugInfo.SequencePoint> Empty = new();
+
         // list sorted by IL offset
-        private IList<ICSharpCode.Decompiler.DebugInfo.SequencePoint>? sequencePoints;
+        private Dictionary<int, ICSharpCode.Decompiler.DebugInfo.SequencePoint>? sequencePoints;
 
         // lines of raw c# source code
-        private string[]? codeLines;
+        private StringBuilder? _stringBuilder;
+        private List<(int, int)>? _stringBuilderLinesIndices;
 
         private readonly CancellationToken cancellationToken;
 
@@ -76,42 +78,79 @@ internal static class CSharpILMixedLanguage
             try
             {
                 var settings = new DecompilerSettings(LanguageVersion.Latest);
-                using var csharpOutput = new StringWriter();
                 var decompiler = CreateDecompiler(module, settings, cancellationToken);
-                var st = decompiler.Decompile(handle);
-                WriteCode(csharpOutput, settings, st);
-                var mapping = decompiler.CreateSequencePoints(st).FirstOrDefault(kvp => (kvp.Key.MoveNextMethod ?? kvp.Key.Method)?.MetadataToken == handle);
-                sequencePoints = mapping.Value ?? (IList<ICSharpCode.Decompiler.DebugInfo.SequencePoint>) EmptyList<ICSharpCode.Decompiler.DebugInfo.SequencePoint>.Instance;
-                codeLines = csharpOutput.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None); // TODO:
+                var syntaxTree = decompiler.Decompile(handle);
+                
+                using var csharpOutput = new StringWriter();
+                WriteCode(csharpOutput, settings, syntaxTree);
+                var mapping = decompiler.CreateSequencePoints(syntaxTree).FirstOrDefault(kvp => (kvp.Key.MoveNextMethod ?? kvp.Key.Method)?.MetadataToken == handle);
+                sequencePoints = (mapping.Value ?? Empty).ToDictionary(x => x.Offset, x => x);
+                
+                _stringBuilder = csharpOutput.GetStringBuilder();
+                IndexStringBuilder();
+                
                 base.Disassemble(module, handle);
             }
             finally
             {
                 sequencePoints = null;
-                codeLines = null;
+                _stringBuilder = null;
+                _stringBuilderLinesIndices = null;
             }
         }
 
+        private void IndexStringBuilder()
+        {
+            if (_stringBuilder is null) return;
+
+            _stringBuilderLinesIndices = new List<(int, int)>();
+            var chunkOffset = 0;
+            var previousIdx = 0;
+            foreach (var chunk in _stringBuilder.GetChunks())
+            {
+                var span = chunk.Span;
+                var offset = 0;
+                while (span.IndexOf(CrLf, StringComparison.Ordinal) is var idx and not -1)
+                {
+                    _stringBuilderLinesIndices.Add((previousIdx, chunkOffset + offset + idx));
+                    previousIdx = chunkOffset + offset + idx + CrLf.Length;
+                    offset += idx + CrLf.Length;
+                    span = span.Slice(idx + CrLf.Length);
+                }
+                chunkOffset += chunk.Length;
+            }
+            _stringBuilderLinesIndices.Add((previousIdx, _stringBuilder.Length));
+        }
+
+        // Is called within base.Disassemble
         protected override void WriteInstruction(ITextOutput output, MetadataReader metadata, MethodDefinitionHandle methodHandle, ref BlobReader blob, int methodRva)
         {
-            if (codeLines is not null && sequencePoints?.BinarySearch(blob.Offset, seq => seq.Offset) is { } index and >= 0)
+            if (output is not PlainTextOutput2 plainTextOutput2) return;
+            if (_stringBuilder is null || _stringBuilderLinesIndices is null) return;
+            if (sequencePoints is null) return;
+
+            if (sequencePoints.TryGetValue(blob.Offset, out var info))
             {
-                var info = sequencePoints[index];
-                if (!info.IsHidden)
+                if (info.IsHidden)
                 {
-                    for (var line = info.StartLine; line <= info.EndLine; line++)
-                    {
-                        output.WriteLine();
-                        output.WriteLine($"// {codeLines[line - 1].Trim()}");
-                    }
+                    plainTextOutput2.WriteLine("// (no C# code)");
                 }
                 else
                 {
-                    output.WriteLine("// (no C# code)");
+                    for (var line = info.StartLine; line <= info.EndLine; line++)
+                    {
+                        plainTextOutput2.WriteLine();
+                        plainTextOutput2.Write("// ");
+
+                        var (start, end) = _stringBuilderLinesIndices[line - 1];
+                        var length = end - start;
+                        plainTextOutput2.Write(_stringBuilder, start, length);
+                        plainTextOutput2.WriteLine();
+                    }
                 }
             }
 
-            base.WriteInstruction(output, metadata, methodHandle, ref blob, methodRva);
+            base.WriteInstruction(plainTextOutput2, metadata, methodHandle, ref blob, methodRva);
         }
     }
 }

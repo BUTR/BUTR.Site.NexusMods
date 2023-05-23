@@ -98,7 +98,7 @@ public static class QueryableExtensions
         _ => throw new ArgumentOutOfRangeException(nameof(filteringType), filteringType, null)
     };
 
-    private static object? ConvertValue(Type type, string rawValue)
+    private static object ConvertValue(Type type, string rawValue)
     {
         if (type.IsEnum)
             return Enum.Parse(type, rawValue);
