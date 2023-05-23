@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.ServerClient.Utils;
 
-internal sealed partial class StreamWithCrLfEnding : Stream
+internal sealed partial class StreamWithLfEnding : Stream
 {
     private static readonly byte[] CrLf = "\r\n"u8.ToArray();
 
@@ -16,11 +16,11 @@ internal sealed partial class StreamWithCrLfEnding : Stream
     public IMemoryOwner<byte>? _leftoverBytes;
     public int _leftoverBytesLength;
 
-    public StreamWithCrLfEnding(Stream stream)
+    public StreamWithLfEnding(Stream stream)
     {
         _streamImplementation = stream;
     }
-    public StreamWithCrLfEnding(IMemoryOwner<byte> leftoverBytes, int leftoverBytesLength, Stream stream)
+    public StreamWithLfEnding(IMemoryOwner<byte> leftoverBytes, int leftoverBytesLength, Stream stream)
     {
         _leftoverBytes = leftoverBytes;
         _leftoverBytesLength = leftoverBytesLength;
@@ -33,7 +33,7 @@ internal sealed partial class StreamWithCrLfEnding : Stream
         if (_endRead) return 0;
 
         var length = 0;
-        var crLfIdx = -1;
+        var lfIdx = -1;
         if (_leftoverBytes is not null && !_leftoverBytes.Memory.IsEmpty)
         {
             length = _leftoverBytesLength;
@@ -41,18 +41,18 @@ internal sealed partial class StreamWithCrLfEnding : Stream
             ResetLeftover();
             var memory = buffer.Slice(0, length);
             if (memory.Span.IndexOfAny(CrLf) is not (var idx and not -1)) return length;
-            crLfIdx = idx;
+            lfIdx = idx;
         }
         else
         {
             length = await _streamImplementation.ReadAsync(buffer, cancellationToken);
             var memory = buffer.Slice(0, length);
             if (memory.Span.IndexOfAny(CrLf) is not (var idx and not -1)) return length;
-            crLfIdx = idx;
+            lfIdx = idx;
         }
 
         _endRead = true;
-        var realLength = crLfIdx + CrLf.Length;
+        var realLength = lfIdx + CrLf.Length;
         var leftover = buffer.Slice(realLength, length - realLength);
         InitializeLeftover(leftover);
         return realLength;

@@ -56,7 +56,7 @@ public sealed record PagingStreamingData<T> where T : class
 
         async LazyTask<APIStreamingResponse> GetStatus()
         {
-            var stream = await streamingJsonContext.ReadCrLfJsonAsync(ct);
+            var stream = await streamingJsonContext.ReadLfSeparatedJsonAsync(ct);
             var result = await JsonSerializer.DeserializeAsync<APIStreamingResponse>(stream, jsonSerializerOptions, ct);
             hasError = result is null || !string.IsNullOrEmpty(result.HumanReadableError);
             return result!;
@@ -67,7 +67,7 @@ public sealed record PagingStreamingData<T> where T : class
 
             await getStatus;
 
-            var stream = await streamingJsonContext.ReadCrLfJsonAsync(ct);
+            var stream = await streamingJsonContext.ReadLfSeparatedJsonAsync(ct);
             var result = await JsonSerializer.DeserializeAsync<PagingMetadata>(stream, jsonSerializerOptions, ct);
             return result!;
         }
@@ -78,7 +78,7 @@ public sealed record PagingStreamingData<T> where T : class
             await getStatus;
             await getMetadata;
 
-            var stream = await streamingJsonContext.ReadCrLfJsonAsync(ct);
+            var stream = await streamingJsonContext.ReadLfSeparatedJsonAsync(ct);
             return new OneTimeEnumerable<T>(JsonSerializer.DeserializeAsyncEnumerable<T>(stream, jsonSerializerOptions, ct)!);
         }
         async LazyTask<PagingAdditionalMetadata> GetQueryExecutionTimeMilliseconds()
@@ -90,7 +90,7 @@ public sealed record PagingStreamingData<T> where T : class
             var items = (await getItems as OneTimeEnumerable<T>)!;
             await items.Enumeration.Task;
 
-            var stream = await streamingJsonContext.ReadCrLfJsonAsync(ct);
+            var stream = await streamingJsonContext.ReadLfSeparatedJsonAsync(ct);
             var result = await JsonSerializer.DeserializeAsync<PagingAdditionalMetadata>(stream, jsonSerializerOptions, ct);
             await streamingJsonContext.DisposeAsync();
             return result!;

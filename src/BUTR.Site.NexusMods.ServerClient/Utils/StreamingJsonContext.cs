@@ -11,24 +11,24 @@ internal class StreamingJsonContext : IDisposable, IAsyncDisposable
     private readonly HttpResponseMessage _response;
     private Stream? _stream;
 
-    private StreamWithCrLfEnding? _current;
+    private StreamWithLfEnding? _current;
 
     public StreamingJsonContext(HttpResponseMessage response)
     {
         _response = response;
     }
 
-    public async Task<Stream> ReadCrLfJsonAsync(CancellationToken ct)
+    public async Task<Stream> ReadLfSeparatedJsonAsync(CancellationToken ct)
     {
         _stream ??= await _response.Content.ReadAsStreamAsync(ct);
 
         if (_current is null)
         {
-            _current = new StreamWithCrLfEnding(_stream);
+            _current = new StreamWithLfEnding(_stream);
         }
         else
         {
-            var newCurrent = new StreamWithCrLfEnding(_current._leftoverBytes!, _current._leftoverBytesLength, _stream);
+            var newCurrent = new StreamWithLfEnding(_current._leftoverBytes!, _current._leftoverBytesLength, _stream);
             _current = newCurrent;
         }
 

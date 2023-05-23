@@ -56,7 +56,7 @@ internal static class CSharpILMixedLanguage
 
     private class MixedMethodBodyDisassembler : MethodBodyDisassembler
     {
-        private static readonly char[] CrLf = "\r\n".ToArray();
+        private static readonly char[] NewLine = Environment.NewLine.ToArray();
         private static readonly List<ICSharpCode.Decompiler.DebugInfo.SequencePoint> Empty = new();
 
         // list sorted by IL offset
@@ -110,12 +110,12 @@ internal static class CSharpILMixedLanguage
             {
                 var span = chunk.Span;
                 var offset = 0;
-                while (span.IndexOf(CrLf, StringComparison.Ordinal) is var idx and not -1)
+                while (span.IndexOf(NewLine, StringComparison.Ordinal) is var idx and not -1)
                 {
                     _stringBuilderLinesIndices.Add((previousIdx, chunkOffset + offset + idx));
-                    previousIdx = chunkOffset + offset + idx + CrLf.Length;
-                    offset += idx + CrLf.Length;
-                    span = span.Slice(idx + CrLf.Length);
+                    previousIdx = chunkOffset + offset + idx + NewLine.Length;
+                    offset += idx + NewLine.Length;
+                    span = span.Slice(idx + NewLine.Length);
                 }
                 chunkOffset += chunk.Length;
             }

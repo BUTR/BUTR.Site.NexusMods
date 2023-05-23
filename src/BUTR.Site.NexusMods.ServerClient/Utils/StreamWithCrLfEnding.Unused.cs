@@ -2,7 +2,7 @@
 
 namespace BUTR.Site.NexusMods.ServerClient.Utils;
 
-partial class StreamWithCrLfEnding
+partial class StreamWithLfEnding
 {
     public override bool CanRead => _streamImplementation.CanRead;
     public override bool CanSeek => _streamImplementation.CanSeek;

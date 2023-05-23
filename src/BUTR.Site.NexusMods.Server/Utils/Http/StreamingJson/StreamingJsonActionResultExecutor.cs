@@ -10,7 +10,7 @@ namespace BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
 
 public class StreamingJsonActionResultExecutor : IActionResultExecutor<StreamingJsonActionResult>
 {
-    private static readonly byte[] CrLf = "\r\n"u8.ToArray();
+    private static readonly byte[] Lf = "\n"u8.ToArray();
 
     public async Task ExecuteAsync(ActionContext context, StreamingJsonActionResult result)
     {
@@ -26,7 +26,7 @@ public class StreamingJsonActionResultExecutor : IActionResultExecutor<Streaming
             foreach (var contentStreamFunc in result.Contents)
             {
                 await contentStreamFunc(responseStream, context.HttpContext.RequestAborted);
-                await responseStream.WriteAsync(CrLf);
+                await responseStream.WriteAsync(Lf);
             }
         }
         catch (OperationCanceledException)
