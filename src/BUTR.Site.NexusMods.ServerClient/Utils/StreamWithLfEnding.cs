@@ -8,7 +8,7 @@ namespace BUTR.Site.NexusMods.ServerClient.Utils;
 
 internal sealed partial class StreamWithLfEnding : Stream
 {
-    private static readonly byte[] CrLf = "\r\n"u8.ToArray();
+    private static readonly byte[] Lf = "\n"u8.ToArray();
 
     private readonly Stream _streamImplementation;
     private bool _endRead = false;
@@ -40,19 +40,19 @@ internal sealed partial class StreamWithLfEnding : Stream
             _leftoverBytes.Memory.CopyTo(buffer);
             ResetLeftover();
             var memory = buffer.Slice(0, length);
-            if (memory.Span.IndexOfAny(CrLf) is not (var idx and not -1)) return length;
+            if (memory.Span.IndexOfAny(Lf) is not (var idx and not -1)) return length;
             lfIdx = idx;
         }
         else
         {
             length = await _streamImplementation.ReadAsync(buffer, cancellationToken);
             var memory = buffer.Slice(0, length);
-            if (memory.Span.IndexOfAny(CrLf) is not (var idx and not -1)) return length;
+            if (memory.Span.IndexOfAny(Lf) is not (var idx and not -1)) return length;
             lfIdx = idx;
         }
 
         _endRead = true;
-        var realLength = lfIdx + CrLf.Length;
+        var realLength = lfIdx + Lf.Length;
         var leftover = buffer.Slice(realLength, length - realLength);
         InitializeLeftover(leftover);
         return realLength;
