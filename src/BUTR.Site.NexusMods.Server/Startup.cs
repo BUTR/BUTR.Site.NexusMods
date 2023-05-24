@@ -27,6 +27,11 @@ using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 
+using Polly;
+using Polly.Contrib.WaitAndRetry;
+using Polly.Extensions.Http;
+using Polly.Retry;
+
 using Quartz;
 
 using Sentry;
@@ -35,6 +40,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
@@ -62,6 +68,15 @@ public sealed class Startup
         opt.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
         opt.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         return opt;
+    }
+    
+    private static AsyncRetryPolicy<HttpResponseMessage> GetRetryPolicy()
+    {
+        var delay = Backoff.DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromSeconds(1), retryCount: 5);
+        return Policy<HttpResponseMessage>
+            .Handle<HttpRequestException>()
+            .OrTransientHttpStatusCode()
+            .WaitAndRetryAsync(delay);
     }
 
     private readonly IConfiguration _configuration;
@@ -97,17 +112,17 @@ public sealed class Startup
         services.AddHttpClient(string.Empty).ConfigureHttpClient((_, client) =>
         {
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<NexusModsClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://nexusmods./");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://api.nexusmods.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<CrashReporterClient>().ConfigureHttpClient((sp, client) =>
         {
             var opts = sp.GetRequiredService<IOptions<CrashReporterOptions>>().Value;
@@ -116,32 +131,32 @@ public sealed class Startup
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Basic",
                 Convert.ToBase64String(Encoding.ASCII.GetBytes($"{opts.Username}:{opts.Password}")));
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<DiscordClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://discord.com/api/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<SteamCommunityClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://steamcommunity.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<SteamAPIClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://api.steampowered.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<GOGAuthClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://auth.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<GOGEmbedClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
 
         services.AddMultipartSupport();
 
