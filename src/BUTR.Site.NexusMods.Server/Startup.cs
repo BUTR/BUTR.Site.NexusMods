@@ -15,6 +15,7 @@ using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -27,6 +28,8 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 
 using Quartz;
+
+using Sentry;
 
 using System;
 using System.IO;
@@ -90,20 +93,21 @@ public sealed class Startup
         services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>(steamAPISection);
         services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>(depotDownloaderSection);
 
+        services.AddTransient<SentryHttpMessageHandler>();
         services.AddHttpClient(string.Empty).ConfigureHttpClient((_, client) =>
         {
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        });
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
         services.AddHttpClient<NexusModsClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://nexusmods./");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        });
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
         services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://api.nexusmods.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        });
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
         services.AddHttpClient<CrashReporterClient>().ConfigureHttpClient((sp, client) =>
         {
             var opts = sp.GetRequiredService<IOptions<CrashReporterOptions>>().Value;
@@ -112,32 +116,32 @@ public sealed class Startup
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Basic",
                 Convert.ToBase64String(Encoding.ASCII.GetBytes($"{opts.Username}:{opts.Password}")));
-        });
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
         services.AddHttpClient<DiscordClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://discord.com/api/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        });
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
         services.AddHttpClient<SteamCommunityClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://steamcommunity.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        });
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
         services.AddHttpClient<SteamAPIClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://api.steampowered.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        });
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
         services.AddHttpClient<GOGAuthClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://auth.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        });
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
         services.AddHttpClient<GOGEmbedClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        });
+        }).AddHttpMessageHandler<SentryHttpMessageHandler>();
 
         services.AddMultipartSupport();
 
@@ -315,6 +319,7 @@ public sealed class Startup
         });
 
         app.UseRouting();
+        app.UseSentryTracing();
         app.UseAuthorization();
         app.UseMetadata();
         app.UseEndpoints(endpoints =>

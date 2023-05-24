@@ -3,6 +3,7 @@ using BUTR.Site.NexusMods.Server.Extensions;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Quartz;
 
@@ -30,5 +31,10 @@ public static class Program
         .ConfigureWebHostDefaults(webBuilder =>
         {
             webBuilder.UseStartup<Startup>();
+            webBuilder.UseSentry();
+        })
+        .ConfigureLogging((ctx, builder) =>
+        {
+            builder.AddSentry();
         });
 }
