@@ -12,6 +12,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,9 +36,18 @@ public sealed class RecreateStacktraceController : ControllerExtended
 
     [HttpGet("Json/{id}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<IOrderedEnumerable<RecreatedStacktrace>?>>> JsonAsync(string id, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<IEnumerable<RecreatedStacktrace>?>>> JsonAsync(string id, CancellationToken ct)
     {
-        var crashReportContent = await _crashReporterClient.GetCrashReportAsync(id, ct);
+        string crashReportContent;
+        try
+        {
+            crashReportContent = await _crashReporterClient.GetCrashReportAsync(id, ct);
+        }
+        catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
+        {
+            return APIResponse(Enumerable.Empty<RecreatedStacktrace>());
+        }
+        
         var crashReport = CrashReportParser.Parse(id, crashReportContent);
         var gameVersion = crashReport.GameVersion;
 
@@ -51,14 +62,23 @@ public sealed class RecreateStacktraceController : ControllerExtended
         var recreatedStacktraceWithMissing = recreatedStacktrace.Concat(currentMethods.Select(x => new RecreatedStacktrace(x, $"No Code Available. IL Offset: {ilOffsets[x]}", 1)))
             .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
 
-        return APIResponse(recreatedStacktraceWithMissing);
+        return APIResponse<IEnumerable<RecreatedStacktrace>>(recreatedStacktraceWithMissing);
     }
 
     [HttpGet("Html/{id}")]
     [Produces("text/plain")]
     public async Task<ActionResult<string>> HtmlAsync(string id, CancellationToken ct)
     {
-        var crashReportContent = await _crashReporterClient.GetCrashReportAsync(id, ct);
+        string crashReportContent;
+        try
+        {
+            crashReportContent = await _crashReporterClient.GetCrashReportAsync(id, ct);
+        }
+        catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
+        {
+            return Content(string.Empty, "text/html", Encoding.UTF8);
+        }
+        
         var crashReport = CrashReportParser.Parse(id, crashReportContent);
         var gameVersion = crashReport.GameVersion;
 
