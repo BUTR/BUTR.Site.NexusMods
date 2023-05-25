@@ -1,0 +1,23 @@
+<Project>
+
+  <!--Development Variables-->
+  <PropertyGroup>
+    <LangVersion>11.0</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!--GitHub Actions-->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+  <!--NuGet SorceLink-->
+  <PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+  <!--SorceLink-->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
+    <PackageReference Include="GitVersion.MsBuild" Version="5.12.0" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

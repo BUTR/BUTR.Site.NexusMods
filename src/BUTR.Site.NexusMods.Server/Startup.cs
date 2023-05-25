@@ -14,8 +14,6 @@ using BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -42,6 +40,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -75,6 +74,7 @@ public sealed class Startup
         var delay = Backoff.DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromSeconds(1), retryCount: 5);
         return Policy<HttpResponseMessage>
             .Handle<HttpRequestException>()
+            .Or<SocketException>()
             .OrTransientHttpStatusCode()
             .WaitAndRetryAsync(delay);
     }

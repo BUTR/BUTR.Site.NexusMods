@@ -2,19 +2,23 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-preview-alpine AS base
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0-preview-alpine AS restore
-WORKDIR /src
+WORKDIR /build
 
-COPY ["BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj", "BUTR.Site.NexusMods.Server/"]
-COPY ["BUTR.Site.NexusMods.Shared/BUTR.Site.NexusMods.Shared.csproj", "BUTR.Site.NexusMods.Shared/"]
+COPY ["src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj", "src/BUTR.Site.NexusMods.Server/"]
+COPY ["src/BUTR.Site.NexusMods.Shared/BUTR.Site.NexusMods.Shared.csproj", "src/BUTR.Site.NexusMods.Shared/"]
 
-RUN dotnet restore "BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj"
+RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj"
 
 COPY . .
 
+COPY [".git/HEAD", ".git/HEAD"]
+COPY [".git/config", ".git/config"]
+COPY [".git/refs/heads/", ".git/refs/heads/"]
+
 
 FROM restore AS publish
-WORKDIR "/src/BUTR.Site.NexusMods.Server"
-RUN dotnet publish "BUTR.Site.NexusMods.Server.csproj" -c Release -r linux-musl-x64 -p:PublishReadyToRun=true -o /app/publish
+WORKDIR /build
+RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -c Release -r linux-musl-x64 -p:PublishReadyToRun=true -o /app/publish
 
 
 FROM base AS final

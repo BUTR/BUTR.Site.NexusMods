@@ -47,7 +47,7 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         builder: ${{ steps.buildx.outputs.name }}
-        context: ./src
+        context: ./
         file: ./src/BUTR.Site.NexusMods.Server/Dockerfile
         platforms: linux/amd64
         #platforms: linux/amd64,linux/arm64

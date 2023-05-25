@@ -349,7 +349,7 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 *.sqlite3
-/build/*
+!/build/*
 /src/swagger.json
 /src/BUTR.Site.NexusMods.Server/.config/dotnet-tools.json
 /**/*.g.cs
