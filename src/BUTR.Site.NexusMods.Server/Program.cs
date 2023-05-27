@@ -51,6 +51,8 @@ public static class Program
                 {
                     var metricsProtocol = oltpSection.GetValue<OtlpExportProtocol>("MetricsProtocol");
                     openTelemetry.WithMetrics(builder => builder
+                        .AddProcessInstrumentation()
+                        .AddEventCountersInstrumentation()
                         .AddRuntimeInstrumentation()
                         .AddHttpClientInstrumentation()
                         .AddAspNetCoreInstrumentation()
