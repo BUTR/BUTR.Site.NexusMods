@@ -1,7 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Extensions;
-
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -43,8 +40,16 @@ public static class Program
             if (oltpSection is not null)
             {
                 var openTelemetry = services.AddOpenTelemetry()
-                    .ConfigureResource(builder => builder
-                        .AddService(serviceName: typeof(Program).Assembly.GetName().Name!));
+                    .ConfigureResource(builder =>
+                    {
+                        builder.AddService(
+                            ctx.HostingEnvironment.ApplicationName,
+                            ctx.HostingEnvironment.EnvironmentName,
+                            typeof(Program).Assembly.GetName().Version?.ToString(),
+                            false,
+                            Environment.MachineName);
+                        builder.AddTelemetrySdk();
+                    });
 
                 var metricsEndpoint = oltpSection.GetValue<string>("MetricsEndpoint");
                 if (metricsEndpoint is not null)
@@ -52,10 +57,19 @@ public static class Program
                     var metricsProtocol = oltpSection.GetValue<OtlpExportProtocol>("MetricsProtocol");
                     openTelemetry.WithMetrics(builder => builder
                         .AddProcessInstrumentation()
-                        .AddEventCountersInstrumentation()
-                        .AddRuntimeInstrumentation()
+                        .AddEventCountersInstrumentation(instrumentationOptions =>
+                        {
+                            
+                        })
+                        .AddRuntimeInstrumentation(instrumentationOptions =>
+                        {
+                            
+                        })
                         .AddHttpClientInstrumentation()
-                        .AddAspNetCoreInstrumentation()
+                        .AddAspNetCoreInstrumentation(instrumentationOptions =>
+                        {
+                            
+                        })
                         .AddOtlpExporter(o =>
                         {
                             o.Endpoint = new Uri(metricsEndpoint);
@@ -68,11 +82,26 @@ public static class Program
                 {
                     var tracingProtocol = oltpSection.GetValue<OtlpExportProtocol>("TracingProtocol");
                     openTelemetry.WithTracing(builder => builder
-                        .AddEntityFrameworkCoreInstrumentation()
-                        .AddNpgsql()
-                        .AddHttpClientInstrumentation()
-                        .AddAspNetCoreInstrumentation()
-                        .AddQuartzInstrumentation()
+                        .AddEntityFrameworkCoreInstrumentation(instrumentationOptions =>
+                        {
+                            instrumentationOptions.SetDbStatementForText = true;
+                        })
+                        .AddNpgsql(instrumentationOptions =>
+                        {
+                            
+                        })
+                        .AddHttpClientInstrumentation(instrumentationOptions =>
+                        {
+                            instrumentationOptions.RecordException = true;
+                        })
+                        .AddAspNetCoreInstrumentation(instrumentationOptions =>
+                        {
+                            instrumentationOptions.RecordException = true;
+                        })
+                        .AddQuartzInstrumentation(instrumentationOptions =>
+                        {
+                            instrumentationOptions.RecordException = true;
+                        })
                         .AddOtlpExporter(o =>
                         {
                             o.Endpoint = new Uri(tracingEndpoint);
