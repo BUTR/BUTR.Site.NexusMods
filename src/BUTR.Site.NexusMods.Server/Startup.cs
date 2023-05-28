@@ -113,7 +113,7 @@ public sealed class Startup
         }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<NexusModsClient>().ConfigureHttpClient((_, client) =>
         {
-            client.BaseAddress = new Uri("https://nexusmods./");
+            client.BaseAddress = new Uri("https://nexusmods.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((_, client) =>

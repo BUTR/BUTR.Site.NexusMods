@@ -42,7 +42,12 @@ public static class Program
                 var openTelemetry = services.AddOpenTelemetry()
                     .ConfigureResource(builder =>
                     {
-                        builder.AddService(ctx.HostingEnvironment.ApplicationName);
+                        builder.AddService(
+                            ctx.HostingEnvironment.ApplicationName,
+                            ctx.HostingEnvironment.EnvironmentName,
+                            typeof(Program).Assembly.GetName().Version?.ToString(),
+                            false,
+                            Environment.MachineName);
                         builder.AddTelemetrySdk();
                     });
 
@@ -51,7 +56,6 @@ public static class Program
                 {
                     var metricsProtocol = oltpSection.GetValue<OtlpExportProtocol>("MetricsProtocol");
                     openTelemetry.WithMetrics(builder => builder
-                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(ctx.HostingEnvironment.ApplicationName))
                         .AddProcessInstrumentation()
                         .AddEventCountersInstrumentation(instrumentationOptions =>
                         {
@@ -78,7 +82,6 @@ public static class Program
                 {
                     var tracingProtocol = oltpSection.GetValue<OtlpExportProtocol>("TracingProtocol");
                     openTelemetry.WithTracing(builder => builder
-                        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(ctx.HostingEnvironment.ApplicationName))
                         .AddEntityFrameworkCoreInstrumentation(instrumentationOptions =>
                         {
                             instrumentationOptions.SetDbStatementForText = true;
@@ -127,7 +130,6 @@ public static class Program
                 o.IncludeScopes = true;
                 o.ParseStateValues = true;
                 o.IncludeFormattedMessage = true;
-                o.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(ctx.HostingEnvironment.ApplicationName));
                 o.AddOtlpExporter(opt =>
                 {
                     opt.Endpoint = new Uri(loggingEndpoint);
