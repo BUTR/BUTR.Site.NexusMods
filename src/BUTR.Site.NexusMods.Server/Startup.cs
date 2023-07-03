@@ -98,13 +98,13 @@ public sealed class Startup
         var depotDownloaderSection = _configuration.GetSection(DepotDownloaderSectionName);
 
         services.AddOptions<JsonSerializerOptions>().Configure(opt => Configure(opt));
-        services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>(connectionStringSection);
-        services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>(crashReporterSection);
-        services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>(nexusModsSection);
-        services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>(jwtSection);
-        services.AddValidatedOptions<DiscordOptions, DiscordOptionsValidator>(discordSection);
-        services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>(steamAPISection);
-        services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>(depotDownloaderSection);
+        services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>().Bind(connectionStringSection);
+        services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>().Bind(crashReporterSection);
+        services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>().Bind(nexusModsSection);
+        services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>().Bind(jwtSection);
+        services.AddValidatedOptions<DiscordOptions, DiscordOptionsValidator>().Bind(discordSection);
+        services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>().Bind(steamAPISection);
+        services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>().Bind(depotDownloaderSection);
 
         services.AddTransient<SentryHttpMessageHandler>();
         services.AddHttpClient(string.Empty).ConfigureHttpClient((_, client) =>

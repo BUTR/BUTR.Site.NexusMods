@@ -12,6 +12,7 @@ using Npgsql;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.ResourceDetectors.Container;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -45,6 +46,7 @@ public static class Program
                 var openTelemetry = services.AddOpenTelemetry()
                     .ConfigureResource(builder =>
                     {
+                        builder.AddDetector(new ContainerResourceDetector());
                         builder.AddService(
                             ctx.HostingEnvironment.ApplicationName,
                             ctx.HostingEnvironment.EnvironmentName,
@@ -60,10 +62,6 @@ public static class Program
                     var metricsProtocol = oltpSection.GetValue<OtlpExportProtocol>("MetricsProtocol");
                     openTelemetry.WithMetrics(builder => builder
                         .AddProcessInstrumentation()
-                        .AddEventCountersInstrumentation(instrumentationOptions =>
-                        {
-                            
-                        })
                         .AddRuntimeInstrumentation(instrumentationOptions =>
                         {
                             
@@ -90,6 +88,10 @@ public static class Program
                             instrumentationOptions.SetDbStatementForText = true;
                         })
                         .AddNpgsql(instrumentationOptions =>
+                        {
+                            
+                        })
+                        .AddGrpcClientInstrumentation(instrumentationOptions =>
                         {
                             
                         })

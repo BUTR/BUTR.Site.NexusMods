@@ -85,7 +85,7 @@ public partial class StatisticsInvolved
 
         var gameVersions = (_gameVersions.Count == 0 ? (ICollection<string>) allGameVersions : (ICollection<string>) _gameVersions);
         var modIds = (_modIds.Count == 0 ? (ICollection<string>) allModIdsWithVersions.Keys : (ICollection<string>) _modIds);
-        var modIdsWithVersions = modIds.Select(x => new { Key = x, Value = allModIdsWithVersions[x] }).ToList();
+        var modIdsWithVersions = modIds.Where(x => allModIdsWithVersions.ContainsKey(x)).Select(x => new { Key = x, Value = allModIdsWithVersions[x] }).ToList();
 
         var backgrounds = ChartUtiities.GetColors(gameVersions.Count * modIds.Count, 0.2f).ToList();
         var borders = ChartUtiities.GetColors(gameVersions.Count * modIds.Count, 1f).ToList();

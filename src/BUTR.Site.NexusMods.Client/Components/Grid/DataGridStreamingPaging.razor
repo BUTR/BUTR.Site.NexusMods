@@ -139,7 +139,7 @@
             
             if (_loadCancellationTokenSource is not null && !_loadCancellationTokenSource.IsCancellationRequested)
             {
-                await _loadCancellationTokenSource.CancelAsync();
+                _loadCancellationTokenSource.Cancel();
                 _loadCancellationTokenSource.Dispose();
                 _loadCancellationTokenSource = null;
             }
