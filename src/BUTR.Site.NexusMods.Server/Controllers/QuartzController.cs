@@ -62,8 +62,20 @@ public sealed class QuartzController : ControllerExtended
     [Produces("application/json")]
     public async Task<ActionResult> TriggerJobAsync(string jobId, CancellationToken ct)
     {
+        var userId = HttpContext.GetUserId();
+        var userName = HttpContext.GetName();
+
+        var job = JobBuilder.Create()
+            .WithIdentity(jobId)
+            .Build();
+        var trigger = TriggerBuilder.Create()
+            .WithIdentity($"User:{userId}:{userName}")
+            .StartNow()
+            .Build();
+
         var scheduler = await _schedulerFactory.GetScheduler(ct);
-        _ = scheduler.TriggerJob(new JobKey(jobId), CancellationToken.None);
+        _ = scheduler.ScheduleJob(job, trigger, CancellationToken.None);
+        
         return Ok();
     }
 }
