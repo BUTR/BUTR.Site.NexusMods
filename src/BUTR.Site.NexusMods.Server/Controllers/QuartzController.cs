@@ -62,10 +62,15 @@ public sealed class QuartzController : ControllerExtended
     [Produces("application/json")]
     public async Task<ActionResult> TriggerJobAsync(string jobId, CancellationToken ct)
     {
+        var jobType = Type.GetType($"BUTR.Site.NexusMods.Server.Jobs.{jobId}");
+        if (jobType is null)
+            return BadRequest();
+
         var userId = HttpContext.GetUserId();
         var userName = HttpContext.GetName();
 
         var job = JobBuilder.Create()
+            .OfType(jobType)
             .WithIdentity(jobId)
             .Build();
         var trigger = TriggerBuilder.Create()
@@ -75,7 +80,7 @@ public sealed class QuartzController : ControllerExtended
 
         var scheduler = await _schedulerFactory.GetScheduler(ct);
         _ = scheduler.ScheduleJob(job, trigger, CancellationToken.None);
-        
+
         return Ok();
     }
 }
