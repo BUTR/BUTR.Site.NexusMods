@@ -6,7 +6,12 @@
 
 <Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="@Margin.Is0">NexusMods Articles</CardTitle>
+        <CardTitle Size="4" Position="Position.Relative" Margin="@Margin.Is0">
+            NexusMods Articles
+            <Button Position="@Position.Absolute.Bottom.Is0.End.Is0.Translate.MiddleX" Clicked="@Refresh" Padding="@Padding.Is0" >
+                <Icon Name="@IconName.Sync" />
+            </Button>
+        </CardTitle>
     </CardHeader>
     <CardBody>
         <DataGridPaging TItem="ArticleModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetArticles" Sortable Filterable>
@@ -60,6 +65,12 @@
                 }
             }
         }
+    }
+
+    private async Task Refresh(MouseEventArgs obj)
+    {
+        if (_dataGridPagingRef is not null)
+            await _dataGridPagingRef.Reload();
     }
 
 }

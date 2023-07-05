@@ -56,7 +56,12 @@
 
 <Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Margin="@Margin.Is0">Crash Reports</CardTitle>
+        <CardTitle Size="4" Position="Position.Relative" Margin="@Margin.Is0">
+            Crash Reports
+            <Button Position="@Position.Absolute.Bottom.Is0.End.Is0.Translate.MiddleX" Clicked="@Refresh" Padding="@Padding.Is0" >
+                <Icon Name="@IconName.Sync" />
+            </Button>
+        </CardTitle>
     </CardHeader>
     <CardBody>
         <DataGridStreamingPaging @ref="@_datagridPagingRef" TItem="CrashReportModel" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable DefaultPageSize="@UserSettings.DefaultCrashReportPageSize" PageSizes="@UserSettings.AvailableCrashReportPageSizes" GetPageSize="@(x => x.CrashReportPageSize)">
@@ -70,7 +75,7 @@
                 <DataGridColumnDate TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.CreatedAt)">
                     <DisplayTemplate>@(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
                 </DataGridColumnDate>
-                <DataGridColumnEnum TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" Filterable Sortable SortField="@nameof(EntityFields.Status)" >
+                <DataGridColumnEnum TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" Filterable Sortable SortField="@nameof(EntityFields.Status)">
                     <DisplayTemplate>@(context.Status.GetDisplayName())</DisplayTemplate>
                 </DataGridColumnEnum>
                 <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Comment)" Caption="Comment" Filterable Sortable SortField="@nameof(EntityFields.Comment)"/>
@@ -162,6 +167,12 @@
                 }
             }
         }
+    }
+
+    private async Task Refresh(MouseEventArgs obj)
+    {
+        if (_datagridPagingRef is not null)
+            await _datagridPagingRef.Reload();
     }
 
 }

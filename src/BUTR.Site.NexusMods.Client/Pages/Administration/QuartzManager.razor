@@ -17,7 +17,7 @@
             </Field>
             <Field>
                 <Button Color="@Color.Primary" Type="@ButtonType.Submit" Clicked="@OnSubmit" PreventDefaultOnSubmit>
-                    Link
+                    Execute Job
                 </Button>
             </Field>
         </Form>
@@ -26,10 +26,15 @@
 
 <Card Margin="@Margin.Is4">
     <CardHeader>
-        <CardTitle Size="4" Margin="@Margin.Is0">Job History</CardTitle>
+        <CardTitle Size="4" Position="Position.Relative" Margin="@Margin.Is0">
+            Job History
+            <Button Position="@Position.Absolute.Bottom.Is0.End.Is0.Translate.MiddleX" Clicked="@Refresh" Padding="@Padding.Is0" >
+                <Icon Name="@IconName.Sync" />
+            </Button>
+        </CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="QuartzExecutionLogEntity" DetailRowTrigger="@(x => x.Item.LogId == _dataGridRef.Value?.LogId)" GetFilters="@GetFilters" GetItems="@Paging" Sortable Filterable>
+        <DataGridPaging @ref="@_dataGridRef" TItem="QuartzExecutionLogEntity" DetailRowTrigger="@(x => x.Item.LogId == _dataGridRef?.Value?.LogId)" GetFilters="@GetFilters" GetItems="@Paging" Sortable Filterable>
             <DataGridColumns>
                 <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="" Filterable="@false" Sortable="@false" >
                     <DisplayTemplate>
@@ -93,8 +98,8 @@
     protected Theme Theme { get; set; } = default!;
 
     private string _jobId = string.Empty;
-    
-    private DataGridPaging<QuartzExecutionLogEntity> _dataGridRef = default!;
+
+    private DataGridPaging<QuartzExecutionLogEntity>? _dataGridRef;
     
     private async Task<DataGridPaging<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
         await _quartzClient.HistoryPaginatedAsync(new PaginatedQuery(page, pageSize, filters, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
@@ -104,6 +109,11 @@
         if (string.IsNullOrEmpty(_jobId)) return;
 
         await _quartzClient.TriggerJobAsync(_jobId);
+
+        await Task.Delay(1000);
+
+        if (_dataGridRef is not null)
+            await _dataGridRef.Reload();
     }
     
     private static IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
@@ -132,5 +142,11 @@
                 }
             }
         }
+    }
+
+    private async Task Refresh(MouseEventArgs obj)
+    {
+        if (_dataGridRef is not null)
+            await _dataGridRef.Reload();
     }
 }
