@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -98,10 +99,12 @@ public static class QueryableExtensions
         _ => throw new ArgumentOutOfRangeException(nameof(filteringType), filteringType, null)
     };
 
-    private static object ConvertValue(Type type, string rawValue)
+    private static bool TryConvertValue(Type type, string rawValue, [NotNullWhen((true))] out object? value)
     {
         if (type.IsEnum)
-            return Enum.Parse(type, rawValue);
+        {
+            return Enum.TryParse(type, rawValue, out value);
+        }
 
         if (type.IsArray)
             type = type.GetElementType()!;
@@ -109,25 +112,36 @@ public static class QueryableExtensions
         if (type is { IsGenericType: true, GenericTypeArguments.Length: 1 })
             type = type.GenericTypeArguments[0];
 
-        return Type.GetTypeCode(type) switch
+        try
         {
-            TypeCode.String => rawValue,
-            TypeCode.Byte => byte.Parse(rawValue),
-            TypeCode.SByte => sbyte.Parse(rawValue),
-            TypeCode.UInt16 => ushort.Parse(rawValue),
-            TypeCode.UInt32 => uint.Parse(rawValue),
-            TypeCode.UInt64 => ulong.Parse(rawValue),
-            TypeCode.Int16 => short.Parse(rawValue),
-            TypeCode.Int32 => int.Parse(rawValue),
-            TypeCode.Int64 => long.Parse(rawValue),
-            TypeCode.Decimal => decimal.Parse(rawValue),
-            TypeCode.Double => double.Parse(rawValue),
-            TypeCode.Single => float.Parse(rawValue),
-            TypeCode.Boolean => bool.Parse(rawValue),
-            TypeCode.Char => rawValue[0],
-            TypeCode.DateTime => DateTime.SpecifyKind(DateTime.Parse(rawValue, null, DateTimeStyles.RoundtripKind), DateTimeKind.Utc),
-            _ => rawValue
-        };
+            value = Type.GetTypeCode(type) switch
+            {
+                TypeCode.String => type.IsArray ? rawValue.Split(",,,").Select(x => x).ToArray() : rawValue,
+                TypeCode.Byte => type.IsArray ? rawValue.Split(",,,").Select(byte.Parse).ToArray() : byte.Parse(rawValue),
+                TypeCode.SByte => type.IsArray ? rawValue.Split(",,,").Select(sbyte.Parse).ToArray() : sbyte.Parse(rawValue),
+                TypeCode.UInt16 => type.IsArray ? rawValue.Split(",,,").Select(ushort.Parse).ToArray() : ushort.Parse(rawValue),
+                TypeCode.UInt32 => type.IsArray ? rawValue.Split(",,,").Select(uint.Parse).ToArray() : uint.Parse(rawValue),
+                TypeCode.UInt64 => type.IsArray ? rawValue.Split(",,,").Select(ulong.Parse).ToArray() : ulong.Parse(rawValue),
+                TypeCode.Int16 => type.IsArray ? rawValue.Split(",,,").Select(short.Parse).ToArray() : short.Parse(rawValue),
+                TypeCode.Int32 => type.IsArray ? rawValue.Split(",,,").Select(int.Parse).ToArray() : int.Parse(rawValue),
+                TypeCode.Int64 => type.IsArray ? rawValue.Split(",,,").Select(long.Parse).ToArray() : long.Parse(rawValue),
+                TypeCode.Decimal => type.IsArray ? rawValue.Split(",,,").Select(decimal.Parse).ToArray() : decimal.Parse(rawValue),
+                TypeCode.Double => type.IsArray ? rawValue.Split(",,,").Select(double.Parse).ToArray() : double.Parse(rawValue),
+                TypeCode.Single => type.IsArray ? rawValue.Split(",,,").Select(float.Parse).ToArray() : float.Parse(rawValue),
+                TypeCode.Boolean => type.IsArray ? rawValue.Split(",,,").Select(bool.Parse).ToArray() : bool.Parse(rawValue),
+                TypeCode.Char => type.IsArray ? rawValue.Split(",,,").Select(x => x[0]).ToArray() : rawValue[0],
+                TypeCode.DateTime => type.IsArray
+                    ? rawValue.Split(",,,").Select(x => DateTime.SpecifyKind(DateTime.Parse(x, null, DateTimeStyles.RoundtripKind), DateTimeKind.Utc)).ToArray()
+                    : DateTime.SpecifyKind(DateTime.Parse(rawValue, null, DateTimeStyles.RoundtripKind), DateTimeKind.Utc),
+                _ => rawValue
+            };
+            return true;
+        }
+        catch (Exception)
+        {
+            value = null;
+            return false;
+        }
     }
 
     private static Expression<Func<TEntity, bool>>? GetFilteringPredicate<TEntity>(Filtering filter)
@@ -135,7 +149,10 @@ public static class QueryableExtensions
         if (typeof(TEntity).GetProperty(filter.Property) is not { } propertyInfo)
             return null;
 
-        return DynamicExpressions.DynamicExpressions.GetPredicate<TEntity>(filter.Property, Convert(filter.Type), ConvertValue(propertyInfo.PropertyType, filter.Value));
+        if (!TryConvertValue(propertyInfo.PropertyType, filter.Value, out var converted))
+            return null;
+
+        return DynamicExpressions.DynamicExpressions.GetPredicate<TEntity>(filter.Property, Convert(filter.Type), converted);
     }
 
     public static IQueryable<TEntity> WithFilter<TEntity>(this IQueryable<TEntity> queryable, IEnumerable<Filtering> filters)
