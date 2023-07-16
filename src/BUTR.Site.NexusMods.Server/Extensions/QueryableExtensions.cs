@@ -102,9 +102,7 @@ public static class QueryableExtensions
     private static bool TryConvertValue(Type type, string rawValue, [NotNullWhen((true))] out object? value)
     {
         if (type.IsEnum)
-        {
             return Enum.TryParse(type, rawValue, out value);
-        }
 
         if (type.IsArray)
             type = type.GetElementType()!;
@@ -112,35 +110,101 @@ public static class QueryableExtensions
         if (type is { IsGenericType: true, GenericTypeArguments.Length: 1 })
             type = type.GenericTypeArguments[0];
 
-        try
+        switch (Type.GetTypeCode(type))
         {
-            value = Type.GetTypeCode(type) switch
+            case TypeCode.String:
             {
-                TypeCode.String => type.IsArray ? rawValue.Split(",,,").Select(x => x).ToArray() : rawValue,
-                TypeCode.Byte => type.IsArray ? rawValue.Split(",,,").Select(byte.Parse).ToArray() : byte.Parse(rawValue),
-                TypeCode.SByte => type.IsArray ? rawValue.Split(",,,").Select(sbyte.Parse).ToArray() : sbyte.Parse(rawValue),
-                TypeCode.UInt16 => type.IsArray ? rawValue.Split(",,,").Select(ushort.Parse).ToArray() : ushort.Parse(rawValue),
-                TypeCode.UInt32 => type.IsArray ? rawValue.Split(",,,").Select(uint.Parse).ToArray() : uint.Parse(rawValue),
-                TypeCode.UInt64 => type.IsArray ? rawValue.Split(",,,").Select(ulong.Parse).ToArray() : ulong.Parse(rawValue),
-                TypeCode.Int16 => type.IsArray ? rawValue.Split(",,,").Select(short.Parse).ToArray() : short.Parse(rawValue),
-                TypeCode.Int32 => type.IsArray ? rawValue.Split(",,,").Select(int.Parse).ToArray() : int.Parse(rawValue),
-                TypeCode.Int64 => type.IsArray ? rawValue.Split(",,,").Select(long.Parse).ToArray() : long.Parse(rawValue),
-                TypeCode.Decimal => type.IsArray ? rawValue.Split(",,,").Select(decimal.Parse).ToArray() : decimal.Parse(rawValue),
-                TypeCode.Double => type.IsArray ? rawValue.Split(",,,").Select(double.Parse).ToArray() : double.Parse(rawValue),
-                TypeCode.Single => type.IsArray ? rawValue.Split(",,,").Select(float.Parse).ToArray() : float.Parse(rawValue),
-                TypeCode.Boolean => type.IsArray ? rawValue.Split(",,,").Select(bool.Parse).ToArray() : bool.Parse(rawValue),
-                TypeCode.Char => type.IsArray ? rawValue.Split(",,,").Select(x => x[0]).ToArray() : rawValue[0],
-                TypeCode.DateTime => type.IsArray
-                    ? rawValue.Split(",,,").Select(x => DateTime.SpecifyKind(DateTime.Parse(x, null, DateTimeStyles.RoundtripKind), DateTimeKind.Utc)).ToArray()
-                    : DateTime.SpecifyKind(DateTime.Parse(rawValue, null, DateTimeStyles.RoundtripKind), DateTimeKind.Utc),
-                _ => rawValue
-            };
-            return true;
-        }
-        catch (Exception)
-        {
-            value = null;
-            return false;
+                value = rawValue;
+                return true;
+            }
+            case TypeCode.Byte:
+            {
+                var result = byte.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.SByte:
+            {
+                var result = sbyte.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.UInt16:
+            {
+                var result = ushort.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.UInt32:
+            {
+                var result = uint.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.UInt64:
+            {
+                var result = ulong.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.Int16:
+            {
+                var result = short.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.Int32:
+            {
+                var result = int.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.Int64:
+            {
+                var result = long.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.Decimal:
+            {
+                var result = decimal.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.Double:
+            {
+                var result = double.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.Single:
+            {
+                var result = float.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.Boolean:
+            {
+                var result = bool.TryParse(rawValue, out var val);
+                value = val;
+                return result;
+            }
+            case TypeCode.Char:
+            {
+                value = rawValue[0];
+                return true;
+            }
+            case TypeCode.DateTime:
+            {
+                var result = DateTime.TryParse(rawValue, null, DateTimeStyles.RoundtripKind, out var val);
+                value = DateTime.SpecifyKind(val, DateTimeKind.Utc);
+                return result;
+            }
+            default:
+            {
+                value = null;
+                return false;
+            }
         }
     }
 
