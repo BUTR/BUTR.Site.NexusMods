@@ -56,7 +56,7 @@ public static class MethodReplacer
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             _ = Syscall.mprotect(sourceAddress, (ulong) instruction.Length, MmapProts.PROT_EXEC | MmapProts.PROT_READ);
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             _ = VirtualProtect(sourceAddress, (uint) instruction.Length, oldWindows, out _);
     }
 }
