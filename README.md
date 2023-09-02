@@ -1,5 +1,8 @@
 # BUTR.Site.NexusMods
 
+A multitenant ASP.NET Core Server and Blazor WASM Client.  
+Currently, only Bannerlord is supported.
+
 Features:
 * **NexusMods Mod Link** - link a NexusMods mod to your account to receive crash reports. Requires the Url property from SubModules.xml to match the link.  
 *Requires log-in.*  
