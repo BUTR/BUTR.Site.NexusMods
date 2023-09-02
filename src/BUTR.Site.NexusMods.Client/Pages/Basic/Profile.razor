@@ -2,7 +2,7 @@
 @page "/profile"
 
 @inject NavigationManager _navigationManager
-@inject IUserClient _userClient
+@inject INexusModsUserClient _userClient
 @inject IDiscordClient _discordClient
 @inject ISteamClient _steamClient
 @inject IGOGClient _gogClient
@@ -61,9 +61,9 @@ else
                 {
                     <CardText TextColor="@TextColor.Secondary">Supporter</CardText>
                 }
-                @if (user.HasBannerlord)
+                @if (user.HasTenantGame)
                 {
-                    <CardText TextColor="@TextColor.Secondary">Owns Mount & Blade II: Bannerlord</CardText>
+                    <CardText TextColor="@TextColor.Secondary">Owns Game</CardText>
                 }
             </CardBody>
         </Card>;
@@ -73,7 +73,7 @@ else
             <CardBody>
                 <Row>
                     <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">NexusMods Id</Column>
-                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.UserId</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.NexusModsUserId</Column>
                 </Row>
                 <Divider/>
                 <Row>

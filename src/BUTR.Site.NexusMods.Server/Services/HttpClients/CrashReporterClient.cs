@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,9 +25,11 @@ public sealed class CrashReporterClient
 
     public async Task<HashSet<string>> GetCrashReportNamesAsync(CancellationToken ct) => await _httpClient.GetFromJsonAsync<HashSet<string>>("getallfilenames", ct) ?? new HashSet<string>();
 
-    public async Task<ImmutableArray<FilenameDate>> GetCrashReportDatesAsync(ImmutableArray<string> filenames, CancellationToken ct)
+    public async IAsyncEnumerable<FileIdDate?> GetCrashReportDatesAsync(IEnumerable<string> filenames, [EnumeratorCancellation] CancellationToken ct)
     {
-        var response = await _httpClient.PostAsJsonAsync<ImmutableArray<string>>("getfilenamedates", filenames, ct);
-        return await response.Content.ReadFromJsonAsync<ImmutableArray<FilenameDate>?>(cancellationToken: ct) ?? ImmutableArray<FilenameDate>.Empty;
+        var request = new HttpRequestMessage(HttpMethod.Post, "getfilenamedates") { Content = JsonContent.Create(filenames) };
+        var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+        await foreach (var entry in JsonSerializer.DeserializeAsyncEnumerable<FileIdDate>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct))
+            yield return entry;
     }
 }

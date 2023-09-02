@@ -2,7 +2,7 @@
 @page "/role-manager"
 
 @inject INotificationService _notificationService
-@inject IUserClient _userClient
+@inject INexusModsUserClient _userClient
 
 <Container>
     <Row Flex="@Flex.JustifyContent.Center">
@@ -14,7 +14,7 @@
                 <CardBody>
                     <Form>
                         <Field>
-                            <FieldLabel>User Id</FieldLabel>
+                            <FieldLabel>NexusMods User Id</FieldLabel>
                             <FieldBody>
                                 <NumericEdit TValue="uint" @bind-Value="@_model.UserId"/>
                             </FieldBody>

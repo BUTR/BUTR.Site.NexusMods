@@ -1,17 +1,23 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
+using BUTR.Site.NexusMods.Shared;
+using BUTR.Site.NexusMods.Shared.Extensions;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using Quartz;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Jobs;
@@ -23,70 +29,99 @@ namespace BUTR.Site.NexusMods.Server.Jobs;
 public sealed class NexusModsModFileProcessorJob : IJob
 {
     private readonly ILogger _logger;
-    private readonly NexusModsOptions _options;
-    private readonly NexusModsAPIClient _client;
-    private readonly NexusModsInfo _info;
-    private readonly AppDbContext _dbContext;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public NexusModsModFileProcessorJob(ILogger<NexusModsModFileProcessorJob> logger, IOptions<NexusModsOptions> options, NexusModsAPIClient client, NexusModsInfo info, AppDbContext dbContext)
+    public NexusModsModFileProcessorJob(ILogger<NexusModsModFileProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _info = info ?? throw new ArgumentNullException(nameof(info));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var modId = 0;
-        var updateDate = await _dbContext.Set<NexusModsFileUpdateEntity>().AsNoTracking().FirstOrDefaultAsync(x => x.NexusModsModId == modId, context.CancellationToken);
-        var files = await _client.GetModFileInfosAsync("mountandblade2bannerlord", modId, _options.ApiKey);
-        if (files is not null)
+        var ct = context.CancellationToken;
+        var tenants = Enum.GetValues<Tenant>();
+
+        foreach (var tenant in tenants)
         {
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
+
+            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            tenantContextAccessor.Current = tenant;
+
+            await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
+        }
+
+        context.Result = "Finished processing all available files";
+        context.SetIsSuccess(true);
+    }
+
+    private static async Task HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    {
+        const int notFoundModIdsTreshold = 25;
+
+        var info = serviceProvider.GetRequiredService<NexusModsInfo>();
+        var options = serviceProvider.GetRequiredService<IOptions<NexusModsOptions>>().Value;
+        var client = serviceProvider.GetRequiredService<NexusModsAPIClient>();
+        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
+        var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
+        var entityFactory = dbContextWrite.CreateEntityFactory();
+        await using var _ = dbContextWrite.CreateSaveScope();
+
+        var gameDomain = tenant.GameDomain();
+
+        var modId = 0;
+        var notFoundModIds = 0;
+        while (!ct.IsCancellationRequested)
+        {
+            var nexusModsModModuleEntities = new List<NexusModsModToModuleEntity>();
+            var nexusModsModToFileUpdateEntities = new List<NexusModsModToFileUpdateEntity>();
+
+            var updateDate = await dbContextRead.NexusModsModToFileUpdates.FirstOrDefaultAsync(x => x.NexusModsMod.NexusModsModId == modId, ct);
+            var files = await client.GetModFileInfosAsync(gameDomain, modId, options.ApiKey, ct);
+            if (files is null)
+            {
+                notFoundModIds++;
+                modId++;
+                if (notFoundModIds >= notFoundModIdsTreshold)
+                {
+                    break;
+                }
+                continue;
+            }
+            notFoundModIds = 0;
+
             // max sequence no elements
             var latestFileUpdate = files.Files.Select(x => DateTimeOffset.FromUnixTimeSeconds(x.UploadedTimestamp).UtcDateTime).DefaultIfEmpty(DateTime.MinValue).Max();
             if (latestFileUpdate != DateTime.MinValue)
             {
                 if (updateDate is null || updateDate.LastCheckedDate < latestFileUpdate)
                 {
-                    var exposedModIds = await _info.GetModIdsAsync("mountandblade2bannerlord", modId, _options.ApiKey).Distinct().ToImmutableArrayAsync(context.CancellationToken);
+                    var exposedModIds = await info.GetModIdsAsync("mountandblade2bannerlord", modId, options.ApiKey, ct).Distinct().ToImmutableArrayAsync(ct);
 
-                    NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
+                    var id = modId;
+                    nexusModsModModuleEntities.AddRange(exposedModIds.Select(x => new NexusModsModToModuleEntity
                     {
-                        null => new() { NexusModsModId = modId, ModuleIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
-                        _ => existing with
-                        {
-                            ModuleIds = existing.ModuleIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModuleIds)).AsArray(),
-                            LastCheckedDate = DateTime.UtcNow
-                        }
-                    };
-                    await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == modId, ApplyChanges2, context.CancellationToken);
-
-                    NexusModsFileUpdateEntity? ApplyChanges(NexusModsFileUpdateEntity? existing) => existing switch
+                        TenantId = tenant,
+                        NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) id),
+                        Module = entityFactory.GetOrCreateModule(x),
+                        LastUpdateDate = latestFileUpdate,
+                        LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure,
+                    }));
+                    nexusModsModToFileUpdateEntities.Add(new NexusModsModToFileUpdateEntity
                     {
-                        null => new() { NexusModsModId = modId, LastCheckedDate = latestFileUpdate },
-                        _ => existing with { LastCheckedDate = latestFileUpdate }
-                    };
-                    await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsFileUpdateEntity>(x => x.NexusModsModId == modId, ApplyChanges, context.CancellationToken);
+                        TenantId = tenant,
+                        NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) modId),
+                        LastCheckedDate = latestFileUpdate
+                    });
                 }
             }
-        }
-        else
-        {
-            NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
-            {
-                _ => null
-            };
-            await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == modId, ApplyChanges2, context.CancellationToken);
 
-            NexusModsFileUpdateEntity? ApplyChanges(NexusModsFileUpdateEntity? existing) => existing switch
-            {
-                _ => null
-            };
-            await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsFileUpdateEntity>(x => x.NexusModsModId == modId, ApplyChanges, context.CancellationToken);
+            dbContextWrite.FutureUpsert(x => x.NexusModsModModules, nexusModsModModuleEntities);
+            dbContextWrite.FutureUpsert(x => x.NexusModsModToFileUpdates, nexusModsModToFileUpdateEntities);
+            // Disposing the DBContext will save the data
+
+            modId++;
         }
-        context.Result = "Finished processing all available files";
-        context.SetIsSuccess(true);
     }
 }

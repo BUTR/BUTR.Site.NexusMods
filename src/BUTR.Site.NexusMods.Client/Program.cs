@@ -78,24 +78,25 @@ public static class Program
                     client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 }).AddHttpMessageHandler<AssetsDelegatingHandler>();
                 services.AddHttpClient("BackendAuthentication").ConfigureBackend(userAgent)
-                    .AddHttpMessageHandler<AuthenticationInjectionDelegatingHandler>();
+                    .AddHttpMessageHandler<AuthenticationInjectionDelegatingHandler>().AddHttpMessageHandler<TenantDelegatingHandler>();
                 services.AddHttpClient("Backend").ConfigureBackend(userAgent)
-                    .AddHttpMessageHandler<AuthenticationAnd401DelegatingHandler>();
+                    .AddHttpMessageHandler<AuthenticationAnd401DelegatingHandler>().AddHttpMessageHandler<TenantDelegatingHandler>();
 
                 services.Configure<JsonSerializerOptions>(opt => opt.Configure());
 
+                services.AddTransient<TenantDelegatingHandler>();
                 services.AddTransient<AssetsDelegatingHandler>();
                 services.AddTransient<AuthenticationInjectionDelegatingHandler>();
                 services.AddTransient<AuthenticationAnd401DelegatingHandler>();
 
                 services.AddTransient<IAuthenticationClient, AuthenticationClient>(sp => ConfigureClient(sp, (http, opt) => new AuthenticationClient(http, opt), "BackendAuthentication"));
-                services.AddTransient<IUserClient, UserClientWithDemo>();
+                services.AddTransient<INexusModsUserClient, NexusModsUserClientWithDemo>();
                 services.AddTransient<ICrashReportsClient, CrashReportsClientWithDemo>();
-                services.AddTransient<IModClient, ModClientWithDemo>();
+                services.AddTransient<INexusModsModClient, NexusModsModClientWithDemo>();
                 services.AddTransient<IReportsClient, ReportsClient>(sp => ConfigureClient(sp, (http, opt) => new ReportsClient(http, opt)));
                 services.AddTransient<IGamePublicApiDiffClient, GamePublicApiDiffClient>(sp => ConfigureClient(sp, (http, opt) => new GamePublicApiDiffClient(http, opt)));
                 services.AddTransient<IGameSourceDiffClient, GameSourceDiffClient>(sp => ConfigureClient(sp, (http, opt) => new GameSourceDiffClient(http, opt)));
-                services.AddTransient<IArticlesClient, ArticlesClient>(sp => ConfigureClient(sp, (http, opt) => new ArticlesClient(http, opt)));
+                services.AddTransient<INexusModsArticleClient, NexusModsArticleClient>(sp => ConfigureClient(sp, (http, opt) => new NexusModsArticleClient(http, opt)));
                 services.AddTransient<IExposedModsClient, ExposedModsClient>(sp => ConfigureClient(sp, (http, opt) => new ExposedModsClient(http, opt)));
                 services.AddTransient<IDiscordClient, DiscordClient>(sp => ConfigureClient(sp, (http, opt) => new DiscordClient(http, opt)));
                 services.AddTransient<ISteamClient, SteamClient>(sp => ConfigureClient(sp, (http, opt) => new SteamClient(http, opt)));
@@ -103,6 +104,8 @@ public static class Program
                 services.AddTransient<IStatisticsClient, StatisticsClient>(sp => ConfigureClient(sp, (http, opt) => new StatisticsClient(http, opt)));
                 services.AddTransient<IQuartzClient, QuartzClient>(sp => ConfigureClient(sp, (http, opt) => new QuartzClient(http, opt)));
                 services.AddTransient<IRecreateStacktraceClient, RecreateStacktraceClient>(sp => ConfigureClient(sp, (http, opt) => new RecreateStacktraceClient(http, opt)));
+
+                services.AddScoped<TenantProvider>();
 
                 services.AddScoped<AuthenticationProvider>();
 

@@ -2,7 +2,7 @@
 
 public enum QuartzLogType
 {
-    ScheduleJob,
-    Trigger,
-    System
+    ScheduleJob = 1,
+    Trigger = 2,
+    System = 3,
 }

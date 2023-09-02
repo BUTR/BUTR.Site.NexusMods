@@ -1,7 +1,17 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Shared;
 
-public sealed class StatisticsTopExceptionsTypeEntity : IEntity
+using System;
+using System.Collections.Generic;
+
+namespace BUTR.Site.NexusMods.Server.Models.Database;
+
+public sealed record StatisticsTopExceptionsTypeEntity : IEntityWithTenant
 {
-    public required string Type { get; init; }
-    public required int Count { get; init; }
+    public required Tenant TenantId { get; init; }
+
+    public required ExceptionTypeEntity ExceptionType { get; init; }
+
+    public required int ExceptionCount { get; init; }
+
+    public override int GetHashCode() => HashCode.Combine(ExceptionType, ExceptionCount);
 }

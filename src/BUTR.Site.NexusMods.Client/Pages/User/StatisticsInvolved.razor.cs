@@ -78,8 +78,8 @@ public partial class StatisticsInvolved
 
         var allGameVersions = data.Select(x => x.GameVersion).ToArray();
         var allModIdsWithVersions = data
-            .SelectMany(x => x.Mods)
-            .GroupBy(x => x.Id)
+            .SelectMany(x => x.Modules)
+            .GroupBy(x => x.ModuleId)
             .Select(x => new { Id = x.Key, Versions = x.SelectMany(y => y.Versions).ToArray() })
             .ToDictionary(x => x.Id, x => x.Versions.Select(y => y.Version).Distinct().OrderBy(y => y, new AlphanumComparatorFast()).ToArray());
 
@@ -96,8 +96,8 @@ public partial class StatisticsInvolved
             foreach (var gameVersion in gameVersions)
             {
                 var versionScores = data
-                    .Where(x => x.GameVersion == gameVersion).SelectMany(x => x.Mods)
-                    .Where(x => x.Id == modId).SelectMany(x => x.Versions)
+                    .Where(x => x.GameVersion == gameVersion).SelectMany(x => x.Modules)
+                    .Where(x => x.ModuleId == modId).SelectMany(x => x.Versions).SelectMany(x => x.Scores)
                     .ToDictionary(x => x.Version, x => x.Score * 100);
 
                 var values = modIdsWithVersions.SelectMany(x => x.Key == modId
@@ -131,7 +131,7 @@ public partial class StatisticsInvolved
     {
         if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested && autocompleteReadDataEventArgs.SearchValue.Length >= 3)
         {
-            _modIdsAutocompleteValues = (await StatisticsClient.AutocompleteModIdAsync(autocompleteReadDataEventArgs.SearchValue)).Data ?? Array.Empty<string>(); ;
+            _modIdsAutocompleteValues = (await StatisticsClient.AutocompleteModuleIdAsync(autocompleteReadDataEventArgs.SearchValue)).Data ?? Array.Empty<string>(); ;
         }
     }
 

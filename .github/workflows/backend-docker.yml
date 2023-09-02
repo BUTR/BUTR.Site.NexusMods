@@ -54,7 +54,7 @@ jobs:
         platforms: linux/amd64
         #platforms: linux/amd64,linux/arm64
         push: true
-        tags: ghcr.io/butr/sitenexusmods:latest
+        tags: ghcr.io/butr/sitenexusmods2:latest
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
 

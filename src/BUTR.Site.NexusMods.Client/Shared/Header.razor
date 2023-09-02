@@ -1,7 +1,9 @@
 ﻿@implements IAsyncDisposable
 
 @inject AuthenticationStateProvider _authenticationStateProvider
-@inject IUserClient _userClient
+@inject TenantProvider _tenantProvider
+@inject NavigationManager _navigationManager
+@inject INexusModsUserClient _userClient
 
 <Bar Mode="@BarMode.Horizontal"
      Breakpoint="@Breakpoint.Desktop"
@@ -24,7 +26,6 @@
                     <BarItem>
                         <BarLink To="mods">Mods</BarLink>
                     </BarItem>
-
                     <BarItem>
                         <BarLink To="crash-reports-viewer">Crash Reports</BarLink>
                     </BarItem>
@@ -119,6 +120,27 @@
                 </BarDropdown>
             </BarItem>
         </BarEnd>
+        <AuthorizeView Roles="@($"{ApplicationRoles.User},{ApplicationRoles.Moderator},{ApplicationRoles.Administrator}")">
+            <Authorized>
+                <BarEnd Style="margin-left: 0!important;">
+                    <BarItem>
+                        <BarDropdown RightAligned>
+                            <BarDropdownToggle>
+                                Tenant
+                            </BarDropdownToggle>
+                            <BarDropdownMenu Background="@Background.Dark">
+                                @foreach (var val in Enum.GetValues<Tenant>())
+                                {
+                                    <BarDropdownItem Background="@Background.Dark">
+                                        <BarLink Clicked="async () => await SwitchTenantAsync(val)">@val</BarLink>
+                                    </BarDropdownItem>
+                                }
+                            </BarDropdownMenu>
+                        </BarDropdown>
+                    </BarItem>
+                </BarEnd>
+            </Authorized>
+        </AuthorizeView>
         <BarEnd Style="margin-left: 0!important;">
             <AuthorizeView>
                 <Authorized>
@@ -144,7 +166,6 @@
                         </BarDropdown>
                     </BarItem>
                 </Authorized>
-
                 <NotAuthorized>
                     <BarItem>
                         <BarLink To="login">Login</BarLink>
@@ -163,7 +184,7 @@
     protected override async Task OnInitializedAsync()
     {
         _authenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
-        
+
         var state = await _authenticationStateProvider.GetAuthenticationStateAsync();
         await OnStateAsync(state);
 
@@ -184,6 +205,13 @@
             StateHasChanged();
         }
     }
+
+    private async Task SwitchTenantAsync(Tenant value)
+    {
+        await _tenantProvider.SetTenantAsync(value);
+        _navigationManager.NavigateTo(_navigationManager.Uri, true);
+    }
+
 
     public ValueTask DisposeAsync()
     {

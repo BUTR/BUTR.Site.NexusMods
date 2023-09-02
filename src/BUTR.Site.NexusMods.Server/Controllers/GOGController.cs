@@ -1,38 +1,32 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
-using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Services;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using System;
-using System.Linq;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-public sealed record GOGUserInfo(
-    [property: JsonPropertyName("id")] string Id,
-    [property: JsonPropertyName("username")] string Username);
-
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public sealed class GOGController : ControllerExtended
 {
+    public sealed record GOGOAuthUrlModel(string Url);
+
 
     private readonly IGOGStorage _gogStorage;
-    private readonly AppDbContext _dbContext;
     private readonly GOGAuthClient _gogAuthClient;
     private readonly GOGEmbedClient _gogEmbedClient;
 
-    public GOGController(IGOGStorage gogStorage, AppDbContext dbContext, GOGAuthClient gogAuthClient, GOGEmbedClient gogEmbedClient)
+    public GOGController(IGOGStorage gogStorage, GOGAuthClient gogAuthClient, GOGEmbedClient gogEmbedClient)
     {
         _gogStorage = gogStorage ?? throw new ArgumentNullException(nameof(gogStorage));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _gogAuthClient = gogAuthClient ?? throw new ArgumentNullException(nameof(gogAuthClient));
         _gogEmbedClient = gogEmbedClient ?? throw new ArgumentNullException(nameof(gogEmbedClient));
     }
@@ -54,24 +48,8 @@ public sealed class GOGController : ControllerExtended
 
         var userId = HttpContext.GetUserId();
 
-        var games = await _gogEmbedClient.GetGamesAsync(tokens.AccessToken, ct);
-        if (games is null)
+        if (!await _gogStorage.CheckOwnedGamesAsync(userId, tokens.UserId, tokens))
             return APIResponseError<string>("Failed to link!");
-
-        var ownsBannerlord = games.Owned.Contains(1802539526) || games.Owned.Contains(1564781494);
-        if (ownsBannerlord)
-        {
-            NexusModsUserMetadataEntity? ApplyChanges(NexusModsUserMetadataEntity? existing) => existing switch
-            {
-                null => null,
-                _ => existing with
-                {
-                    Metadata = existing.Metadata.SetAndReturn("MB2B", "")
-                },
-            };
-            if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == userId, ApplyChanges, CancellationToken.None))
-                return APIResponseError<string>("Failed to link!");
-        }
 
         if (!await _gogStorage.UpsertAsync(userId, tokens.UserId, tokens))
             return APIResponseError<string>("Failed to link!");

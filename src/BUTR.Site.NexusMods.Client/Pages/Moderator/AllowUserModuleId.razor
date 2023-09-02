@@ -2,7 +2,7 @@
 @page "/allow-user-module-id"
 
 @inject INotificationService _notificationService
-@inject IModClient _modClient
+@inject INexusModsUserClient _userClient
 
 <Modal @ref="_modalRef">
     <ModalContent Size="@ModalSize.ExtraLarge" Centered>
@@ -70,10 +70,10 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Allowed User Module Ids</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="UserAllowedModuleIdsModel" GetItems="@GetAllowUserMods">
+        <DataGridPaging @ref="@_dataGridRef" TItem="NexusModsUserToModuleManualLinkModel" GetItems="@GetAllowUserMods">
             <DataGridColumns>
-                <DataGridColumnText TItem="UserAllowedModuleIdsModel" Field="@nameof(UserAllowedModuleIdsModel.UserId)" Caption="User Id"/>
-                <DataGridColumnText TItem="UserAllowedModuleIdsModel" Field="@nameof(UserAllowedModuleIdsModel.AllowedModuleIds)" Caption="Allowed Module Ids">
+                <DataGridColumnText TItem="NexusModsUserToModuleManualLinkModel" Field="@nameof(NexusModsUserToModuleManualLinkModel.NexusModsUserId)" Caption="User Id"/>
+                <DataGridColumnText TItem="NexusModsUserToModuleManualLinkModel" Field="@nameof(NexusModsUserToModuleManualLinkModel.AllowedModuleIds)" Caption="Allowed Module Ids">
                     <DisplayTemplate>@(string.Join(", ", context.AllowedModuleIds))</DisplayTemplate>
                 </DataGridColumnText>
             </DataGridColumns>
@@ -101,7 +101,7 @@
     private string? _moduleIdIdToDelete;
 
     private Modal _modalRef = default!;
-    private DataGridPaging<UserAllowedModuleIdsModel>? _dataGridRef;
+    private DataGridPaging<NexusModsUserToModuleManualLinkModel>? _dataGridRef;
 
     private async Task ShowModal() => await _modalRef.Show();
 
@@ -110,7 +110,7 @@
         await _modalRef.Hide();
         if (save && _dataGridRef?.Value is not null && _moduleIdIdToDelete is not null)
         {
-            if (await _modClient.DisallowUserAModuleIdAsync(_dataGridRef.Value.UserId, _moduleIdIdToDelete) is { HumanReadableError: var error } && string.IsNullOrEmpty(error))
+            if (await _userClient.ToModuleManualUnlinkAsync(_dataGridRef.Value.NexusModsUserId, _moduleIdIdToDelete) is { HumanReadableError: var error } && string.IsNullOrEmpty(error))
             {
                 await _notificationService.Success($"Disallowed succesfully!", "Success!");
                 await _dataGridRef.Reload();
@@ -148,10 +148,10 @@
         }
     }
 
-    private async Task<DataGridPaging<UserAllowedModuleIdsModel>.ItemsResponse?> GetAllowUserMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _modClient.AllowUserAModuleIdPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    private async Task<DataGridPaging<NexusModsUserToModuleManualLinkModel>.ItemsResponse?> GetAllowUserMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct) =>
+        await _userClient.ToModuleManualLinkPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
-    private async Task OnDisallow(ButtonRowContext<UserAllowedModuleIdsModel?> context)
+    private async Task OnDisallow(ButtonRowContext<NexusModsUserToModuleManualLinkModel?> context)
     {
         if (context.DeleteCommand.Item is not null && await DoUserDisallowMod(context.DeleteCommand.Item))
         {
@@ -161,12 +161,12 @@
     
     private async Task<bool> DoUserAllowMod(AllowUserModel model)
     {
-        if (!NexusModsUtils.TryParse(model.UserUrl, out _, out var nexusModsId) && !int.TryParse(model.UserUrl, out nexusModsId))
+        if (!NexusModsUtils.TryParse(model.UserUrl, out _, out var nexusModsId) && !ushort.TryParse(model.UserUrl, out nexusModsId))
             return false;
         
-        return await _modClient.AllowUserAModuleIdAsync(nexusModsId, model.ModuleId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        return await _userClient.ToModuleManualLinkAsync(nexusModsId, model.ModuleId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
     }
-    private async Task<bool> DoUserDisallowMod(UserAllowedModuleIdsModel model)
+    private async Task<bool> DoUserDisallowMod(NexusModsUserToModuleManualLinkModel model)
     {
         await ShowModal();
         return true;

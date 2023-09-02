@@ -1,7 +1,6 @@
 ﻿using BUTR.Site.NexusMods.ServerClient.Utils;
 
 using System;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -121,9 +120,9 @@ public partial class CrashReportsClient
     }
 }
 
-public partial class ModClient
+public partial class NexusModsModClient
 {
-    public ModClient(HttpClient client, JsonSerializerOptions options) : this(client)
+    public NexusModsModClient(HttpClient client, JsonSerializerOptions options) : this(client)
     {
         _settings = new Lazy<JsonSerializerOptions>(options);
     }
@@ -137,9 +136,9 @@ public partial class ReportsClient
     }
 }
 
-public partial class UserClient
+public partial class NexusModsUserClient
 {
-    public UserClient(HttpClient client, JsonSerializerOptions options) : this(client)
+    public NexusModsUserClient(HttpClient client, JsonSerializerOptions options) : this(client)
     {
         _settings = new Lazy<JsonSerializerOptions>(options);
     }
@@ -162,9 +161,9 @@ public partial class GameSourceDiffClient
     }
 }
 
-public partial class ArticlesClient
+public partial class NexusModsArticleClient
 {
-    public ArticlesClient(HttpClient client, JsonSerializerOptions options) : this(client)
+    public NexusModsArticleClient(HttpClient client, JsonSerializerOptions options) : this(client)
     {
         _settings = new Lazy<JsonSerializerOptions>(options);
     }
@@ -229,37 +228,34 @@ public partial class RecreateStacktraceClient
 public partial record CrashReportModel
 {
     [JsonIgnore]
-    public string? Type => Exception.Split(Environment.NewLine).FirstOrDefault(l => l.Contains("Type:"))?.Split("Type:").Skip(1).FirstOrDefault();
-
-    [JsonIgnore]
     public string ExceptionHtml => Exception.Replace("\r", "<br/>").Replace("\r\n", "<br/>");
 }
 
-public partial record ModModel
+public partial record NexusModsModModel
 {
     [JsonIgnore]
-    public string Url => $"https://nexusmods.com/mountandblade2bannerlord/mods/{ModId}";
+    public string Url => $"https://nexusmods.com/mountandblade2bannerlord/mods/{NexusModsModId}";
 }
 
 public partial record ProfileModel
 {
     [JsonIgnore]
-    public string? Url => UserId != -1 ? $"https://nexusmods.com/users/{UserId}" : null;
+    public string? Url => NexusModsUserId != -1 ? $"https://nexusmods.com/users/{NexusModsUserId}" : null;
 }
 
-public partial record ArticleModel
+public partial record NexusModsArticleModel
 {
     [JsonIgnore]
-    public string Url => $"https://nexusmods.com/mountandblade2bannerlord/articles/{Id}";
+    public string Url => $"https://nexusmods.com/mountandblade2bannerlord/articles/{NexusModsArticleId}";
 
     [JsonIgnore]
-    public string AuthorUrl => $"https://nexusmods.com/users/{AuthorId}";
+    public string AuthorUrl => $"https://nexusmods.com/users/{NexusModsUserId}";
 }
 
-public partial record ExposedModModel
+public partial record ExposedNexusModsModModel
 {
     [JsonIgnore]
-    public string Url => $"https://nexusmods.com/mountandblade2bannerlord/mods/{Id}";
+    public string Url => $"https://nexusmods.com/mountandblade2bannerlord/mods/{NexusModsModId}";
 }
 
 public partial record PagingMetadata

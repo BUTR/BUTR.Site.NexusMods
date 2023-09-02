@@ -43,7 +43,7 @@ public sealed class GOGAuthClient
 
     public async Task<GOGOAuthTokens?> GetOrRefreshTokensAsync(GOGOAuthTokens tokens, CancellationToken ct)
     {
-        if (DateTimeOffset.Now <= tokens.ExpiresAt)
+        if (DateTimeOffset.UtcNow <= tokens.ExpiresAt)
             return tokens;
 
         var url = $"token?client_id={ClientId}&client_secret={ClientSecret}&grant_type=refresh_token&refresh_token={tokens.RefreshToken}";

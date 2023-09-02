@@ -1,11 +1,14 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
+using BUTR.Site.NexusMods.Shared;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -14,6 +17,7 @@ using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Jobs;
@@ -25,76 +29,107 @@ namespace BUTR.Site.NexusMods.Server.Jobs;
 public sealed class NexusModsModFileUpdatesProcessorJob : IJob
 {
     private readonly ILogger _logger;
-    private readonly NexusModsOptions _options;
-    private readonly NexusModsAPIClient _client;
-    private readonly NexusModsInfo _info;
-    private readonly AppDbContext _dbContext;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public NexusModsModFileUpdatesProcessorJob(ILogger<NexusModsModFileUpdatesProcessorJob> logger, IOptions<NexusModsOptions> options, NexusModsAPIClient client, NexusModsInfo info, AppDbContext dbContext)
+    public NexusModsModFileUpdatesProcessorJob(ILogger<NexusModsModFileUpdatesProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _info = info ?? throw new ArgumentNullException(nameof(info));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var updatesStoredWithinDay = await _dbContext.Set<NexusModsFileUpdateEntity>().Where(x => x.LastCheckedDate > DateTime.UtcNow.AddDays(-1)).AsNoTracking().ToListAsync(context.CancellationToken);
-        var updatedWithinDay = await _client.GetAllModUpdatesAsync("mountandblade2bannerlord", _options.ApiKey) ?? Array.Empty<NexusModsUpdatedModsResponse>();
+        var ct = context.CancellationToken;
+        var tenants = Enum.GetValues<Tenant>();
+
+        var processed = 0;
+        var exceptions = new List<Exception>();
+        var updatesStoredWithinDay = 0;
+        var updatedWithinDay = 0;
+        var newUpdates = 0;
+        foreach (var tenant in tenants)
+        {
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
+
+            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            tenantContextAccessor.Current = tenant;
+
+            var (processed_, exceptions_, updatesStoredWithinDay_, updatedWithinDay_, newUpdates_) = await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
+            processed += processed_;
+            exceptions.AddRange(exceptions_);
+            updatesStoredWithinDay += updatesStoredWithinDay_;
+            updatedWithinDay += updatedWithinDay_;
+            newUpdates += newUpdates_;
+        }
+
+        context.MergedJobDataMap["UpdatesStoredWithinDay"] = updatesStoredWithinDay;
+        context.MergedJobDataMap["UpdatedWithinDay"] = updatedWithinDay;
+        context.MergedJobDataMap["NewUpdates"] = newUpdates;
+
+        context.Result = $"Processed {processed} file updates. Failed {exceptions.Count} file updates.{(exceptions.Count > 0 ? $"\n{string.Join('\n', exceptions)}" : string.Empty)}";
+        context.SetIsSuccess(exceptions.Count == 0);
+    }
+
+    private static async Task<(int Processed, List<Exception> Exceptions, int UpdatesStoredWithinDay, int UpdatedWithinDay, int NewUpdates)> HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    {
+        var info = serviceProvider.GetRequiredService<NexusModsInfo>();
+        var options = serviceProvider.GetRequiredService<IOptions<NexusModsOptions>>().Value;
+        var client = serviceProvider.GetRequiredService<NexusModsAPIClient>();
+        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
+        var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
+        var entityFactory = dbContextWrite.CreateEntityFactory();
+        await using var _ = dbContextWrite.CreateSaveScope();
+
+        var updatesStoredWithinDay = await dbContextRead.NexusModsModToFileUpdates.Where(x => x.LastCheckedDate > DateTime.UtcNow.AddDays(-1)).ToListAsync(ct);
+        var updatedWithinDay = await client.GetAllModUpdatesAsync("mountandblade2bannerlord", options.ApiKey, ct) ?? Array.Empty<NexusModsUpdatedModsResponse>();
         var newUpdates = updatedWithinDay.Where(x =>
         {
             var latestFileUpdateDate = DateTimeOffset.FromUnixTimeSeconds(x.LatestFileUpdateTimestamp).UtcDateTime;
             if (latestFileUpdateDate < DateTime.UtcNow.AddDays(-1)) return false;
 
-            var found = updatesStoredWithinDay.FirstOrDefault(y => y.NexusModsModId == x.Id);
+            var found = updatesStoredWithinDay.FirstOrDefault(y => y.NexusModsMod.NexusModsModId == x.Id);
             return found is null || found.LastCheckedDate < latestFileUpdateDate;
         }).ToList();
 
-        context.MergedJobDataMap["UpdatesStoredWithinDay"] = updatesStoredWithinDay.Count;
-        context.MergedJobDataMap["UpdatedWithinDay"] = updatedWithinDay.Length;
-        context.MergedJobDataMap["NewUpdates"] = newUpdates.Count;
-
         var processed = 0;
         var exceptions = new List<Exception>();
-        try
+        var nexusModsModModuleEntities = new List<NexusModsModToModuleEntity>();
+        var nexusModsModToFileUpdateEntities = new List<NexusModsModToFileUpdateEntity>();
+        foreach (var modUpdate in newUpdates)
         {
-            foreach (var modUpdate in newUpdates)
+            try
             {
-                try
+                if (ct.IsCancellationRequested) break;
+
+                var exposedModIds = await info.GetModIdsAsync("mountandblade2bannerlord", modUpdate.Id, options.ApiKey, ct).Distinct().ToImmutableArrayAsync(ct);
+                var lastUpdateTime = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime;
+
+                nexusModsModModuleEntities.AddRange(exposedModIds.Select(x => new NexusModsModToModuleEntity
                 {
-                    if (context.CancellationToken.IsCancellationRequested) break;
-
-                    var exposedModIds = await _info.GetModIdsAsync("mountandblade2bannerlord", modUpdate.Id, _options.ApiKey).Distinct().ToImmutableArrayAsync(context.CancellationToken);
-
-                    NexusModsExposedModsEntity? ApplyChanges2(NexusModsExposedModsEntity? existing) => existing switch
-                    {
-                        null => new() { NexusModsModId = modUpdate.Id, ModuleIds = exposedModIds.AsArray(), LastCheckedDate = DateTime.UtcNow },
-                        _ => existing with { ModuleIds = existing.ModuleIds.AsImmutableArray().AddRange(exposedModIds.Except(existing.ModuleIds)).AsArray(), LastCheckedDate = DateTime.UtcNow }
-                    };
-
-                    await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsExposedModsEntity>(x => x.NexusModsModId == modUpdate.Id, ApplyChanges2, context.CancellationToken);
-
-                    NexusModsFileUpdateEntity? ApplyChanges(NexusModsFileUpdateEntity? existing) => existing switch
-                    {
-                        null => new() { NexusModsModId = modUpdate.Id, LastCheckedDate = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime },
-                        _ => existing with { LastCheckedDate = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime }
-                    };
-
-                    await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsFileUpdateEntity>(x => x.NexusModsModId == modUpdate.Id, ApplyChanges, context.CancellationToken);
-                    processed++;
-                }
-                catch (Exception e)
+                    TenantId = tenant,
+                    NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
+                    Module = entityFactory.GetOrCreateModule(x),
+                    LastUpdateDate = lastUpdateTime,
+                    LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure
+                }));
+                nexusModsModToFileUpdateEntities.Add(new NexusModsModToFileUpdateEntity
                 {
-                    exceptions.Add(new Exception($"Mod Id: {modUpdate.Id}", e));
-                }
+                    TenantId = tenant,
+                    NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
+                    LastCheckedDate = lastUpdateTime
+                });
+                processed++;
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(new Exception($"Mod Id: {modUpdate.Id}", e));
             }
         }
-        finally
-        {
-            context.Result = $"Processed {processed} file updates. Failed {exceptions.Count} file updates.\n{string.Join('\n', exceptions)}";
-            context.SetIsSuccess(exceptions.Count == 0);
-        }
+
+        dbContextWrite.FutureUpsert(x => x.NexusModsModModules, nexusModsModModuleEntities);
+        dbContextWrite.FutureUpsert(x => x.NexusModsModToFileUpdates, nexusModsModToFileUpdateEntities);
+        // Disposing the DBContext will save the data
+
+        return (processed, exceptions, updatesStoredWithinDay.Count, updatedWithinDay.Length, newUpdates.Count);
     }
 }

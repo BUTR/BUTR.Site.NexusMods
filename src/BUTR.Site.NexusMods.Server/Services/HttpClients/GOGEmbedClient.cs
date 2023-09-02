@@ -1,4 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Controllers;
+using BUTR.Site.NexusMods.Server.Models;
 
 using Microsoft.Extensions.Options;
 
@@ -21,7 +22,7 @@ public sealed class GOGEmbedClient
     );
 
     public record GamesOwned(
-        [property: JsonPropertyName("owned")] IReadOnlyList<int?> Owned
+        [property: JsonPropertyName("owned")] IReadOnlyList<uint?> Owned
     );
 
 

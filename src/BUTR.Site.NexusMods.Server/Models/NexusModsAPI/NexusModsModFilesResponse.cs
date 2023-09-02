@@ -3,12 +3,12 @@ using System.Text.Json.Serialization;
 
 namespace BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 
-public record NexusModsModFilesResponse(
+public sealed record NexusModsModFilesResponse(
     [property: JsonPropertyName("files")] IReadOnlyList<NexusModsModFilesResponse.File> Files,
     [property: JsonPropertyName("file_updates")] IReadOnlyList<NexusModsModFilesResponse.FileUpdate> FileUpdates
 )
 {
-    public record File(
+    public sealed record File(
         [property: JsonPropertyName("file_id")] int Id,
         [property: JsonPropertyName("name")] string Name,
         [property: JsonPropertyName("version")] string Version,
@@ -19,7 +19,7 @@ public record NexusModsModFilesResponse(
         [property: JsonPropertyName("content_preview_link")] string ContentPreviewUrl
     );
 
-    public record FileUpdate(
+    public sealed record FileUpdate(
         [property: JsonPropertyName("old_file_id")] int OldId,
         [property: JsonPropertyName("new_file_id")] int NewId,
         [property: JsonPropertyName("old_file_name")] string OldName,

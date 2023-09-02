@@ -2,7 +2,7 @@
 
 public sealed record ProfileModel
 {
-    public required int UserId { get; init; }
+    public required int NexusModsUserId { get; init; }
     public required string Name { get; init; }
     public required string Email { get; init; }
     public required string ProfileUrl { get; init; }
@@ -14,5 +14,5 @@ public sealed record ProfileModel
     public required string? SteamUserId { get; init; }
     public required string? GOGUserId { get; init; }
 
-    public required bool HasBannerlord { get; init; }
+    public required bool HasTenantGame { get; init; }
 }

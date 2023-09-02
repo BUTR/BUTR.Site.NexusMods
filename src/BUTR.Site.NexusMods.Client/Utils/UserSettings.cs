@@ -9,4 +9,6 @@ public sealed record UserSettings
 
     public int CrashReportPageSize { get; set; } = DefaultCrashReportPageSize;
     public int PageSize { get; set; } = DefaultPageSize;
+
+    public string[] BlacklistedExceptions { get; set; }
 }

@@ -25,31 +25,53 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public sealed class CrashReportsController : ControllerExtended
 {
+    public sealed record CrashReportModel
+    {
+        public required Guid Id { get; init; }
+        public required int Version { get; init; }
+        public required string GameVersion { get; init; }
+        public required string ExceptionType { get; init; }
+        public required string Exception { get; init; }
+        public required DateTime Date { get; init; }
+        public required string Url { get; init; }
+        public required ImmutableArray<string> InvolvedModules { get; init; }
+        public CrashReportStatus Status { get; init; } = CrashReportStatus.New;
+        public string Comment { get; init; } = string.Empty;
+    }
+
+    private sealed record ModuleIdToVersionView
+    {
+        public required string ModuleId { get; init; }
+        public required string Version { get; init; }
+    }
     private sealed record UserCrashReportView
     {
         public required Guid Id { get; init; }
         public required int Version { get; init; }
         public required string GameVersion { get; init; }
+        public required string ExceptionType { get; init; }
         public required string Exception { get; init; }
         public required DateTime CreatedAt { get; init; }
-        public required string[] ModIds { get; init; }
-        public required Dictionary<string, string> ModIdToVersion { get; init; }
-        public required string[] InvolvedModIds { get; init; }
-        public required int[] ModNexusModsIds { get; init; }
+        public required string[] ModuleIds { get; init; }
+        public required ModuleIdToVersionView[] ModuleIdToVersion { get; init; }
+        public required string? TopInvolvedModuleId { get; init; }
+        public required string[] InvolvedModuleIds { get; init; }
+        public required int[] NexusModsModIds { get; init; }
         public required string Url { get; init; }
 
-        public required int UserId { get; init; }
         public required CrashReportStatus Status { get; init; }
-        public required string Comment { get; init; }
+        public required string? Comment { get; init; }
     }
 
     private readonly ILogger _logger;
-    private readonly AppDbContext _dbContext;
+    private readonly IAppDbContextRead _dbContextRead;
+    private readonly IAppDbContextWrite _dbContextWrite;
 
-    public CrashReportsController(ILogger<CrashReportsController> logger, AppDbContext dbContext)
+    public CrashReportsController(ILogger<CrashReportsController> logger, IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _dbContextRead = dbContextRead ?? throw new ArgumentNullException(nameof(dbContextRead));
+        _dbContextWrite = dbContextWrite ?? throw new ArgumentNullException(nameof(dbContextWrite));
     }
 
     private async Task<BasePaginated<UserCrashReportView, CrashReportModel>> PaginatedBaseAsync(PaginatedQuery query, CancellationToken ct)
@@ -61,53 +83,72 @@ public sealed class CrashReportsController : ControllerExtended
             ? new List<Sorting> { new() { Property = nameof(CrashReportEntity.CreatedAt), Type = SortingType.Descending } }
             : query.Sotings;
 
+        var userId = HttpContext.GetUserId();
+
+        var user = await _dbContextRead.NexusModsUsers
+            .Include(x => x.ToModules)
+            .ThenInclude(x => x.Module)
+            .Include(x => x.ToNexusModsMods)
+            .ThenInclude(x => x.NexusModsMod)
+            .AsSplitQuery()
+            .FirstAsync(x => x.NexusModsUserId == userId, ct);
+
         IQueryable<UserCrashReportView> DbQueryBase(Expression<Func<CrashReportEntity, bool>> predicate)
         {
-            return _dbContext.Set<CrashReportEntity>()
+            return _dbContextRead.CrashReports
+                .Include(x => x.ToUsers)
+                .ThenInclude(x => x.NexusModsUser)
+                .Include(x => x.ModuleInfos)
+                .ThenInclude(x => x.Module)
+                .Include(x => x.ModuleInfos)
+                .ThenInclude(x => x.NexusModsMod)
+                .Include(x => x.ModuleInfos)
+                .ThenInclude(x => x.Module)
+                .Include(x => x.ExceptionType)
+                .AsSplitQuery()
                 .Where(predicate)
-                .GroupJoin(_dbContext.Set<NexusModsUserCrashReportEntity>(), cre => cre.Id, ucr => ucr.CrashReport.Id, (cre, ucr) => new { cre, ucr })
-                .SelectMany(x => x.ucr.DefaultIfEmpty(), (cre, ucr) => new { cre.cre, ucr })
                 .Select(x => new UserCrashReportView
                 {
-                    Id = x.cre.Id,
-                    Version = x.cre.Version,
-                    GameVersion = x.cre.GameVersion,
-                    Exception = x.cre.Exception,
-                    CreatedAt = x.cre.CreatedAt,
-                    ModIds = x.cre.ModIds,
-                    ModIdToVersion = x.cre.ModIdToVersion,
-                    InvolvedModIds = x.cre.InvolvedModIds,
-                    ModNexusModsIds = x.cre.ModNexusModsIds,
-                    Url = x.cre.Url,
-                    UserId = x.ucr != null ? x.ucr.NexusModsUserId : -1,
-                    Status = x.ucr != null ? x.ucr.Status : CrashReportStatus.New,
-                    Comment = x.ucr != null ? x.ucr.Comment : string.Empty,
+                    Id = x.CrashReportId,
+                    Version = x.Version,
+                    GameVersion = x.GameVersion,
+                    ExceptionType = x.ExceptionType.ExceptionTypeId,
+                    Exception = x.Exception,
+                    CreatedAt = x.CreatedAt,
+                    Url = x.Url,
+                    ModuleIds = x.ModuleInfos.Select(y => y.Module).Select(y => y.ModuleId).ToArray(),
+                    ModuleIdToVersion = x.ModuleInfos.Select(y =>  new ModuleIdToVersionView { ModuleId = y.Module.ModuleId, Version = y.Version }).ToArray(),
+                    TopInvolvedModuleId = x.ModuleInfos.Where(z => z.IsInvolved).Select(y => y.Module).Select(y => y.ModuleId).FirstOrDefault(),
+                    InvolvedModuleIds = x.ModuleInfos.Where(z => z.IsInvolved).Select(y => y.Module).Select(y => y.ModuleId).ToArray(),
+                    NexusModsModIds = x.ModuleInfos.Select(y => y.NexusModsMod).Where(y => y != null).Select(y => y!.NexusModsModId).ToArray(),
+                    Status = x.ToUsers.Where(y => y.NexusModsUser.NexusModsUserId == userId).Select(y => y.Status).FirstOrDefault(),
+                    Comment = x.ToUsers.Where(y => y.NexusModsUser.NexusModsUserId == userId).Select(y => y.Comment).FirstOrDefault(),
                 })
                 .WithFilter(filters)
                 .WithSort(sortings);
         }
 
-        var userId = HttpContext.GetUserId();
+        var moduleIds = user.ToModules.Select(x => x.Module.ModuleId).ToHashSet();
+        var nexusModsModIds = user.ToNexusModsMods.Select(x => x.NexusModsMod.NexusModsModId).ToHashSet();
+
         var dbQuery = User.IsInRole(ApplicationRoles.Administrator) || User.IsInRole(ApplicationRoles.Moderator)
             ? DbQueryBase(x => true)
-            : DbQueryBase(x => _dbContext.Set<NexusModsModEntity>().Any(y => y.UserIds.Contains(userId) && x.ModNexusModsIds.Contains(y.NexusModsModId)) ||
-                               _dbContext.Set<NexusModsModManualLinkedNexusModsUsersEntity>()
-                                   .Any(y => x.ModNexusModsIds.Contains(y.NexusModsModId) && y.AllowedNexusModsUserIds.Contains(userId)) ||
-                               _dbContext.Set<NexusModsModManualLinkedModuleIdEntity>().Any(y =>
-                                   _dbContext.Set<NexusModsModEntity>().Any(z => z.UserIds.Contains(userId) && z.NexusModsModId == y.NexusModsModId) && x.ModIds.Contains(y.ModuleId)) ||
-                               _dbContext.Set<NexusModsUserAllowedModuleIdsEntity>().Any(y => y.NexusModsUserId == userId && x.ModIds.Any(z => y.AllowedModuleIds.Contains(z))));
+            : DbQueryBase(x => x.ToUsers.Any(y => y.NexusModsUser.NexusModsUserId == userId) ||
+                               x.ModuleInfos.Any(y => moduleIds.Contains(y.Module.ModuleId)) ||
+                               x.ModuleInfos.Where(y => y.NexusModsMod != null).Any(y => nexusModsModIds.Contains(y.NexusModsMod!.NexusModsModId)));
 
-        return new(await dbQuery.Prepare().PaginatedAsync(page, pageSize, ct), items => items.Select(x => new CrashReportModel
+        return new(await dbQuery.PaginatedAsync(page, pageSize, ct), items => items.Select(x => new CrashReportModel
         {
             Id = x.Id,
             Version = x.Version,
             GameVersion = x.GameVersion,
+            ExceptionType = x.ExceptionType,
             Exception = x.Exception,
             Date = x.CreatedAt,
             Url = x.Url,
-            InvolvedModules = x.InvolvedModIds.ToImmutableArray(),
+            InvolvedModules = x.InvolvedModuleIds.ToImmutableArray(),
             Status = x.Status,
-            Comment = x.Comment
+            Comment = x.Comment ?? string.Empty,
         }));
     }
 
@@ -132,30 +173,29 @@ public sealed class CrashReportsController : ControllerExtended
     [Produces("application/json")]
     public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] string modId)
     {
-        return APIResponse(_dbContext.AutocompleteStartsWith<CrashReportEntity, string[]>(x => x.ModIds, modId).Prepare());
+        return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportToModuleMetadataEntity>(x => x.Module.ModuleId, modId));
     }
 
     [HttpPost("Update")]
     [Produces("application/json")]
     public async Task<ActionResult<APIResponse<string?>>> UpdateAsync([FromBody] CrashReportModel updatedCrashReport)
     {
+        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        await using var _ = _dbContextWrite.CreateSaveScope();
+
         var userId = HttpContext.GetUserId();
+        var tenant = HttpContext.GetTenant();
+        if (tenant is null) return BadRequest();
 
-        NexusModsUserCrashReportEntity? ApplyChanges(NexusModsUserCrashReportEntity? existing) => existing switch
+        var entity = new NexusModsUserToCrashReportEntity()
         {
-            null => new NexusModsUserCrashReportEntity
-            {
-                CrashReport = new(updatedCrashReport.Id),
-                NexusModsUserId = userId,
-                Status = updatedCrashReport.Status,
-                Comment = updatedCrashReport.Comment
-            },
-            var entity => entity with { Status = updatedCrashReport.Status, Comment = updatedCrashReport.Comment }
+            TenantId = tenant.Value,
+            NexusModsUser = entityFactory.GetOrCreateNexusModsUser(userId),
+            CrashReportId = updatedCrashReport.Id,
+            Status = updatedCrashReport.Status,
+            Comment = updatedCrashReport.Comment
         };
-        var set = _dbContext.Set<NexusModsUserCrashReportEntity>().Include(x => x.CrashReport);
-        if (await _dbContext.AddUpdateRemoveAndSaveAsync(set, x => x.NexusModsUserId == userId && x.CrashReport.Id == updatedCrashReport.Id, ApplyChanges))
-            return APIResponse("Updated successful!");
-
-        return APIResponseError<string>("Failed to update!");
+        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToCrashReports, entity);
+        return APIResponse("Updated successful!");
     }
 }

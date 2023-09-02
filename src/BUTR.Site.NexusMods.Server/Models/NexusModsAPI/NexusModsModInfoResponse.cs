@@ -2,7 +2,7 @@
 
 namespace BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 
-public record NexusModsModInfoResponse(
+public sealed record NexusModsModInfoResponse(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("picture_url")] string PictureUrl,
     [property: JsonPropertyName("mod_id")] int Id,
@@ -16,7 +16,7 @@ public record NexusModsModInfoResponse(
     [property: JsonPropertyName("user")] NexusModsModInfoResponse.UserModel User
 )
 {
-    public record UserModel(
+    public sealed record UserModel(
         [property: JsonPropertyName("member_id")] int Id,
         [property: JsonPropertyName("name")] string Name
     );

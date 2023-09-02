@@ -1,8 +1,8 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
-using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Shared.Helpers;
@@ -15,29 +15,25 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-public sealed record SteamUserInfo(
-    [property: JsonPropertyName("id")] string Id,
-    [property: JsonPropertyName("username")] string Username);
-
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public sealed class SteamController : ControllerExtended
 {
+    public sealed record SteamOpenIdUrlModel(string Url);
+
+
     private readonly ISteamStorage _steamStorage;
-    private readonly AppDbContext _dbContext;
     private readonly SteamAPIOptions _options;
     private readonly SteamCommunityClient _steamCommunityClient;
     private readonly SteamAPIClient _steamAPIClient;
 
-    public SteamController(ISteamStorage steamStorage, AppDbContext dbContext, IOptions<SteamAPIOptions> options, SteamCommunityClient steamCommunityClient, SteamAPIClient steamAPIClient)
+    public SteamController(ISteamStorage steamStorage, IOptions<SteamAPIOptions> options, SteamCommunityClient steamCommunityClient, SteamAPIClient steamAPIClient)
     {
         _steamStorage = steamStorage ?? throw new ArgumentNullException(nameof(steamStorage));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));
         _steamCommunityClient = steamCommunityClient ?? throw new ArgumentNullException(nameof(steamCommunityClient));
         _steamAPIClient = steamAPIClient ?? throw new ArgumentNullException(nameof(steamAPIClient));
@@ -77,20 +73,8 @@ public sealed class SteamController : ControllerExtended
         var userId = HttpContext.GetUserId();
         var userInfo = await _steamAPIClient.GetUserInfoAsync(steamId, ct);
 
-        var ownsBannerlord = await _steamAPIClient.IsOwningGameAsync(steamId, 261550, ct);
-        if (ownsBannerlord)
-        {
-            NexusModsUserMetadataEntity? ApplyChanges(NexusModsUserMetadataEntity? existing) => existing switch
-            {
-                null => null,
-                _ => existing with
-                {
-                    Metadata = existing.Metadata.SetAndReturn("MB2B", "")
-                },
-            };
-            if (!await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsUserMetadataEntity>(x => x.NexusModsUserId == userId, ApplyChanges, CancellationToken.None))
-                return APIResponseError<string>("Failed to link!");
-        }
+        if (!await _steamStorage.CheckOwnedGamesAsync(userId, steamId))
+            return APIResponseError<string>("Failed to link!");
 
         if (userInfo is null || !await _steamStorage.UpsertAsync(userId, userInfo.Id, queries))
             return APIResponseError<string>("Failed to link!");

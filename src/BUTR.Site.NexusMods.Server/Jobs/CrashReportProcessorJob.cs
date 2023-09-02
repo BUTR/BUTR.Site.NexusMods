@@ -1,25 +1,25 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
+using BUTR.Site.NexusMods.Shared;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
-using Npgsql;
 
 using Quartz;
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Jobs;
@@ -27,122 +27,255 @@ namespace BUTR.Site.NexusMods.Server.Jobs;
 [DisallowConcurrentExecution]
 public sealed class CrashReportProcessorJob : IJob
 {
-    private readonly ILogger _logger;
-    private readonly CrashReporterOptions _options;
-    private readonly CrashReporterClient _client;
-    private readonly AppDbContext _dbContext;
+    private class ObjectPool<T>
+    {
+        private readonly ConcurrentBag<T> _objects = new();
+        private readonly Func<CancellationToken, Task<T>> _objectGenerator;
 
-    public CrashReportProcessorJob(ILogger<CrashReportProcessorJob> logger, IOptions<CrashReporterOptions> options, CrashReporterClient client, AppDbContext dbContext)
+        public ObjectPool(Func<CancellationToken, Task<T>> objectGenerator)
+        {
+            _objectGenerator = objectGenerator ?? throw new ArgumentNullException(nameof(objectGenerator));
+        }
+
+        public async Task<T> GetAsync(CancellationToken ct) => _objects.TryTake(out var item) ? item : await _objectGenerator(ct);
+
+        public void Return(T item) => _objects.Add(item);
+    }
+
+    private record HttpResultEntry(string FileId, DateTime Date, string ReportString, CrashReport CrashReport);
+    private record DatabaseResultEntry(CrashReport CrashReport, DateTime Date);
+
+    private static readonly int ParallelCount = Environment.ProcessorCount / 2;
+
+    private readonly ILogger _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
+    public CrashReportProcessorJob(ILogger<CrashReportProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
+    }
+
+    private static async Task DownloadCrashReportsAsync(Tenant tenant, IAsyncEnumerable<FileIdDate> requests, CrashReporterClient client, ChannelWriter<HttpResultEntry> httpResultChannel, CancellationToken ct)
+    {
+        var options = new ParallelOptions { CancellationToken = ct, MaxDegreeOfParallelism = ParallelCount };
+        await Parallel.ForEachAsync(requests, options, async (entry, ct2) =>
+        {
+            var (fileId, date) = entry;
+
+            var reportStr = await client.GetCrashReportAsync(fileId, ct2);
+            var report = CrashReportParser.Parse(fileId, reportStr);
+
+            await httpResultChannel.WaitToWriteAsync(ct2);
+            await httpResultChannel.WriteAsync(new(fileId, date, reportStr, report), ct2);
+        });
+        httpResultChannel.Complete();
+    }
+
+    private static async Task FilterCrashReportsAsync(Tenant tenant, IServiceProvider serviceProvider, ChannelReader<HttpResultEntry> httpResultChannel, ChannelWriter<DatabaseResultEntry> databaseResultChannel, ChannelWriter<CrashReportToFileIdEntity> linkedCrashReportsChannel, ChannelWriter<CrashReportIgnoredFileEntity> ignoredCrashReportsChannel, CancellationToken ct)
+    {
+        var dbContextFactory = serviceProvider.GetRequiredService<IAppDbContextFactory>();
+        var dbContextPool = new ObjectPool<IAppDbContextRead>(dbContextFactory.CreateReadAsync);
+
+        var options = new ParallelOptions { CancellationToken = ct, MaxDegreeOfParallelism = ParallelCount };
+        await Parallel.ForEachAsync(httpResultChannel.ReadAllAsync(ct), options, async (entry, ct2) =>
+        {
+            var (fileId, date, reportStr, report) = entry;
+
+            var dbContextRead = await dbContextPool.GetAsync(ct2);
+            try
+            {
+                // Check just in case that the CrashReportToFileIdEntity is not missing for some reason
+                var hasCrashReport = dbContextRead.CrashReports.Any(x => x.CrashReportId == report.Id);
+                if (hasCrashReport)
+                {
+                    var hasCrashReportLink = dbContextRead.CrashReportToFileIds.Any(x => x.CrashReportId == report.Id);
+                    if (!hasCrashReportLink)
+                    {
+                        await linkedCrashReportsChannel.WriteAsync(new CrashReportToFileIdEntity
+                        {
+                            TenantId = tenant,
+                            CrashReportId = report.Id,
+                            FileId = fileId
+                        }, ct2);
+                        return;
+                    }
+                }
+
+                // Ignore incorrect crash reports
+                var isIncorrectCrashReport = string.IsNullOrEmpty(reportStr) || string.IsNullOrEmpty(report.GameVersion);
+                var isDuplicateCrashReport = dbContextRead.CrashReportToFileIds.Any(x => x.CrashReportId == report.Id && x.FileId != fileId);
+                if (isIncorrectCrashReport || isDuplicateCrashReport)
+                {
+                    await ignoredCrashReportsChannel.WriteAsync(new CrashReportIgnoredFileEntity
+                    {
+                        TenantId = tenant,
+                        Value = fileId
+                    }, ct2);
+                    return;
+                }
+            }
+            finally
+            {
+                dbContextPool.Return(dbContextRead);
+            }
+
+            // Handle the crash report further
+            await databaseResultChannel.WaitToWriteAsync(ct2);
+            await databaseResultChannel.WriteAsync(new(report, date), ct2);
+        });
+        databaseResultChannel.Complete();
+        ignoredCrashReportsChannel.Complete();
+        linkedCrashReportsChannel.Complete();
+    }
+
+    private static async Task WriteIgnoredToDatabaseAsync(Tenant tenant, IServiceProvider serviceProvider, ChannelReader<CrashReportIgnoredFileEntity> ignoredCrashReportsChannel, CancellationToken ct)
+    {
+        var dbContextFactory = serviceProvider.GetRequiredService<IAppDbContextFactory>();
+        var dbContextWrite = await dbContextFactory.CreateWriteAsync(ct);
+        await foreach (var entity in ignoredCrashReportsChannel.ReadAllAsync(ct))
+            dbContextWrite.CrashReportIgnoredFileIds.Add(entity);
+        await dbContextWrite.SaveAsync(ct);
+    }
+
+    private static async Task WriteLinkedToDatabaseAsync(Tenant tenant, IServiceProvider serviceProvider, ChannelReader<CrashReportToFileIdEntity> linkedCrashReportsChannel, CancellationToken ct)
+    {
+        var dbContextFactory = serviceProvider.GetRequiredService<IAppDbContextFactory>();
+        var dbContextWrite = await dbContextFactory.CreateWriteAsync(ct);
+        await foreach (var entity in linkedCrashReportsChannel.ReadAllAsync(ct))
+            dbContextWrite.CrashReportToFileIds.Add(entity);
+        await dbContextWrite.SaveAsync(ct);
+    }
+
+    private static async Task WriteCrashReportsToDatabaseAsync(Tenant tenant, CrashReporterOptions options, IServiceProvider serviceProvider, ChannelReader<DatabaseResultEntry> databaseResultChannel, CancellationToken ct)
+    {
+        var dbContextFactory = serviceProvider.GetRequiredService<IAppDbContextFactory>();
+        var dbContextWrite = await dbContextFactory.CreateWriteAsync(ct);
+        var entityFactory = dbContextWrite.CreateEntityFactory();
+        await using var _ = dbContextWrite.CreateSaveScope();
+
+        // Filter out duplicate reports
+        var uniqueGuids = new HashSet<Guid>();
+        var ignored = new List<CrashReportIgnoredFileEntity>();
+        var crashReports = new List<CrashReportEntity>();
+        var crashReportMetadatas = new List<CrashReportToMetadataEntity>();
+        var crashReportModules = new List<CrashReportToModuleMetadataEntity>();
+        var crashReportFileIds = new List<CrashReportToFileIdEntity>();
+        await foreach (var (report, date) in databaseResultChannel.ReadAllAsync(ct))
+        {
+            if (uniqueGuids.Contains(report.Id))
+            {
+                ignored.Add(new CrashReportIgnoredFileEntity
+                {
+                    TenantId = tenant,
+                    Value = report.Id2
+                });
+                continue;
+            }
+            uniqueGuids.Add(report.Id);
+
+            crashReports.Add(new CrashReportEntity
+            {
+                TenantId = tenant,
+                CrashReportId = report.Id,
+                Url = new Uri(new Uri(options.Endpoint), $"{report.Id2}.html").ToString(),
+                Version = report.Version,
+                GameVersion = report.GameVersion,
+                ExceptionType = entityFactory.GetOrCreateExceptionTypeFromException(report.Exception),
+                Exception = report.Exception,
+                CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date.ToUniversalTime(),
+            });
+            crashReportMetadatas.Add(new CrashReportToMetadataEntity
+            {
+                TenantId = tenant,
+                CrashReportId = report.Id,
+                LauncherType = string.IsNullOrEmpty(report.LauncherType) ? null : report.LauncherType,
+                LauncherVersion = string.IsNullOrEmpty(report.LauncherVersion) ? null : report.LauncherVersion,
+                Runtime = string.IsNullOrEmpty(report.Runtime) ? null : report.Runtime,
+                BUTRLoaderVersion = string.IsNullOrEmpty(report.BUTRLoaderVersion) ? null : report.BUTRLoaderVersion,
+                BLSEVersion = string.IsNullOrEmpty(report.BLSEVersion) ? null : report.BLSEVersion,
+                LauncherExVersion = string.IsNullOrEmpty(report.LauncherExVersion) ? null : report.LauncherExVersion,
+            });
+            crashReportModules.AddRange(report.Modules.Select(x => new CrashReportToModuleMetadataEntity
+            {
+                TenantId = tenant,
+                CrashReportId = report.Id,
+                Module = entityFactory.GetOrCreateModule(x.Id),
+                Version = x.Version,
+                NexusModsMod = NexusModsUtils.TryParse(x.Url, out var _, out var modId) ? entityFactory.GetOrCreateNexusModsMod(modId) : null,
+                IsInvolved = report.InvolvedModules.Any(y => y.Id == x.Id),
+            }));
+            crashReportFileIds.Add(new CrashReportToFileIdEntity
+            {
+                TenantId = tenant,
+                CrashReportId = report.Id,
+                FileId = report.Id2
+            });
+        }
+
+        dbContextWrite.FutureUpsert(x => x.CrashReportIgnoredFileIds, ignored);
+        dbContextWrite.FutureUpsert(x => x.CrashReports, crashReports);
+        dbContextWrite.FutureUpsert(x => x.CrashReportToFileIds, crashReportFileIds);
+        dbContextWrite.FutureUpsert(x => x.CrashReportModuleInfos, crashReportModules);
+        dbContextWrite.FutureUpsert(x => x.CrashReportToMetadatas, crashReportMetadatas);
+        // Disposing the DBContext will save the data
+    }
+
+    private static async Task HandleFileIdDatesAsync(Tenant tenant, IServiceProvider serviceProvider, CrashReporterClient client, IAsyncEnumerable<FileIdDate> requests, CancellationToken ct)
+    {
+        var options = serviceProvider.GetRequiredService<IOptions<CrashReporterOptions>>().Value;
+        var httpResultChannel = Channel.CreateBounded<HttpResultEntry>(ParallelCount);
+        var databaseResultChannel = Channel.CreateBounded<DatabaseResultEntry>(ParallelCount);
+        var linkedCrashReportsChannel = Channel.CreateUnbounded<CrashReportToFileIdEntity>();
+        var ignoredCrashReportsChannel = Channel.CreateUnbounded<CrashReportIgnoredFileEntity>();
+
+        await Task.WhenAll(new Task[]
+        {
+            DownloadCrashReportsAsync(tenant, requests, client, httpResultChannel, ct),
+            FilterCrashReportsAsync(tenant, serviceProvider, httpResultChannel, databaseResultChannel, linkedCrashReportsChannel, ignoredCrashReportsChannel, ct),
+            WriteIgnoredToDatabaseAsync(tenant, serviceProvider, ignoredCrashReportsChannel, ct),
+            WriteLinkedToDatabaseAsync(tenant, serviceProvider, linkedCrashReportsChannel, ct),
+            WriteCrashReportsToDatabaseAsync(tenant, options, serviceProvider, databaseResultChannel, ct),
+        });
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
+        const int take = 2000;
+
+        var ct = context.CancellationToken;
+        var tenants = Enum.GetValues<Tenant>();
+
         var processed = 0;
-        try
+        foreach (var tenant in tenants)
         {
-            await foreach (var (report, date) in MissingFilenamesAsync(_dbContext, context.CancellationToken))
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
+
+            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            tenantContextAccessor.Current = tenant;
+
+            var dbContextFactory = scope.ServiceProvider.GetRequiredService<IAppDbContextFactory>();
+            var dbContextRead = await dbContextFactory.CreateReadAsync(ct);
+
+            var client = scope.ServiceProvider.GetRequiredService<CrashReporterClient>();
+
+            var availableFileIds = await client.GetCrashReportNamesAsync(ct);
+            availableFileIds.ExceptWith(await dbContextRead.CrashReportIgnoredFileIds.Select(x => x.Value).ToListAsync(ct));
+
+            for (var toSkip = 0; toSkip < availableFileIds.Count; toSkip += take)
             {
-                var crashReportEntity = new CrashReportEntity
-                {
-                    Id = report.Id,
-                    Url = new Uri(new Uri(_options.Endpoint), $"{report.Id2}.html").ToString(),
-                    Version = report.Version,
-                    GameVersion = report.GameVersion,
-                    Exception = report.Exception,
-                    CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date.ToUniversalTime(),
-                    ModIds = report.Modules.Select(x => x.Id).Distinct().ToImmutableArray().AsArray(),
-                    ModIdToVersion = report.Modules.Select(item => new { item.Id, item.Version }).Distinct().ToDictionary(x => x.Id, x => x.Version),
-                    InvolvedModIds = report.InvolvedModules.Select(x => x.Id).ToImmutableArray().AsArray(),
-                    ModNexusModsIds = report.Modules
-                        .Select(x => NexusModsUtils.TryParse(x.Url, out _, out var modId) ? modId : -1)
-                        .Where(x => x != -1)
-                        .ToImmutableArray().AsArray(),
-                    Metadata = new CrashReportEntityMetadata
-                    {
-                        LauncherType = report.LauncherType,
-                        LauncherVersion = report.LauncherVersion,
-                        Runtime = report.Runtime,
-                        BUTRLoaderVersion = report.BUTRLoaderVersion,
-                        BLSEVersion = report.BLSEVersion,
-                        LauncherExVersion = report.LauncherExVersion,
-                    }
-                };
+                var toTake = availableFileIds.Count - toSkip >= take ? take : availableFileIds.Count - toSkip;
 
-                CrashReportEntity? ApplyChangesCrashReportEntity(CrashReportEntity? existing) => existing switch
-                {
-                    _ => crashReportEntity,
-                };
-                await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportEntity>(x => x.Id == report.Id, ApplyChangesCrashReportEntity, context.CancellationToken);
+                var fileIds = availableFileIds.Skip(toSkip).Take(toTake).ToHashSet();
+                fileIds.ExceptWith(await dbContextRead.CrashReportToFileIds.Where(x => fileIds.Contains(x.FileId)).Select(x => x.FileId).ToListAsync(ct));
+                if (fileIds.Count == 0) continue;
 
-                CrashReportFileEntity? ApplyChangesCrashReportFileEntity(CrashReportFileEntity? existing) => existing switch
-                {
-                    _ => new CrashReportFileEntity { Filename = report.Id2, CrashReport = crashReportEntity },
-                };
-                await _dbContext.AddUpdateRemoveAndSaveAsync<CrashReportFileEntity>(x => x.Filename == report.Id2, ApplyChangesCrashReportFileEntity, context.CancellationToken);
-                processed++;
+                await HandleFileIdDatesAsync(tenant, scope.ServiceProvider, client, client.GetCrashReportDatesAsync(fileIds, ct).OfType<FileIdDate>(), ct);
+                processed += fileIds.Count;
             }
         }
-        finally
-        {
-            context.Result = $"Processed {processed} crash reports";
-            context.SetIsSuccess(true);
-        }
-    }
 
-    private async IAsyncEnumerable<(CrashReport, DateTime)> MissingFilenamesAsync(AppDbContext dbContext, [EnumeratorCancellation] CancellationToken ct)
-    {
-        var mapping = dbContext.Model.FindEntityType(typeof(CrashReportFileEntity));
-        if (mapping?.GetTableName() is not { } table)
-            yield break;
-
-        var schema = mapping.GetSchema();
-        var tableName = mapping.GetSchemaQualifiedTableName();
-        var storeObjectIdentifier = StoreObjectIdentifier.Table(table, schema);
-        var filenameName = mapping.GetProperty(nameof(CrashReportFileEntity.Filename)).GetColumnName(storeObjectIdentifier);
-
-        var filenames = await _client.GetCrashReportNamesAsync(ct);
-
-        var ignored = dbContext.Set<CrashReportIgnoredFilesEntity>().Select(x => x.Filename).ToHashSet();
-        filenames.ExceptWith(ignored);
-
-        for (var skip = 0; skip < filenames.Count; skip += 1000)
-        {
-            var take = filenames.Count - skip >= 1000 ? 1000 : filenames.Count - skip;
-            var toFindFilenames = new NpgsqlParameter<List<string>>("filenames", filenames.Skip(skip).Take(take).ToList());
-            var query = dbContext.Set<CrashReportFileEntity>()
-                .FromSqlRaw(@$"
-SELECT
-    {filenameName}
-FROM
-    unnest(@filenames) as {filenameName}
-WHERE
-    {filenameName} NOT IN (SELECT {filenameName} FROM {tableName})", toFindFilenames)
-                .Select(x => x.Filename);
-
-            var missingFilenames = await query.ToImmutableArrayAsync(ct);
-            foreach (var missing in await _client.GetCrashReportDatesAsync(missingFilenames, ct))
-            {
-                var reportStr = await _client.GetCrashReportAsync(missing.Filename, ct);
-                var report = CrashReportParser.Parse(missing.Filename, reportStr);
-                var foundExisting = await dbContext.Set<CrashReportEntity>().Where(x => x.Id == report.Id).Select(x => x.Id).CountAsync(ct) > 0;
-                if (string.IsNullOrEmpty(reportStr) || string.IsNullOrEmpty(report.GameVersion) || foundExisting)
-                {
-                    CrashReportIgnoredFilesEntity? ApplyChanges(CrashReportIgnoredFilesEntity? existing) => existing switch
-                    {
-                        null => new() { Filename = missing.Filename, Id = report.Id },
-                        _ => existing,
-                    };
-                    await dbContext.AddUpdateRemoveAndSaveAsync<CrashReportIgnoredFilesEntity>(x => x.Filename == missing.Filename, ApplyChanges, ct);
-                    continue;
-                }
-
-                yield return (report, missing.Date);
-            }
-        }
+        context.Result = $"Processed {processed} crash reports";
+        context.SetIsSuccess(true);
     }
 }

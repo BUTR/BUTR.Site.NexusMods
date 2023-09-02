@@ -1,7 +1,9 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Utils;
 
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,16 +21,45 @@ using OpenTelemetry.Trace;
 using Quartz;
 
 using System;
+using System.IO;
 using System.Threading.Tasks;
+
+using Z.EntityFramework.Extensions;
 
 namespace BUTR.Site.NexusMods.Server;
 
 public static class Program
 {
-    public static Task Main(string[] args) => CreateHostBuilder(args)
-        .Build()
-        .SeedDbContext<AppDbContext>()
-        .RunAsync();
+    private static void PreBulkSaveChanges(DbContext context)
+    {
+        if (context is AppDbContextRead)
+            throw new NotSupportedException("Write operations not supported with 'AppDbContextRead'!");
+    }
+    private static void PreBulkOperation(DbContext context, object o) => PreBulkSaveChanges(context);
+
+    public static async Task Main(string[] args)
+    {
+        EntityFrameworkManager.PreBulkInsert = PreBulkOperation;
+        EntityFrameworkManager.PreBulkDelete = PreBulkOperation;
+        EntityFrameworkManager.PreBulkMerge  = PreBulkOperation;
+        EntityFrameworkManager.PreBulkUpdate = PreBulkOperation;
+        EntityFrameworkManager.PreBulkSynchronize = PreBulkOperation;
+        EntityFrameworkManager.PreBulkSaveChanges = PreBulkSaveChanges;
+        EntityFrameworkManager.ContextFactory = context => context switch
+        {
+            AppDbContextRead appDbContextRead => appDbContextRead.Create(),
+            AppDbContextWrite appDbContextWrite => appDbContextWrite.Create(),
+            _ => null
+        };
+
+        // I need to perform some cleanup at the start of the app
+        foreach (var sourceFile in Directory.EnumerateFiles("scripts"))
+            ScriptHandler.CompileAndExecute(Path.GetFileNameWithoutExtension(sourceFile), await File.ReadAllTextAsync(sourceFile));
+
+        var host = CreateHostBuilder(args).Build();
+
+        await host.SeedDbContext<BaseAppDbContext>().RunAsync();
+    }
 
     public static IHostBuilder CreateHostBuilder(string[] args) => Host
         .CreateDefaultBuilder(args)
@@ -39,7 +70,7 @@ public static class Program
                 options.AwaitApplicationStarted = true;
                 options.WaitForJobsToComplete = true;
             });
-            
+
             var oltpSection = ctx.Configuration.GetSection("Oltp");
             if (oltpSection is not null)
             {
@@ -118,11 +149,9 @@ public static class Program
         .ConfigureWebHostDefaults(webBuilder =>
         {
             webBuilder.UseStartup<Startup>();
-            webBuilder.UseSentry();
         })
         .ConfigureLogging((ctx, builder) =>
         {
-            builder.AddSentry();
             var oltpSection = ctx.Configuration.GetSection("Oltp");
             if (oltpSection is null) return;
             
@@ -135,10 +164,10 @@ public static class Program
                 o.IncludeScopes = true;
                 o.ParseStateValues = true;
                 o.IncludeFormattedMessage = true;
-                o.AddOtlpExporter(opt =>
+                o.AddOtlpExporter((options, processorOptions) =>
                 {
-                    opt.Endpoint = new Uri(loggingEndpoint);
-                    opt.Protocol = loggingProtocol;
+                    options.Endpoint = new Uri(loggingEndpoint);
+                    options.Protocol = loggingProtocol;
                 });
             });
         });

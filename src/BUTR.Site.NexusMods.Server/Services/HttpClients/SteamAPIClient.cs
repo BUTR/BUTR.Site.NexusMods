@@ -1,4 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Controllers;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Options;

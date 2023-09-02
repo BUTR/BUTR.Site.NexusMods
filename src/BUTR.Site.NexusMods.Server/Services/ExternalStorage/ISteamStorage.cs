@@ -1,49 +1,102 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Shared;
+
+using Microsoft.EntityFrameworkCore;
 
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
 public interface ISteamStorage
 {
-    Task<Dictionary<string, string>?> GetAsync(string userId);
+    Task<bool> CheckOwnedGamesAsync(int nexusModsUserId, string steamUserId);
+
+    Task<Dictionary<string, string>?> GetAsync(string steamUserId);
     Task<bool> UpsertAsync(int nexusModsUserId, string steamUserId, Dictionary<string, string> data);
     Task<bool> RemoveAsync(int nexusModsUserId, string steamUserId);
 }
 
-public sealed class DatabaseSteamStorage : BaseDatabaseStorage<Dictionary<string, string>, SteamLinkedRoleTokensEntity, NexusModsUserToSteamEntity>, ISteamStorage
+public sealed class DatabaseSteamStorage : ISteamStorage
 {
-    protected override string ExternalMetadataId => ExternalStorageConstants.Steam;
-
-    public DatabaseSteamStorage(AppDbContext dbContext) : base(dbContext) { }
-
-    protected override Dictionary<string, string> FromExternalEntity(SteamLinkedRoleTokensEntity externalEntity) => externalEntity.Data;
-
-    protected override NexusModsUserToSteamEntity? Upsert(int nexusModsUserId, string externalId, NexusModsUserToSteamEntity? existing) => existing switch
+    private Dictionary<Tenant, HashSet<uint>> TenantToGameIds { get; } = new()
     {
-        null => new NexusModsUserToSteamEntity
-        {
-            NexusModsUserId = nexusModsUserId,
-            UserId = externalId,
-        },
-        _ => existing with
-        {
-            UserId = externalId,
-        }
+        { Tenant.Bannerlord, new HashSet<uint> { 261550 } }
     };
 
-    protected override SteamLinkedRoleTokensEntity? Upsert(string externalId, Dictionary<string, string> data, SteamLinkedRoleTokensEntity? existing) => existing switch
+    private readonly IAppDbContextRead _dbContextRead;
+    private readonly IAppDbContextWrite _dbContextWrite;
+    private readonly SteamAPIClient _steamAPIClient;
+
+    public DatabaseSteamStorage(IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite, SteamAPIClient steamAPIClient)
     {
-        null => new SteamLinkedRoleTokensEntity
+        _dbContextRead = dbContextRead;
+        _dbContextWrite = dbContextWrite;
+        _steamAPIClient = steamAPIClient;
+    }
+
+    public async Task<bool> CheckOwnedGamesAsync(int nexusModsUserId, string steamUserId)
+    {
+        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        await using var _ = _dbContextWrite.CreateSaveScope();
+
+        var nexusModsUserToIntegrationSteam = entityFactory.GetOrCreateNexusModsUserSteam(nexusModsUserId, steamUserId);
+
+        var list = new List<IntegrationSteamToOwnedTenantEntity>();
+        foreach (var (tenant, gameIds) in TenantToGameIds)
         {
-            UserId = externalId,
-            Data = data,
-        },
-        _ => existing with
-        {
-            Data = data,
+            var ownsTenant = false;
+            foreach (var gameId in gameIds)
+            {
+                ownsTenant = await _steamAPIClient.IsOwningGameAsync(steamUserId, gameId, CancellationToken.None);
+                if (ownsTenant) break;
+            }
+
+            if (ownsTenant)
+            {
+                list.Add(new IntegrationSteamToOwnedTenantEntity()
+                {
+                    SteamUserId = steamUserId,
+                    OwnedTenant = tenant,
+                });
+            }
         }
-    };
+
+        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToSteam, nexusModsUserToIntegrationSteam);
+        _dbContextWrite.FutureUpsert(x => x.IntegrationSteamToOwnedTenants, list);
+        await _dbContextWrite.IntegrationSteamToOwnedTenants.Where(x => x.SteamUserId == steamUserId).ExecuteDeleteAsync(CancellationToken.None);
+        return true;
+    }
+
+    public async Task<Dictionary<string, string>?> GetAsync(string steamUserId)
+    {
+        var entity = await _dbContextRead.IntegrationSteamTokens.FirstOrDefaultAsync(x => x.SteamUserId.Equals(steamUserId));
+        if (entity is null) return null;
+        return entity.Data;
+    }
+
+    public async Task<bool> UpsertAsync(int nexusModsUserId, string steamUserId, Dictionary<string, string> data)
+    {
+        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        await using var _ = _dbContextWrite.CreateSaveScope();
+
+        var nexusModsUserToIntegrationSteam = entityFactory.GetOrCreateNexusModsUserSteam(nexusModsUserId, steamUserId);
+        var tokensSteam = entityFactory.GetOrCreateIntegrationSteamTokens(nexusModsUserId, steamUserId, data);
+
+        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToSteam, nexusModsUserToIntegrationSteam);
+        _dbContextWrite.FutureUpsert(x => x.IntegrationSteamTokens, tokensSteam);
+        return true;
+    }
+
+    public async Task<bool> RemoveAsync(int nexusModsUserId, string steamUserId)
+    {
+        await _dbContextWrite.NexusModsUserToSteam.Where(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.SteamUserId == steamUserId).ExecuteDeleteAsync();
+        await _dbContextWrite.IntegrationSteamTokens.Where(x => x.SteamUserId == steamUserId).ExecuteDeleteAsync();
+
+        return true;
+    }
 }

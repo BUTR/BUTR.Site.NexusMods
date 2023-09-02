@@ -75,33 +75,33 @@ public sealed class NexusModsAPIClient
         }
     }
 
-    public Task<NexusModsModInfoResponse?> GetModAsync(string gameDomain, int modId, string apiKey) =>
-        GetCachedWithTimeLimitAsync<NexusModsModInfoResponse?>($"/v1/games/{gameDomain}/mods/{modId}.json", apiKey);
+    public Task<NexusModsModInfoResponse?> GetModAsync(string gameDomain, int modId, string apiKey, CancellationToken ct) =>
+        GetCachedWithTimeLimitAsync<NexusModsModInfoResponse?>($"/v1/games/{gameDomain}/mods/{modId}.json", apiKey, ct);
 
-    public Task<NexusModsModFilesResponse?> GetModFileInfosAsync(string gameDomain, int modId, string apiKey) =>
-        GetCachedWithTimeLimitAsync<NexusModsModFilesResponse?>($"/v1/games/{gameDomain}/mods/{modId}/files.json?category=main", apiKey);
+    public Task<NexusModsModFilesResponse?> GetModFileInfosAsync(string gameDomain, int modId, string apiKey, CancellationToken ct) =>
+        GetCachedWithTimeLimitAsync<NexusModsModFilesResponse?>($"/v1/games/{gameDomain}/mods/{modId}/files.json?category=main", apiKey, ct);
 
-    public Task<NexusModsDownloadLinkResponse[]?> GetModFileLinksAsync(string gameDomain, int modId, int fileId, string apiKey) =>
-        GetCachedWithTimeLimitAsync<NexusModsDownloadLinkResponse[]>($"/v1/games/{gameDomain}/mods/{modId}/files/{fileId}/download_link.json", apiKey);
+    public Task<NexusModsDownloadLinkResponse[]?> GetModFileLinksAsync(string gameDomain, int modId, int fileId, string apiKey, CancellationToken ct) =>
+        GetCachedWithTimeLimitAsync<NexusModsDownloadLinkResponse[]>($"/v1/games/{gameDomain}/mods/{modId}/files/{fileId}/download_link.json", apiKey, ct);
 
-    public async Task<NexusModsUpdatedModsResponse[]?> GetAllModUpdatesAsync(string gameDomain, string apiKey)
+    public async Task<NexusModsUpdatedModsResponse[]?> GetAllModUpdatesAsync(string gameDomain, string apiKey, CancellationToken ct)
     {
         try
         {
-            await _lock.WaitAsync();
+            await _lock.WaitAsync(ct);
             await _timeLimiter;
 
             var request = new HttpRequestMessage(HttpMethod.Get, $"/v1/games/{gameDomain}/mods/updated.json?period=1w");
             request.Headers.Add("apikey", apiKey);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var response = await _httpClient.SendAsync(request);
+            var response = await _httpClient.SendAsync(request, ct);
             _timeLimiter = ParseResponseLimits(response);
             if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync(ct);
             var mod = JsonSerializer.Deserialize<NexusModsUpdatedModsResponse[]>(json, _jsonSerializerOptions);
             if (mod is null)
             {
@@ -116,40 +116,40 @@ public sealed class NexusModsAPIClient
         }
     }
 
-    private async Task<TResponse?> GetCachedWithTimeLimitAsync<TResponse>(string url, string apiKey) where TResponse : class?
+    private async Task<TResponse?> GetCachedWithTimeLimitAsync<TResponse>(string url, string apiKey, CancellationToken ct) where TResponse : class?
     {
         var apiKeyKey = HashString(apiKey);
         try
         {
-            if (await _cache.GetStringAsync(url) is { } json)
+            if (await _cache.GetStringAsync(url, token: ct) is { } json)
             {
                 return string.IsNullOrEmpty(json) ? null : JsonSerializer.Deserialize<TResponse>(json, _jsonSerializerOptions);
             }
 
             try
             {
-                await _lock.WaitAsync();
+                await _lock.WaitAsync(ct);
                 await _timeLimiter;
 
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
                 request.Headers.Add("apikey", apiKey);
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                var response = await _httpClient.SendAsync(request);
+                var response = await _httpClient.SendAsync(request, ct);
                 _timeLimiter = ParseResponseLimits(response);
                 if (!response.IsSuccessStatusCode)
                 {
-                    await _cache.SetStringAsync(url, "", _expiration);
+                    await _cache.SetStringAsync(url, "", _expiration, token: ct);
                     return null;
                 }
-                json = await response.Content.ReadAsStringAsync();
+                json = await response.Content.ReadAsStringAsync(ct);
                 var mod = JsonSerializer.Deserialize<TResponse>(json, _jsonSerializerOptions);
                 if (mod is null)
                 {
-                    await _cache.SetStringAsync(url, "", _expiration);
+                    await _cache.SetStringAsync(url, "", _expiration, token: ct);
                     return null;
                 }
 
-                await _cache.SetStringAsync(url, json, _expiration);
+                await _cache.SetStringAsync(url, json, _expiration, token: ct);
                 return response.IsSuccessStatusCode ? mod : null;
             }
             finally
@@ -159,7 +159,7 @@ public sealed class NexusModsAPIClient
         }
         catch (Exception)
         {
-            await _cache.RemoveAsync(apiKeyKey);
+            await _cache.RemoveAsync(apiKeyKey, ct);
             return null;
         }
     }

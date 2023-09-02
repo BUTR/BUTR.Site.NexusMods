@@ -28,7 +28,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly QuartzEventProviderService _quartzEventProviderService;
     private readonly ISchedulerFactory _schedulerFactory;
-    private readonly Channel<Func<AppDbContext, CancellationToken, ValueTask>> _taskQueue;
+    private readonly Channel<Func<IAppDbContextWrite, CancellationToken, ValueTask>> _taskQueue;
 
     public QuartzListenerBackgroundService(ILogger<QuartzListenerBackgroundService> logger, IServiceProvider serviceProvider, QuartzEventProviderService quartzEventProviderService, ISchedulerFactory schedulerFactory)
     {
@@ -36,7 +36,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         _serviceProvider = serviceProvider;
         _quartzEventProviderService = quartzEventProviderService;
         _schedulerFactory = schedulerFactory;
-        _taskQueue = Channel.CreateUnbounded<Func<AppDbContext, CancellationToken, ValueTask>>(new UnboundedChannelOptions { SingleReader = true });
+        _taskQueue = Channel.CreateUnbounded<Func<IAppDbContextWrite, CancellationToken, ValueTask>>(new UnboundedChannelOptions { SingleReader = true });
 
         _quartzEventProviderService.OnJobToBeExecuted += OnJobToBeExecuted;
         _quartzEventProviderService.OnJobWasExecuted += OnJobWasExecuted;
@@ -219,17 +219,17 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
     {
         try
         {
-            using var scope = _serviceProvider.CreateScope();
-            var repo = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await using var scope = _serviceProvider.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContextWrite>();
 
-            var isSuccessNullJobs = repo.Set<QuartzExecutionLogEntity>().Where(x => !x.IsSuccess.HasValue && x.LogType == QuartzLogType.ScheduleJob);
+            var isSuccessNullJobs = dbContext.QuartzExecutionLogs.Where(x => !x.IsSuccess.HasValue && x.LogType == QuartzLogType.ScheduleJob);
             foreach (var log in isSuccessNullJobs)
             {
                 log.IsSuccess = false;
                 log.ErrorMessage = "Incomplete execution.";
                 log.JobRunTime = null;
             }
-            await repo.SaveChangesAsync(CancellationToken.None);
+            await dbContext.SaveAsync(CancellationToken.None);
         }
         catch (OperationCanceledException)
         {
@@ -237,7 +237,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while updating executing status to incomplete status.");
+            _logger.LogError(ex, "Error occurred while updating executing status to incomplete status");
         }
     }
 
@@ -245,26 +245,25 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
     {
         var batch = await GetBatchAsync(stoppingToken);
 
-        _logger.LogInformation("Got a batch with {taskCount} task(s). Saving to data store.",
-            batch.Count);
+        _logger.LogInformation("Got a batch with {TaskCount} task(s). Saving to data store", batch.Count);
 
         try
         {
-            using var scope = _serviceProvider.CreateScope();
-            var repo = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await using var scope = _serviceProvider.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContextWrite>();
 
             foreach (var workItem in batch)
             {
-                await workItem(repo, stoppingToken);
+                await workItem(dbContext, stoppingToken);
             }
 
             try
             {
-                await repo.SaveChangesAsync(CancellationToken.None);
+                await dbContext.SaveAsync(CancellationToken.None);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while saving execution logs.");
+                _logger.LogError(ex, "Error occurred while saving execution logs");
             }
         }
         catch (OperationCanceledException)
@@ -273,7 +272,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred executing task work item.");
+            _logger.LogError(ex, "Error occurred executing task work item");
         }
     }
 
@@ -330,11 +329,11 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         return log;
     }
 
-    private async Task<List<Func<AppDbContext, CancellationToken, ValueTask>>> GetBatchAsync(CancellationToken cancellationToken)
+    private async Task<List<Func<IAppDbContextWrite, CancellationToken, ValueTask>>> GetBatchAsync(CancellationToken cancellationToken)
     {
         await _taskQueue.Reader.WaitToReadAsync(cancellationToken);
 
-        var batch = new List<Func<AppDbContext, CancellationToken, ValueTask>>();
+        var batch = new List<Func<IAppDbContextWrite, CancellationToken, ValueTask>>();
 
         while (batch.Count < MAX_BATCH_SIZE && _taskQueue.Reader.TryRead(out var dbTask))
         {
@@ -346,39 +345,24 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
 
     private void QueueUpdateTask(QuartzExecutionLogEntity log)
     {
-        QueueTask(async (repo, ct) =>
+        QueueTask(async (dbContext, ct) =>
         {
             try
             {
-                QuartzExecutionLogEntity? ApplyChanges(QuartzExecutionLogEntity? existing) => existing switch
-                {
-                    null => log,
-                    var entity => entity with
-                    {
-                        ExecutionLogDetail = log.ExecutionLogDetail,
-                        ErrorMessage = log.ErrorMessage,
-                        IsVetoed = log.IsVetoed,
-                        JobRunTime = log.JobRunTime,
-                        Result = log.Result,
-                        IsException = log.IsException,
-                        IsSuccess = log.IsSuccess,
-                        ReturnCode = log.ReturnCode,
-                    }
-                };
-                await repo.AddUpdateRemoveAsync<QuartzExecutionLogEntity>(x => x.RunInstanceId == log.RunInstanceId, ApplyChanges, ct: CancellationToken.None);
+                await dbContext.QuartzExecutionLogs.SingleMergeAsync(log, o => { o.ColumnPrimaryKeyExpression = e => e.RunInstanceId; }, CancellationToken.None);
             }
             catch (Exception ex)
             {
                 if (log.LogType == QuartzLogType.ScheduleJob)
                 {
                     _logger.LogError(ex,
-                        "Error occurred while updating execution log with job key [{jobGroup}.{jobName}] run instance id [{runInstanceId}].",
+                        "Error occurred while updating execution log with job key [{JobGroup}.{JobName}] run instance id [{RunInstanceId}]",
                         log.JobGroup, log.JobName, log.RunInstanceId);
                 }
                 else
                 {
                     _logger.LogError(ex,
-                        "Error occurred while updating {logType} execution log with job key [{jobGroup}.{jobName}] trigger key [{triggerGroup}.{triggerName}].",
+                        "Error occurred while updating {LogType} execution log with job key [{JobGroup}.{JobName}] trigger key [{TriggerGroup}.{TriggerName}]",
                         log.LogType, log.JobGroup, log.JobName, log.TriggerGroup, log.TriggerName);
                 }
             }
@@ -387,11 +371,11 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
 
     private void QueueGetJobKeyAndInsertTask(QuartzExecutionLogEntity log)
     {
-        QueueTask(async (repo, ct) =>
+        QueueTask(async (dbContext, ct) =>
         {
             try
             {
-                if (log.JobName == null && log is { TriggerName: { }, TriggerGroup: { } })
+                if (log.JobName == null && log is { TriggerName: not null, TriggerGroup: not null})
                 {
                     // when there is no job name but has trigger name
                     // try to determine the job name
@@ -404,18 +388,18 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
                     }
                 }
 
-                await repo.Set<QuartzExecutionLogEntity>().AddAsync(log, CancellationToken.None);
+                await dbContext.QuartzExecutionLogs.AddAsync(log, CancellationToken.None);
             }
             catch (Exception ex)
             {
                 if (log.LogType == QuartzLogType.ScheduleJob)
                 {
-                    _logger.LogError(ex, "Error occurred while adding execution log with job key [{jobGroup}.{jobName}] run instance id [{runInstanceId}].",
+                    _logger.LogError(ex, "Error occurred while adding execution log with job key [{JobGroup}.{JobName}] run instance id [{RunInstanceId}]",
                         log.JobGroup, log.JobName, log.RunInstanceId);
                 }
                 else
                 {
-                    _logger.LogError(ex, "Error occurred while adding {logType} execution log with job key [{jobGroup}.{jobName}] trigger key [{triggerGroup}.{triggerName}].",
+                    _logger.LogError(ex, "Error occurred while adding {LogType} execution log with job key [{JobGroup}.{JobName}] trigger key [{TriggerGroup}.{TriggerName}]",
                         log.LogType, log.JobGroup, log.JobName, log.TriggerGroup, log.TriggerName);
                 }
             }
@@ -425,29 +409,29 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
 
     private void QueueInsertTask(QuartzExecutionLogEntity log)
     {
-        QueueTask(async (repo, ct) =>
+        QueueTask(async (dbContext, ct) =>
         {
             try
             {
-                await repo.Set<QuartzExecutionLogEntity>().AddAsync(log, CancellationToken.None);
+                await dbContext.QuartzExecutionLogs.AddAsync(log, CancellationToken.None);
             }
             catch (Exception ex)
             {
                 if (log.LogType == QuartzLogType.ScheduleJob)
                 {
-                    _logger.LogError(ex, "Error occurred while adding execution log with job key [{jobGroup}.{jobName}] run instance id [{runInstanceId}].",
+                    _logger.LogError(ex, "Error occurred while adding execution log with job key [{JobGroup}.{JobName}] run instance id [{RunInstanceId}]",
                         log.JobGroup, log.JobName, log.RunInstanceId);
                 }
                 else
                 {
-                    _logger.LogError(ex, "Error occurred while adding {logType} execution log with job key [{jobGroup}.{jobName}] trigger key [{triggerGroup}.{triggerName}].",
+                    _logger.LogError(ex, "Error occurred while adding {LogType} execution log with job key [{JobGroup}.{JobName}] trigger key [{TriggerGroup}.{TriggerName}]",
                         log.LogType, log.JobGroup, log.JobName, log.TriggerGroup, log.TriggerName);
                 }
             }
         });
     }
 
-    private void QueueTask(Func<AppDbContext, CancellationToken, ValueTask> task)
+    private void QueueTask(Func<IAppDbContextWrite, CancellationToken, ValueTask> task)
     {
         if (!_taskQueue.Writer.TryWrite(task))
         {

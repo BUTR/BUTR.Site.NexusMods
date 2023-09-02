@@ -1,13 +1,18 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Shared;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Quartz;
 
 using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Jobs;
@@ -16,97 +21,106 @@ namespace BUTR.Site.NexusMods.Server.Jobs;
 public sealed class CrashReportAnalyzerProcessorJob : IJob
 {
     private readonly ILogger _logger;
-    private readonly AppDbContext _dbContext;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public CrashReportAnalyzerProcessorJob(ILogger<CrashReportAnalyzerProcessorJob> logger, AppDbContext dbContext)
+    public CrashReportAnalyzerProcessorJob(ILogger<CrashReportAnalyzerProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var crashReportEntity = _dbContext.Model.FindEntityType(typeof(CrashReportEntity))!;
-        var crashReportEntityTable = crashReportEntity.GetSchemaQualifiedTableName();
-        var modIds = crashReportEntity.GetProperty(nameof(CrashReportEntity.ModIds)).GetColumnName();
-        var involvedModIds = crashReportEntity.GetProperty(nameof(CrashReportEntity.InvolvedModIds)).GetColumnName();
-        var gameVersion = crashReportEntity.GetProperty(nameof(CrashReportEntity.GameVersion)).GetColumnName();
-        var modIdToVersion = crashReportEntity.GetProperty(nameof(CrashReportEntity.ModIdToVersion)).GetColumnName();
+        var ct = context.CancellationToken;
+        var tenants = Enum.GetValues<Tenant>();
 
-        var crashScoreInvolvedEntity = _dbContext.Model.FindEntityType(typeof(StatisticsCrashScoreInvolvedEntity))!;
-        var crashScoreInvolvedEntityTable = crashScoreInvolvedEntity.GetSchemaQualifiedTableName();
+        foreach (var tenant in tenants)
+        {
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
 
-        if (!_dbContext.Database.IsNpgsql()) return;
+            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            tenantContextAccessor.Current = tenant;
 
-        var sql = $"""
-TRUNCATE TABLE {crashScoreInvolvedEntityTable};
-WITH
--- Get a list of all distinct mod versions in the database
-all_mod_versions AS (
-    SELECT DISTINCT (EACH({modIdToVersion})).key AS mod_id, (EACH({modIdToVersion})).value AS version
-    FROM {crashReportEntityTable}
-),
--- Calculate the number of times a mod is involved in the crash for each mod version
-mod_counts AS (
-    SELECT {gameVersion}, mod_id, {modIdToVersion} -> mod_id AS version, count(*) AS count
-    FROM (
-             SELECT UNNEST({modIds}) AS mod_id, {modIdToVersion}, {gameVersion}
-             FROM {crashReportEntityTable}
-         ) t
-    GROUP BY {gameVersion}, mod_id, version
-),
--- Calculate the number of times where the mod version was involved in the crash
-involved_mod_counts AS (
-    SELECT {gameVersion}, mod_id, {modIdToVersion} -> mod_id AS version, count(*) AS count
-    FROM (
-             SELECT UNNEST({involvedModIds}) AS mod_id, {modIdToVersion}, {gameVersion}, {involvedModIds}
-             FROM {crashReportEntityTable}
-         ) t
-    WHERE {involvedModIds} @> ARRAY[mod_id]
-    GROUP BY {gameVersion}, mod_id, version
-),
--- Calculate the number of times where the mod version was not involved in the crash
-not_involved_mod_counts AS (
-    SELECT {gameVersion}, mod_id, {modIdToVersion} -> mod_id AS version, count(*) AS count
-    FROM (
-             SELECT UNNEST({modIds}) AS mod_id, {modIdToVersion}, {gameVersion}, {involvedModIds}
-             FROM {crashReportEntityTable}
-         ) t
-    WHERE NOT {involvedModIds} @> ARRAY[mod_id]
-    GROUP BY {gameVersion}, mod_id, version 
-)
-INSERT INTO {crashScoreInvolvedEntityTable}
--- Calculate the score for each mod version
-SELECT
-    mod_counts.{gameVersion},
-    all_mod_versions.mod_id,
-    all_mod_versions.version,
-    COALESCE(involved_mod_counts.count, 0) AS involved_count,
-    COALESCE(not_involved_mod_counts.count, 0) AS not_involved_count,
-    mod_counts.count AS total_count,
-    involved_mod_counts.count AS value,
-    COALESCE(involved_mod_counts.count, 0) / mod_counts.count::numeric AS crash_score
-FROM
-    all_mod_versions
-        JOIN mod_counts ON
-                all_mod_versions.mod_id = mod_counts.mod_id AND
-                all_mod_versions.version = mod_counts.version
-        JOIN involved_mod_counts ON
-                all_mod_versions.mod_id = involved_mod_counts.mod_id AND
-                all_mod_versions.version = involved_mod_counts.version AND
-                mod_counts.{gameVersion} = involved_mod_counts.{gameVersion}
-        JOIN not_involved_mod_counts ON
-                all_mod_versions.mod_id = not_involved_mod_counts.mod_id AND
-                all_mod_versions.version = not_involved_mod_counts.version AND
-                mod_counts.{gameVersion} = not_involved_mod_counts.{gameVersion}
-ORDER BY
-    mod_counts.{gameVersion},
-    all_mod_versions.mod_id,
-    all_mod_versions.version;
-""";
-        _dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(10));
-        await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { }, context.CancellationToken);
+            try
+            {
+                await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
         context.Result = "Updated Crash Report Statistics Data";
         context.SetIsSuccess(true);
+    }
+
+    private static async Task HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    {
+        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
+        var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
+        var entityFactory = dbContextWrite.CreateEntityFactory();
+        await using var _ = dbContextWrite.CreateSaveScope();
+
+        var allModVersionsQuery = dbContextRead.CrashReportModuleInfos
+            .GroupBy(x => new { x.Module.ModuleId, x.Version })
+            .Select(x => new { x.Key.ModuleId, x.Key.Version })
+            .Distinct();
+
+        var modCountsQuery = dbContextRead.CrashReportModuleInfos
+            .Include(x => x.ToCrashReport!)
+            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.Module.ModuleId, x.Version })
+            .Select(x => new { x.Key.GameVersion, x.Key.ModuleId, x.Key.Version, Count = x.Count() })
+            .Distinct();
+
+        var involvedModCountsQuery = dbContextRead.CrashReportModuleInfos
+            .Include(x => x.ToCrashReport!)
+            .Where(x => x.IsInvolved)
+            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.Module.ModuleId, x.Version })
+            .Select(x => new { x.Key.GameVersion, x.Key.ModuleId, x.Key.Version, Count = x.Count() })
+            .Distinct();
+
+        var notInvolvedModCountsQuery = dbContextRead.CrashReportModuleInfos
+            .Include(x => x.ToCrashReport!)
+            .Where(x => !x.IsInvolved)
+            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.Module.ModuleId, x.Version })
+            .Select(x => new { x.Key.GameVersion, x.Key.ModuleId, x.Key.Version, Count = x.Count() })
+            .Distinct();
+
+        var query =
+            from allModVersios in allModVersionsQuery
+            join modCounts in modCountsQuery on new { allModVersios.ModuleId, allModVersios.Version } equals new { modCounts.ModuleId, modCounts.Version }
+            join involvedModCounts in involvedModCountsQuery on new { allModVersios.ModuleId, allModVersios.Version, modCounts.GameVersion } equals new { involvedModCounts.ModuleId, involvedModCounts.Version, involvedModCounts.GameVersion }
+            join notInvolvedModCounts in notInvolvedModCountsQuery on new { allModVersios.ModuleId, allModVersios.Version, modCounts.GameVersion } equals new { notInvolvedModCounts.ModuleId, notInvolvedModCounts.Version, notInvolvedModCounts.GameVersion }
+            select new
+            {
+                GameVersion = modCounts.GameVersion,
+                ModuleId = allModVersios.ModuleId,
+                ModuleVersion = allModVersios.Version,
+                InvolvedCount = involvedModCounts.Count,
+                NotInvolvedCount = notInvolvedModCounts.Count,
+                TotalCount = modCounts.Count,
+                Value = involvedModCounts.Count,
+                CrashScore = (double) involvedModCounts.Count / (double) modCounts.Count
+            };
+
+        var statisticsCrashScoreInvolved = await query.AsAsyncEnumerable().Select(x => new StatisticsCrashScoreInvolvedEntity
+        {
+            TenantId = tenant,
+            StatisticsCrashScoreInvolvedId = Guid.NewGuid(),
+            GameVersion = x.GameVersion,
+            Module = entityFactory.GetOrCreateModule(x.ModuleId),
+            ModuleVersion = x.ModuleVersion,
+            InvolvedCount = x.InvolvedCount,
+            NotInvolvedCount = x.NotInvolvedCount,
+            TotalCount = x.TotalCount,
+            RawValue = x.Value,
+            Score = x.CrashScore,
+        }).ToListAsync(ct);
+
+        dbContextWrite.FutureSyncronize(x => x.StatisticsCrashScoreInvolveds, statisticsCrashScoreInvolved);
+        // Disposing the DBContext will save the data
     }
 }

@@ -3,6 +3,7 @@
 using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Authentication.NexusMods.Extensions;
 using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Contexts.Configs;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Jobs;
 using BUTR.Site.NexusMods.Server.Options;
@@ -15,7 +16,6 @@ using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -31,8 +31,6 @@ using Polly.Extensions.Http;
 using Polly.Retry;
 
 using Quartz;
-
-using Sentry;
 
 using System;
 using System.IO;
@@ -106,21 +104,20 @@ public sealed class Startup
         services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>().Bind(steamAPISection);
         services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>().Bind(depotDownloaderSection);
 
-        services.AddTransient<SentryHttpMessageHandler>();
         services.AddHttpClient(string.Empty).ConfigureHttpClient((_, client) =>
         {
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
+        }).AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<NexusModsClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://nexusmods.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
+        }).AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<NexusModsAPIClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://api.nexusmods.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
+        }).AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<CrashReporterClient>().ConfigureHttpClient((sp, client) =>
         {
             var opts = sp.GetRequiredService<IOptions<CrashReporterOptions>>().Value;
@@ -129,37 +126,38 @@ public sealed class Startup
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Basic",
                 Convert.ToBase64String(Encoding.ASCII.GetBytes($"{opts.Username}:{opts.Password}")));
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
+        }).AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<DiscordClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://discord.com/api/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
+        }).AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<SteamCommunityClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://steamcommunity.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
+        }).AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<SteamAPIClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://api.steampowered.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
+        }).AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<GOGAuthClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://auth.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
+        }).AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<GOGEmbedClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
-        }).AddHttpMessageHandler<SentryHttpMessageHandler>().AddPolicyHandler(GetRetryPolicy());
+        }).AddPolicyHandler(GetRetryPolicy());
 
         services.AddMultipartSupport();
 
         services.AddSingleton<BannerlordBinaryCache>();
         services.AddSingleton<SteamDepotDownloader>();
+
         services.AddSingleton<QuartzEventProviderService>();
         services.AddHostedService<QuartzListenerBackgroundService>();
         services.AddQuartz(opt =>
@@ -205,10 +203,21 @@ public sealed class Startup
 
         services.AddMemoryCache();
 
-        services.AddDbContext<AppDbContext>(x => x
-            .UseNpgsql(_configuration.GetConnectionString("Main"), opt => opt.EnableRetryOnFailure())
-            .AddPrepareInterceptor()
-        );
+        services.AddSingleton<ITenantContextAccessor, TenantContextAccessor>();
+
+        services.AddScoped<IEntityConfigurationFactory, EntityConfigurationFactory>();
+        var types = typeof(Startup).Assembly.GetTypes().Where(x => x is { IsAbstract: false, BaseType: { IsGenericType: true } }).ToList();
+        foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfigurationWithTenant<>)))
+            services.AddScoped(typeof(BaseEntityConfigurationWithTenant<>).MakeGenericType(type.BaseType!.GetGenericArguments()), type);
+        foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfiguration<>)))
+            services.AddScoped(typeof(BaseEntityConfiguration<>).MakeGenericType(type.BaseType!.GetGenericArguments()), type);
+
+        services.AddDbContext<BaseAppDbContext>(ServiceLifetime.Scoped);
+        services.AddDbContextFactory<AppDbContextRead>(lifetime: ServiceLifetime.Scoped);
+        services.AddDbContextFactory<AppDbContextWrite>(lifetime: ServiceLifetime.Scoped);
+        services.AddScoped<IAppDbContextFactory, AppDbContextFactory>();
+        services.AddScoped<IAppDbContextRead>(sp => sp.GetRequiredService<IAppDbContextFactory>().CreateRead());
+        services.AddScoped<IAppDbContextWrite>(sp => sp.GetRequiredService<IAppDbContextFactory>().CreateWrite());
 
         services.AddNexusModsDefaultServices();
 
@@ -228,6 +237,7 @@ public sealed class Startup
         });
 
         services.AddControllers().AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
+        services.AddHttpContextAccessor();
         services.AddRouting();
         services.AddResponseCompression(options =>
         {
@@ -304,8 +314,8 @@ public sealed class Startup
             var opts = connectionStringSection.Get<ConnectionStringsOptions>();
 
             options.ConnectionString = opts?.Main;
-            options.SchemaName = "public";
-            options.TableName = "nexusmods_cache_entry";
+            options.SchemaName = "cache";
+            options.TableName = "sitenexusmods_cache";
             options.CreateInfrastructure = true;
         });
     }
@@ -332,9 +342,7 @@ public sealed class Startup
         });
 
         app.UseRouting();
-        app.UseSentryTracing();
         app.UseAuthorization();
-        app.UseMetadata();
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();

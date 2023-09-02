@@ -7,6 +7,46 @@ namespace BUTR.Site.NexusMods.Server.Extensions;
 
 public static class StringBuilderExtensions
 {
+    public static int IndexOf(this StringBuilder sb, ReadOnlySpan<char> value, int startIndex)
+    {
+        var length = value.Length;
+        var maxSearchLength = (sb.Length - length) + 1;
+
+        for (var i = startIndex; i < maxSearchLength; ++i)
+        {
+            if (sb[i] != value[0]) continue;
+
+            var index = 1;
+            while (index < length && (sb[i + index] == value[index]))
+                ++index;
+
+            if (index == length)
+                return i;
+        }
+
+        return -1;
+    }
+
+    public static int IndexOf(this StringBuilder sb, char c)
+    {
+        var pos = 0;
+        foreach (var chunk in sb.GetChunks())
+        {
+            var span = chunk.Span;
+            for (var i = 0; i < span.Length; i++)
+            {
+                if (span[i] == c)
+                {
+                    return pos + i;
+                }
+            }
+
+            pos += span.Length;
+        }
+
+        return -1;
+    }
+
     [SkipLocalsInit]
     public static unsafe StringBuilder Append(this StringBuilder sb, Span<byte> rawUtf8)
     {

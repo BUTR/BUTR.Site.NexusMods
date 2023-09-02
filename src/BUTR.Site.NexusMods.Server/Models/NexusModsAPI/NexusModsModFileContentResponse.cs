@@ -3,12 +3,12 @@ using System.Text.Json.Serialization;
 
 namespace BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 
-public record NexusModsModFileContentResponse(
+public sealed record NexusModsModFileContentResponse(
     [property: JsonPropertyName("children")]
     IReadOnlyList<NexusModsModFileContentResponse.ContentEntry> Children
 )
 {
-    public record ContentEntry(
+    public sealed record ContentEntry(
         [property: JsonPropertyName("path")] string Path,
         [property: JsonPropertyName("name")] string Name,
         [property: JsonPropertyName("type")] string Type,

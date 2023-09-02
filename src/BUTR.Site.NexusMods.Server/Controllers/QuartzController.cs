@@ -8,6 +8,7 @@ using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using Quartz;
@@ -23,13 +24,15 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 public sealed class QuartzController : ControllerExtended
 {
     private readonly ILogger _logger;
-    private readonly AppDbContext _dbContext;
+    private readonly IAppDbContextRead _dbContextRead;
+    private readonly IAppDbContextWrite _dbContextWrite;
     private readonly ISchedulerFactory _schedulerFactory;
 
-    public QuartzController(ILogger<QuartzController> logger, AppDbContext dbContext, ISchedulerFactory schedulerFactory)
+    public QuartzController(ILogger<QuartzController> logger, IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite, ISchedulerFactory schedulerFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _dbContextRead = dbContextRead ?? throw new ArgumentNullException(nameof(dbContextRead));
+        _dbContextWrite = dbContextWrite ?? throw new ArgumentNullException(nameof(dbContextWrite));
         _schedulerFactory = schedulerFactory ?? throw new ArgumentNullException(nameof(schedulerFactory));
     }
 
@@ -37,7 +40,7 @@ public sealed class QuartzController : ControllerExtended
     [Produces("application/json")]
     public async Task<ActionResult<APIResponse<PagingData<QuartzExecutionLogEntity>?>>> HistoryPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
-        var paginated = await _dbContext.Set<QuartzExecutionLogEntity>()
+        var paginated = await _dbContextRead.QuartzExecutionLogs.Prepare()
             .Where(x => x.LogType == QuartzLogType.ScheduleJob)
             .PaginatedAsync(query, 100, new() { Property = nameof(QuartzExecutionLogEntity.DateAddedUtc), Type = SortingType.Descending }, ct);
 
@@ -48,11 +51,7 @@ public sealed class QuartzController : ControllerExtended
     [Produces("application/json")]
     public async Task<ActionResult<APIResponse<string?>>> DeleteAsync([FromQuery] long logId)
     {
-        QuartzExecutionLogEntity? ApplyChanges(QuartzExecutionLogEntity? existing) => existing switch
-        {
-            _ => null
-        };
-        if (await _dbContext.AddUpdateRemoveAndSaveAsync<QuartzExecutionLogEntity>(x => x.LogId == logId, ApplyChanges))
+        if (await _dbContextWrite.QuartzExecutionLogs.Where(x => x.LogId == logId).ExecuteDeleteAsync() > 0)
             return APIResponse("Deleted successful!");
 
         return APIResponseError<string>("Failed to delete!");

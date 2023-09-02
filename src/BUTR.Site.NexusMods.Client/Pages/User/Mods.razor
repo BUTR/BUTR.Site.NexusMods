@@ -1,8 +1,9 @@
 ﻿@attribute [Authorize]
 @page "/mods"
 
-@inject IModClient _modClient
 @inject IJSRuntime _jsRuntime;
+@inject INexusModsUserClient _userClient
+@inject INexusModsModClient _modClient
 
 <Card Margin="@Margin.Is4">
     <CardHeader>
@@ -31,20 +32,20 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Linked Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="ModModel" GetItems="@GetMods">
+        <DataGridPaging @ref="@_dataGridRef" TItem="NexusModsModModel" GetItems="@GetMods">
             <DataGridColumns>
-                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ModId)" Caption="Mod Id"/>
-                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.Name)" Caption="Name"/>
-                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.AllowedUserIds)" Caption="Allowed User Ids">
-                    <DisplayTemplate>@(string.Join(", ", context.AllowedUserIds))</DisplayTemplate>
+                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.NexusModsModId)" Caption="Mod Id"/>
+                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.Name)" Caption="Name"/>
+                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.AllowedNexusModsUserIds)" Caption="Allowed User Ids">
+                    <DisplayTemplate>@(string.Join(", ", context.AllowedNexusModsUserIds))</DisplayTemplate>
                 </DataGridColumn>
-                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ManuallyLinkedUserIds)" Caption="Manually Linked User Ids">
-                    <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedUserIds))</DisplayTemplate>
+                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.ManuallyLinkedNexusModsUserIds)" Caption="Manually Linked User Ids">
+                    <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedNexusModsUserIds))</DisplayTemplate>
                 </DataGridColumn>
-                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ManuallyLinkedModuleIds)" Caption="Confirmed Module Id">
+                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.ManuallyLinkedModuleIds)" Caption="Confirmed Module Id">
                     <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedModuleIds))</DisplayTemplate>
                 </DataGridColumn>
-                <DataGridColumn TItem="ModModel" Field="@nameof(ModModel.ManuallyLinkedModuleIds)" Caption="Known Module Id">
+                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.ManuallyLinkedModuleIds)" Caption="Known Module Id">
                     <DisplayTemplate>@(string.Join(", ", context.KnownModuleIds))</DisplayTemplate>
                 </DataGridColumn>
             </DataGridColumns>
@@ -65,10 +66,10 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Available Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef2" TItem="AvailableModModel" GetItems="@GetAllowedMods" PageSizes="@(new[] { 5, 10, 20 })">
+        <DataGridPaging @ref="@_dataGridRef2" TItem="NexusModsModAvailableModel" GetItems="@GetAllowedMods" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
-                <DataGridColumn TItem="AvailableModModel" Field="@nameof(AvailableModModel.ModId)" Caption="Mod Id"/>
-                <DataGridColumn TItem="AvailableModModel" Field="@nameof(AvailableModModel.Name)" Caption="Name"/>
+                <DataGridColumn TItem="NexusModsModAvailableModel" Field="@nameof(NexusModsModAvailableModel.NexusModsModId)" Caption="Mod Id"/>
+                <DataGridColumn TItem="NexusModsModAvailableModel" Field="@nameof(NexusModsModAvailableModel.Name)" Caption="Name"/>
             </DataGridColumns>
         </DataGridPaging>
     </CardBody>
@@ -85,8 +86,8 @@
 
     private LinkModModel _model = new();
 
-    private DataGridPaging<ModModel>? _dataGridRef;
-    private DataGridPaging<AvailableModModel>? _dataGridRef2;
+    private DataGridPaging<NexusModsModModel>? _dataGridRef;
+    private DataGridPaging<NexusModsModAvailableModel>? _dataGridRef2;
 
     private async Task OnSubmit()
     {
@@ -105,30 +106,30 @@
 
     private async Task<bool> DoLinkMod(LinkModModel model)
     {
-        if (!NexusModsUtils.TryParse(model.ModUrl, out _, out var modId) && !int.TryParse(model.ModUrl, out modId))
+        if (!NexusModsUtils.TryParse(model.ModUrl, out _, out var modId) && !ushort.TryParse(model.ModUrl, out modId))
             return false;
 
-        return await _modClient.ModLinkAsync(modId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        return await _userClient.ToNexusModsModLinkAsync(modId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
     }
 
-    private async Task<bool> DoUnlinkMod(ModModel model)
+    private async Task<bool> DoUnlinkMod(NexusModsModModel model)
     {
-        return await _modClient.ModUnlinkAsync(model.ModId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        return await _userClient.ToNexusModsModUnlinkAsync(model.NexusModsModId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
     }
 
-    private async Task<DataGridPaging<ModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _modClient.ModPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    private async Task<DataGridPaging<NexusModsModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
+        await _userClient.ToNexusModsModPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
-    private async Task<DataGridPaging<AvailableModModel>.ItemsResponse?> GetAllowedMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _modClient.AvailableModsPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    private async Task<DataGridPaging<NexusModsModAvailableModel>.ItemsResponse?> GetAllowedMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
+        await _modClient.AvailablePaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
-    private async Task OnClick(ModModel? mod)
+    private async Task OnClick(NexusModsModModel? mod)
     {
         if (mod is not null)
             await _jsRuntime.InvokeVoidAsync("open", mod.Url, "_blank");
     }
 
-    private async Task OnDelete(ButtonRowContext<ModModel?> context)
+    private async Task OnDelete(ButtonRowContext<NexusModsModModel?> context)
     {
         if (context.DeleteCommand.Item is not null && await DoUnlinkMod(context.DeleteCommand.Item))
         {

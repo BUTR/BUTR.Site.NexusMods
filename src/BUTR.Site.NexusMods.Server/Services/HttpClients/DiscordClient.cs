@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -89,12 +90,12 @@ public sealed class DiscordClient
         };
         using var response = await _httpClient.PostAsync("v10/oauth2/token", new FormUrlEncodedContent(data), ct);
         var tokens = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
-        return tokens is not null ? new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(tokens.ExpiresIn)) : null;
+        return tokens is not null ? new DiscordOAuthTokens(tokens.AccessToken, tokens.RefreshToken, DateTimeOffset.UtcNow + TimeSpan.FromSeconds(tokens.ExpiresIn)) : null;
     }
 
     public async Task<DiscordOAuthTokens?> GetOrRefreshTokensAsync(DiscordOAuthTokens tokens, CancellationToken ct)
     {
-        if (DateTimeOffset.Now <= tokens.ExpiresAt)
+        if (DateTimeOffset.UtcNow <= tokens.ExpiresAt)
             return tokens;
 
         var data = new List<KeyValuePair<string, string>>
@@ -109,7 +110,7 @@ public sealed class DiscordClient
         var responseData = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
         if (responseData is null) return null;
 
-        return new DiscordOAuthTokens(responseData.AccessToken, responseData.RefreshToken, DateTimeOffset.Now + TimeSpan.FromSeconds(responseData.ExpiresIn));
+        return new DiscordOAuthTokens(responseData.AccessToken, responseData.RefreshToken, DateTimeOffset.UtcNow + TimeSpan.FromSeconds(responseData.ExpiresIn));
     }
 
     public async Task<DiscordUserInfo?> GetUserInfoAsync(DiscordOAuthTokens tokens, CancellationToken ct)
@@ -118,7 +119,7 @@ public sealed class DiscordClient
         {
             Headers =
             {
-                {"Authorization", $"Bearer {tokens.AccessToken}"}
+                Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken)
             }
         }, ct);
         return await JsonSerializer.DeserializeAsync<DiscordUserInfo>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);

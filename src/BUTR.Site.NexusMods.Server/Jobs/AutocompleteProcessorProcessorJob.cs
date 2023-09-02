@@ -1,18 +1,20 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Shared;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
-using Npgsql;
 
 using Quartz;
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Jobs;
@@ -20,94 +22,107 @@ namespace BUTR.Site.NexusMods.Server.Jobs;
 [DisallowConcurrentExecution]
 public sealed class AutocompleteProcessorProcessorJob : IJob
 {
-    private readonly ILogger _logger;
-    private readonly AppDbContext _dbContext;
+    private sealed record AutocompleteEntry(string Name, Func<IAppDbContextRead, IQueryable<string>> Query);
 
-    public AutocompleteProcessorProcessorJob(ILogger<AutocompleteProcessorProcessorJob> logger, AppDbContext dbContext)
+    private sealed record GroupingEntry
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        public required string Key { get; init; }
+        public required string[] Values { get; init; }
+    }
+    private sealed record AutocompleteGroupingEntry(string Name, Func<IAppDbContextRead, IQueryable<GroupingEntry>> Query);
+
+    private static readonly AutocompleteEntry[] ToAutocomplete =
+    {
+        new(GenerateName<CrashReportEntity>(x => x.GameVersion), x => x.CrashReports.Select(y => y.GameVersion)),
+        new(GenerateName<CrashReportToModuleMetadataEntity>(x => x.Module.ModuleId), x => x.CrashReportModuleInfos.Select(y => y.Module.ModuleId)),
+        new(GenerateName<NexusModsArticleEntity>(x => x.NexusModsUser.Name!.Name), x => x.NexusModsArticles.Include(y => y.NexusModsUser).ThenInclude(y => y.Name).Select(y => y.NexusModsUser).Select(x => x.Name).Select(x => x.Name)),
+    };
+
+    private static readonly AutocompleteGroupingEntry[] ToAutocompleteGrouping =
+    {
+        new(GenerateName<CrashReportToModuleMetadataEntity>(x => x.Module.ModuleId),
+            x => x.CrashReportModuleInfos.GroupBy(y => y.Module.ModuleId).Select(y => new GroupingEntry { Key = y.Key, Values = y.Select(z => z.Version).Distinct().ToArray() })),
+    };
+
+    public static string GenerateName<TEntity>(Expression<Func<TEntity, string>> property)
+    {
+        if (property is not LambdaExpression { Body: MemberExpression { Member: PropertyInfo propertyInfo } }) return string.Empty;
+        return $"{propertyInfo.DeclaringType!.Name}.{propertyInfo.Name}";
     }
 
-    private abstract record AutocompleteEntry(Expression BaseExpression);
-    private sealed record AutocompleteEntry<TEntity, TProperty>(Expression<Func<TEntity, TProperty>> Expression) : AutocompleteEntry(Expression) where TEntity : IEntity;
+    private readonly ILogger _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
+    public AutocompleteProcessorProcessorJob(ILogger<AutocompleteProcessorProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
+    }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        // TODO: External?
-        var toAutocomplete = new AutocompleteEntry[]
+        var ct = context.CancellationToken;
+        var tenants = Enum.GetValues<Tenant>();
+
+        foreach (var tenant in tenants)
         {
-            new AutocompleteEntry<CrashReportEntity, string>(e => e.GameVersion),
-            new AutocompleteEntry<CrashReportEntity, string[]>(e => e.ModIds),
-            new AutocompleteEntry<CrashReportEntity, Dictionary<string, string>>(e => e.ModIdToVersion),
-            new AutocompleteEntry<NexusModsExposedModsEntity, string[]>(e => e.ModuleIds),
-            new AutocompleteEntry<NexusModsArticleEntity, string>(e => e.AuthorName),
-        };
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
 
-        var autocompleteEntity = _dbContext.Model.FindEntityType(typeof(AutocompleteEntity));
-        if (autocompleteEntity is null) return;
-        var autocompleteEntityTable = autocompleteEntity.GetSchemaQualifiedTableName();
-        var typePropertyName = autocompleteEntity.GetProperty(nameof(AutocompleteEntity.Type)).GetColumnName();
-        var valuesPropertyName = autocompleteEntity.GetProperty(nameof(AutocompleteEntity.Values)).GetColumnName();
+            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            tenantContextAccessor.Current = tenant;
 
-        foreach (var value in toAutocomplete)
-        {
-            if (context.CancellationToken.IsCancellationRequested) break;
-
-            if (value.BaseExpression is not LambdaExpression { Body: MemberExpression { Member: PropertyInfo propertyInfo } }) continue;
-            if (!value.BaseExpression.Type.IsGenericType || value.BaseExpression.Type.GenericTypeArguments.Length != 2) continue;
-            var entityType = value.BaseExpression.Type.GenericTypeArguments[0];
-            var propertyType = value.BaseExpression.Type.GenericTypeArguments[1];
-            var name = $"{entityType.Name}.{propertyInfo.Name}";
-
-            var entity = _dbContext.Model.FindEntityType(entityType);
-            if (entity is null) continue;
-
-            var entityTable = entity.GetSchemaQualifiedTableName();
-
-            var property = entity.GetProperty(propertyInfo.Name);
-            if (property is null) continue;
-
-            var propertyColumnName = property.GetColumnName();
-
-            if (typeof(IDictionary<string, string>).IsAssignableFrom(propertyType))
-            {
-                /*
-                var sql = $@"
-WITH values AS (SELECT DISTINCT {propertyColumnName} -> @modId as mod_version FROM {entityTable} WHERE exist({modIdToVersionName}, @modId) ORDER BY mod_version)
-SELECT
-array_agg(mod_version) as {modIdsName}
-FROM
-values
-WHERE
-mod_version ILIKE @val || '%'";
-                var valPram = new NpgsqlParameter<string>("val", value.Name);
-                await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { valPram }, context.CancellationToken);
-                */
-            }
-            if (typeof(IEnumerable<string>).IsAssignableFrom(propertyType))
-            {
-                var sql = @$"
-DELETE FROM {autocompleteEntityTable} WHERE {typePropertyName} = @val;
-WITH values AS (SELECT DISTINCT unnest({propertyColumnName}) as props FROM {entityTable} ORDER BY props)
-INSERT INTO {autocompleteEntityTable}
-SELECT @val as {typePropertyName}, array_agg(props) as {valuesPropertyName} FROM values";
-                var valPram = new NpgsqlParameter<string>("val", name);
-                await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { valPram }, context.CancellationToken);
-            }
-            if (propertyType == typeof(string))
-            {
-                var sql = @$"
-DELETE FROM {autocompleteEntityTable} WHERE {typePropertyName} = @val;
-WITH values AS (SELECT DISTINCT {propertyColumnName} as props FROM {entityTable} ORDER BY props)
-INSERT INTO {autocompleteEntityTable}
-SELECT @val as {typePropertyName}, array_agg(props) as {valuesPropertyName} FROM values";
-                var valPram = new NpgsqlParameter<string>("val", name);
-                await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { valPram }, context.CancellationToken);
-            }
+            await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
         }
 
         context.Result = "Updated Autocomplete Data";
         context.SetIsSuccess(true);
+    }
+
+    private static async Task HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    {
+        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
+        var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
+
+        foreach (var autocompleteEntry in ToAutocomplete)
+        {
+            if (ct.IsCancellationRequested) return;
+
+            var key = autocompleteEntry.Name;
+
+            await dbContextWrite.Autocompletes.Where(x => x.Type == key).ExecuteDeleteAsync(ct);
+            await dbContextWrite.Autocompletes.BulkInsertAsync(autocompleteEntry.Query(dbContextRead).Distinct().Select(x => new AutocompleteEntity
+            {
+                TenantId = tenant,
+                AutocompleteId = 0,
+                Type = key,
+                Value = x,
+            }), ct);
+        }
+
+        /*
+        foreach (var autocompleteGroupingEntry in ToAutocompleteGrouping)
+        {
+            foreach (var chunk in autocompleteGroupingEntry.Query(dbContextRead).AsEnumerable().Chunk(50))
+            {
+                var keys = chunk.Select(x => $"{autocompleteGroupingEntry.Name}.{x.Key}").ToArray();
+                foreach (var groupingEntry in chunk)
+                {
+                    if (ct.IsCancellationRequested) return;
+
+                    var key = $"{autocompleteGroupingEntry.Name}.{groupingEntry.Key}";
+                    await dbContextWrite.Autocompletes.AddRangeAsync(groupingEntry.Values.Select(x => new AutocompleteEntity
+                    {
+                        TenantId = tenant,
+                        AutocompleteId = 0,
+                        Type = key,
+                        Value = x,
+                    }), ct);
+                }
+
+                await dbContextWrite.Autocompletes.Where(x => keys.Contains(x.Type)).ExecuteDeleteAsync(ct);
+                await dbContextWrite.SaveAsync(ct);
+            }
+        }
+        */
     }
 }

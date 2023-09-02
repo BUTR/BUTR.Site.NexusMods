@@ -9,15 +9,12 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Exposed Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging TItem="ExposedModModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetExposedMods" Sortable Filterable>
+        <DataGridPaging TItem="ExposedNexusModsModModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetExposedMods" Sortable Filterable>
             <DataGridColumns>
-                <DataGridColumnText TItem="ExposedModModel" Field="@nameof(ExposedModModel.Id)" Caption="Id" Filterable Sortable SortField="@nameof(EntityFields.NexusModsModId)"/>
-                <DataGridColumnTextAutocomplete TItem="ExposedModModel" Field="@nameof(ExposedModModel.ModIds)" Caption="Mod Id's" Filterable Sortable SortField="@nameof(EntityFields.ModIds)" GetAutocompleteValues="GetAutocompleteValues">
-                    <DisplayTemplate>@(string.Join(", ", context.ModIds))</DisplayTemplate>
+                <DataGridColumnText TItem="ExposedNexusModsModModel" Field="@nameof(ExposedNexusModsModModel.NexusModsModId)" Caption="NexusMods Mod Id" Filterable Sortable SortField="@nameof(EntityFields.NexusModsModId)"/>
+                <DataGridColumnTextAutocomplete TItem="ExposedNexusModsModModel" Field="@nameof(ExposedNexusModsModModel.Mods)" Caption="Module Id's" Filterable Sortable SortField="@nameof(EntityFields.ModuleId)" GetAutocompleteValues="GetAutocompleteValues">
+                    <DisplayTemplate>@(string.Join(", ", context.Mods.Select(x => x.ModuleId)))</DisplayTemplate>
                 </DataGridColumnTextAutocomplete>
-                <DataGridColumnDate TItem="ExposedModModel" Field="@nameof(ExposedModModel.LastCheckedDate)" Caption="Last Checked Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.LastCheckedDate)">
-                    <DisplayTemplate>@(context.LastCheckedDate.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
-                </DataGridColumnDate>
             </DataGridColumns>
 
             <ButtonRowTemplate>
@@ -29,14 +26,14 @@
 
 @code {
 
-    private enum EntityFields { NexusModsModId, ModIds, LastCheckedDate }
+    private enum EntityFields { NexusModsModId, ModuleId, LastUpdateDate }
 
-    private DataGridPaging<ExposedModModel>? _dataGridPagingRef;
+    private DataGridPaging<ExposedNexusModsModModel>? _dataGridPagingRef;
 
-    private async Task<DataGridPaging<ExposedModModel>.ItemsResponse?> GetExposedMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
+    private async Task<DataGridPaging<ExposedNexusModsModModel>.ItemsResponse?> GetExposedMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
         await _exposedModsClient.PaginatedAsync(new PaginatedQuery(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
-    private async Task OnClick(ExposedModModel? mod)
+    private async Task OnClick(ExposedNexusModsModModel? mod)
     {
         if (mod is not null)
             await _jsRuntime.InvokeVoidAsync("open", mod.Url, "_blank");
@@ -48,7 +45,7 @@
     {
         foreach (var columnInfo in columnInfos)
         {
-            if (columnInfo.SortField is nameof(EntityFields.LastCheckedDate) && columnInfo.SearchValue is string[] dates)
+            if (columnInfo.SortField is nameof(EntityFields.LastUpdateDate) && columnInfo.SearchValue is string[] dates)
             {
                 yield return new Filtering(columnInfo.SortField, FilteringType.GreaterThanOrEqual, dates[0]);
                 yield return new Filtering(columnInfo.SortField, FilteringType.LessThanOrEqual, dates[1]);
@@ -61,7 +58,7 @@
                 }
                 else if (str.Length >= 3)
                 {
-                    if (columnInfo.SortField is nameof(EntityFields.ModIds))
+                    if (columnInfo.SortField is nameof(EntityFields.ModuleId))
                     {
                         yield return new Filtering(columnInfo.SortField, FilteringType.Contains, str);
                     }

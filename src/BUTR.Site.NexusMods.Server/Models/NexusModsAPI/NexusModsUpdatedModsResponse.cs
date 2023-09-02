@@ -2,8 +2,8 @@
 
 namespace BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 
-public record NexusModsUpdatedModsResponse(
-    [property: JsonPropertyName("mod_id")] int Id,
+public sealed record NexusModsUpdatedModsResponse(
+    [property: JsonPropertyName("mod_id")] ushort Id,
     [property: JsonPropertyName("latest_file_update")] long LatestFileUpdateTimestamp,
     [property: JsonPropertyName("latest_mod_activity")] long LatestModActivityTimestamp
 );

@@ -2,6 +2,7 @@
 @page "/crash-reports-viewer"
 
 @inject INotificationService _notificationService
+@inject ILocalStorageService _localStorage
 @inject ICrashReportsClient _crashReportsClient
 @inject IJSRuntime _jsRuntime;
 
@@ -67,10 +68,10 @@
         <DataGridStreamingPaging @ref="@_datagridPagingRef" TItem="CrashReportModel" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable DefaultPageSize="@UserSettings.DefaultCrashReportPageSize" PageSizes="@UserSettings.AvailableCrashReportPageSizes" GetPageSize="@(x => x.CrashReportPageSize)">
             <DataGridColumns>
                 <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="Game Version" Filterable Placeholder="v1.0.0" Sortable SortField="@nameof(EntityFields.GameVersion)"/>
-                <DataGridColumnTextAutocomplete TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Filterable Sortable SortField="@nameof(EntityFields.InvolvedModIds)" GetAutocompleteValues="@GetAutocompleteValues">
+                <DataGridColumnTextAutocomplete TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Filterable Sortable SortField="@nameof(EntityFields.TopInvolvedModuleId)" GetAutocompleteValues="@GetAutocompleteValues">
                     <DisplayTemplate>@(context.InvolvedModules.FirstOrDefault())</DisplayTemplate>
                 </DataGridColumnTextAutocomplete>
-                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Type)" Caption="Exception" Filterable Placeholder="System.NullReferenceException" Sortable SortField="@nameof(EntityFields.Exception)"/>
+                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.ExceptionType)" Caption="Exception" Filterable Placeholder="System.NullReferenceException" Sortable SortField="@nameof(EntityFields.ExceptionType)"/>
                 <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Version)" Caption="Version" Filterable Placeholder="1" Sortable SortField="@nameof(EntityFields.Version)"/>
                 <DataGridColumnDate TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.CreatedAt)">
                     <DisplayTemplate>@(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
@@ -91,10 +92,17 @@
 
 @code {
 
-    private enum EntityFields { GameVersion, Version, InvolvedModIds, Exception, CreatedAt, Status, Comment }
+    private enum EntityFields { GameVersion, Version, TopInvolvedModuleId, ExceptionType, CreatedAt, Status, Comment }
 
     private Modal _modalRef = default!;
     private DataGridStreamingPaging<CrashReportModel>? _datagridPagingRef;
+    private UserSettings? _userSettings;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        _userSettings = await _localStorage.GetItemAsync<UserSettings>("settings") ?? new();
+    }
 
     private async Task ShowModal() => await _modalRef.Show();
 
@@ -126,8 +134,14 @@
 
     private async Task<ICollection<string>> GetAutocompleteValues(string filter) => await _crashReportsClient.AutocompleteAsync(filter) is { Data: { } data } ? data : Array.Empty<string>();
 
-    private static IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
+    private IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
     {
+        foreach (var exception in _userSettings?.BlacklistedExceptions ?? Array.Empty<string>())
+        {
+            yield return new Filtering(nameof(EntityFields.ExceptionType), FilteringType.NotEquals, exception);
+
+        }
+
         foreach (var columnInfo in columnInfos)
         {
             if (columnInfo is { SortField: nameof(EntityFields.CreatedAt),SearchValue: string[] dates })
@@ -138,6 +152,10 @@
             else if (columnInfo.SearchValue is string str)
             {
                 if (columnInfo.SortField is nameof(EntityFields.Status) && !string.IsNullOrEmpty(str))
+                {
+                    yield return new Filtering(columnInfo.SortField, FilteringType.Equal, str);
+                }
+                else if (columnInfo.SortField is nameof(EntityFields.ExceptionType) && !string.IsNullOrEmpty(str))
                 {
                     yield return new Filtering(columnInfo.SortField, FilteringType.Equal, str);
                 }
@@ -156,7 +174,7 @@
                 }
                 else if (str.Length >= 3)
                 {
-                    if (columnInfo.SortField is nameof(EntityFields.InvolvedModIds) or nameof(EntityFields.Exception))
+                    if (columnInfo.SortField is nameof(EntityFields.TopInvolvedModuleId))
                     {
                         yield return new Filtering(columnInfo.SortField, FilteringType.Contains, str);
                     }

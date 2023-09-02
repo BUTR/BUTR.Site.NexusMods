@@ -14,17 +14,17 @@ public static class DemoUser
 {
     private static readonly ProfileModel _profile =
         new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true, ApplicationRoles.User, null, null, null, true);
-    private static readonly List<ModModel> _mods = new()
+    private static readonly List<NexusModsModModel> _mods = new()
     {
-        new("Demo Mod 1", 1, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-        new("Demo Mod 2", 2, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-        new("Demo Mod 3", 3, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-        new("Demo Mod 4", 4, ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
+        new(1, "Demo Mod 1", ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
+        new(2, "Demo Mod 2", ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
+        new(3, "Demo Mod 3", ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
+        new(4, "Demo Mod 4", ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
     };
     private static List<CrashReportModel>? _crashReports;
 
     public static Task<ProfileModel> GetProfile() => Task.FromResult(_profile);
-    public static IAsyncEnumerable<ModModel> GetMods() => _mods.ToAsyncEnumerable();
+    public static IAsyncEnumerable<NexusModsModModel> GetMods() => _mods.ToAsyncEnumerable();
     public static async IAsyncEnumerable<CrashReportModel> GetCrashReports(IHttpClientFactory factory)
     {
         static async Task<CrashReport> DownloadReport(HttpClient client, string id)
@@ -44,7 +44,7 @@ public static class DemoUser
             var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, r)));
             foreach (var cr in contents)
             {
-                var report = new CrashReportModel(cr.Id, cr.Version, cr.GameVersion, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html", cr.Modules.Select(x => x.Id).ToArray(), CrashReportStatus.New, string.Empty);
+                var report = new CrashReportModel(cr.Id, cr.Version, cr.GameVersion, cr.ExceptionType, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html", cr.Modules.Select(x => x.Id).ToArray(), CrashReportStatus.New, string.Empty);
                 crm.Add(report);
                 yield return report;
 

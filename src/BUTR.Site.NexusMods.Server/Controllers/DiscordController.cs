@@ -2,7 +2,6 @@
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.API;
-using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
@@ -21,6 +20,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public sealed class DiscordController : ControllerExtended
 {
+    public sealed record DiscordOAuthUrlModel(string Url, Guid State);
+
     private sealed record Metadata(
         [property: JsonPropertyName(DiscordConstants.BUTRModAuthor)] int IsModAuthor,
         [property: JsonPropertyName(DiscordConstants.BUTRModerator)] int IsModerator,
@@ -29,13 +30,13 @@ public sealed class DiscordController : ControllerExtended
 
     private readonly DiscordClient _discordClient;
     private readonly IDiscordStorage _discordStorage;
-    private readonly AppDbContext _dbContext;
+    private readonly IAppDbContextRead _dbContextRead;
 
-    public DiscordController(DiscordClient discordClient, IDiscordStorage discordStorage, AppDbContext dbContext)
+    public DiscordController(DiscordClient discordClient, IDiscordStorage discordStorage, IAppDbContextRead dbContextRead)
     {
         _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
         _discordStorage = discordStorage ?? throw new ArgumentNullException(nameof(discordStorage));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _dbContextRead = dbContextRead ?? throw new ArgumentNullException(nameof(dbContextRead));
     }
 
     [HttpGet("GetOAuthUrl")]
@@ -131,12 +132,12 @@ public sealed class DiscordController : ControllerExtended
         if (tokens?.Data is null)
             return null;
 
-        var linkedModsCount = await _dbContext
-            .Set<NexusModsModEntity>()
-            .CountAsync(y => y.UserIds.Contains(userId), ct);
-        var manuallyLinkedModsCount = await _dbContext
-            .Set<NexusModsUserAllowedModuleIdsEntity>()
-            .CountAsync(y => y.NexusModsUserId == userId, ct);
+        var linkedModsCount = await _dbContextRead.NexusModsUsers
+            .Include(x => x.ToNexusModsMods)
+            .AsSplitQuery()
+            .Where(x => x.NexusModsUserId == userId)
+            .SelectMany(x => x.ToNexusModsMods)
+            .CountAsync(ct);
 
         var refreshed = await _discordClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
@@ -149,6 +150,6 @@ public sealed class DiscordController : ControllerExtended
             1,
             role == ApplicationRoles.Moderator ? 1 : 0,
             role == ApplicationRoles.Administrator ? 1 : 0,
-            linkedModsCount + manuallyLinkedModsCount), ct);
+            linkedModsCount), ct);
     }
 }

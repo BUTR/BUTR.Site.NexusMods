@@ -1,4 +1,6 @@
-﻿using ICSharpCode.Decompiler;
+﻿using BUTR.Site.NexusMods.Server.Extensions;
+
+using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.CSharp.OutputVisitor;
 using ICSharpCode.Decompiler.CSharp.Syntax;
@@ -66,11 +68,11 @@ internal static class CSharpILMixedLanguage
         private StringBuilder? _stringBuilder;
         private List<(int, int)>? _stringBuilderLinesIndices;
 
-        private readonly CancellationToken cancellationToken;
+        private readonly CancellationToken _cancellationToken;
 
         public MixedMethodBodyDisassembler(ITextOutput output, CancellationToken ct) : base(output, ct)
         {
-            cancellationToken = ct;
+            _cancellationToken = ct;
         }
 
         public override void Disassemble(PEFile module, MethodDefinitionHandle handle)
@@ -78,7 +80,7 @@ internal static class CSharpILMixedLanguage
             try
             {
                 var settings = new DecompilerSettings(LanguageVersion.Latest);
-                var decompiler = CreateDecompiler(module, settings, cancellationToken);
+                var decompiler = CreateDecompiler(module, settings, _cancellationToken);
                 var syntaxTree = decompiler.Decompile(handle);
                 
                 using var csharpOutput = new StringWriter();
@@ -104,21 +106,13 @@ internal static class CSharpILMixedLanguage
             if (_stringBuilder is null) return;
 
             _stringBuilderLinesIndices = new List<(int, int)>();
-            var chunkOffset = 0;
             var previousIdx = 0;
-            foreach (var chunk in _stringBuilder.GetChunks())
+            while (_stringBuilder.IndexOf(NewLine, previousIdx) is var idx and not -1)
             {
-                var span = chunk.Span;
-                var offset = 0;
-                while (span.IndexOf(NewLine, StringComparison.Ordinal) is var idx and not -1)
-                {
-                    _stringBuilderLinesIndices.Add((previousIdx, chunkOffset + offset + idx));
-                    previousIdx = chunkOffset + offset + idx + NewLine.Length;
-                    offset += idx + NewLine.Length;
-                    span = span.Slice(idx + NewLine.Length);
-                }
-                chunkOffset += chunk.Length;
+                _stringBuilderLinesIndices.Add((previousIdx, idx));
+                previousIdx = idx + NewLine.Length;
             }
+
             _stringBuilderLinesIndices.Add((previousIdx, _stringBuilder.Length));
         }
 

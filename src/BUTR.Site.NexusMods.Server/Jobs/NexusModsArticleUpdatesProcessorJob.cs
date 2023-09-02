@@ -1,15 +1,20 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Services;
+using BUTR.Site.NexusMods.Shared;
+using BUTR.Site.NexusMods.Shared.Extensions;
 
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Quartz;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Jobs;
@@ -18,88 +23,102 @@ namespace BUTR.Site.NexusMods.Server.Jobs;
 public sealed class NexusModsArticleUpdatesProcessorJob : IJob
 {
     private readonly ILogger _logger;
-    private readonly NexusModsClient _client;
-    private readonly AppDbContext _dbContext;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public NexusModsArticleUpdatesProcessorJob(ILogger<NexusModsArticleUpdatesProcessorJob> logger, NexusModsClient client, AppDbContext dbContext)
+    public NexusModsArticleUpdatesProcessorJob(ILogger<NexusModsArticleUpdatesProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        const string gameDomain = "mountandblade2bannerlord";
+        var ct = context.CancellationToken;
+        var tenants = Enum.GetValues<Tenant>();
+
+        var processed = 0;
+        foreach (var tenant in tenants)
+        {
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
+
+            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            tenantContextAccessor.Current = tenant;
+
+            processed += await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
+        }
+
+        context.Result = $"Processed {processed} article updates";
+        context.SetIsSuccess(true);
+    }
+
+    private static async Task<int> HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    {
         const int notFoundArticlesTreshold = 20;
 
-        var ct = context.CancellationToken;
+        var client = serviceProvider.GetRequiredService<NexusModsClient>();
+        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
+        var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
+        var entityFactory = dbContextWrite.CreateEntityFactory();
+        await using var _ = dbContextWrite.CreateSaveScope();
 
-        var articleId = _dbContext.Set<NexusModsArticleEntity>().OrderBy(x => x.NexusModsArticleId).AsNoTracking().LastOrDefault()?.NexusModsArticleId ?? 0;
+        var gameDomain = tenant.GameDomain();
+
+        var articles = new List<NexusModsArticleEntity>();
+
+        var articleId = dbContextRead.NexusModsArticles.OrderBy(x => x.NexusModsArticleId).LastOrDefault()?.NexusModsArticleId ?? 0;
         var notFoundArticles = 0;
         var processed = 0;
-        try
+        while (!ct.IsCancellationRequested)
         {
-            while (!ct.IsCancellationRequested)
+            var articleDocument = await client.GetArticleAsync(gameDomain, articleId, ct);
+            if (articleDocument is null) continue;
+
+
+            var errorElement = articleDocument.GetElementbyId($"{articleId}-title");
+            if (errorElement is not null)
             {
-                var articleDocument = await _client.GetArticleAsync(gameDomain, articleId, ct);
-                if (articleDocument is null) continue;
-
-
-                var errorElement = articleDocument.GetElementbyId($"{articleId}-title");
-                if (errorElement is not null)
-                {
-                    notFoundArticles++;
-                    articleId++;
-                    if (notFoundArticles >= notFoundArticlesTreshold)
-                    {
-                        break;
-                    }
-                    continue;
-                }
-                notFoundArticles = 0;
-
-                var pagetitleElement = articleDocument.GetElementbyId("pagetitle");
-                var titleElement = pagetitleElement.ChildNodes.FindFirst("h1");
-                var title = titleElement.InnerText;
-
-                var authorElement = articleDocument.GetElementbyId("image-author-name");
-                var authorUrl = authorElement.GetAttributeValue("href", "0");
-                var authorUrlSplit = authorUrl.Split('/', StringSplitOptions.RemoveEmptyEntries);
-                var authorIdText = authorUrlSplit.LastOrDefault() ?? string.Empty;
-                var authorId = int.TryParse(authorIdText, out var authorVal) ? authorVal : 0;
-                var authorText = authorElement.InnerText;
-
-                var fileinfoElement = articleDocument.GetElementbyId("fileinfo");
-                var dateTimeText1 = fileinfoElement.ChildNodes.FindFirst("div");
-                var dateTimeText2 = dateTimeText1?.ChildNodes.FindFirst("time");
-                var dateTimeText = dateTimeText2?.GetAttributeValue("datetime", "");
-                var dateTime = DateTimeOffset.TryParse(dateTimeText, out var dateTimeVal) ? dateTimeVal.UtcDateTime : DateTimeOffset.MinValue.UtcDateTime;
-
-                NexusModsArticleEntity? ApplyChanges(NexusModsArticleEntity? existing) => existing switch
-                {
-                    null => new()
-                    {
-                        Title = title,
-                        NexusModsArticleId = articleId,
-                        NexusModsUserId = authorId,
-                        AuthorName = authorText,
-                        CreateDate = dateTime
-                    },
-                    _ => existing with
-                    {
-                        Title = title
-                    }
-                };
-                await _dbContext.AddUpdateRemoveAndSaveAsync<NexusModsArticleEntity>(x => x.NexusModsArticleId == articleId, ApplyChanges, ct);
+                notFoundArticles++;
                 articleId++;
-                processed++;
+                if (notFoundArticles >= notFoundArticlesTreshold)
+                {
+                    break;
+                }
+                continue;
             }
+            notFoundArticles = 0;
+
+            var pagetitleElement = articleDocument.GetElementbyId("pagetitle");
+            var titleElement = pagetitleElement.ChildNodes.FindFirst("h1");
+            var title = titleElement.InnerText;
+
+            var authorElement = articleDocument.GetElementbyId("image-author-name");
+            var authorUrl = authorElement.GetAttributeValue("href", "0");
+            var authorUrlSplit = authorUrl.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var authorIdText = authorUrlSplit.LastOrDefault() ?? string.Empty;
+            var authorId = int.TryParse(authorIdText, out var authorVal) ? authorVal : 0;
+            var authorText = authorElement.InnerText;
+
+            var fileinfoElement = articleDocument.GetElementbyId("fileinfo");
+            var dateTimeText1 = fileinfoElement.ChildNodes.FindFirst("div");
+            var dateTimeText2 = dateTimeText1?.ChildNodes.FindFirst("time");
+            var dateTimeText = dateTimeText2?.GetAttributeValue("datetime", "");
+            var dateTime = DateTimeOffset.TryParse(dateTimeText, out var dateTimeVal) ? dateTimeVal.UtcDateTime : DateTimeOffset.MinValue.UtcDateTime;
+
+            articles.Add(new()
+            {
+                TenantId = tenant,
+                Title = title,
+                NexusModsArticleId = articleId,
+                NexusModsUser = entityFactory.GetOrCreateNexusModsUserWithName(authorId, authorText),
+                CreateDate = dateTime
+            });
+            articleId++;
+            processed++;
         }
-        finally
-        {
-            context.Result = $"Processed {processed} article updates";
-            context.SetIsSuccess(true);
-        }
+
+        dbContextWrite.FutureUpsert(x => x.NexusModsArticles, articles);
+        // Disposing the DBContext will save the data
+
+        return processed;
     }
 }

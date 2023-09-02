@@ -6,6 +6,8 @@ using BUTR.Site.NexusMods.Server.Utils.Npgsql;
 using DynamicExpressions;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 
 using System;
 using System.Collections.Generic;
@@ -15,6 +17,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,6 +25,9 @@ namespace BUTR.Site.NexusMods.Server.Extensions;
 
 public static class QueryableExtensions
 {
+    public static IQueryable<TSource> WhereIf<TSource>(this IQueryable<TSource> source, bool condition, Expression<Func<TSource, bool>> predicate) =>
+        condition ? source.Where(predicate) : source;
+
     public static async IAsyncEnumerable<ImmutableArray<T>> BatchedAsync<T>(this IQueryable<T> query, int batchSize = 3000)
     {
         var processed = 0;
@@ -67,7 +73,7 @@ public static class QueryableExtensions
         return new()
         {
             StartTime = startTime,
-            Items = queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).AsNoTracking().AsAsyncEnumerable(),
+            Items = queryable.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).AsAsyncEnumerable(),
             Metadata = new()
             {
                 PageSize = pageSize,
@@ -227,26 +233,47 @@ public static class QueryableExtensions
         return queryable;
     }
 
-    private static Expression<Func<TEntity, object>>? GetOrderPredicate<TEntity>(Sorting sorting)
+    private static DbContext? GetDbContext(IQueryable query)
     {
-        if (typeof(TEntity).GetProperty(sorting.Property) is null)
-            return null;
+#pragma warning disable EF1001
+        const BindingFlags bindingFlags = BindingFlags.NonPublic | BindingFlags.Instance;
 
-        return DynamicExpressions.DynamicExpressions.GetPropertyGetter<TEntity>(sorting.Property);
+        if (typeof(EntityQueryProvider).GetField("_queryCompiler", bindingFlags) is not { } queryCompilerField) return null;
+        if (queryCompilerField.GetValue(query.Provider) is not QueryCompiler queryCompiler) return null;
+        if (queryCompiler.GetType().GetField("_queryContextFactory", bindingFlags) is not { } queryContextFactoryField) return null;
+        if (queryContextFactoryField.GetValue(queryCompiler) is not RelationalQueryContextFactory queryContextFactory) return null;
+        if (typeof(RelationalQueryContextFactory).GetProperty("Dependencies", bindingFlags) is not { } dependenciesProperty) return null;
+        if (dependenciesProperty.GetValue(queryContextFactory) is not QueryContextDependencies dependencies) return null;
+
+        return dependencies.StateManager.Context;
+#pragma warning restore EF1001
     }
+
 
     public static IQueryable<TEntity> WithSort<TEntity>(this IQueryable<TEntity> queryable, IEnumerable<Sorting> sortings)
     {
-        IOrderedQueryable<TEntity>? ordered = null;
-        foreach (var (sorting, predicate) in sortings.Select(x => (x, GetOrderPredicate<TEntity>(x))))
-        {
-            if (predicate is null)
-                continue;
+        var ctx = GetDbContext(queryable);
+        var entityPropertyNames = ctx?.Model.FindEntityType(typeof(TEntity))?.GetProperties().Select(x => x.Name).ToList();
+        var propertyNames = typeof(TEntity).GetProperties().Select(x => x.Name).ToList();
 
-            if (ordered is null)
-                ordered = sorting.Type == SortingType.Ascending ? queryable.OrderBy(predicate) : queryable.OrderByDescending(predicate);
-            else
-                ordered = sorting.Type == SortingType.Ascending ? ordered.ThenBy(predicate) : ordered.ThenByDescending(predicate);
+        IOrderedQueryable<TEntity>? ordered = null;
+        foreach (var sorting in sortings)
+        {
+            if (entityPropertyNames is not null && entityPropertyNames.Contains(sorting.Property))
+            {
+                if (ordered is null)
+                    ordered = sorting.Type == SortingType.Ascending ? queryable.OrderBy(x => EF.Property<object>(x!, sorting.Property)) : queryable.OrderByDescending(x => EF.Property<object>(x!, sorting.Property));
+                else
+                    ordered = sorting.Type == SortingType.Ascending ? ordered.OrderBy(x => EF.Property<object>(x!, sorting.Property)) : ordered.OrderByDescending(x => EF.Property<object>(x!, sorting.Property));
+            }
+            else if (propertyNames.Contains(sorting.Property))
+            {
+                var predicate = DynamicExpressions.DynamicExpressions.GetPropertyGetter<TEntity>(sorting.Property);
+                if (ordered is null)
+                    ordered = sorting.Type == SortingType.Ascending ? queryable.OrderBy(predicate) : queryable.OrderByDescending(predicate);
+                else
+                    ordered = sorting.Type == SortingType.Ascending ? ordered.ThenBy(predicate) : ordered.ThenByDescending(predicate);
+            }
         }
 
         return ordered ?? queryable;

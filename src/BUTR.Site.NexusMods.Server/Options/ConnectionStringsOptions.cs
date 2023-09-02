@@ -15,4 +15,5 @@ public sealed class ConnectionStringsOptionsValidator : AbstractValidator<Connec
 public sealed record ConnectionStringsOptions
 {
     public required string Main { get; init; }
+    public required string Replica { get; init; }
 }

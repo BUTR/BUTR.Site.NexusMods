@@ -19,30 +19,35 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public class ExposedModsController : ControllerExtended
 {
-    private readonly ILogger _logger;
-    private readonly AppDbContext _dbContext;
+    public record ExposedNexusModsModModel(int NexusModsModId, ExposedModuleModel[] Mods);
+    public record ExposedModuleModel(string ModuleId, DateTimeOffset LastCheckedDate);
 
-    public ExposedModsController(ILogger<ExposedModsController> logger, AppDbContext dbContext)
+
+    private readonly ILogger _logger;
+    private readonly IAppDbContextRead _dbContextRead;
+
+    public ExposedModsController(ILogger<ExposedModsController> logger, IAppDbContextRead dbContextRead)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _dbContextRead = dbContextRead ?? throw new ArgumentNullException(nameof(dbContextRead));
     }
 
     [HttpPost("Paginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<ExposedModModel>?>>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<ExposedNexusModsModModel>?>>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
-        var paginated = await _dbContext.Set<NexusModsExposedModsEntity>()
-            .Where(x => x.ModuleIds.Length > 0)
-            .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsExposedModsEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
+        var paginated = await _dbContextRead.NexusModsModModules
+            .Where(x => x.LinkType == NexusModsModToModuleLinkType.ByUnverifiedFileExposure)
+            .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
-        return APIPagingResponse(paginated, items => items.Select(x => new ExposedModModel(x.NexusModsModId, x.ModuleIds, x.LastCheckedDate)));
+        return APIPagingResponse(paginated, items => items.GroupBy(x => x.NexusModsMod.NexusModsModId).SelectAwaitWithCancellation(async (x, ct2) =>
+            new ExposedNexusModsModModel(x.Key, await x.Select(y => new ExposedModuleModel(y.Module.ModuleId, y.LastUpdateDate)).ToArrayAsync(ct2))));
     }
 
     [HttpGet("Autocomplete")]
     [Produces("application/json")]
     public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] string modId)
     {
-        return APIResponse(_dbContext.AutocompleteStartsWith<NexusModsExposedModsEntity, string[]>(x => x.ModuleIds, modId));
+        return APIResponse(_dbContextRead.AutocompleteStartsWith<NexusModsModToModuleEntity>(x => x.Module.ModuleId, modId));
     }
 }

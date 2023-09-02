@@ -2,6 +2,6 @@
 
 namespace BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 
-public record NexusModsDownloadLinkResponse(
+public sealed record NexusModsDownloadLinkResponse(
     [property: JsonPropertyName("URI")] string Url
 );

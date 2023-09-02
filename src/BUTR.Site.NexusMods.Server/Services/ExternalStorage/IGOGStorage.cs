@@ -1,7 +1,14 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Shared;
+
+using Microsoft.EntityFrameworkCore;
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
@@ -10,47 +17,80 @@ public sealed record GOGOAuthTokens(string UserId, string AccessToken, string Re
 
 public interface IGOGStorage
 {
-    Task<GOGOAuthTokens?> GetAsync(string userId);
-    Task<bool> UpsertAsync(int nexusModsUserId, string discordUserId, GOGOAuthTokens tokens);
-    Task<bool> RemoveAsync(int nexusModsUserId, string discordUserId);
+    Task<bool> CheckOwnedGamesAsync(int nexusModsUserId, string gogUserId, GOGOAuthTokens tokens);
+
+    Task<GOGOAuthTokens?> GetAsync(string gogUserId);
+    Task<bool> UpsertAsync(int nexusModsUserId, string gogUserId, GOGOAuthTokens tokens);
+    Task<bool> RemoveAsync(int nexusModsUserId, string gogUserId);
 }
 
-public sealed class DatabaseGOGStorage : BaseDatabaseStorage<GOGOAuthTokens, GOGLinkedRoleTokensEntity, NexusModsUserToGOGEntity>, IGOGStorage
+public sealed class DatabaseGOGStorage : IGOGStorage
 {
-    protected override string ExternalMetadataId => ExternalStorageConstants.GOG;
-
-    public DatabaseGOGStorage(AppDbContext dbContext) : base(dbContext) { }
-
-    protected override GOGOAuthTokens FromExternalEntity(GOGLinkedRoleTokensEntity externalEntity) =>
-        new(externalEntity.UserId, externalEntity.AccessToken, externalEntity.RefreshToken, externalEntity.AccessTokenExpiresAt);
-
-    protected override NexusModsUserToGOGEntity? Upsert(int nexusModsUserId, string externalId, NexusModsUserToGOGEntity? existing) => existing switch
+    private Dictionary<Tenant, HashSet<uint>> TenantToGameIds { get; } = new()
     {
-        null => new NexusModsUserToGOGEntity
-        {
-            NexusModsUserId = nexusModsUserId,
-            UserId = externalId,
-        },
-        _ => existing with
-        {
-            UserId = externalId,
-        }
+        { Tenant.Bannerlord, new HashSet<uint> { 1802539526, 1564781494 } }
     };
 
-    protected override GOGLinkedRoleTokensEntity? Upsert(string externalId, GOGOAuthTokens data, GOGLinkedRoleTokensEntity? existing) => existing switch
+    private readonly IAppDbContextRead _dbContextRead;
+    private readonly IAppDbContextWrite _dbContextWrite;
+    private readonly GOGEmbedClient _gogEmbedClient;
+
+    public DatabaseGOGStorage(IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite, GOGEmbedClient gogEmbedClient)
     {
-        null => new GOGLinkedRoleTokensEntity
+        _dbContextRead = dbContextRead;
+        _dbContextWrite = dbContextWrite;
+        _gogEmbedClient = gogEmbedClient;
+    }
+
+    public async Task<bool> CheckOwnedGamesAsync(int nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
+    {
+        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        await using var _ = _dbContextWrite.CreateSaveScope();
+
+        var games = await _gogEmbedClient.GetGamesAsync(tokens.AccessToken, CancellationToken.None);
+        if (games is null)
+            return false;
+
+        var nexusModsUserToIntegrationGOG = entityFactory.GetOrCreateNexusModsUserGOG(nexusModsUserId, gogUserId);
+
+        var ownedTenants = TenantToGameIds.Where(x => x.Value.Intersect(games.Owned.Where(y => y.HasValue).Select(y => y!.Value)).Any());
+        var list = ownedTenants.Select(x => x.Key).Select(x => new IntegrationGOGToOwnedTenantEntity
         {
-            UserId = externalId,
-            RefreshToken = data.RefreshToken,
-            AccessToken = data.AccessToken,
-            AccessTokenExpiresAt = data.ExpiresAt.ToUniversalTime()
-        },
-        _ => existing with
-        {
-            RefreshToken = data.RefreshToken,
-            AccessToken = data.AccessToken,
-            AccessTokenExpiresAt = data.ExpiresAt.ToUniversalTime()
-        }
-    };
+            GOGUserId = gogUserId,
+            OwnedTenant = x,
+        }).ToList();
+
+        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToGOG, nexusModsUserToIntegrationGOG);
+        _dbContextWrite.FutureUpsert(x => x.IntegrationGOGToOwnedTenants, list);
+        await _dbContextWrite.IntegrationGOGToOwnedTenants.Where(x => x.GOGUserId == gogUserId).ExecuteDeleteAsync(CancellationToken.None);
+        return true;
+    }
+
+    public async Task<GOGOAuthTokens?> GetAsync(string gogUserId)
+    {
+        var entity = await _dbContextRead.IntegrationGOGTokens.FirstOrDefaultAsync(x => x.GOGUserId.Equals(gogUserId));
+        if (entity is null) return null;
+        return new(gogUserId, entity.AccessToken, entity.RefreshToken, entity.AccessTokenExpiresAt);
+    }
+
+    public async Task<bool> UpsertAsync(int nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
+    {
+        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        await using var _ = _dbContextWrite.CreateSaveScope();
+
+        var nexusModsUserToIntegrationGOG = entityFactory.GetOrCreateNexusModsUserGOG(nexusModsUserId, gogUserId);
+        var tokensGOG = entityFactory.GetOrCreateIntegrationGOGTokens(nexusModsUserId, gogUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt);
+
+        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToGOG, nexusModsUserToIntegrationGOG);
+        _dbContextWrite.FutureUpsert(x => x.IntegrationGOGTokens, tokensGOG);
+        return true;
+    }
+
+    public async Task<bool> RemoveAsync(int nexusModsUserId, string gogUserId)
+    {
+        await _dbContextWrite.NexusModsUserToGOG.Where(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.GOGUserId == gogUserId).ExecuteDeleteAsync();
+        await _dbContextWrite.IntegrationGOGTokens.Where(x => x.GOGUserId == gogUserId).ExecuteDeleteAsync();
+
+        return true;
+    }
 }

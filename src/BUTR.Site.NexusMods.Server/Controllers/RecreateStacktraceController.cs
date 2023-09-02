@@ -1,4 +1,5 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
@@ -20,7 +21,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme), Metadata("MB2B")]
+[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public sealed class RecreateStacktraceController : ControllerExtended
 {
     private readonly ILogger _logger;
@@ -38,6 +39,9 @@ public sealed class RecreateStacktraceController : ControllerExtended
     [Produces("application/json")]
     public async Task<ActionResult<APIResponse<IEnumerable<RecreatedStacktrace>?>>> JsonAsync(string id, CancellationToken ct)
     {
+        if (!HttpContext.OwnsTenantGame())
+            return Unauthorized();
+
         string crashReportContent;
         try
         {
@@ -69,6 +73,9 @@ public sealed class RecreateStacktraceController : ControllerExtended
     [Produces("text/plain")]
     public async Task<ActionResult<string>> HtmlAsync(string id, CancellationToken ct)
     {
+        if (!HttpContext.OwnsTenantGame())
+            return Unauthorized();
+
         string crashReportContent;
         try
         {

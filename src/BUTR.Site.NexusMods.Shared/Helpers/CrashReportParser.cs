@@ -12,7 +12,7 @@ namespace BUTR.Site.NexusMods.Shared.Helpers;
 public record CrashReport
 {
     public required Guid Id { get; init; }
-    public required int Version { get; init; }
+    public required byte Version { get; init; }
     public required string GameVersion { get; init; }
     public required string Exception { get; init; }
     public required ImmutableArray<Module> Modules { get; init; }
@@ -29,6 +29,8 @@ public record CrashReport
 
     public required string? BLSEVersion { get; init; }
     public required string? LauncherExVersion { get; init; }
+
+    public string ExceptionType => Exception.Split(Environment.NewLine).FirstOrDefault(l => l.Contains("Type:"))?.Split("Type:").Skip(1).FirstOrDefault() ?? string.Empty;
 }
 
 public record EnhancedStacktraceFrame
@@ -132,11 +134,11 @@ public static class CrashReportParser
 
         var id = document.SelectSingleNode("descendant::report")?.Attributes?["id"]?.Value ?? string.Empty;
         var versionStr = document.SelectSingleNode("descendant::report")?.Attributes?["version"]?.Value;
-        var version = int.TryParse(versionStr, out var v) ? v : 1;
+        var version = byte.TryParse(versionStr, out var v) ? v : (byte) 1;
         var gameVersion = document.SelectSingleNode("descendant::game")?.Attributes?["version"]?.Value ?? string.Empty;
         var exception = document.SelectSingleNode("descendant::div[@id=\"exception\"]")?.InnerText ?? string.Empty;
-        var installedModules = document.SelectSingleNode("descendant::div[@id=\"installed-modules\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseModule).ToImmutableArray() ?? ImmutableArray<Module>.Empty;
-        var involvedModules = document.SelectSingleNode("descendant::div[@id=\"involved-modules\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseInvolvedModule).ToImmutableArray() ?? ImmutableArray<InvolvedModule>.Empty;
+        var installedModules = document.SelectSingleNode("descendant::div[@id=\"installed-modules\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseModule).DistinctBy(x => x.Id).ToImmutableArray() ?? ImmutableArray<Module>.Empty;
+        var involvedModules = document.SelectSingleNode("descendant::div[@id=\"involved-modules\"]/ul")?.ChildNodes.Where(cn => cn.Name == "li").Select(ParseInvolvedModule).DistinctBy(x => x.Id).ToImmutableArray() ?? ImmutableArray<InvolvedModule>.Empty;
         var enhancedStacktrace = GetEnhancedStacktrace(content.AsSpan(), version, document);
 
         //var assemblies = document.SelectSingleNode("descendant::div[@id=\"assemblies\"]/ul").ChildNodes.Where(cn => cn.Name == "li").ToList();

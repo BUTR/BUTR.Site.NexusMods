@@ -1,12 +1,52 @@
 version: 2
 updates:
-  #- package-ecosystem: "nuget"
-  #  directory: "/"
-  #  schedule:
-  #    interval: "daily"
-
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: nuget
+    directory: /
     schedule:
-      interval: "daily"  
-      
+      interval: daily
+    groups:
+      Blazor:
+        patterns:
+          - "Microsoft.AspNetCore.Components*"
+      Blazored:
+        patterns:
+          - "Blazored*"
+      Blazorise:
+        patterns:
+          - "Blazorise*"
+      System:
+        patterns:
+          - "System*"
+      Extensions:
+        patterns:
+          - "Microsoft.Extensions*"
+      ASPNETCore:
+        patterns:
+          - "Microsoft.AspNetCore*"
+      EFCore:
+        patterns:
+          - "Npgsql*"
+          - "Microsoft.EntityFrameworkCore*"
+          - "Community.Microsoft.Extensions.Caching.PostgreSql"
+          - "Z.EntityFramework.Plus.EFCore"
+      OpenTelemetry:
+        patterns:
+          - "OpenTelemetry*"
+      Polly:
+        patterns:
+          - "Polly*"
+          - "Microsoft.Extensions.Http.Polly"
+      Quartz:
+        patterns:
+          - "Quartz*"
+      Swashbuckle:
+        patterns:
+          - "Swashbuckle*"
+      Tests:
+        patterns:
+          - "Microsoft.AspNetCore*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily

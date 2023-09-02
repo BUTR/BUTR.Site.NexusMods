@@ -1,13 +1,18 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Shared;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Quartz;
 
 using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Jobs;
@@ -16,35 +21,48 @@ namespace BUTR.Site.NexusMods.Server.Jobs;
 public sealed class TopExceptionsTypesAnalyzerProcessorJob : IJob
 {
     private readonly ILogger _logger;
-    private readonly AppDbContext _dbContext;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public TopExceptionsTypesAnalyzerProcessorJob(ILogger<TopExceptionsTypesAnalyzerProcessorJob> logger, AppDbContext dbContext)
+    public TopExceptionsTypesAnalyzerProcessorJob(ILogger<TopExceptionsTypesAnalyzerProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var crashReportEntity = _dbContext.Model.FindEntityType(typeof(CrashReportEntity))!;
-        var crashReportEntityTable = crashReportEntity.GetSchemaQualifiedTableName();
-        var exception = crashReportEntity.GetProperty(nameof(CrashReportEntity.Exception)).GetColumnName();
+        var ct = context.CancellationToken;
+        var tenants = Enum.GetValues<Tenant>();
 
-        var topExceptionsTypeEntity = _dbContext.Model.FindEntityType(typeof(StatisticsTopExceptionsTypeEntity))!;
-        var topExceptionsTypeEntityTable = topExceptionsTypeEntity.GetSchemaQualifiedTableName();
+        foreach (var tenant in tenants)
+        {
+            await using var scope = _serviceScopeFactory.CreateAsyncScope();
 
-        if (!_dbContext.Database.IsNpgsql()) return;
+            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
+            tenantContextAccessor.Current = tenant;
 
+            await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
+        }
 
-        var sql = $"""
-TRUNCATE TABLE {topExceptionsTypeEntityTable};
-INSERT INTO {topExceptionsTypeEntityTable}
-SELECT split_part((regexp_split_to_array({exception}, '\r\n'))[3], ': ', 2) as type, COUNT(*) as count
-FROM {crashReportEntityTable}
-GROUP BY type
-""";
-        await _dbContext.Database.ExecuteSqlRawAsync(sql, new object[] { }, context.CancellationToken);
-        context.Result = "Updated Top Exception Types Data";
+        context.Result = "Updated Top Exception Types";
         context.SetIsSuccess(true);
+    }
+
+    private static async Task HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    {
+        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
+        var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
+        var entityFactory = dbContextWrite.CreateEntityFactory();
+        await using var _ = dbContextWrite.CreateSaveScope();
+
+        var statisticsQuery = await dbContextRead.ExceptionTypes.Include(x => x.ToCrashReports).AsSplitQuery().Select(x => new StatisticsTopExceptionsTypeEntity
+        {
+            TenantId = tenant,
+            ExceptionType = entityFactory.GetOrCreateExceptionType(x.ExceptionTypeId),
+            ExceptionCount = x.ToCrashReports.Count
+        }).ToListAsync(ct);
+
+        dbContextWrite.FutureSyncronize(x => x.StatisticsTopExceptionsTypes, statisticsQuery);
+        // Disposing the DBContext will save the data
     }
 }

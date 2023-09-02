@@ -1,7 +1,10 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
+using Microsoft.EntityFrameworkCore;
+
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
@@ -15,42 +18,42 @@ public interface IDiscordStorage
     Task<bool> RemoveAsync(int nexusModsUserId, string discordUserId);
 }
 
-public sealed class DatabaseDiscordStorage : BaseDatabaseStorage<DiscordOAuthTokens, DiscordLinkedRoleTokensEntity, NexusModsUserToDiscordEntity>, IDiscordStorage
+public sealed class DatabaseDiscordStorage : IDiscordStorage
 {
-    protected override string ExternalMetadataId => ExternalStorageConstants.Discord;
+    private readonly IAppDbContextRead _dbContextRead;
+    private readonly IAppDbContextWrite _dbContextWrite;
 
-    public DatabaseDiscordStorage(AppDbContext dbContext) : base(dbContext) { }
-
-    protected override DiscordOAuthTokens FromExternalEntity(DiscordLinkedRoleTokensEntity externalEntity) =>
-        new(externalEntity.AccessToken, externalEntity.RefreshToken, externalEntity.AccessTokenExpiresAt);
-
-    protected override NexusModsUserToDiscordEntity? Upsert(int nexusModsUserId, string externalId, NexusModsUserToDiscordEntity? existing) => existing switch
+    public DatabaseDiscordStorage(IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite)
     {
-        null => new NexusModsUserToDiscordEntity
-        {
-            NexusModsUserId = nexusModsUserId,
-            UserId = externalId,
-        },
-        _ => existing with
-        {
-            UserId = externalId,
-        }
-    };
+        _dbContextRead = dbContextRead;
+        _dbContextWrite = dbContextWrite;
+    }
 
-    protected override DiscordLinkedRoleTokensEntity? Upsert(string externalId, DiscordOAuthTokens data, DiscordLinkedRoleTokensEntity? existing) => existing switch
+    public async Task<DiscordOAuthTokens?> GetAsync(string discordUserId)
     {
-        null => new DiscordLinkedRoleTokensEntity
-        {
-            UserId = externalId,
-            RefreshToken = data.RefreshToken,
-            AccessToken = data.AccessToken,
-            AccessTokenExpiresAt = data.ExpiresAt.ToUniversalTime()
-        },
-        _ => existing with
-        {
-            RefreshToken = data.RefreshToken,
-            AccessToken = data.AccessToken,
-            AccessTokenExpiresAt = data.ExpiresAt.ToUniversalTime()
-        }
-    };
+        var entity = await _dbContextRead.IntegrationDiscordTokens.FirstOrDefaultAsync(x => x.DiscordUserId.Equals(discordUserId));
+        if (entity is null) return null;
+        return new(entity.AccessToken, entity.RefreshToken, entity.AccessTokenExpiresAt);
+    }
+
+    public async Task<bool> UpsertAsync(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
+    {
+        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        await using var _ = _dbContextWrite.CreateSaveScope();
+
+        var nexusModsUserToIntegrationDiscord = entityFactory.GetOrCreateNexusModsUserDiscord(nexusModsUserId, discordUserId);
+        var tokensDiscord = entityFactory.GetOrCreateIntegrationDiscordTokens(nexusModsUserId, discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt);
+
+        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToDiscord, nexusModsUserToIntegrationDiscord);
+        _dbContextWrite.FutureUpsert(x => x.IntegrationDiscordTokens, tokensDiscord);
+        return true;
+    }
+
+    public async Task<bool> RemoveAsync(int nexusModsUserId, string discordUserId)
+    {
+        await _dbContextWrite.NexusModsUserToDiscord.Where(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.DiscordUserId == discordUserId).ExecuteDeleteAsync();
+        await _dbContextWrite.IntegrationDiscordTokens.Where(x => x.DiscordUserId == discordUserId).ExecuteDeleteAsync();
+
+        return true;
+    }
 }
