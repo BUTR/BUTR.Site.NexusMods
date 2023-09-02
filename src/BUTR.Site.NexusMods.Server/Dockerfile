@@ -20,8 +20,8 @@ COPY [".git/refs/heads/", ".git/refs/heads/"]
 
 FROM restore AS publish
 WORKDIR /build
-RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" --no-restore -c Release -r linux-musl-x64 -o /app/publish;
-#RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" --no-restore -c Release -r linux-musl-x64 -o /app/publish -p:PublishReadyToRun=true;
+RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" --no-restore -c Release -r linux-x64 -o /app/publish;
+#RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" --no-restore -c Release -r linux-x64 -o /app/publish -p:PublishReadyToRun=true;
 
 
 FROM base AS final
