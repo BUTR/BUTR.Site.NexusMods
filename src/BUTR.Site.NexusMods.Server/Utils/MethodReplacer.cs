@@ -17,6 +17,9 @@ public static class MethodReplacer
 
     public static void Replace(MethodBase source, MethodBase target)
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return;
+
         RuntimeHelpers.PrepareMethod(source.MethodHandle);
         RuntimeHelpers.PrepareMethod(target.MethodHandle);
 
@@ -46,17 +49,8 @@ public static class MethodReplacer
                     0xC3  // ret
                 }).ToArray();
 
-        var oldWindows = default(Protection);
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            _ = Syscall.mprotect(sourceAddress, (ulong) instruction.Length, MmapProts.PROT_WRITE | MmapProts.PROT_READ);
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            _ = VirtualProtect(sourceAddress, (uint) instruction.Length, Protection.PAGE_EXECUTE_READWRITE, out oldWindows);
-
+        VirtualProtect(sourceAddress, (uint) instruction.Length, Protection.PAGE_EXECUTE_READWRITE, out var old);
         Marshal.Copy(instruction, 0, sourceAddress, instruction.Length);
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            _ = Syscall.mprotect(sourceAddress, (ulong) instruction.Length, MmapProts.PROT_EXEC | MmapProts.PROT_READ);
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            _ = VirtualProtect(sourceAddress, (uint) instruction.Length, oldWindows, out _);
+        VirtualProtect(sourceAddress, (uint) instruction.Length, old, out _);
     }
 }
