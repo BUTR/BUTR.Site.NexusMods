@@ -30,8 +30,9 @@ RUN apt-get update && apt-get install -y wget unzip \
     && wget https://github.com/SteamRE/DepotDownloader/releases/download/DepotDownloader_2.5.0/depotdownloader-2.5.0.zip \
     && unzip depotdownloader-2.5.0.zip -d /depotdownloader \
     && rm depotdownloader-2.5.0.zip \
-    && apt-get remove wget unzip \
-    && apt-get clean
+    && apt-get remove -y wget unzip \
+    && apt-get autoremove -y \
+    && apt-get clean -y
 
 WORKDIR /app
 COPY --from=publish /app/publish .
