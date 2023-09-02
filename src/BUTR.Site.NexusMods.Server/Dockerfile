@@ -1,14 +1,14 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-preview-alpine AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-preview AS base
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0-preview-alpine AS restore
+FROM mcr.microsoft.com/dotnet/sdk:8.0-preview AS restore
 WORKDIR /build
 
 COPY ["src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj", "src/BUTR.Site.NexusMods.Server/"]
 COPY ["src/BUTR.Site.NexusMods.Shared/BUTR.Site.NexusMods.Shared.csproj", "src/BUTR.Site.NexusMods.Shared/"]
 
-RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -r linux-musl-x64;
-#RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -r linux-musl-x64 -p:PublishReadyToRun=true;
+RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -r linux-x64;
+#RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -r linux-x64 -p:PublishReadyToRun=true;
 
 COPY ["src/BUTR.Site.NexusMods.Server/", "src/BUTR.Site.NexusMods.Server/"]
 COPY ["src/BUTR.Site.NexusMods.Shared/", "src/BUTR.Site.NexusMods.Shared/"]
