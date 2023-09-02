@@ -26,11 +26,12 @@ RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.cs
 
 FROM base AS final
 
-RUN apk update && apk add --no-cache wget unzip \
+RUN apt-get update && apt-get install -y wget unzip \
     && wget https://github.com/SteamRE/DepotDownloader/releases/download/DepotDownloader_2.5.0/depotdownloader-2.5.0.zip \
     && unzip depotdownloader-2.5.0.zip -d /depotdownloader \
     && rm depotdownloader-2.5.0.zip \
-    && apk del wget unzip
+    && apt-get remove wget unzip \
+    && apt-get clean
 
 WORKDIR /app
 COPY --from=publish /app/publish .
