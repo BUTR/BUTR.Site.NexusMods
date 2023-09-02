@@ -49,8 +49,17 @@ public static class MethodReplacer
                     0xC3  // ret
                 }).ToArray();
 
-        VirtualProtect(sourceAddress, (uint) instruction.Length, Protection.PAGE_EXECUTE_READWRITE, out var old);
+        var oldWindows = default(Protection);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            _ = Syscall.mprotect(sourceAddress, (ulong) instruction.Length, MmapProts.PROT_WRITE | MmapProts.PROT_READ);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            _ = VirtualProtect(sourceAddress, (uint) instruction.Length, Protection.PAGE_EXECUTE_READWRITE, out oldWindows);
+
         Marshal.Copy(instruction, 0, sourceAddress, instruction.Length);
-        VirtualProtect(sourceAddress, (uint) instruction.Length, old, out _);
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            _ = Syscall.mprotect(sourceAddress, (ulong) instruction.Length, MmapProts.PROT_EXEC | MmapProts.PROT_READ);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            _ = VirtualProtect(sourceAddress, (uint) instruction.Length, oldWindows, out _);
     }
 }
