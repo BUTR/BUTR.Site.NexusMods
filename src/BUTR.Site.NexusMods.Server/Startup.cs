@@ -15,6 +15,7 @@ using BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -300,6 +301,11 @@ public sealed class Startup
                 opt.IncludeXmlComments(xmlFilePath);
         });
 
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        });
+
         services.AddCors(options =>
         {
             options.AddPolicy("Development", builder => builder
@@ -322,10 +328,11 @@ public sealed class Startup
 
     public void Configure(IApplicationBuilder app, IHostEnvironment env)
     {
+        app.UseForwardedHeaders();
+
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
-
             app.UseCors("Development");
         }
 

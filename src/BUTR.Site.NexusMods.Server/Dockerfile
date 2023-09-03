@@ -26,7 +26,13 @@ RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.cs
 
 FROM base AS final
 
-RUN apt-get update && apt-get install -y wget unzip \
+RUN apt-get update \
+    && apt-get install -y wget \
+    && wget https://packages.microsoft.com/config/debian/11/packages-microsoft-prod.deb \
+    && dpkg -i packages-microsoft-prod.deb \
+    && rm packages-microsoft-prod.deb \
+    && apt-get update \
+    && apt-get install -y libmsquic unzip \
     && wget https://github.com/SteamRE/DepotDownloader/releases/download/DepotDownloader_2.5.0/depotdownloader-2.5.0.zip \
     && unzip depotdownloader-2.5.0.zip -d /depotdownloader \
     && rm depotdownloader-2.5.0.zip \
