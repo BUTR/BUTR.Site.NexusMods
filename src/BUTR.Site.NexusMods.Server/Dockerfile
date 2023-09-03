@@ -1,7 +1,7 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-preview AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-preview-jammy AS base
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0-preview AS restore
+FROM mcr.microsoft.com/dotnet/sdk:8.0-preview-jammy AS restore
 WORKDIR /build
 
 COPY ["src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj", "src/BUTR.Site.NexusMods.Server/"]
@@ -28,7 +28,7 @@ FROM base AS final
 
 RUN apt-get update \
     && apt-get install -y wget \
-    && wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb \
+    && wget https://packages.microsoft.com/config/ubuntu/22.10/packages-microsoft-prod.deb \
     && dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
