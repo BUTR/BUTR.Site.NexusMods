@@ -1,6 +1,7 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Shared.Helpers;
@@ -148,8 +149,8 @@ public sealed class DiscordController : ControllerExtended
 
         return await _discordClient.PushMetadataAsync(refreshed, new Metadata(
             1,
-            role == ApplicationRoles.Moderator ? 1 : 0,
-            role == ApplicationRoles.Administrator ? 1 : 0,
+            role == ApplicationRole.Moderator ? 1 : 0,
+            role == ApplicationRole.Administrator ? 1 : 0,
             linkedModsCount), ct);
     }
 }

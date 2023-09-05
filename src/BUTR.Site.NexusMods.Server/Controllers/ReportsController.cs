@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.API;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
 
 using Microsoft.AspNetCore.Authorization;
@@ -25,7 +26,7 @@ public sealed class ReportsController : ControllerExtended
 
     [HttpGet("Get/{id}.html")]
     [Produces("text/html")]
-    public async Task<ActionResult<string>> GetAllAsync(string id, CancellationToken ct) => Ok(await _crashReporterClient.GetCrashReportAsync(id, ct));
+    public async Task<ActionResult<string>> GetAllAsync(CrashReportFileId id, CancellationToken ct) => Ok(await _crashReporterClient.GetCrashReportAsync(id, ct));
 
     [HttpGet("BlankRequest")]
     [Produces("text/plain")]

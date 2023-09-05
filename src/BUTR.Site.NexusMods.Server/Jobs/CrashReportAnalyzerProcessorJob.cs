@@ -2,7 +2,6 @@
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
-using BUTR.Site.NexusMods.Shared;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,9 +31,8 @@ public sealed class CrashReportAnalyzerProcessorJob : IJob
     public async Task Execute(IJobExecutionContext context)
     {
         var ct = context.CancellationToken;
-        var tenants = Enum.GetValues<Tenant>();
 
-        foreach (var tenant in tenants)
+        foreach (var tenant in TenantId.Values)
         {
             await using var scope = _serviceScopeFactory.CreateAsyncScope();
 
@@ -57,7 +55,7 @@ public sealed class CrashReportAnalyzerProcessorJob : IJob
         context.SetIsSuccess(true);
     }
 
-    private static async Task HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    private static async Task HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
     {
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();

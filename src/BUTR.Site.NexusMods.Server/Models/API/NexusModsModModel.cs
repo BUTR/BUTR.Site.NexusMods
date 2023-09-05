@@ -3,9 +3,9 @@
 namespace BUTR.Site.NexusMods.Server.Models.API;
 
 public sealed record NexusModsModModel(
-    int NexusModsModId,
+    NexusModsModId NexusModsModId,
     string Name,
-    ImmutableArray<int> AllowedNexusModsUserIds,
-    ImmutableArray<int> ManuallyLinkedNexusModsUserIds,
-    ImmutableArray<string> ManuallyLinkedModuleIds,
-    ImmutableArray<string> KnownModuleIds);
+    ImmutableArray<NexusModsUserId> AllowedNexusModsUserIds,
+    ImmutableArray<NexusModsUserId> ManuallyLinkedNexusModsUserIds,
+    ImmutableArray<ModuleId> ManuallyLinkedModuleIds,
+    ImmutableArray<ModuleId> KnownModuleIds);

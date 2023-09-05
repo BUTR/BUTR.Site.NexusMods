@@ -1,6 +1,7 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -20,11 +21,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public sealed class StatisticsController : ControllerExtended
 {
-    public record TopExceptionsEntry(string Type, decimal Percentage);
+    public record TopExceptionsEntry(ExceptionTypeId Type, decimal Percentage);
 
     public record VersionScore
     {
-        public required string Version { get; init; }
+        public required ModuleVersion Version { get; init; }
         public required double Score { get; init; }
         public required double Value { get; init; }
         public required int CountStable { get; init; }
@@ -33,19 +34,19 @@ public sealed class StatisticsController : ControllerExtended
     }
     public record VersionStorage
     {
-        public required string Version { get; init; }
+        public required ModuleVersion Version { get; init; }
         public required VersionScore[] Scores { get; init; }
         public double MeanScore => Scores.Length == 0 ? 0 : 1 - (Scores.Sum(x => x.Value) / (double) Scores.Sum(x => x.Count));
     };
     public record ModuleStorage
     {
-        public required string ModuleId { get; init; }
+        public required ModuleId ModuleId { get; init; }
         public required VersionStorage[] Versions { get; init; }
     };
 
     public record GameStorage
     {
-        public required string GameVersion { get; init; }
+        public required GameVersion GameVersion { get; init; }
         public required ModuleStorage[] Modules { get; init; }
     }
 
@@ -60,16 +61,16 @@ public sealed class StatisticsController : ControllerExtended
 
     [HttpGet("AutocompleteGameVersion")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<string>?>> AutocompleteGameVersion([FromQuery] string gameVersion)
+    public ActionResult<APIResponse<IQueryable<string>?>> AutocompleteGameVersion([FromQuery] GameVersion gameVersion)
     {
-        return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportEntity>(x => x.GameVersion, gameVersion));
+        return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportEntity, GameVersion>(x => x.GameVersion, gameVersion));
     }
 
     [HttpGet("AutocompleteModuleId")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<string>?>> AutocompleteModuleId([FromQuery] string moduleId)
+    public ActionResult<APIResponse<IQueryable<string>?>> AutocompleteModuleId([FromQuery] ModuleId moduleId)
     {
-        return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportToModuleMetadataEntity>(x => x.Module.ModuleId, moduleId));
+        return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId, moduleId));
     }
 
     [HttpGet("TopExceptionsTypes")]
@@ -87,7 +88,7 @@ public sealed class StatisticsController : ControllerExtended
 
     [HttpGet("Involved")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<GameStorage>?>> Involved([FromQuery] string[]? gameVersions, [FromQuery] string[]? moduleIds, [FromQuery] string[]? moduleVersions)
+    public ActionResult<APIResponse<IQueryable<GameStorage>?>> Involved([FromQuery] GameVersion[]? gameVersions, [FromQuery] ModuleId[]? moduleIds, [FromQuery] ModuleVersion[]? moduleVersions)
     {
         //if (gameVersions?.Length == 0 && modIds?.Length == 0 && modVersions?.Length == 0)
         //    return StatusCode(StatusCodes.Status403Forbidden, Array.Empty<GameStorage>());

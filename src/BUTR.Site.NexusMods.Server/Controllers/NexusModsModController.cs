@@ -22,13 +22,13 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public sealed class NexusModsModController : ControllerExtended
 {
-    public sealed record RawNexusModsModModel(int NexusModsModId, string Name);
+    public sealed record RawNexusModsModModel(NexusModsModId NexusModsModId, string Name);
 
-    public sealed record NexusModsModToModuleModel(string ModuleId, int NexusModsModId);
+    public sealed record NexusModsModToModuleModel(ModuleId ModuleId, NexusModsModId NexusModsModId);
 
-    public sealed record NexusModsModToModuleManualLinkQuery(string ModuleId, int NexusModsModId);
+    public sealed record NexusModsModToModuleManualLinkQuery(ModuleId ModuleId, NexusModsModId NexusModsModId);
 
-    public sealed record NexusModsModAvailableModel(int NexusModsModId, string Name);
+    public sealed record NexusModsModAvailableModel(NexusModsModId NexusModsModId, string Name);
 
 
     private readonly ILogger _logger;
@@ -45,9 +45,9 @@ public sealed class NexusModsModController : ControllerExtended
     }
 
 
-    [HttpGet("Raw/{gameDomain}/{modId:int}")]
+    [HttpGet("Raw/{gameDomain}/{modId}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<RawNexusModsModModel?>>> RawAsync(string gameDomain, int modId, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<RawNexusModsModModel?>>> RawAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, CancellationToken ct)
     {
         var userId = HttpContext.GetUserId();
         var apiKey = HttpContext.GetAPIKey();
@@ -71,12 +71,12 @@ public sealed class NexusModsModController : ControllerExtended
         var entityFactory = _dbContextWrite.CreateEntityFactory();
 
         var tenant = HttpContext.GetTenant();
-        if (tenant is null) return BadRequest();
+        if (tenant == TenantId.None) return BadRequest();
 
         var nexusModsModToModule = new NexusModsModToModuleEntity
         {
-            TenantId = tenant.Value,
-            NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) query.NexusModsModId),
+            TenantId = tenant,
+            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
             Module = entityFactory.GetOrCreateModule(query.ModuleId),
             LinkType = NexusModsModToModuleLinkType.ByStaff,
             LastUpdateDate = DateTime.UtcNow,

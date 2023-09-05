@@ -75,6 +75,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnName("exception");
 
                     b.Property<string>("ExceptionTypeId")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("exception_type_id");
 
@@ -369,8 +370,8 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("tenant");
 
-                    b.Property<short>("NexusModsArticleId")
-                        .HasColumnType("smallint")
+                    b.Property<int>("NexusModsArticleId")
+                        .HasColumnType("integer")
                         .HasColumnName("nexusmods_article_entity_id");
 
                     b.Property<DateTime>("CreateDate")
@@ -863,7 +864,8 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                     b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.ExceptionTypeEntity", "ExceptionType")
                         .WithMany("ToCrashReports")
                         .HasForeignKey("TenantId", "ExceptionTypeId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ExceptionType");
                 });

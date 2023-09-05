@@ -1,7 +1,5 @@
 ﻿using FluentValidation;
 
-using System.Net.Http;
-
 namespace BUTR.Site.NexusMods.Server.Options;
 
 public sealed class ConnectionStringsOptionsValidator : AbstractValidator<ConnectionStringsOptions>

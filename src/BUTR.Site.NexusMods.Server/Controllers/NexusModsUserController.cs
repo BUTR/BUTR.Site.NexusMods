@@ -24,19 +24,19 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public sealed class NexusModsUserController : ControllerExtended
 {
-    public sealed record SetRoleBody(uint NexusModsUserId, string Role);
+    public sealed record SetRoleBody(NexusModsUserId NexusModsUserId, ApplicationRole Role);
 
-    public sealed record RemoveRoleBody(uint NexusModsUserId);
+    public sealed record RemoveRoleBody(NexusModsUserId NexusModsUserId);
 
-    public sealed record NexusModsUserToNexusModsModQuery(int NexusModsModId);
+    public sealed record NexusModsUserToNexusModsModQuery(NexusModsModId NexusModsModId);
 
-    public sealed record NexusModsUserToModuleQuery(int NexusModsUserId, string ModuleId);
+    public sealed record NexusModsUserToModuleQuery(NexusModsUserId NexusModsUserId, ModuleId ModuleId);
 
-    public sealed record NexusModsUserToNexusModsModManualLinkQuery(int UserId, int NexusModsModId);
+    public sealed record NexusModsUserToNexusModsModManualLinkQuery(NexusModsUserId NexusModsUserId, NexusModsModId NexusModsModId);
 
-    public sealed record NexusModsUserToModuleManualLinkModel(int NexusModsUserId, ImmutableArray<string> AllowedModuleIds);
+    public sealed record NexusModsUserToModuleManualLinkModel(NexusModsUserId NexusModsUserId, ImmutableArray<ModuleId> AllowedModuleIds);
 
-    public sealed record NexusModsUserToNexusModsModManualLinkModel(int NexusModsModId, ImmutableArray<int> AllowedNexusModsUserIds);
+    public sealed record NexusModsUserToNexusModsModManualLinkModel(NexusModsModId NexusModsModId, ImmutableArray<NexusModsUserId> AllowedNexusModsUserIds);
 
     private readonly ILogger _logger;
     private readonly NexusModsAPIClient _nexusModsAPIClient;
@@ -67,9 +67,9 @@ public sealed class NexusModsUserController : ControllerExtended
         await using var _ = _dbContextWrite.CreateSaveScope();
 
         var tenant = HttpContext.GetTenant();
-        if (tenant is null) return BadRequest();
+        if (tenant == TenantId.None) return BadRequest();
 
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUsers, NexusModsUserEntity.CreateWithRole((int) body.NexusModsUserId, tenant.Value, body.Role));
+        _dbContextWrite.FutureUpsert(x => x.NexusModsUsers, NexusModsUserEntity.CreateWithRole(body.NexusModsUserId, tenant, body.Role));
         return APIResponse("Set successful!");
     }
 
@@ -81,9 +81,9 @@ public sealed class NexusModsUserController : ControllerExtended
         await using var _ = _dbContextWrite.CreateSaveScope();
 
         var tenant = HttpContext.GetTenant();
-        if (tenant is null) return BadRequest();
+        if (tenant == TenantId.None) return BadRequest();
 
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUsers, NexusModsUserEntity.CreateWithRole((int) body.NexusModsUserId, tenant.Value, ApplicationRoles.User));
+        _dbContextWrite.FutureUpsert(x => x.NexusModsUsers, NexusModsUserEntity.CreateWithRole(body.NexusModsUserId, tenant, ApplicationRole.User));
         return APIResponse("Removed successful!");
     }
 
@@ -133,11 +133,13 @@ public sealed class NexusModsUserController : ControllerExtended
         var entityFactory = _dbContextWrite.CreateEntityFactory();
 
         var userId = HttpContext.GetUserId();
-        var tenant = HttpContext.GetTenant();
         var apiKey = HttpContext.GetAPIKey();
-        if (tenant is null) return BadRequest();
+        var tenant = HttpContext.GetTenant();
+        if (tenant == TenantId.None) return BadRequest();
 
-        if (await _nexusModsAPIClient.GetModAsync("mountandblade2bannerlord", query.NexusModsModId, apiKey, ct) is not { } modInfo)
+        var gameDomain = tenant.ToGameDomain();
+
+        if (await _nexusModsAPIClient.GetModAsync(gameDomain, query.NexusModsModId, apiKey, ct) is not { } modInfo)
             return APIResponseError<string>("Mod not found!");
 
         if (userId != modInfo.User.Id)
@@ -145,8 +147,8 @@ public sealed class NexusModsUserController : ControllerExtended
 
         var entity = new NexusModsModToNameEntity
         {
-            TenantId = tenant.Value,
-            NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) query.NexusModsModId),
+            TenantId = tenant,
+            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
             Name = modInfo.Name,
         };
         _dbContextWrite.FutureUpsert(x => x.NexusModsModName, entity);
@@ -162,11 +164,13 @@ public sealed class NexusModsUserController : ControllerExtended
         var entityFactory = _dbContextWrite.CreateEntityFactory();
 
         var userId = HttpContext.GetUserId();
-        var tenant = HttpContext.GetTenant();
         var apiKey = HttpContext.GetAPIKey();
-        if (tenant is null) return BadRequest();
+        var tenant = HttpContext.GetTenant();
+        if (tenant == TenantId.None) return BadRequest();
 
-        if (await _nexusModsAPIClient.GetModAsync("mountandblade2bannerlord", query.NexusModsModId, apiKey, ct) is not { } modInfo)
+        var gameDomain = tenant.ToGameDomain();
+
+        if (await _nexusModsAPIClient.GetModAsync(gameDomain, query.NexusModsModId, apiKey, ct) is not { } modInfo)
             return APIResponseError<string>("Mod not found!");
 
         if (userId != modInfo.User.Id)
@@ -174,11 +178,11 @@ public sealed class NexusModsUserController : ControllerExtended
 
         if (HttpContext.GetIsPremium()) // Premium is needed for API based downloading
         {
-            var exposedModIds = await _nexusModsInfo.GetModIdsAsync("mountandblade2bannerlord", modInfo.Id, apiKey, ct).Distinct().ToImmutableArrayAsync(ct);
+            var exposedModIds = await _nexusModsInfo.GetModIdsAsync(gameDomain, modInfo.Id, apiKey, ct).Distinct().ToImmutableArrayAsync(ct);
             var entities = exposedModIds.Select(y => new NexusModsModToModuleEntity
             {
-                TenantId = tenant.Value,
-                NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) query.NexusModsModId),
+                TenantId = tenant,
+                NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
                 Module = entityFactory.GetOrCreateModule(y),
                 LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure,
                 LastUpdateDate = DateTime.UtcNow
@@ -188,16 +192,16 @@ public sealed class NexusModsUserController : ControllerExtended
 
         var nexusModsModToName = new NexusModsModToNameEntity
         {
-            TenantId = tenant.Value,
-            NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) query.NexusModsModId),
+            TenantId = tenant,
+            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
             Name = modInfo.Name,
         };
         _dbContextWrite.FutureUpsert(x => x.NexusModsModName, nexusModsModToName);
         var nexusModsUserToNexusModsMod = new NexusModsUserToNexusModsModEntity
         {
-            TenantId = tenant.Value,
+            TenantId = tenant,
             NexusModsUser = entityFactory.GetOrCreateNexusModsUser(userId),
-            NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) query.NexusModsModId),
+            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
             LinkType = NexusModsUserToNexusModsModLinkType.ByAPIConfirmation,
         };
         _dbContextWrite.FutureUpsert(x => x.NexusModsUserToNexusModsMods, nexusModsUserToNexusModsMod);
@@ -226,11 +230,11 @@ public sealed class NexusModsUserController : ControllerExtended
         var entityFactory = _dbContextWrite.CreateEntityFactory();
 
         var tenant = HttpContext.GetTenant();
-        if (tenant is null) return BadRequest();
+        if (tenant == TenantId.None) return BadRequest();
 
         var nexusModsUserToModule = new NexusModsUserToModuleEntity
         {
-            TenantId = tenant.Value,
+            TenantId = tenant,
             NexusModsUser = entityFactory.GetOrCreateNexusModsUser(query.NexusModsUserId),
             Module = entityFactory.GetOrCreateModule(query.ModuleId),
             LinkType = NexusModsUserToModuleLinkType.ByStaff,
@@ -273,11 +277,13 @@ public sealed class NexusModsUserController : ControllerExtended
         var entityFactory = _dbContextWrite.CreateEntityFactory();
 
         var userId = HttpContext.GetUserId();
-        var tenant = HttpContext.GetTenant();
         var apiKey = HttpContext.GetAPIKey();
-        if (tenant is null) return BadRequest();
+        var tenant = HttpContext.GetTenant();
+        if (tenant == TenantId.None) return BadRequest();
 
-        if (await _nexusModsAPIClient.GetModAsync("mountandblade2bannerlord", query.NexusModsModId, apiKey, ct) is not { } modInfo)
+        var gameDomain = tenant.ToGameDomain();
+
+        if (await _nexusModsAPIClient.GetModAsync(gameDomain, query.NexusModsModId, apiKey, ct) is not { } modInfo)
             return APIResponseError<string>("Mod not found!");
 
         if (userId != modInfo.User.Id)
@@ -286,8 +292,8 @@ public sealed class NexusModsUserController : ControllerExtended
 
         var nexusModsModToName = new NexusModsModToNameEntity
         {
-            TenantId = tenant.Value,
-            NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) query.NexusModsModId),
+            TenantId = tenant,
+            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
             Name = modInfo.Name,
         };
         _dbContextWrite.FutureUpsert(x => x.NexusModsModName, nexusModsModToName);
@@ -295,16 +301,16 @@ public sealed class NexusModsUserController : ControllerExtended
         {
             new()
             {
-                TenantId = tenant.Value,
+                TenantId = tenant,
                 NexusModsUser = entityFactory.GetOrCreateNexusModsUser(userId),
-                NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) query.NexusModsModId),
+                NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
                 LinkType = NexusModsUserToNexusModsModLinkType.ByAPIConfirmation,
             },
             new()
             {
-                TenantId = tenant.Value,
-                NexusModsUser = entityFactory.GetOrCreateNexusModsUser(query.UserId),
-                NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) query.NexusModsModId),
+                TenantId = tenant,
+                NexusModsUser = entityFactory.GetOrCreateNexusModsUser(query.NexusModsUserId),
+                NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
                 LinkType = NexusModsUserToNexusModsModLinkType.ByOwner,
             }
         };
@@ -317,7 +323,7 @@ public sealed class NexusModsUserController : ControllerExtended
     public async Task<ActionResult<APIResponse<string?>>> ToNexusModsModManualUnlinkAsync([FromQuery] NexusModsUserToNexusModsModManualLinkQuery query)
     {
         await _dbContextWrite.NexusModsUserToNexusModsMods
-            .Where(x => x.NexusModsUser.NexusModsUserId == query.UserId && x.NexusModsMod.NexusModsModId == query.NexusModsModId && x.LinkType == NexusModsUserToNexusModsModLinkType.ByOwner)
+            .Where(x => x.NexusModsUser.NexusModsUserId == query.NexusModsUserId && x.NexusModsMod.NexusModsModId == query.NexusModsModId && x.LinkType == NexusModsUserToNexusModsModLinkType.ByOwner)
             .ExecuteDeleteAsync();
         return APIResponse("Disallowed successful!");
     }

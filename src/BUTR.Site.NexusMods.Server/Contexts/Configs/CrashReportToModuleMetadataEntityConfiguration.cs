@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,10 +12,10 @@ public class CrashReportToModuleMetadataEntityConfiguration : BaseEntityConfigur
 
     protected override void ConfigureModel(EntityTypeBuilder<CrashReportToModuleMetadataEntity> builder)
     {
-        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_module_info_id").ValueGeneratedNever();
-        builder.Property<string>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id");
-        builder.Property(x => x.Version).HasColumnName("version");
-        builder.Property<int?>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_id").IsRequired(false);
+        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_module_info_id").HasConversion<CrashReportId.EfCoreValueConverter>().ValueGeneratedNever();
+        builder.Property<ModuleId>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id").HasConversion<ModuleId.EfCoreValueConverter>();
+        builder.Property(x => x.Version).HasConversion<ModuleVersion.EfCoreValueConverter>().HasColumnName("version");
+        builder.Property<NexusModsModId?>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_id").HasConversion<NexusModsModId.EfCoreValueConverter>().IsRequired(false);
         builder.Property(x => x.IsInvolved).HasColumnName("is_involved");
         builder.ToTable("crash_report_module_info", "crashreport").HasKey(nameof(CrashReportToModuleMetadataEntity.TenantId), nameof(CrashReportToModuleMetadataEntity.CrashReportId), nameof(ModuleEntity.ModuleId));
 

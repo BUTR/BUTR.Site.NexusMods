@@ -1,17 +1,14 @@
-﻿using BUTR.Site.NexusMods.Server.Models.API;
-using BUTR.Site.NexusMods.Shared;
-
-using System;
+﻿using System;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database;
 
 public sealed record NexusModsUserToCrashReportEntity : IEntityWithTenant
 {
-    public required Tenant TenantId { get; init; }
+    public required TenantId TenantId { get; init; }
 
     public required NexusModsUserEntity NexusModsUser { get; init; }
 
-    public required Guid CrashReportId { get; init; }
+    public required CrashReportId CrashReportId { get; init; }
     public CrashReportEntity? ToCrashReport { get; init; }
 
     public required CrashReportStatus Status { get; init; }

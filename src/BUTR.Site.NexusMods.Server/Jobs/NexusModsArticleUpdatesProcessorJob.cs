@@ -3,8 +3,6 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Services;
-using BUTR.Site.NexusMods.Shared;
-using BUTR.Site.NexusMods.Shared.Extensions;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -34,10 +32,9 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
     public async Task Execute(IJobExecutionContext context)
     {
         var ct = context.CancellationToken;
-        var tenants = Enum.GetValues<Tenant>();
 
         var processed = 0;
-        foreach (var tenant in tenants)
+        foreach (var tenant in TenantId.Values)
         {
             await using var scope = _serviceScopeFactory.CreateAsyncScope();
 
@@ -51,9 +48,9 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
         context.SetIsSuccess(true);
     }
 
-    private static async Task<int> HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    private static async Task<int> HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
     {
-        const int notFoundArticlesTreshold = 20;
+        const int notFoundArticlesTreshold = 50;
 
         var client = serviceProvider.GetRequiredService<NexusModsClient>();
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
@@ -61,15 +58,17 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
         var entityFactory = dbContextWrite.CreateEntityFactory();
         await using var _ = dbContextWrite.CreateSaveScope();
 
-        var gameDomain = tenant.GameDomain();
+        var gameDomain = tenant.ToGameDomain();
 
         var articles = new List<NexusModsArticleEntity>();
 
-        var articleId = dbContextRead.NexusModsArticles.OrderBy(x => x.NexusModsArticleId).LastOrDefault()?.NexusModsArticleId ?? 0;
+        var articleIdRaw = dbContextRead.NexusModsArticles.OrderBy(x => x.NexusModsArticleId).LastOrDefault()?.NexusModsArticleId.Value ?? 0;
         var notFoundArticles = 0;
         var processed = 0;
         while (!ct.IsCancellationRequested)
         {
+            var articleId = NexusModsArticleId.From(articleIdRaw);
+
             var articleDocument = await client.GetArticleAsync(gameDomain, articleId, ct);
             if (articleDocument is null) continue;
 
@@ -78,7 +77,7 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
             if (errorElement is not null)
             {
                 notFoundArticles++;
-                articleId++;
+                articleIdRaw++;
                 if (notFoundArticles >= notFoundArticlesTreshold)
                 {
                     break;
@@ -95,7 +94,7 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
             var authorUrl = authorElement.GetAttributeValue("href", "0");
             var authorUrlSplit = authorUrl.Split('/', StringSplitOptions.RemoveEmptyEntries);
             var authorIdText = authorUrlSplit.LastOrDefault() ?? string.Empty;
-            var authorId = int.TryParse(authorIdText, out var authorVal) ? authorVal : 0;
+            var authorId = NexusModsUserId.TryParse(authorIdText, out var val) ? val : throw new Exception("Author Id invalid");
             var authorText = authorElement.InnerText;
 
             var fileinfoElement = articleDocument.GetElementbyId("fileinfo");
@@ -109,10 +108,10 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
                 TenantId = tenant,
                 Title = title,
                 NexusModsArticleId = articleId,
-                NexusModsUser = entityFactory.GetOrCreateNexusModsUserWithName(authorId, authorText),
+                NexusModsUser = entityFactory.GetOrCreateNexusModsUserWithName(authorId, NexusModsUserName.From(authorText)),
                 CreateDate = dateTime
             });
-            articleId++;
+            articleIdRaw++;
             processed++;
         }
 

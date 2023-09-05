@@ -9,7 +9,7 @@ public sealed record NexusModsModFilesResponse(
 )
 {
     public sealed record File(
-        [property: JsonPropertyName("file_id")] int Id,
+        [property: JsonPropertyName("file_id")] NexusModsFileId Id,
         [property: JsonPropertyName("name")] string Name,
         [property: JsonPropertyName("version")] string Version,
         [property: JsonPropertyName("file_name")] string FileName,
@@ -20,10 +20,10 @@ public sealed record NexusModsModFilesResponse(
     );
 
     public sealed record FileUpdate(
-        [property: JsonPropertyName("old_file_id")] int OldId,
-        [property: JsonPropertyName("new_file_id")] int NewId,
+        [property: JsonPropertyName("old_file_id")] NexusModsFileId OldId,
+        [property: JsonPropertyName("new_file_id")] NexusModsFileId NewId,
         [property: JsonPropertyName("old_file_name")] string OldName,
         [property: JsonPropertyName("new_file_name")] string NewName,
-        [property: JsonPropertyName("uploaded_timestamp")] long UploadedTimestamp
+        [property: JsonPropertyName("uploaded_timestamp")] ulong UploadedTimestamp
     );
 }

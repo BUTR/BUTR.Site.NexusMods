@@ -1,5 +1,4 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
-using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;

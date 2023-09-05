@@ -17,7 +17,7 @@ public class TenantDelegatingHandler : DelegatingHandler
     {
         var tenant = await _tenantProvider.GetTenantAsync();
 
-        request.Headers.Add("Tenant", ((int) tenant).ToString());
+        request.Headers.Add("Tenant", tenant);
         return await base.SendAsync(request, ct);
     }
 }

@@ -66,7 +66,7 @@ public sealed class Startup
         opt.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         return opt;
     }
-    
+
     private static AsyncRetryPolicy<HttpResponseMessage> GetRetryPolicy()
     {
         var delay = Backoff.DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromSeconds(1), retryCount: 5);
@@ -163,8 +163,6 @@ public sealed class Startup
         services.AddHostedService<QuartzListenerBackgroundService>();
         services.AddQuartz(opt =>
         {
-            opt.UseMicrosoftDependencyInjectionJobFactory();
-
             opt.AddJobListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
             opt.AddTriggerListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
             opt.AddSchedulerListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
@@ -174,31 +172,29 @@ public sealed class Startup
             string AtEveryDay(int hour = 0) => $"0 0 {hour} ? * *";
             string AtEveryHour() => "0 0 * * * ?";
 #if DEBUG
-            // Migration
-            //opt.AddJobAtStartup<CrashReportModIdToVersionProcessorJob>();
-            //opt.AddJobAtStartup<CrashReportMetadataProcessorJob>();
-            //opt.AddJobAtStartup<CrashReportVersionProcessorJob>();
-
-            // Manual
-            //opt.AddJobAtStartup<NexusModsArticleProcessorJob>();
-            opt.AddJobAtStartup<TopExceptionsTypesAnalyzerProcessorJob>();
-            opt.AddJobAtStartup<CrashReportAnalyzerProcessorJob>();
-            opt.AddJobAtStartup<AutocompleteProcessorProcessorJob>();
+            opt.AddJob<CrashReportProcessorJob>();
+            opt.AddJob<CrashReportAnalyzerProcessorJob>();
+            opt.AddJob<TopExceptionsTypesAnalyzerProcessorJob>();
+            opt.AddJob<AutocompleteProcessorProcessorJob>();
+            opt.AddJob<NexusModsModFileProcessorJob>();
+            opt.AddJob<NexusModsModFileUpdatesProcessorJob>();
+            opt.AddJob<NexusModsArticleProcessorJob>();
+            opt.AddJob<NexusModsArticleUpdatesProcessorJob>();
 #else
-                // Hourly
-                opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<AutocompleteProcessorProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<TopExceptionsTypesAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<CrashReportAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
+            // Hourly
+            opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
+            opt.AddJob<AutocompleteProcessorProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
+            opt.AddJob<TopExceptionsTypesAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
+            opt.AddJob<CrashReportAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
 
-                // Daily
-                opt.AddJob<QuartzLogHistoryManagerExecutionLogsJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(00)).InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(00)).InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsArticleUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(12)).InTimeZone(TimeZoneInfo.Utc));
+            // Daily
+            opt.AddJob<QuartzLogHistoryManagerExecutionLogsJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(00)).InTimeZone(TimeZoneInfo.Utc));
+            opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(00)).InTimeZone(TimeZoneInfo.Utc));
+            opt.AddJob<NexusModsArticleUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(12)).InTimeZone(TimeZoneInfo.Utc));
 
-                // Monthly
-                opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(06)).InTimeZone(TimeZoneInfo.Utc));
-                opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(18)).InTimeZone(TimeZoneInfo.Utc));
+            // Monthly
+            //opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(06)).InTimeZone(TimeZoneInfo.Utc));
+            //opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(18)).InTimeZone(TimeZoneInfo.Utc));
 #endif
         });
 
@@ -287,6 +283,7 @@ public sealed class Startup
             opt.DescribeAllParametersInCamelCase();
             opt.SupportNonNullableReferenceTypes();
             opt.OperationFilter<AuthResponsesOperationFilter>();
+            opt.SchemaFilter<VogenSchemaFilter>();
 
             // Really .NET?
             opt.MapType<TimeSpan>(() => new OpenApiSchema { Type = "string", Format = "time-span" });

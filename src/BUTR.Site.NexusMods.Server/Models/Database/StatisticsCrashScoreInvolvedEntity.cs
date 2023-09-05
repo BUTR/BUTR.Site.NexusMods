@@ -1,17 +1,15 @@
-﻿using BUTR.Site.NexusMods.Shared;
-
-using System;
+﻿using System;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database;
 
 public sealed record StatisticsCrashScoreInvolvedEntity : IEntityWithTenant
 {
-    public required Tenant TenantId { get; init; }
+    public required TenantId TenantId { get; init; }
 
     public required Guid StatisticsCrashScoreInvolvedId { get; init; }
-    public required string GameVersion { get; init; }
+    public required GameVersion GameVersion { get; init; }
     public required ModuleEntity Module { get; init; }
-    public required string ModuleVersion { get; init; }
+    public required ModuleVersion ModuleVersion { get; init; }
     public required int InvolvedCount { get; init; }
     public required int NotInvolvedCount { get; init; }
     public required int TotalCount { get; init; }

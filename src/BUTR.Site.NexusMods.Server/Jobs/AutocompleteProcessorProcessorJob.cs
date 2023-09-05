@@ -2,7 +2,6 @@
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
-using BUTR.Site.NexusMods.Shared;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,27 +23,29 @@ public sealed class AutocompleteProcessorProcessorJob : IJob
 {
     private sealed record AutocompleteEntry(string Name, Func<IAppDbContextRead, IQueryable<string>> Query);
 
+    /*
     private sealed record GroupingEntry
     {
         public required string Key { get; init; }
         public required string[] Values { get; init; }
     }
     private sealed record AutocompleteGroupingEntry(string Name, Func<IAppDbContextRead, IQueryable<GroupingEntry>> Query);
+    */
 
     private static readonly AutocompleteEntry[] ToAutocomplete =
     {
-        new(GenerateName<CrashReportEntity>(x => x.GameVersion), x => x.CrashReports.Select(y => y.GameVersion)),
-        new(GenerateName<CrashReportToModuleMetadataEntity>(x => x.Module.ModuleId), x => x.CrashReportModuleInfos.Select(y => y.Module.ModuleId)),
-        new(GenerateName<NexusModsArticleEntity>(x => x.NexusModsUser.Name!.Name), x => x.NexusModsArticles.Include(y => y.NexusModsUser).ThenInclude(y => y.Name).Select(y => y.NexusModsUser).Select(x => x.Name).Select(x => x.Name)),
+        new(GenerateName<CrashReportEntity, GameVersion>(x => x.GameVersion), x => x.CrashReports.Select(y => y.GameVersion.Value)),
+        new(GenerateName<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId), x => x.CrashReportModuleInfos.Select(y => y.Module.ModuleId.Value)),
+        new(GenerateName<NexusModsArticleEntity, NexusModsUserName>(x => x.NexusModsUser.Name!.Name), x => x.NexusModsArticles.Include(y => y.NexusModsUser).ThenInclude(y => y.Name).Select(y => y.NexusModsUser).Select(x => x.Name).Select(x => x.Name.Value)),
     };
 
-    private static readonly AutocompleteGroupingEntry[] ToAutocompleteGrouping =
-    {
-        new(GenerateName<CrashReportToModuleMetadataEntity>(x => x.Module.ModuleId),
-            x => x.CrashReportModuleInfos.GroupBy(y => y.Module.ModuleId).Select(y => new GroupingEntry { Key = y.Key, Values = y.Select(z => z.Version).Distinct().ToArray() })),
-    };
+    //private static readonly AutocompleteGroupingEntry[] ToAutocompleteGrouping =
+    //{
+    //    new(GenerateName<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId),
+    //        x => x.CrashReportModuleInfos.GroupBy(y => y.Module.ModuleId).Select(y => new GroupingEntry { Key = y.Key, Values = y.Select(z => z.Version).Distinct().ToArray() })),
+    //};
 
-    public static string GenerateName<TEntity>(Expression<Func<TEntity, string>> property)
+    public static string GenerateName<TEntity, TParameter>(Expression<Func<TEntity, TParameter>> property)
     {
         if (property is not LambdaExpression { Body: MemberExpression { Member: PropertyInfo propertyInfo } }) return string.Empty;
         return $"{propertyInfo.DeclaringType!.Name}.{propertyInfo.Name}";
@@ -62,9 +63,8 @@ public sealed class AutocompleteProcessorProcessorJob : IJob
     public async Task Execute(IJobExecutionContext context)
     {
         var ct = context.CancellationToken;
-        var tenants = Enum.GetValues<Tenant>();
 
-        foreach (var tenant in tenants)
+        foreach (var tenant in TenantId.Values)
         {
             await using var scope = _serviceScopeFactory.CreateAsyncScope();
 
@@ -78,7 +78,7 @@ public sealed class AutocompleteProcessorProcessorJob : IJob
         context.SetIsSuccess(true);
     }
 
-    private static async Task HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    private static async Task HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
     {
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
@@ -93,7 +93,6 @@ public sealed class AutocompleteProcessorProcessorJob : IJob
             await dbContextWrite.Autocompletes.BulkInsertAsync(autocompleteEntry.Query(dbContextRead).Distinct().Select(x => new AutocompleteEntity
             {
                 TenantId = tenant,
-                AutocompleteId = 0,
                 Type = key,
                 Value = x,
             }), ct);

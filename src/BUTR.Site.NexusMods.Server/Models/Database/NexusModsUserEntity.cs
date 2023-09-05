@@ -1,6 +1,4 @@
-﻿using BUTR.Site.NexusMods.Shared;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -11,7 +9,7 @@ namespace BUTR.Site.NexusMods.Server.Models.Database;
 /// </summary>
 public sealed record NexusModsUserEntity : IEntity
 {
-    public required int NexusModsUserId { get; init; }
+    public required NexusModsUserId NexusModsUserId { get; init; }
     public NexusModsUserToNameEntity? Name { get; init; }
     public ICollection<NexusModsUserToRoleEntity> ToRoles { get; init; } = new List<NexusModsUserToRoleEntity>();
     public ICollection<NexusModsUserToModuleEntity> ToModules { get; init; } = new List<NexusModsUserToModuleEntity>();
@@ -27,13 +25,13 @@ public sealed record NexusModsUserEntity : IEntity
 
     private NexusModsUserEntity() { }
     [SetsRequiredMembers]
-    private NexusModsUserEntity(int userId, string? name = null, Tenant? tenant = null, string? role = null) : this()
+    private NexusModsUserEntity(NexusModsUserId userId, NexusModsUserName? name = null, TenantId? tenant = null, ApplicationRole? role = null) : this()
     {
         NexusModsUserId = userId;
         Name = name is not null ? new()
         {
             NexusModsUser = this,
-            Name = name,
+            Name = name.Value,
         } : null;
         if (tenant is not null && role is not null)
         {
@@ -41,12 +39,12 @@ public sealed record NexusModsUserEntity : IEntity
             {
                 NexusModsUser = this,
                 TenantId = tenant.Value,
-                Role = role,
+                Role = role.Value,
             });
         }
     }
 
-    public static NexusModsUserEntity Create(int userId) => new(userId);
-    public static NexusModsUserEntity CreateWithName(int userId, string name) => new(userId, name: name);
-    public static NexusModsUserEntity CreateWithRole(int userId, Tenant tenant, string role) => new(userId, tenant: tenant, role: role);
+    public static NexusModsUserEntity Create(NexusModsUserId userId) => new(userId);
+    public static NexusModsUserEntity CreateWithName(NexusModsUserId userId, NexusModsUserName name) => new(userId, name: name);
+    public static NexusModsUserEntity CreateWithRole(NexusModsUserId userId, TenantId tenant, ApplicationRole role) => new(userId, tenant: tenant, role: role);
 }

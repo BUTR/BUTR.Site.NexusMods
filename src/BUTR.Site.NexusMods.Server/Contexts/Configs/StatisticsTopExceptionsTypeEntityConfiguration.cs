@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,7 +12,7 @@ public class StatisticsTopExceptionsTypeEntityConfiguration : BaseEntityConfigur
 
     protected override void ConfigureModel(EntityTypeBuilder<StatisticsTopExceptionsTypeEntity> builder)
     {
-        builder.Property<string>(nameof(ExceptionTypeEntity.ExceptionTypeId)).HasColumnName("top_exceptions_type_id").ValueGeneratedNever();
+        builder.Property<ExceptionTypeId>(nameof(ExceptionTypeEntity.ExceptionTypeId)).HasColumnName("top_exceptions_type_id").HasConversion<ExceptionTypeId.EfCoreValueConverter>().ValueGeneratedNever();
         builder.Property(x => x.ExceptionCount).HasColumnName("count");
         builder.ToTable("top_exceptions_type", "statistics").HasKey(nameof(StatisticsTopExceptionsTypeEntity.TenantId), nameof(ExceptionTypeEntity.ExceptionTypeId));
 

@@ -11,7 +11,7 @@ namespace BUTR.Site.NexusMods.Server.Extensions;
 
 public static class AppDbContextExtensions
 {
-    public static IQueryable<string> AutocompleteStartsWith<TEntity>(this IAppDbContextRead dbContext, Expression<Func<TEntity, string>> property, string value)
+    public static IQueryable<string> AutocompleteStartsWith<TEntity, TParameter>(this IAppDbContextRead dbContext, Expression<Func<TEntity, TParameter>> property, TParameter value)
     {
         var key = AutocompleteProcessorProcessorJob.GenerateName(property);
         return dbContext.Autocompletes

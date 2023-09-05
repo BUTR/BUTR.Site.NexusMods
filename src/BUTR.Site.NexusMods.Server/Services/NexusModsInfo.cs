@@ -1,4 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 using BUTR.Site.NexusMods.Server.Utils;
 
@@ -45,7 +46,7 @@ public class NexusModsInfo
     }
 
 
-    public async IAsyncEnumerable<string> GetModIdsAsync(string gameDomain, int modId, string apiKey, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<ModuleId> GetModIdsAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, NexusModsApiKey apiKey, [EnumeratorCancellation] CancellationToken ct)
     {
         const int DefaultBufferSize = 1024 * 16;
         const int LargeBufferSize = 1024 * 1024 * 5;
@@ -69,7 +70,7 @@ public class NexusModsInfo
                 using var reader = ReaderExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
                 if (reader is null) throw new InvalidOperationException($"Failed to get Reader for file '{fileInfo.FileName}'");
                 await foreach (var id in GetModIdsFromReaderAsync(reader).WithCancellation(ct))
-                    yield return id;
+                    yield return ModuleId.From(id);
                 continue;
             }
 
@@ -80,7 +81,7 @@ public class NexusModsInfo
                 httpStream.SetBufferSize(LargeBufferSize);
 
             await foreach (var id in GetModIdsFromArchiveAsync(archive).WithCancellation(ct))
-                yield return id;
+                yield return ModuleId.From(id);
         }
     }
 

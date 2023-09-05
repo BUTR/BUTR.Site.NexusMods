@@ -1,4 +1,4 @@
-﻿using Aragas.Extensions.Options.FluentValidation.Extensions;
+﻿using BUTR.Site.NexusMods.Server.Models;
 
 using FluentValidation;
 
@@ -16,5 +16,5 @@ public sealed class NexusModsOptionsValidator : AbstractValidator<NexusModsOptio
 
 public sealed record NexusModsOptions
 {
-    public required string ApiKey { get; init; }
+    public required NexusModsApiKey ApiKey { get; init; }
 }

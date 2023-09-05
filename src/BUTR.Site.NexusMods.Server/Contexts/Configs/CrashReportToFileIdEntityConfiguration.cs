@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,8 +12,8 @@ public class CrashReportToFileIdEntityConfiguration : BaseEntityConfigurationWit
 
     protected override void ConfigureModel(EntityTypeBuilder<CrashReportToFileIdEntity> builder)
     {
-        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_file_id").ValueGeneratedNever();
-        builder.Property(x => x.FileId).HasColumnName("file_id");
+        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_file_id").HasConversion<CrashReportId.EfCoreValueConverter>().ValueGeneratedNever();
+        builder.Property(x => x.FileId).HasColumnName("file_id").HasConversion<CrashReportFileId.EfCoreValueConverter>();
         builder.ToTable("crash_report_file", "crashreport").HasKey(x => new { x.TenantId, x.CrashReportId });
 
         builder.HasOne(x => x.ToCrashReport)

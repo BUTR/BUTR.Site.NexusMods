@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,9 +12,9 @@ public class NexusModsUserToRoleEntityConfiguration : BaseEntityConfigurationWit
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToRoleEntity> builder)
     {
-        builder.Property<int>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_role_id").ValueGeneratedNever();
-        builder.Property(x => x.Role).HasColumnName("role");
-        builder.Property(x => x.TenantId).HasColumnName("tenant");
+        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_role_id").HasConversion<NexusModsUserId.EfCoreValueConverter>().ValueGeneratedNever();
+        builder.Property(x => x.Role).HasColumnName("role").HasConversion<ApplicationRole.EfCoreValueConverter>();
+        builder.Property(x => x.TenantId).HasColumnName("tenant").HasConversion<TenantId.EfCoreValueConverter>();
         builder.ToTable("nexusmods_user_role", "nexusmods_user").HasKey(nameof(NexusModsUserToRoleEntity.TenantId), nameof(NexusModsUserEntity.NexusModsUserId));
 
         builder.HasOne(x => x.NexusModsUser)

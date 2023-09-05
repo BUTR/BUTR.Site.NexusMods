@@ -1,6 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
-using BUTR.Site.NexusMods.Shared;
 
 using Microsoft.AspNetCore.Http;
 
@@ -15,7 +14,7 @@ public class TenantContextAccessor : ITenantContextAccessor
 {
     private static readonly AsyncLocal<TenantContextHolder> _tenantContextCurrent = new();
 
-    public Tenant? Current
+    public TenantId Current
     {
         get
         {
@@ -25,22 +24,19 @@ public class TenantContextAccessor : ITenantContextAccessor
             if (_httpContextAccessor?.HttpContext?.GetTenant() is { } httpContextTenant)
                 return httpContextTenant;
 
-            return Tenant.Bannerlord;
+            return TenantId.None;
         }
         set
         {
             if (_tenantContextCurrent.Value is { } holder)
             {
-                // Clear current HttpContext trapped in the AsyncLocals, as its done.
+                // Clear current TenantId trapped in the AsyncLocals, as its done.
                 holder.Tenant = null;
             }
 
-            if (value != null)
-            {
-                // Use an object indirection to hold the HttpContext in the AsyncLocal,
-                // so it can be cleared in all ExecutionContexts when its cleared.
-                _tenantContextCurrent.Value = new TenantContextHolder { Tenant = value };
-            }
+            // Use an object indirection to hold the TenantId in the AsyncLocal,
+            // so it can be cleared in all ExecutionContexts when its cleared.
+            _tenantContextCurrent.Value = new TenantContextHolder { Tenant = value };
         }
     }
 
@@ -53,6 +49,6 @@ public class TenantContextAccessor : ITenantContextAccessor
 
     private sealed class TenantContextHolder
     {
-        public Tenant? Tenant;
+        public TenantId? Tenant;
     }
 }

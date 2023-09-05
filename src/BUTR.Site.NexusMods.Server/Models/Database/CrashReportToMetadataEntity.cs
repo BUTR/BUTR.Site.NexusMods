@@ -1,14 +1,12 @@
-﻿using BUTR.Site.NexusMods.Shared;
-
-using System;
+﻿using System;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database;
 
 public sealed record CrashReportToMetadataEntity : IEntityWithTenant
 {
-    public required Tenant TenantId { get; init; }
+    public required TenantId TenantId { get; init; }
 
-    public required Guid CrashReportId { get; init; }
+    public required CrashReportId CrashReportId { get; init; }
     public CrashReportEntity? ToCrashReport { get; init; }
 
     public required string? LauncherType { get; init; }

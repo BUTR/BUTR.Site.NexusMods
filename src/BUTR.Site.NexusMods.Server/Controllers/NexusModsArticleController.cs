@@ -20,7 +20,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public class NexusModsArticleController : ControllerExtended
 {
-    public record NexusModsArticleModel(int NexusModsArticleId, string Title, int NexusModsUserId, string Author, DateTimeOffset CreateDate);
+    public record NexusModsArticleModel(NexusModsArticleId NexusModsArticleId, string Title, NexusModsUserId NexusModsUserId, NexusModsUserName Author, DateTimeOffset CreateDate);
 
 
     private readonly ILogger _logger;
@@ -44,7 +44,7 @@ public class NexusModsArticleController : ControllerExtended
                 NexusModsArticleId = x.NexusModsArticleId,
                 Title = x.Title,
                 NexusModsUserId = x.NexusModsUser.NexusModsUserId,
-                Author = x.NexusModsUser.Name == null ? string.Empty : x.NexusModsUser.Name.Name,
+                Author = x.NexusModsUser.Name != null ? x.NexusModsUser.Name.Name : NexusModsUserName.Empty,
                 CreateDate = x.CreateDate,
             })
             .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsArticleEntity.NexusModsArticleId), Type = SortingType.Ascending }, ct);
@@ -61,8 +61,8 @@ public class NexusModsArticleController : ControllerExtended
             .ThenInclude(x => x.Name)
             .Select(x => x.NexusModsUser)
             .Select(x => x.Name!)
-            .Where(x => EF.Functions.ILike(x.Name, $"{authorName}%"))
-            .Select(x => x.Name)
+            .Where(x => EF.Functions.ILike(x.Name.Value, $"{authorName}%"))
+            .Select(x => x.Name.Value)
             .Distinct();
 
         return APIResponse(moduleIds);

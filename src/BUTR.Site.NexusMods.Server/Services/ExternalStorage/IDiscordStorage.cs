@@ -1,5 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Models;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -14,8 +14,8 @@ public sealed record DiscordOAuthTokens(string AccessToken, string RefreshToken,
 public interface IDiscordStorage
 {
     Task<DiscordOAuthTokens?> GetAsync(string userId);
-    Task<bool> UpsertAsync(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens);
-    Task<bool> RemoveAsync(int nexusModsUserId, string discordUserId);
+    Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens);
+    Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string discordUserId);
 }
 
 public sealed class DatabaseDiscordStorage : IDiscordStorage
@@ -36,7 +36,7 @@ public sealed class DatabaseDiscordStorage : IDiscordStorage
         return new(entity.AccessToken, entity.RefreshToken, entity.AccessTokenExpiresAt);
     }
 
-    public async Task<bool> UpsertAsync(int nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
+    public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
     {
         var entityFactory = _dbContextWrite.CreateEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
@@ -49,7 +49,7 @@ public sealed class DatabaseDiscordStorage : IDiscordStorage
         return true;
     }
 
-    public async Task<bool> RemoveAsync(int nexusModsUserId, string discordUserId)
+    public async Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string discordUserId)
     {
         await _dbContextWrite.NexusModsUserToDiscord.Where(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.DiscordUserId == discordUserId).ExecuteDeleteAsync();
         await _dbContextWrite.IntegrationDiscordTokens.Where(x => x.DiscordUserId == discordUserId).ExecuteDeleteAsync();

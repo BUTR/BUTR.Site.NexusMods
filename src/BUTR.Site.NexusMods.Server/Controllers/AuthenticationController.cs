@@ -50,13 +50,13 @@ public sealed class AuthenticationController : ControllerExtended
     [Produces("application/json")]
     [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(APIResponse<string>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> AuthenticateAsync([FromHeader] string? apiKey, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> AuthenticateAsync([FromHeader] NexusModsApiKey apiKey, CancellationToken ct)
     {
         var tenant = HttpContext.GetTenant();
-        if (tenant is null)
+        if (tenant == TenantId.None)
             return StatusCode(StatusCodes.Status400BadRequest);
 
-        if (apiKey is null || await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey, ct) is not { } validateResponse)
+        if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey, ct) is not { } validateResponse)
             return StatusCode(StatusCodes.Status401Unauthorized);
 
         var userEntity = await _dbContextRead.NexusModsUsers
@@ -73,7 +73,7 @@ public sealed class AuthenticationController : ControllerExtended
             .ThenInclude(x => x.ToOwnedTenants)
             .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.NexusModsUserId == validateResponse.UserId, ct);
-        var role = userEntity?.ToRoles.FirstOrDefault(x => x.TenantId == tenant.Value)?.Role ?? ApplicationRoles.User;
+        var role = userEntity?.ToRoles.FirstOrDefault(x => x.TenantId == tenant)?.Role ?? ApplicationRole.User;
 
         var typedMetadata = UserTypedMetadata.FromUser(userEntity);
         var metadata = new Dictionary<string, string>
@@ -82,17 +82,17 @@ public sealed class AuthenticationController : ControllerExtended
         };
         var generatedToken = await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
         {
-            UserId = validateResponse.UserId,
-            Name = validateResponse.Name,
-            EMail = validateResponse.Email,
+            UserId = (uint) validateResponse.UserId.Value,
+            Name = validateResponse.Name.Value,
+            EMail = validateResponse.Email.Value,
             ProfileUrl = validateResponse.ProfileUrl,
             IsSupporter = validateResponse.IsSupporter,
             IsPremium = validateResponse.IsPremium,
-            APIKey = validateResponse.Key,
-            Role = role,
+            APIKey = validateResponse.Key.Value,
+            Role = role.Value,
             Metadata = metadata
         });
-        return APIResponse(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role, metadata)));
+        return APIResponse(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(validateResponse, role, metadata)));
     }
 
     [HttpGet("Validate"), AllowAnonymous]
@@ -102,10 +102,11 @@ public sealed class AuthenticationController : ControllerExtended
     public async Task<ActionResult<APIResponse<JwtTokenResponse?>>> ValidateAsync(CancellationToken ct)
     {
         var tenant = HttpContext.GetTenant();
-        if (tenant is null)
+        if (tenant == TenantId.None)
             return StatusCode(StatusCodes.Status400BadRequest);
 
-        if (HttpContext.GetAPIKey() is not { } apikey || string.IsNullOrEmpty(apikey) || await _nexusModsAPIClient.ValidateAPIKeyAsync(apikey, ct) is not { } validateResponse)
+        var apiKey = HttpContext.GetAPIKey();
+        if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey, ct) is not { } validateResponse)
             return StatusCode(StatusCodes.Status401Unauthorized);
 
         var userEntity = await _dbContextRead.NexusModsUsers
@@ -123,7 +124,7 @@ public sealed class AuthenticationController : ControllerExtended
             .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.NexusModsUserId == validateResponse.UserId, ct);
 
-        var role = userEntity?.ToRoles.FirstOrDefault(x => x.TenantId == tenant)?.Role ?? ApplicationRoles.User;
+        var role = userEntity?.ToRoles.FirstOrDefault(x => x.TenantId == tenant)?.Role ?? ApplicationRole.User;
 
         var typedMetadata = UserTypedMetadata.FromUser(userEntity);
         var metadata = new Dictionary<string, string>
@@ -138,17 +139,17 @@ public sealed class AuthenticationController : ControllerExtended
         {
             var generatedToken = await _tokenGenerator.GenerateTokenAsync(new ButrNexusModsUserInfo
             {
-                UserId = validateResponse.UserId,
-                Name = validateResponse.Name,
-                EMail = validateResponse.Email,
+                UserId = (uint) validateResponse.UserId.Value,
+                Name = validateResponse.Name.Value,
+                EMail = validateResponse.Email.Value,
                 ProfileUrl = validateResponse.ProfileUrl,
                 IsSupporter = validateResponse.IsSupporter,
                 IsPremium = validateResponse.IsPremium,
-                APIKey = validateResponse.Key,
-                Role = role,
+                APIKey = validateResponse.Key.Value,
+                Role = role.Value,
                 Metadata = metadata
             });
-            return APIResponse(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(role, metadata)));
+            return APIResponse(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(validateResponse, role, metadata)));
         }
 
         var token = Request.Headers["Authorization"].ToString().Replace(ButrNexusModsAuthSchemeConstants.AuthScheme, "").Trim();

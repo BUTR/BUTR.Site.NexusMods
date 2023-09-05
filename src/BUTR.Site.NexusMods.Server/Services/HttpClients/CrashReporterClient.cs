@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -21,11 +20,11 @@ public sealed class CrashReporterClient
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
 
-    public async Task<string> GetCrashReportAsync(string id, CancellationToken ct) => await _httpClient.GetStringAsync($"{id}.html", ct);
+    public async Task<string> GetCrashReportAsync(CrashReportFileId id, CancellationToken ct) => await _httpClient.GetStringAsync($"{id}.html", ct);
 
-    public async Task<HashSet<string>> GetCrashReportNamesAsync(CancellationToken ct) => await _httpClient.GetFromJsonAsync<HashSet<string>>("getallfilenames", ct) ?? new HashSet<string>();
+    public async Task<HashSet<CrashReportFileId>> GetCrashReportNamesAsync(CancellationToken ct) => await _httpClient.GetFromJsonAsync<HashSet<CrashReportFileId>>("getallfilenames", ct) ?? new HashSet<CrashReportFileId>();
 
-    public async IAsyncEnumerable<FileIdDate?> GetCrashReportDatesAsync(IEnumerable<string> filenames, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<FileIdDate?> GetCrashReportDatesAsync(IEnumerable<CrashReportFileId> filenames, [EnumeratorCancellation] CancellationToken ct)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "getfilenamedates") { Content = JsonContent.Create(filenames) };
         var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);

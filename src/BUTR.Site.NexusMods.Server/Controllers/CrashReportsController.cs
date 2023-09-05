@@ -27,37 +27,37 @@ public sealed class CrashReportsController : ControllerExtended
 {
     public sealed record CrashReportModel
     {
-        public required Guid Id { get; init; }
-        public required int Version { get; init; }
-        public required string GameVersion { get; init; }
-        public required string ExceptionType { get; init; }
+        public required CrashReportId Id { get; init; }
+        public required CrashReportVersion Version { get; init; }
+        public required GameVersion GameVersion { get; init; }
+        public required ExceptionTypeId ExceptionType { get; init; }
         public required string Exception { get; init; }
         public required DateTime Date { get; init; }
-        public required string Url { get; init; }
-        public required ImmutableArray<string> InvolvedModules { get; init; }
+        public required CrashReportUrl Url { get; init; }
+        public required ImmutableArray<ModuleId> InvolvedModules { get; init; }
         public CrashReportStatus Status { get; init; } = CrashReportStatus.New;
         public string Comment { get; init; } = string.Empty;
     }
 
     private sealed record ModuleIdToVersionView
     {
-        public required string ModuleId { get; init; }
-        public required string Version { get; init; }
+        public required ModuleId ModuleId { get; init; }
+        public required ModuleVersion Version { get; init; }
     }
     private sealed record UserCrashReportView
     {
-        public required Guid Id { get; init; }
-        public required int Version { get; init; }
-        public required string GameVersion { get; init; }
-        public required string ExceptionType { get; init; }
+        public required CrashReportId Id { get; init; }
+        public required CrashReportVersion Version { get; init; }
+        public required GameVersion GameVersion { get; init; }
+        public required ExceptionTypeId ExceptionType { get; init; }
         public required string Exception { get; init; }
         public required DateTime CreatedAt { get; init; }
-        public required string[] ModuleIds { get; init; }
+        public required ModuleId[] ModuleIds { get; init; }
         public required ModuleIdToVersionView[] ModuleIdToVersion { get; init; }
-        public required string? TopInvolvedModuleId { get; init; }
-        public required string[] InvolvedModuleIds { get; init; }
-        public required int[] NexusModsModIds { get; init; }
-        public required string Url { get; init; }
+        public required ModuleId? TopInvolvedModuleId { get; init; }
+        public required ModuleId[] InvolvedModuleIds { get; init; }
+        public required NexusModsModId[] NexusModsModIds { get; init; }
+        public required CrashReportUrl Url { get; init; }
 
         public required CrashReportStatus Status { get; init; }
         public required string? Comment { get; init; }
@@ -118,7 +118,7 @@ public sealed class CrashReportsController : ControllerExtended
                     Url = x.Url,
                     ModuleIds = x.ModuleInfos.Select(y => y.Module).Select(y => y.ModuleId).ToArray(),
                     ModuleIdToVersion = x.ModuleInfos.Select(y =>  new ModuleIdToVersionView { ModuleId = y.Module.ModuleId, Version = y.Version }).ToArray(),
-                    TopInvolvedModuleId = x.ModuleInfos.Where(z => z.IsInvolved).Select(y => y.Module).Select(y => y.ModuleId).FirstOrDefault(),
+                    TopInvolvedModuleId = x.ModuleInfos.Where(z => z.IsInvolved).Select(y => y.Module).Select(y => y.ModuleId).Cast<ModuleId?>().FirstOrDefault(),
                     InvolvedModuleIds = x.ModuleInfos.Where(z => z.IsInvolved).Select(y => y.Module).Select(y => y.ModuleId).ToArray(),
                     NexusModsModIds = x.ModuleInfos.Select(y => y.NexusModsMod).Where(y => y != null).Select(y => y!.NexusModsModId).ToArray(),
                     Status = x.ToUsers.Where(y => y.NexusModsUser.NexusModsUserId == userId).Select(y => y.Status).FirstOrDefault(),
@@ -171,9 +171,9 @@ public sealed class CrashReportsController : ControllerExtended
 
     [HttpGet("Autocomplete")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] string modId)
+    public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] ModuleId modId)
     {
-        return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportToModuleMetadataEntity>(x => x.Module.ModuleId, modId));
+        return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId, modId));
     }
 
     [HttpPost("Update")]
@@ -185,11 +185,11 @@ public sealed class CrashReportsController : ControllerExtended
 
         var userId = HttpContext.GetUserId();
         var tenant = HttpContext.GetTenant();
-        if (tenant is null) return BadRequest();
+        if (tenant == TenantId.None) return BadRequest();
 
         var entity = new NexusModsUserToCrashReportEntity()
         {
-            TenantId = tenant.Value,
+            TenantId = tenant,
             NexusModsUser = entityFactory.GetOrCreateNexusModsUser(userId),
             CrashReportId = updatedCrashReport.Id,
             Status = updatedCrashReport.Status,

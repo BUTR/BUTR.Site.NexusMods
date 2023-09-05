@@ -3,6 +3,7 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
 
 using System;
@@ -34,6 +35,7 @@ public class BaseAppDbContext : DbContext
     public required DbSet<CrashReportIgnoredFileEntity> CrashReportIgnoredFileIds { get; set; }
 
     public required DbSet<NexusModsUserEntity> NexusModsUsers { get; set; }
+    public required DbSet<NexusModsUserToNameEntity> NexusModsUserToName { get; set; }
     public required DbSet<NexusModsUserToCrashReportEntity> NexusModsUserToCrashReports { get; set; }
     public required DbSet<NexusModsUserToNexusModsModEntity> NexusModsUserToNexusModsMods { get; set; }
     public required DbSet<NexusModsUserToModuleEntity> NexusModsUserToModules { get; set; }
@@ -126,6 +128,8 @@ public class BaseAppDbContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
+            optionsBuilder.ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>();
+
             optionsBuilder
                 .UseNpgsql(IsReadOnly && !string.IsNullOrEmpty(_options.Replica) ? _options.Replica : _options.Main, opt =>
                 {

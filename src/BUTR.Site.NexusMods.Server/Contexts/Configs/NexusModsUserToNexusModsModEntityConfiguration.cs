@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,8 +12,8 @@ public class NexusModsUserToNexusModsModEntityConfiguration : BaseEntityConfigur
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToNexusModsModEntity> builder)
     {
-        builder.Property<int>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_nexusmods_mod_id");
-        builder.Property<int>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_id");
+        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_nexusmods_mod_id").HasConversion<NexusModsUserId.EfCoreValueConverter>();
+        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_id").HasConversion<NexusModsModId.EfCoreValueConverter>();
         builder.Property(x => x.LinkType).HasColumnName("nexusmods_user_nexusmods_mod_link_type_id");
         builder.ToTable("nexusmods_user_nexusmods_mod", "nexusmods_user").HasKey(nameof(NexusModsUserToNexusModsModEntity.TenantId), nameof(NexusModsUserEntity.NexusModsUserId), nameof(NexusModsModEntity.NexusModsModId), nameof(NexusModsUserToNexusModsModEntity.LinkType));
 

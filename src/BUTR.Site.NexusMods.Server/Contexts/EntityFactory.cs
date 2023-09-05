@@ -1,6 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
-using BUTR.Site.NexusMods.Shared;
 
 using System;
 using System.Collections.Concurrent;
@@ -15,10 +14,11 @@ public sealed class EntityFactory
     private readonly ITenantContextAccessor _tenantContextAccessor;
     private readonly IAppDbContextWrite _dbContextWrite;
 
-    private readonly ConcurrentDictionary<int, NexusModsUserEntity> _nexusModsUsers = new();
-    private readonly ConcurrentDictionary<ushort, NexusModsModEntity> _nexusModsMods = new();
-    private readonly ConcurrentDictionary<string, ModuleEntity> _modules = new();
-    private readonly ConcurrentDictionary<string, ExceptionTypeEntity> _exceptionTypes = new();
+    private readonly ConcurrentDictionary<NexusModsUserId, NexusModsUserEntity> _nexusModsUsers = new();
+    private readonly ConcurrentDictionary<NexusModsUserId, NexusModsUserToNameEntity> _nexusModsUserNames = new();
+    private readonly ConcurrentDictionary<NexusModsModId, NexusModsModEntity> _nexusModsMods = new();
+    private readonly ConcurrentDictionary<ModuleId, ModuleEntity> _modules = new();
+    private readonly ConcurrentDictionary<ExceptionTypeId, ExceptionTypeEntity> _exceptionTypes = new();
     private readonly ConcurrentDictionary<string, NexusModsUserToIntegrationDiscordEntity> _discordUsers = new();
     private readonly ConcurrentDictionary<string, NexusModsUserToIntegrationSteamEntity> _steamUsers = new();
     private readonly ConcurrentDictionary<string, NexusModsUserToIntegrationGOGEntity> _gogUsers = new();
@@ -36,47 +36,57 @@ public sealed class EntityFactory
         _dbContextWrite = dbContextWrite;
     }
 
-    public NexusModsUserEntity GetOrCreateNexusModsUser(int nexusModsUserId)
+    public NexusModsUserEntity GetOrCreateNexusModsUser(NexusModsUserId nexusModsUserId)
     {
         return _nexusModsUsers.GetOrAdd(nexusModsUserId, ValueFactory);
 
-        static NexusModsUserEntity ValueFactory(int id) => NexusModsUserEntity.Create(id);
+        static NexusModsUserEntity ValueFactory(NexusModsUserId id) => NexusModsUserEntity.Create(id);
     }
 
-    public NexusModsUserToIntegrationSteamEntity GetOrCreateNexusModsUserSteam(int nexusModsUserId, string steamUserId)
+    public NexusModsUserEntity GetOrCreateNexusModsUserWithName(NexusModsUserId nexusModsUserId, NexusModsUserName nexusModsUserName)
+    {
+        var user = _nexusModsUsers.GetOrAdd(nexusModsUserId, ValueFactory, nexusModsUserName);
+        _ = _nexusModsUserNames.GetOrAdd(nexusModsUserId, ValueFactory2, user);
+        return user;
+
+        static NexusModsUserEntity ValueFactory(NexusModsUserId id, NexusModsUserName name) => NexusModsUserEntity.CreateWithName(id, name);
+        static NexusModsUserToNameEntity ValueFactory2(NexusModsUserId id, NexusModsUserEntity user) => user.Name!;
+    }
+
+    public NexusModsUserToIntegrationSteamEntity GetOrCreateNexusModsUserSteam(NexusModsUserId nexusModsUserId, string steamUserId)
     {
         return _steamUsers.GetOrAdd(steamUserId, ValueFactory, nexusModsUserId);
 
-        NexusModsUserToIntegrationSteamEntity ValueFactory(string steamUserId_, int nexusModsUserId_) => new()
+        NexusModsUserToIntegrationSteamEntity ValueFactory(string steamUserId_, NexusModsUserId nexusModsUserId_) => new()
         {
             NexusModsUser = GetOrCreateNexusModsUser(nexusModsUserId_),
             SteamUserId = steamUserId_,
         };
     }
 
-    public NexusModsUserToIntegrationDiscordEntity GetOrCreateNexusModsUserDiscord(int nexusModsUserId, string discordUserId)
+    public NexusModsUserToIntegrationDiscordEntity GetOrCreateNexusModsUserDiscord(NexusModsUserId nexusModsUserId, string discordUserId)
     {
         return _discordUsers.GetOrAdd(discordUserId, ValueFactory, nexusModsUserId);
 
-        NexusModsUserToIntegrationDiscordEntity ValueFactory(string discordUserId_, int nexusModsUserId_) => new()
+        NexusModsUserToIntegrationDiscordEntity ValueFactory(string discordUserId_, NexusModsUserId nexusModsUserId_) => new()
         {
             NexusModsUser = GetOrCreateNexusModsUser(nexusModsUserId_),
             DiscordUserId = discordUserId_,
         };
     }
 
-    public NexusModsUserToIntegrationGOGEntity GetOrCreateNexusModsUserGOG(int nexusModsUserId, string gogUserId)
+    public NexusModsUserToIntegrationGOGEntity GetOrCreateNexusModsUserGOG(NexusModsUserId nexusModsUserId, string gogUserId)
     {
         return _gogUsers.GetOrAdd(gogUserId, ValueFactory, nexusModsUserId);
 
-        NexusModsUserToIntegrationGOGEntity ValueFactory(string gogUserId_, int nexusModsUserId_) => new()
+        NexusModsUserToIntegrationGOGEntity ValueFactory(string gogUserId_, NexusModsUserId nexusModsUserId_) => new()
         {
             NexusModsUser = GetOrCreateNexusModsUser(nexusModsUserId_),
             GOGUserId = gogUserId_,
         };
     }
 
-    public IntegrationDiscordTokensEntity GetOrCreateIntegrationDiscordTokens(int nexusModsUserId, string discordUserId, string accessToken, string refreshToken, DateTimeOffset accessTokenExpiresAt)
+    public IntegrationDiscordTokensEntity GetOrCreateIntegrationDiscordTokens(NexusModsUserId nexusModsUserId, string discordUserId, string accessToken, string refreshToken, DateTimeOffset accessTokenExpiresAt)
     {
         return _discordTokens.GetOrAdd(discordUserId, ValueFactory);
 
@@ -91,7 +101,7 @@ public sealed class EntityFactory
         };
     }
 
-    public IntegrationGOGTokensEntity GetOrCreateIntegrationGOGTokens(int nexusModsUserId, string gogUserId, string accessToken, string refreshToken, DateTimeOffset accessTokenExpiresAt)
+    public IntegrationGOGTokensEntity GetOrCreateIntegrationGOGTokens(NexusModsUserId nexusModsUserId, string gogUserId, string accessToken, string refreshToken, DateTimeOffset accessTokenExpiresAt)
     {
         return _gogTokens.GetOrAdd(gogUserId, ValueFactory);
 
@@ -106,7 +116,7 @@ public sealed class EntityFactory
         };
     }
 
-    public IntegrationSteamTokensEntity GetOrCreateIntegrationSteamTokens(int nexusModsUserId, string steamUserId, Dictionary<string, string> data)
+    public IntegrationSteamTokensEntity GetOrCreateIntegrationSteamTokens(NexusModsUserId nexusModsUserId, string steamUserId, Dictionary<string, string> data)
     {
         return _steamTokens.GetOrAdd(steamUserId, ValueFactory);
 
@@ -119,46 +129,35 @@ public sealed class EntityFactory
         };
     }
 
-    public NexusModsUserEntity GetOrCreateNexusModsUserWithName(int nexusModsUserId, string nexusModsUserName)
-    {
-        return _nexusModsUsers.GetOrAdd(nexusModsUserId, ValueFactory, nexusModsUserName);
-
-        static NexusModsUserEntity ValueFactory(int id, string name) => NexusModsUserEntity.CreateWithName(id, name);
-    }
-
-    public NexusModsModEntity GetOrCreateNexusModsMod(ushort nexusModsModId)
+    public NexusModsModEntity GetOrCreateNexusModsMod(NexusModsModId nexusModsModId)
     {
         var tenant = _tenantContextAccessor.Current;
-        if (tenant is null) throw new Exception();
-        return _nexusModsMods.GetOrAdd(nexusModsModId, ValueFactory, tenant.Value);
+        return _nexusModsMods.GetOrAdd(nexusModsModId, ValueFactory, tenant);
 
-        static NexusModsModEntity ValueFactory(ushort id, Tenant tenant) => NexusModsModEntity.Create(tenant, id);
+        static NexusModsModEntity ValueFactory(NexusModsModId id, TenantId tenant) => NexusModsModEntity.Create(tenant, id);
     }
 
-    public ModuleEntity GetOrCreateModule(string moduleId)
+    public ModuleEntity GetOrCreateModule(ModuleId moduleId)
     {
         var tenant = _tenantContextAccessor.Current;
-        if (tenant is null) throw new Exception();
-        return _modules.GetOrAdd(moduleId, ValueFactory, tenant.Value);
+        return _modules.GetOrAdd(moduleId, ValueFactory, tenant);
 
-        static ModuleEntity ValueFactory(string id, Tenant tenant) => ModuleEntity.Create(tenant, id);
+        static ModuleEntity ValueFactory(ModuleId id, TenantId tenant) => ModuleEntity.Create(tenant, id);
     }
 
-    public ExceptionTypeEntity GetOrCreateExceptionType(string exception)
+    public ExceptionTypeEntity GetOrCreateExceptionType(ExceptionTypeId exception)
     {
         var tenant = _tenantContextAccessor.Current;
-        if (tenant is null) throw new Exception();
-        return _exceptionTypes.GetOrAdd(ExceptionTypeEntity.Create(tenant.Value, exception).ExceptionTypeId, ValueFactory, tenant.Value);
+        return _exceptionTypes.GetOrAdd(ExceptionTypeEntity.Create(tenant, exception).ExceptionTypeId, ValueFactory, tenant);
 
-        static ExceptionTypeEntity ValueFactory(string id, Tenant tenant) => ExceptionTypeEntity.Create(tenant, id);
+        static ExceptionTypeEntity ValueFactory(ExceptionTypeId id, TenantId tenant) => ExceptionTypeEntity.Create(tenant, id);
     }
     public ExceptionTypeEntity GetOrCreateExceptionTypeFromException(string exception)
     {
         var tenant = _tenantContextAccessor.Current;
-        if (tenant is null) throw new Exception();
-        return _exceptionTypes.GetOrAdd(ExceptionTypeEntity.FromException(tenant.Value, exception).ExceptionTypeId, ValueFactory, tenant.Value);
+        return _exceptionTypes.GetOrAdd(ExceptionTypeEntity.FromException(tenant, exception).ExceptionTypeId, ValueFactory, tenant);
 
-        static ExceptionTypeEntity ValueFactory(string id, Tenant tenant) => ExceptionTypeEntity.Create(tenant, id);
+        static ExceptionTypeEntity ValueFactory(ExceptionTypeId id, TenantId tenant) => ExceptionTypeEntity.Create(tenant, id);
     }
 
     public async Task SaveCreated(CancellationToken ct)
@@ -169,6 +168,7 @@ public sealed class EntityFactory
         try
         {
             if (!_nexusModsUsers.IsEmpty) await _dbContextWrite.NexusModsUsers.BulkMergeAsync(_nexusModsUsers.Values, ct);
+            if (!_nexusModsUserNames.IsEmpty) await _dbContextWrite.NexusModsUserToName.BulkMergeAsync(_nexusModsUserNames.Values, ct);
             if (!_nexusModsMods.IsEmpty) await _dbContextWrite.NexusModsMods.BulkMergeAsync(_nexusModsMods.Values, ct);
             if (!_modules.IsEmpty) await _dbContextWrite.Modules.BulkMergeAsync(_modules.Values, ct);
             if (!_exceptionTypes.IsEmpty) await _dbContextWrite.ExceptionTypes.BulkMergeAsync(_exceptionTypes.Values, ct);

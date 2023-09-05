@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -9,7 +10,7 @@ public class NexusModsUserToIntegrationSteamEntityConfiguration : BaseEntityConf
 {
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToIntegrationSteamEntity> builder)
     {
-        builder.Property<int>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_to_steam_id").ValueGeneratedNever();
+        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_to_steam_id").HasConversion<NexusModsUserId.EfCoreValueConverter>().ValueGeneratedNever();
         builder.Property(x => x.SteamUserId).HasColumnName("steam_user_id");
         builder.ToTable("nexusmods_user_to_integration_steam", "nexusmods_user").HasKey(nameof(NexusModsUserEntity.NexusModsUserId));
 

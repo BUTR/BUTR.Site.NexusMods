@@ -1,7 +1,5 @@
 ﻿using Blazored.LocalStorage;
 
-using BUTR.Site.NexusMods.Shared;
-
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,13 +14,13 @@ public sealed class TenantProvider
         _localStorage = localStorage;
     }
 
-    public async Task<Tenant> GetTenantAsync()
+    public async Task<string> GetTenantAsync()
     {
         if (! await _localStorage.ContainKeyAsync("tenant"))
-            await SetTenantAsync(Tenant.Bannerlord);
+            await SetTenantAsync("1");
 
-        return await _localStorage.GetItemAsync<Tenant>("tenant", CancellationToken.None);
+        return await _localStorage.GetItemAsStringAsync("tenant", CancellationToken.None);
     }
 
-    public async Task SetTenantAsync(Tenant tenant) => await _localStorage.SetItemAsync("tenant", tenant, CancellationToken.None);
+    public async Task SetTenantAsync(string tenant) => await _localStorage.SetItemAsStringAsync("tenant", tenant, CancellationToken.None);
 }

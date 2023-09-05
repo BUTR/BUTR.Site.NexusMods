@@ -5,7 +5,6 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
-using BUTR.Site.NexusMods.Shared;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,14 +39,13 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
     public async Task Execute(IJobExecutionContext context)
     {
         var ct = context.CancellationToken;
-        var tenants = Enum.GetValues<Tenant>();
 
         var processed = 0;
         var exceptions = new List<Exception>();
         var updatesStoredWithinDay = 0;
         var updatedWithinDay = 0;
         var newUpdates = 0;
-        foreach (var tenant in tenants)
+        foreach (var tenant in TenantId.Values)
         {
             await using var scope = _serviceScopeFactory.CreateAsyncScope();
 
@@ -70,8 +68,10 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
         context.SetIsSuccess(exceptions.Count == 0);
     }
 
-    private static async Task<(int Processed, List<Exception> Exceptions, int UpdatesStoredWithinDay, int UpdatedWithinDay, int NewUpdates)> HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    private static async Task<(int Processed, List<Exception> Exceptions, int UpdatesStoredWithinDay, int UpdatedWithinDay, int NewUpdates)> HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
     {
+        var gameDomain = tenant.ToGameDomain();
+
         var info = serviceProvider.GetRequiredService<NexusModsInfo>();
         var options = serviceProvider.GetRequiredService<IOptions<NexusModsOptions>>().Value;
         var client = serviceProvider.GetRequiredService<NexusModsAPIClient>();
@@ -81,7 +81,7 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
         await using var _ = dbContextWrite.CreateSaveScope();
 
         var updatesStoredWithinDay = await dbContextRead.NexusModsModToFileUpdates.Where(x => x.LastCheckedDate > DateTime.UtcNow.AddDays(-1)).ToListAsync(ct);
-        var updatedWithinDay = await client.GetAllModUpdatesAsync("mountandblade2bannerlord", options.ApiKey, ct) ?? Array.Empty<NexusModsUpdatedModsResponse>();
+        var updatedWithinDay = await client.GetAllModUpdatesAsync(gameDomain, options.ApiKey, ct) ?? Array.Empty<NexusModsUpdatedModsResponse>();
         var newUpdates = updatedWithinDay.Where(x =>
         {
             var latestFileUpdateDate = DateTimeOffset.FromUnixTimeSeconds(x.LatestFileUpdateTimestamp).UtcDateTime;
@@ -101,7 +101,7 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
             {
                 if (ct.IsCancellationRequested) break;
 
-                var exposedModIds = await info.GetModIdsAsync("mountandblade2bannerlord", modUpdate.Id, options.ApiKey, ct).Distinct().ToImmutableArrayAsync(ct);
+                var exposedModIds = await info.GetModIdsAsync(gameDomain, modUpdate.Id, options.ApiKey, ct).Distinct().ToImmutableArrayAsync(ct);
                 var lastUpdateTime = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime;
 
                 nexusModsModModuleEntities.AddRange(exposedModIds.Select(x => new NexusModsModToModuleEntity

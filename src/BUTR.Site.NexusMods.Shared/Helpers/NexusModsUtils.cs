@@ -5,7 +5,7 @@ namespace BUTR.Site.NexusMods.Shared.Helpers;
 
 public static class NexusModsUtils
 {
-    public static bool TryParse(string url, [NotNullWhen(true)] out string? gameDomain, out ushort modId)
+    public static bool TryParse(string url, [NotNullWhen(true)] out string? gameDomain, out uint modId)
     {
         gameDomain = default;
         modId = default;
@@ -21,7 +21,7 @@ public static class NexusModsUtils
         if (split.Length != 3)
             return false;
 
-        if (!ushort.TryParse(split[2], out var modIdNumber))
+        if (!uint.TryParse(split[2], out var modIdNumber))
             return false;
 
         gameDomain = split[0];

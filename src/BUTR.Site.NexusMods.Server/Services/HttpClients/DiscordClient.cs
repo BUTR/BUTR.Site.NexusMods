@@ -22,11 +22,23 @@ public sealed record DiscordUserInfoUser(
 public sealed record DiscordUserInfo(
     [property: JsonPropertyName("user")] DiscordUserInfoUser User);
 
+public enum DiscordGlobalMetadataType
+{
+    INTEGER_LESS_THAN_OR_EQUAL = 1,
+    INTEGER_GREATER_THAN_OR_EQUAL = 2,
+    INTEGER_EQUAL = 3,
+    INTEGER_NOT_EQUAL = 4,
+    DATETIME_LESS_THAN_OR_EQUAL = 5,
+    DATETIME_GREATER_THAN_OR_EQUAL = 6,
+    BOOLEAN_EQUAL = 7,
+    BOOLEAN_NOT_EQUAL = 8,
+}
+
 public sealed record DiscordGlobalMetadata(
     [property: JsonPropertyName("key")] string Key,
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("description")] string Description,
-    [property: JsonPropertyName("type")] int Type);
+    [property: JsonPropertyName("type")] DiscordGlobalMetadataType Type);
 
 public sealed class DiscordClient
 {

@@ -1,6 +1,4 @@
-﻿using BUTR.Site.NexusMods.Shared;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -11,9 +9,9 @@ namespace BUTR.Site.NexusMods.Server.Models.Database;
 /// </summary>
 public record NexusModsModEntity : IEntityWithTenant
 {
-    public required Tenant TenantId { get; init; }
+    public required TenantId TenantId { get; init; }
 
-    public required int NexusModsModId { get; init; }
+    public required NexusModsModId NexusModsModId { get; init; }
     public NexusModsModToNameEntity? Name { get; init; }
     public NexusModsModToFileUpdateEntity? FileUpdate { get; init; }
     public ICollection<NexusModsModToModuleEntity> ModuleIds { get; init; } = new List<NexusModsModToModuleEntity>();
@@ -24,17 +22,17 @@ public record NexusModsModEntity : IEntityWithTenant
 
     private NexusModsModEntity() { }
     [SetsRequiredMembers]
-    private NexusModsModEntity(Tenant tenant, ushort modId) : this() => (TenantId,NexusModsModId) = (tenant, modId);
+    private NexusModsModEntity(TenantId tenant, NexusModsModId modId) : this() => (TenantId,NexusModsModId) = (tenant, modId);
     [SetsRequiredMembers]
-    private NexusModsModEntity(Tenant tenant, ushort modId, DateTime lastCheckedDate) : this(tenant, modId) => FileUpdate = new()
+    private NexusModsModEntity(TenantId tenant, NexusModsModId modId, DateTime lastCheckedDate) : this(tenant, modId) => FileUpdate = new()
     {
         TenantId = tenant,
         NexusModsMod = this,
         LastCheckedDate = lastCheckedDate
     };
 
-    public static NexusModsModEntity Create(Tenant tenant, ushort modId) => new(tenant, modId);
-    public static NexusModsModEntity Create(Tenant tenant, ushort modId, DateTime lastCheckedDate) => new(tenant, modId, lastCheckedDate);
+    public static NexusModsModEntity Create(TenantId tenant, NexusModsModId modId) => new(tenant, modId);
+    public static NexusModsModEntity Create(TenantId tenant, NexusModsModId modId, DateTime lastCheckedDate) => new(tenant, modId, lastCheckedDate);
 }
 
 /*

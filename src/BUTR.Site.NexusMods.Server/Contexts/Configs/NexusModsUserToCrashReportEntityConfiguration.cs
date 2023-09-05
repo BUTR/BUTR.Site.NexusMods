@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,8 +12,8 @@ public class NexusModsUserToCrashReportEntityConfiguration : BaseEntityConfigura
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToCrashReportEntity> builder)
     {
-        builder.Property<int>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_crash_report_id").ValueGeneratedNever();
-        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_id");
+        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_crash_report_id").HasConversion<NexusModsUserId.EfCoreValueConverter>().ValueGeneratedNever();
+        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_id").HasConversion<CrashReportId.EfCoreValueConverter>();
         builder.Property(x => x.Status).HasColumnName("status");
         builder.Property(x => x.Comment).HasColumnName("comment");
         builder.ToTable("nexusmods_user_crash_report", "nexusmods_user").HasKey(nameof(NexusModsUserToCrashReportEntity.TenantId), nameof(NexusModsUserEntity.NexusModsUserId), nameof(NexusModsUserToCrashReportEntity.CrashReportId));

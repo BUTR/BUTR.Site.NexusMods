@@ -19,8 +19,8 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public class ExposedModsController : ControllerExtended
 {
-    public record ExposedNexusModsModModel(int NexusModsModId, ExposedModuleModel[] Mods);
-    public record ExposedModuleModel(string ModuleId, DateTimeOffset LastCheckedDate);
+    public record ExposedNexusModsModModel(NexusModsModId NexusModsModId, ExposedModuleModel[] Mods);
+    public record ExposedModuleModel(ModuleId ModuleId, DateTimeOffset LastCheckedDate);
 
 
     private readonly ILogger _logger;
@@ -46,8 +46,8 @@ public class ExposedModsController : ControllerExtended
 
     [HttpGet("Autocomplete")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] string modId)
+    public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] ModuleId modId)
     {
-        return APIResponse(_dbContextRead.AutocompleteStartsWith<NexusModsModToModuleEntity>(x => x.Module.ModuleId, modId));
+        return APIResponse(_dbContextRead.AutocompleteStartsWith<NexusModsModToModuleEntity, ModuleId>(x => x.Module.ModuleId, modId));
     }
 }

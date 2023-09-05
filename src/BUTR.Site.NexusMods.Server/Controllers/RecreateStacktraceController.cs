@@ -1,5 +1,6 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
@@ -37,7 +38,7 @@ public sealed class RecreateStacktraceController : ControllerExtended
 
     [HttpGet("Json/{id}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<IEnumerable<RecreatedStacktrace>?>>> JsonAsync(string id, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<IEnumerable<RecreatedStacktrace>?>>> JsonAsync(CrashReportFileId id, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
             return Unauthorized();
@@ -52,7 +53,7 @@ public sealed class RecreateStacktraceController : ControllerExtended
             return APIResponse(Enumerable.Empty<RecreatedStacktrace>());
         }
         
-        var crashReport = CrashReportParser.Parse(id, crashReportContent);
+        var crashReport = CrashReportParser.Parse(id.Value, crashReportContent);
         var gameVersion = crashReport.GameVersion;
 
         var assemblyFiles = await _bannerlordBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);
@@ -71,7 +72,7 @@ public sealed class RecreateStacktraceController : ControllerExtended
 
     [HttpGet("Html/{id}")]
     [Produces("text/plain")]
-    public async Task<ActionResult<string>> HtmlAsync(string id, CancellationToken ct)
+    public async Task<ActionResult<string>> HtmlAsync(CrashReportFileId id, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
             return Unauthorized();
@@ -86,7 +87,7 @@ public sealed class RecreateStacktraceController : ControllerExtended
             return Content(string.Empty, "text/html", Encoding.UTF8);
         }
         
-        var crashReport = CrashReportParser.Parse(id, crashReportContent);
+        var crashReport = CrashReportParser.Parse(id.Value, crashReportContent);
         var gameVersion = crashReport.GameVersion;
 
         var assemblyFiles = await _bannerlordBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);

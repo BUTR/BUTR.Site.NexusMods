@@ -233,29 +233,24 @@ public partial record CrashReportModel
 
 public partial record NexusModsModModel
 {
-    [JsonIgnore]
-    public string Url => $"https://nexusmods.com/mountandblade2bannerlord/mods/{NexusModsModId}";
+    public string Url(string gameDomain) => $"https://nexusmods.com/{gameDomain}/mods/{NexusModsModId}";
 }
 
 public partial record ProfileModel
 {
-    [JsonIgnore]
-    public string? Url => NexusModsUserId != -1 ? $"https://nexusmods.com/users/{NexusModsUserId}" : null;
+    public string Url() => $"https://nexusmods.com/users/{NexusModsUserId}";
 }
 
 public partial record NexusModsArticleModel
 {
-    [JsonIgnore]
-    public string Url => $"https://nexusmods.com/mountandblade2bannerlord/articles/{NexusModsArticleId}";
+    public string Url(string gameDomain) => $"https://nexusmods.com/{gameDomain}/articles/{NexusModsArticleId}";
 
-    [JsonIgnore]
-    public string AuthorUrl => $"https://nexusmods.com/users/{NexusModsUserId}";
+    public string AuthorUrl() => $"https://nexusmods.com/users/{NexusModsUserId}";
 }
 
 public partial record ExposedNexusModsModModel
 {
-    [JsonIgnore]
-    public string Url => $"https://nexusmods.com/mountandblade2bannerlord/mods/{NexusModsModId}";
+    public string Url(string gameDomain) => $"https://nexusmods.com/{gameDomain}/mods/{NexusModsModId}";
 }
 
 public partial record PagingMetadata

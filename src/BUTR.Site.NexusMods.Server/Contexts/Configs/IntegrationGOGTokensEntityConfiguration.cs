@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -9,7 +10,7 @@ public class IntegrationGOGTokensEntityConfiguration : BaseEntityConfiguration<I
 {
     protected override void ConfigureModel(EntityTypeBuilder<IntegrationGOGTokensEntity> builder)
     {
-        builder.Property<int>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("integration_gog_tokens_id").ValueGeneratedNever();
+        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("integration_gog_tokens_id").HasConversion<NexusModsUserId.EfCoreValueConverter>().ValueGeneratedNever();
         builder.Property(x => x.GOGUserId).HasColumnName("gog_user_id");
         builder.Property(x => x.RefreshToken).HasColumnName("refresh_token");
         builder.Property(x => x.AccessToken).HasColumnName("access_token");

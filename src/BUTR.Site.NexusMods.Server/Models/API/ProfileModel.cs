@@ -1,18 +1,22 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models.API;
+﻿using System.Collections.Immutable;
+
+namespace BUTR.Site.NexusMods.Server.Models.API;
 
 public sealed record ProfileModel
 {
-    public required int NexusModsUserId { get; init; }
-    public required string Name { get; init; }
-    public required string Email { get; init; }
+    public required NexusModsUserId NexusModsUserId { get; init; }
+    public required NexusModsUserName Name { get; init; }
+    public required NexusModsUserEMail Email { get; init; }
     public required string ProfileUrl { get; init; }
     public required bool IsPremium { get; init; }
     public required bool IsSupporter { get; init; }
-    public required string Role { get; init; }
+    public required ApplicationRole Role { get; init; }
 
     public required string? DiscordUserId { get; init; }
     public required string? SteamUserId { get; init; }
     public required string? GOGUserId { get; init; }
 
     public required bool HasTenantGame { get; init; }
+
+    public ImmutableDictionary<TenantId, string> AvailableTenants { get; init; }
 }

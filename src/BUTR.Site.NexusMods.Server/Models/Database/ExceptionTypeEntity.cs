@@ -1,5 +1,4 @@
 ﻿using BUTR.Site.NexusMods.Server.Extensions;
-using BUTR.Site.NexusMods.Shared;
 
 using System;
 using System.Collections.Generic;
@@ -12,9 +11,9 @@ namespace BUTR.Site.NexusMods.Server.Models.Database;
 /// </summary>
 public sealed record ExceptionTypeEntity : IEntityWithTenant
 {
-    public required Tenant TenantId { get; init; }
+    public required TenantId TenantId { get; init; }
 
-    public required string ExceptionTypeId { get; init; }
+    public required ExceptionTypeId ExceptionTypeId { get; init; }
     public ICollection<CrashReportEntity> ToCrashReports { get; init; } = new List<CrashReportEntity>();
     public ICollection<StatisticsTopExceptionsTypeEntity> ToTopExceptionsTypes { get; init; } = new List<StatisticsTopExceptionsTypeEntity>();
 
@@ -23,10 +22,10 @@ public sealed record ExceptionTypeEntity : IEntityWithTenant
 
     private ExceptionTypeEntity() { }
     [SetsRequiredMembers]
-    private ExceptionTypeEntity(Tenant tenant, string exceptionTypeId) : this() => (TenantId, ExceptionTypeId) = (tenant, exceptionTypeId);
+    private ExceptionTypeEntity(TenantId tenant, ExceptionTypeId exceptionTypeId) : this() => (TenantId, ExceptionTypeId) = (tenant, exceptionTypeId);
 
-    public static ExceptionTypeEntity Create(Tenant tenant, string exceptionTypeId) => new(tenant, exceptionTypeId);
-    public static ExceptionTypeEntity FromException(Tenant tenant, string exception)
+    public static ExceptionTypeEntity Create(TenantId tenant, ExceptionTypeId exceptionTypeId) => new(tenant, exceptionTypeId);
+    public static ExceptionTypeEntity FromException(TenantId tenant, string exception)
     {
         var exceptionType = "NO_EXCEPTION";
         Span<Range> dest = stackalloc Range[32];
@@ -44,6 +43,6 @@ public sealed record ExceptionTypeEntity : IEntityWithTenant
             exceptionType = line[dest[1]].Trim().ToString();
             break;
         }
-        return new() { TenantId = tenant, ExceptionTypeId = exceptionType };
+        return new() { TenantId = tenant, ExceptionTypeId = ExceptionTypeId.From(exceptionType) };
     }
 }

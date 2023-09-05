@@ -2,8 +2,6 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using System;
-
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
 public interface IAppDbContextRead
@@ -23,6 +21,7 @@ public interface IAppDbContextRead
     DbSet<CrashReportIgnoredFileEntity> CrashReportIgnoredFileIds { get; }
 
     DbSet<NexusModsUserEntity> NexusModsUsers { get; }
+    DbSet<NexusModsUserToNameEntity> NexusModsUserToName { get; }
     DbSet<NexusModsUserToCrashReportEntity> NexusModsUserToCrashReports { get; }
     DbSet<NexusModsUserToNexusModsModEntity> NexusModsUserToNexusModsMods { get; }
     DbSet<NexusModsUserToModuleEntity> NexusModsUserToModules { get; }

@@ -1,7 +1,6 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
-using BUTR.Site.NexusMods.Shared;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -14,18 +13,20 @@ namespace BUTR.Site.NexusMods.Server.Services;
 
 public interface ISteamStorage
 {
-    Task<bool> CheckOwnedGamesAsync(int nexusModsUserId, string steamUserId);
+    Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string steamUserId);
 
     Task<Dictionary<string, string>?> GetAsync(string steamUserId);
-    Task<bool> UpsertAsync(int nexusModsUserId, string steamUserId, Dictionary<string, string> data);
-    Task<bool> RemoveAsync(int nexusModsUserId, string steamUserId);
+    Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string steamUserId, Dictionary<string, string> data);
+    Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string steamUserId);
 }
 
 public sealed class DatabaseSteamStorage : ISteamStorage
 {
-    private Dictionary<Tenant, HashSet<uint>> TenantToGameIds { get; } = new()
+    private Dictionary<TenantId, HashSet<uint>> TenantToGameIds { get; } = new()
     {
-        { Tenant.Bannerlord, new HashSet<uint> { 261550 } }
+        { TenantId.Bannerlord, new HashSet<uint> { 261550 } },
+        { TenantId.Rimworld, new HashSet<uint> { 294100 } },
+        { TenantId.StardewValley, new HashSet<uint> { 413150 } },
     };
 
     private readonly IAppDbContextRead _dbContextRead;
@@ -39,7 +40,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
         _steamAPIClient = steamAPIClient;
     }
 
-    public async Task<bool> CheckOwnedGamesAsync(int nexusModsUserId, string steamUserId)
+    public async Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string steamUserId)
     {
         var entityFactory = _dbContextWrite.CreateEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
@@ -79,7 +80,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
         return entity.Data;
     }
 
-    public async Task<bool> UpsertAsync(int nexusModsUserId, string steamUserId, Dictionary<string, string> data)
+    public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string steamUserId, Dictionary<string, string> data)
     {
         var entityFactory = _dbContextWrite.CreateEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
@@ -92,7 +93,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
         return true;
     }
 
-    public async Task<bool> RemoveAsync(int nexusModsUserId, string steamUserId)
+    public async Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string steamUserId)
     {
         await _dbContextWrite.NexusModsUserToSteam.Where(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.SteamUserId == steamUserId).ExecuteDeleteAsync();
         await _dbContextWrite.IntegrationSteamTokens.Where(x => x.SteamUserId == steamUserId).ExecuteDeleteAsync();

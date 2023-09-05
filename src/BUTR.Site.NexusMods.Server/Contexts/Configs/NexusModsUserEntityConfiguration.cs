@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -9,7 +10,7 @@ public class NexusModsUserEntityConfiguration : BaseEntityConfiguration<NexusMod
 {
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserEntity> builder)
     {
-        builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_id").ValueGeneratedNever();
+        builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_id").HasConversion<NexusModsUserId.EfCoreValueConverter>().ValueGeneratedNever();
         builder.ToTable("nexusmods_user", "nexusmods_user").HasKey(x => x.NexusModsUserId);
 
         base.ConfigureModel(builder);

@@ -4,8 +4,6 @@ using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
-using BUTR.Site.NexusMods.Shared;
-using BUTR.Site.NexusMods.Shared.Extensions;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,9 +38,8 @@ public sealed class NexusModsModFileProcessorJob : IJob
     public async Task Execute(IJobExecutionContext context)
     {
         var ct = context.CancellationToken;
-        var tenants = Enum.GetValues<Tenant>();
 
-        foreach (var tenant in tenants)
+        foreach (var tenant in TenantId.Values)
         {
             await using var scope = _serviceScopeFactory.CreateAsyncScope();
 
@@ -56,7 +53,7 @@ public sealed class NexusModsModFileProcessorJob : IJob
         context.SetIsSuccess(true);
     }
 
-    private static async Task HandleTenantAsync(Tenant tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    private static async Task HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
     {
         const int notFoundModIdsTreshold = 25;
 
@@ -68,12 +65,14 @@ public sealed class NexusModsModFileProcessorJob : IJob
         var entityFactory = dbContextWrite.CreateEntityFactory();
         await using var _ = dbContextWrite.CreateSaveScope();
 
-        var gameDomain = tenant.GameDomain();
+        var gameDomain = tenant.ToGameDomain();
 
-        var modId = 0;
+        var modIdRaw = 0;
         var notFoundModIds = 0;
         while (!ct.IsCancellationRequested)
         {
+            var modId = NexusModsModId.From(modIdRaw);
+
             var nexusModsModModuleEntities = new List<NexusModsModToModuleEntity>();
             var nexusModsModToFileUpdateEntities = new List<NexusModsModToFileUpdateEntity>();
 
@@ -82,7 +81,7 @@ public sealed class NexusModsModFileProcessorJob : IJob
             if (files is null)
             {
                 notFoundModIds++;
-                modId++;
+                modIdRaw++;
                 if (notFoundModIds >= notFoundModIdsTreshold)
                 {
                     break;
@@ -97,13 +96,13 @@ public sealed class NexusModsModFileProcessorJob : IJob
             {
                 if (updateDate is null || updateDate.LastCheckedDate < latestFileUpdate)
                 {
-                    var exposedModIds = await info.GetModIdsAsync("mountandblade2bannerlord", modId, options.ApiKey, ct).Distinct().ToImmutableArrayAsync(ct);
+                    var exposedModIds = await info.GetModIdsAsync(gameDomain, modId, options.ApiKey, ct).Distinct().ToImmutableArrayAsync(ct);
 
-                    var id = modId;
+                    var id = modIdRaw;
                     nexusModsModModuleEntities.AddRange(exposedModIds.Select(x => new NexusModsModToModuleEntity
                     {
                         TenantId = tenant,
-                        NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) id),
+                        NexusModsMod = entityFactory.GetOrCreateNexusModsMod(NexusModsModId.From(id)),
                         Module = entityFactory.GetOrCreateModule(x),
                         LastUpdateDate = latestFileUpdate,
                         LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure,
@@ -111,7 +110,7 @@ public sealed class NexusModsModFileProcessorJob : IJob
                     nexusModsModToFileUpdateEntities.Add(new NexusModsModToFileUpdateEntity
                     {
                         TenantId = tenant,
-                        NexusModsMod = entityFactory.GetOrCreateNexusModsMod((ushort) modId),
+                        NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modId),
                         LastCheckedDate = latestFileUpdate
                     });
                 }
@@ -121,7 +120,7 @@ public sealed class NexusModsModFileProcessorJob : IJob
             dbContextWrite.FutureUpsert(x => x.NexusModsModToFileUpdates, nexusModsModToFileUpdateEntities);
             // Disposing the DBContext will save the data
 
-            modId++;
+            modIdRaw++;
         }
     }
 }

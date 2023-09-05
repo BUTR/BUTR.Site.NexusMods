@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,7 +12,7 @@ public class CrashReportToMetadataEntityConfiguration : BaseEntityConfigurationW
 
     protected override void ConfigureModel(EntityTypeBuilder<CrashReportToMetadataEntity> builder)
     {
-        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_metadata_id").ValueGeneratedNever();
+        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_metadata_id").HasConversion<CrashReportId.EfCoreValueConverter>().ValueGeneratedNever();
         builder.Property(x => x.LauncherType).HasColumnName("launcher_type");
         builder.Property(x => x.LauncherVersion).HasColumnName("launcher_version");
         builder.Property(x => x.Runtime).HasColumnName("runtime");

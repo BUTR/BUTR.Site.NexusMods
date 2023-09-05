@@ -1,7 +1,6 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
-using BUTR.Site.NexusMods.Shared;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -17,18 +16,20 @@ public sealed record GOGOAuthTokens(string UserId, string AccessToken, string Re
 
 public interface IGOGStorage
 {
-    Task<bool> CheckOwnedGamesAsync(int nexusModsUserId, string gogUserId, GOGOAuthTokens tokens);
+    Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string gogUserId, GOGOAuthTokens tokens);
 
     Task<GOGOAuthTokens?> GetAsync(string gogUserId);
-    Task<bool> UpsertAsync(int nexusModsUserId, string gogUserId, GOGOAuthTokens tokens);
-    Task<bool> RemoveAsync(int nexusModsUserId, string gogUserId);
+    Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string gogUserId, GOGOAuthTokens tokens);
+    Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string gogUserId);
 }
 
 public sealed class DatabaseGOGStorage : IGOGStorage
 {
-    private Dictionary<Tenant, HashSet<uint>> TenantToGameIds { get; } = new()
+    private Dictionary<TenantId, HashSet<uint>> TenantToGameIds { get; } = new()
     {
-        { Tenant.Bannerlord, new HashSet<uint> { 1802539526, 1564781494 } }
+        { TenantId.Bannerlord, new HashSet<uint> { 1802539526, 1564781494 } },
+        { TenantId.Rimworld, new HashSet<uint> { 1094900565 } },
+        { TenantId.StardewValley, new HashSet<uint> { 1453375253 } },
     };
 
     private readonly IAppDbContextRead _dbContextRead;
@@ -42,7 +43,7 @@ public sealed class DatabaseGOGStorage : IGOGStorage
         _gogEmbedClient = gogEmbedClient;
     }
 
-    public async Task<bool> CheckOwnedGamesAsync(int nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
+    public async Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
     {
         var entityFactory = _dbContextWrite.CreateEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
@@ -73,7 +74,7 @@ public sealed class DatabaseGOGStorage : IGOGStorage
         return new(gogUserId, entity.AccessToken, entity.RefreshToken, entity.AccessTokenExpiresAt);
     }
 
-    public async Task<bool> UpsertAsync(int nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
+    public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
     {
         var entityFactory = _dbContextWrite.CreateEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
@@ -86,7 +87,7 @@ public sealed class DatabaseGOGStorage : IGOGStorage
         return true;
     }
 
-    public async Task<bool> RemoveAsync(int nexusModsUserId, string gogUserId)
+    public async Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string gogUserId)
     {
         await _dbContextWrite.NexusModsUserToGOG.Where(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.GOGUserId == gogUserId).ExecuteDeleteAsync();
         await _dbContextWrite.IntegrationGOGTokens.Where(x => x.GOGUserId == gogUserId).ExecuteDeleteAsync();

@@ -1,6 +1,5 @@
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
-using BUTR.Site.NexusMods.Server.Services;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -9,8 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Z.BulkOperations;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 

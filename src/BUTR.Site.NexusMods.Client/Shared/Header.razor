@@ -33,6 +33,33 @@
             </AuthorizeView>
         </BarStart>
 
+        <AuthorizeView Roles="@($"{ApplicationRoles.User},{ApplicationRoles.Moderator},{ApplicationRoles.Administrator}")">
+            <Authorized>
+                @if (_currentTenant != null)
+                {
+                    <BarEnd Style="margin-left: 0!important;">
+                        <BarItem>
+                            <BarDropdown>
+                                <BarDropdownToggle>
+                                    @_currentTenant
+                                </BarDropdownToggle>
+                                <BarDropdownMenu Background="@Background.Dark">
+                                    @foreach (var (tenant, name) in _user?.AvailableTenants ?? new Dictionary<string, string>())
+                                    {
+                                        if (_currentTenant == name) continue;
+
+                                        <BarDropdownItem Background="@Background.Dark">
+                                            <BarLink Clicked="async () => await SwitchTenantAsync(tenant)">@name</BarLink>
+                                        </BarDropdownItem>
+                                    }
+                                </BarDropdownMenu>
+                            </BarDropdown>
+                        </BarItem>
+                    </BarEnd>
+                }
+            </Authorized>
+        </AuthorizeView>
+
         <BarEnd>
             <AuthorizeView Roles="@($"{ApplicationRoles.Moderator}")">
                 <Authorized>
@@ -120,27 +147,6 @@
                 </BarDropdown>
             </BarItem>
         </BarEnd>
-        <AuthorizeView Roles="@($"{ApplicationRoles.User},{ApplicationRoles.Moderator},{ApplicationRoles.Administrator}")">
-            <Authorized>
-                <BarEnd Style="margin-left: 0!important;">
-                    <BarItem>
-                        <BarDropdown RightAligned>
-                            <BarDropdownToggle>
-                                Tenant
-                            </BarDropdownToggle>
-                            <BarDropdownMenu Background="@Background.Dark">
-                                @foreach (var val in Enum.GetValues<Tenant>())
-                                {
-                                    <BarDropdownItem Background="@Background.Dark">
-                                        <BarLink Clicked="async () => await SwitchTenantAsync(val)">@val</BarLink>
-                                    </BarDropdownItem>
-                                }
-                            </BarDropdownMenu>
-                        </BarDropdown>
-                    </BarItem>
-                </BarEnd>
-            </Authorized>
-        </AuthorizeView>
         <BarEnd Style="margin-left: 0!important;">
             <AuthorizeView>
                 <Authorized>
@@ -180,6 +186,7 @@
 
     private const string FallbackIcon = "images/default_profile.webp";
     private ProfileModel? _user;
+    private string? _currentTenant;
 
     protected override async Task OnInitializedAsync()
     {
@@ -204,9 +211,12 @@
             _user = response.Data;
             StateHasChanged();
         }
+
+        var currentTenantId = await _tenantProvider.GetTenantAsync();
+        _currentTenant = TenantUtils.FromTenantToName(currentTenantId);
     }
 
-    private async Task SwitchTenantAsync(Tenant value)
+    private async Task SwitchTenantAsync(string value)
     {
         await _tenantProvider.SetTenantAsync(value);
         _navigationManager.NavigateTo(_navigationManager.Uri, true);

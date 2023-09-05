@@ -1,13 +1,10 @@
-﻿using BUTR.Site.NexusMods.Shared;
-
-using System;
-using System.Collections.Generic;
+﻿using System;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database;
 
 public sealed record StatisticsTopExceptionsTypeEntity : IEntityWithTenant
 {
-    public required Tenant TenantId { get; init; }
+    public required TenantId TenantId { get; init; }
 
     public required ExceptionTypeEntity ExceptionType { get; init; }
 

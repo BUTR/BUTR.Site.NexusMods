@@ -1,17 +1,15 @@
-﻿using BUTR.Site.NexusMods.Shared;
-
-using System;
+﻿using System;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database;
 
 public sealed record CrashReportToFileIdEntity : IEntityWithTenant
 {
-    public required Tenant TenantId { get; init; }
+    public required TenantId TenantId { get; init; }
 
-    public required Guid CrashReportId { get; init; }
+    public required CrashReportId CrashReportId { get; init; }
     public CrashReportEntity? ToCrashReport { get; init; }
 
-    public required string FileId { get; init; }
+    public required CrashReportFileId FileId { get; init; }
 
     public override int GetHashCode() => HashCode.Combine(CrashReportId, FileId);
 }

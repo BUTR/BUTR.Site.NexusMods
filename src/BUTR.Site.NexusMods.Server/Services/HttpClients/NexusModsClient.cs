@@ -1,4 +1,6 @@
-﻿using HtmlAgilityPack;
+﻿using BUTR.Site.NexusMods.Server.Models;
+
+using HtmlAgilityPack;
 
 using System;
 using System.Net.Http;
@@ -16,7 +18,7 @@ public sealed class NexusModsClient
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
 
-    public async Task<HtmlDocument?> GetArticleAsync(string gameDomain, int articleId, CancellationToken ct)
+    public async Task<HtmlDocument?> GetArticleAsync(NexusModsGameDomain gameDomain, NexusModsArticleId articleId, CancellationToken ct)
     {
         using var response = await _httpClient.GetAsync($"{gameDomain}/articles/{articleId}", ct);
 
