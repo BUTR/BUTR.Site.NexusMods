@@ -89,7 +89,7 @@ public sealed class CrashReportProcessorJob : IJob
                 var hasCrashReport = dbContextRead.CrashReports.Any(x => x.CrashReportId == crashReportId);
                 if (hasCrashReport)
                 {
-                    var hasCrashReportLink = dbContextRead.CrashReportToFileIds.Any(x => x.CrashReportId == report.Id);
+                    var hasCrashReportLink = dbContextRead.CrashReportToFileIds.Any(x => x.CrashReportId == crashReportId);
                     if (!hasCrashReportLink)
                     {
                         await linkedCrashReportsChannel.WriteAsync(new CrashReportToFileIdEntity
@@ -104,7 +104,7 @@ public sealed class CrashReportProcessorJob : IJob
 
                 // Ignore incorrect crash reports
                 var isIncorrectCrashReport = string.IsNullOrEmpty(reportStr) || string.IsNullOrEmpty(report.GameVersion);
-                var isDuplicateCrashReport = dbContextRead.CrashReportToFileIds.Any(x => x.CrashReportId == report.Id && x.FileId != fileId);
+                var isDuplicateCrashReport = dbContextRead.CrashReportToFileIds.Any(x => x.CrashReportId == crashReportId && x.FileId != fileId);
                 if (isIncorrectCrashReport || isDuplicateCrashReport)
                 {
                     await ignoredCrashReportsChannel.WriteAsync(new CrashReportIgnoredFileEntity
@@ -164,13 +164,14 @@ public sealed class CrashReportProcessorJob : IJob
         await foreach (var (report, date) in databaseResultChannel.ReadAllAsync(ct))
         {
             var crashReportId = CrashReportId.From(report.Id);
+            var crashReportFileId = CrashReportFileId.From(report.Id2);
 
             if (uniqueIds.Contains(crashReportId))
             {
                 ignored.Add(new CrashReportIgnoredFileEntity
                 {
                     TenantId = tenant,
-                    Value = CrashReportFileId.From(report.Id2)
+                    Value = crashReportFileId
                 });
                 continue;
             }
@@ -211,7 +212,7 @@ public sealed class CrashReportProcessorJob : IJob
             {
                 TenantId = tenant,
                 CrashReportId = crashReportId,
-                FileId = CrashReportFileId.From(report.Id2)
+                FileId = crashReportFileId
             });
         }
 
