@@ -1,14 +1,15 @@
 name: Dependabot Auto Merge
 
 on:
-  pull_request:
-    branches:
-      - 'master'
+  - pull_request_target
+
 jobs:
-  auto-merge:
+  run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: ahmadnassri/action-dependabot-auto-merge@v2
+      - name: Auto Merge Dependabot Updates
+        uses: buluma/gh-action-auto-merge-dependabot-updates@1.0.4
         with:
-          github-token: ${{ secrets.DEPENDABOT_TOKEN }}
+          allowed-actors: dependabot-preview[bot], dependabot[bot]
+          allowed-update-types: devDependencies:minor, devDependencies:patch
+          package-allow-list: Z.EntityFramework.Plus.EFCore

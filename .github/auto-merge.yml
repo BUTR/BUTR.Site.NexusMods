@@ -1,3 +1,0 @@
-- match:
-    dependency_name: Z.EntityFramework.Plus.EFCore
-    update_type: semver:minor
