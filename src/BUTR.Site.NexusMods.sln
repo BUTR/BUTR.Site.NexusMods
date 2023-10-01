@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{49388931-B
 	ProjectSection(SolutionItems) = preProject
 		..\README.md = ..\README.md
 		..\.github\dependabot.yml = ..\.github\dependabot.yml
+		..\.github\auto-merge.yml = ..\.github\auto-merge.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C161254D-1B6E-48DE-9F26-EFC403F74F11}"
@@ -27,6 +28,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		..\.github\workflows\deploy-self-hosted.yml = ..\.github\workflows\deploy-self-hosted.yml
 		..\.github\workflows\dotnet-format-daily.yml = ..\.github\workflows\dotnet-format-daily.yml
 		..\.github\workflows\frontend.yml = ..\.github\workflows\frontend.yml
+		..\.github\workflows\dependabot.yml = ..\.github\workflows\dependabot.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BUTR.Site.NexusMods.ServerClient", "BUTR.Site.NexusMods.ServerClient\BUTR.Site.NexusMods.ServerClient.csproj", "{26AE4C2C-03BF-44B1-872F-8FD1573C9E90}"

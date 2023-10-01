@@ -1,4 +1,10 @@
 version: 2
+registries:
+  nuget-butr:
+    type: nuget-feed
+    url: https://nuget.pkg.github.com/BUTR/index.json
+    username: Aragas
+    password: ${{secrets.NUGET_KEY}}
 updates:
   - package-ecosystem: nuget
     directory: /
@@ -45,6 +51,9 @@ updates:
       Tests:
         patterns:
           - "Microsoft.AspNetCore*"
+      EFPlus:
+        patterns:
+          - "Z.EntityFramework.Plus*"
 
   - package-ecosystem: github-actions
     directory: /

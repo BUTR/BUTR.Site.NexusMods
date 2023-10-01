@@ -1,6 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
-using BUTR.Site.NexusMods.Server.Utils;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +20,6 @@ using OpenTelemetry.Trace;
 using Quartz;
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
 using Z.EntityFramework.Extensions;
@@ -51,10 +49,6 @@ public static class Program
             AppDbContextWrite appDbContextWrite => appDbContextWrite.Create(),
             _ => null
         };
-
-        // I need to perform some cleanup at the start of the app
-        foreach (var sourceFile in Directory.EnumerateFiles("scripts"))
-            ScriptHandler.CompileAndExecute(Path.GetFileNameWithoutExtension(sourceFile), await File.ReadAllTextAsync(sourceFile));
 
         var host = CreateHostBuilder(args).Build();
 
