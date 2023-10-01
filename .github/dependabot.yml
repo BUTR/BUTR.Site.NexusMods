@@ -40,7 +40,6 @@ updates:
           - "Npgsql*"
           - "Microsoft.EntityFrameworkCore*"
           - "Community.Microsoft.Extensions.Caching.PostgreSql"
-          - "Z.EntityFramework.Plus.EFCore"
       OpenTelemetry:
         patterns:
           - "OpenTelemetry*"
