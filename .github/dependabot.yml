@@ -56,9 +56,9 @@ updates:
       Tests:
         patterns:
           - "Microsoft.AspNetCore*"
-      #EFPlus:
-      #  patterns:
-      #    - "Z.EntityFramework.Plus*"
+      EFPlus:
+        patterns:
+          - "Z.EntityFramework.Plus*"
 
   - package-ecosystem: github-actions
     directory: /
