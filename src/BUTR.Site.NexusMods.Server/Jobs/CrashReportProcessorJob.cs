@@ -58,7 +58,7 @@ public sealed class CrashReportProcessorJob : IJob
         _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
     }
 
-    private static async Task DownloadCrashReportsAsync(TenantId tenant, IAsyncEnumerable<CrashReportFileMetadata> requests, CrashReporterClient client, ChannelWriter<HttpResultEntry> httpResultChannel, CancellationToken ct)
+    private static async Task DownloadCrashReportsAsync(TenantId tenant, IAsyncEnumerable<CrashReportFileMetadata> requests, ILogger logger, CrashReporterClient client, ChannelWriter<HttpResultEntry> httpResultChannel, CancellationToken ct)
     {
         var options = new ParallelOptions { CancellationToken = ct, MaxDegreeOfParallelism = ParallelCount };
         await Parallel.ForEachAsync(requests, options, async (entry, ct2) =>
@@ -70,9 +70,15 @@ public sealed class CrashReportProcessorJob : IJob
             {
                 var content = await client.GetCrashReportAsync(fileId, ct2);
 
-                var document = new HtmlDocument();
-                document.LoadHtml(content.Replace("<filename unknown>", "NULL"));
-                model = CrashReportParser.ParseLegacyHtml(version, document, content);
+                try
+                {
+                    model = CrashReportParser.ParseLegacyHtml(version, content);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Failed to parse {FileId}", fileId);
+                    throw;
+                }
             }
             else
             {
@@ -253,7 +259,7 @@ CallStack:
         // Disposing the DBContext will save the data
     }
 
-    private static async Task HandleFileIdDatesAsync(TenantId tenant, IServiceProvider serviceProvider, CrashReporterClient client, IAsyncEnumerable<CrashReportFileMetadata> requests, CancellationToken ct)
+    private static async Task HandleFileIdDatesAsync(TenantId tenant, IServiceProvider serviceProvider, ILogger logger, CrashReporterClient client, IAsyncEnumerable<CrashReportFileMetadata> requests, CancellationToken ct)
     {
         var options = serviceProvider.GetRequiredService<IOptions<CrashReporterOptions>>().Value;
         var httpResultChannel = Channel.CreateBounded<HttpResultEntry>(ParallelCount);
@@ -263,7 +269,7 @@ CallStack:
 
         await Task.WhenAll(new Task[]
         {
-            DownloadCrashReportsAsync(tenant, requests, client, httpResultChannel, ct),
+            DownloadCrashReportsAsync(tenant, requests, logger, client, httpResultChannel, ct),
             FilterCrashReportsAsync(tenant, serviceProvider, httpResultChannel, databaseResultChannel, linkedCrashReportsChannel, ignoredCrashReportsChannel, ct),
             WriteIgnoredToDatabaseAsync(tenant, serviceProvider, ignoredCrashReportsChannel, ct),
             WriteLinkedToDatabaseAsync(tenant, serviceProvider, linkedCrashReportsChannel, ct),
@@ -301,7 +307,7 @@ CallStack:
                 fileIds.ExceptWith(await dbContextRead.CrashReportToFileIds.Where(x => fileIds.Contains(x.FileId)).Select(x => x.FileId).ToListAsync(ct));
                 if (fileIds.Count == 0) continue;
 
-                await HandleFileIdDatesAsync(tenant, scope.ServiceProvider, client, client.GetCrashReportMetadataAsync(fileIds, ct).OfType<CrashReportFileMetadata>(), ct);
+                await HandleFileIdDatesAsync(tenant, scope.ServiceProvider, _logger, client, client.GetCrashReportMetadataAsync(fileIds, ct).OfType<CrashReportFileMetadata>(), ct);
                 processed += fileIds.Count;
             }
         }

@@ -3,8 +3,6 @@ using BUTR.CrashReport.Models;
 using BUTR.Site.NexusMods.ServerClient;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
-using HtmlAgilityPack;
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -50,9 +48,7 @@ CallStack:
             var response = await client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
 
-            var document = new HtmlDocument();
-            document.LoadHtml(content.Replace("<filename unknown>", "NULL"));
-            return (id, CrashReportParser.ParseLegacyHtml(10, document, content));
+            return (id, CrashReportParser.ParseLegacyHtml(10, content));
         }
 
         if (_crashReports is null)
