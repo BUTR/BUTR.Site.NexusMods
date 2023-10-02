@@ -3,5 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace BUTR.Site.NexusMods.Server.Models;
 
-public sealed record FileIdDate(
-    [property: JsonPropertyName("filename")] CrashReportFileId FileId, [property: JsonPropertyName("date")] DateTime Date);
+public sealed record CrashReportFileMetadata(
+    [property: JsonPropertyName("file")] CrashReportFileId File,
+    [property: JsonPropertyName("version")] byte Version,
+    [property: JsonPropertyName("date")] DateTime Date);

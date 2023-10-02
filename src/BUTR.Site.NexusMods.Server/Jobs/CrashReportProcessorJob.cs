@@ -1,10 +1,13 @@
-﻿using BUTR.Site.NexusMods.Server.Contexts;
+﻿using BUTR.CrashReport.Bannerlord.Parser;
+using BUTR.CrashReport.Models;
+using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
-using BUTR.Site.NexusMods.Shared.Helpers;
+
+using HtmlAgilityPack;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,8 +44,8 @@ public sealed class CrashReportProcessorJob : IJob
         public void Return(T item) => _objects.Add(item);
     }
 
-    private record HttpResultEntry(CrashReportFileId FileId, DateTime Date, string ReportString, CrashReport CrashReport);
-    private record DatabaseResultEntry(CrashReport CrashReport, DateTime Date);
+    private record HttpResultEntry(CrashReportFileId FileId, DateTime Date, CrashReportModel CrashReport);
+    private record DatabaseResultEntry(CrashReportFileId FileId, CrashReportModel CrashReport, DateTime Date);
 
     private static readonly int ParallelCount = Environment.ProcessorCount / 2;
 
@@ -55,18 +58,30 @@ public sealed class CrashReportProcessorJob : IJob
         _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
     }
 
-    private static async Task DownloadCrashReportsAsync(TenantId tenant, IAsyncEnumerable<FileIdDate> requests, CrashReporterClient client, ChannelWriter<HttpResultEntry> httpResultChannel, CancellationToken ct)
+    private static async Task DownloadCrashReportsAsync(TenantId tenant, IAsyncEnumerable<CrashReportFileMetadata> requests, CrashReporterClient client, ChannelWriter<HttpResultEntry> httpResultChannel, CancellationToken ct)
     {
         var options = new ParallelOptions { CancellationToken = ct, MaxDegreeOfParallelism = ParallelCount };
         await Parallel.ForEachAsync(requests, options, async (entry, ct2) =>
         {
-            var (fileId, date) = entry;
+            var (fileId, version, date) = entry;
 
-            var reportStr = await client.GetCrashReportAsync(fileId, ct2);
-            var report = CrashReportParser.Parse(fileId.Value, reportStr);
+            CrashReportModel model;
+            if (version <= 12)
+            {
+                var content = await client.GetCrashReportAsync(fileId, ct2);
+
+                var document = new HtmlDocument();
+                document.LoadHtml(content.Replace("<filename unknown>", "NULL"));
+                model = CrashReportParser.ParseLegacyHtml(version, document, content);
+            }
+            else
+            {
+                model = await client.GetCrashReportModelAsync(fileId, ct2);
+            }
+
 
             await httpResultChannel.WaitToWriteAsync(ct2);
-            await httpResultChannel.WriteAsync(new(fileId, date, reportStr, report), ct2);
+            await httpResultChannel.WriteAsync(new(fileId, date, model), ct2);
         });
         httpResultChannel.Complete();
     }
@@ -79,7 +94,7 @@ public sealed class CrashReportProcessorJob : IJob
         var options = new ParallelOptions { CancellationToken = ct, MaxDegreeOfParallelism = ParallelCount };
         await Parallel.ForEachAsync(httpResultChannel.ReadAllAsync(ct), options, async (entry, ct2) =>
         {
-            var (fileId, date, reportStr, report) = entry;
+            var (fileId, date, report) = entry;
 
             var dbContextRead = await dbContextPool.GetAsync(ct2);
             try
@@ -103,7 +118,7 @@ public sealed class CrashReportProcessorJob : IJob
                 }
 
                 // Ignore incorrect crash reports
-                var isIncorrectCrashReport = string.IsNullOrEmpty(reportStr) || string.IsNullOrEmpty(report.GameVersion);
+                var isIncorrectCrashReport = string.IsNullOrEmpty(report.GameVersion);
                 var isDuplicateCrashReport = dbContextRead.CrashReportToFileIds.Any(x => x.CrashReportId == crashReportId && x.FileId != fileId);
                 if (isIncorrectCrashReport || isDuplicateCrashReport)
                 {
@@ -122,7 +137,7 @@ public sealed class CrashReportProcessorJob : IJob
 
             // Handle the crash report further
             await databaseResultChannel.WaitToWriteAsync(ct2);
-            await databaseResultChannel.WriteAsync(new(report, date), ct2);
+            await databaseResultChannel.WriteAsync(new(fileId, report, date), ct2);
         });
         databaseResultChannel.Complete();
         ignoredCrashReportsChannel.Complete();
@@ -149,6 +164,17 @@ public sealed class CrashReportProcessorJob : IJob
 
     private static async Task WriteCrashReportsToDatabaseAsync(TenantId tenant, CrashReporterOptions options, IServiceProvider serviceProvider, ChannelReader<DatabaseResultEntry> databaseResultChannel, CancellationToken ct)
     {
+        static string GetException(ExceptionModel? exception, bool inner = false) => exception is null ? string.Empty : $"""
+
+{(inner ? "Inner ": string.Empty)}Exception information
+Type: {exception.Type}
+Message: {exception.Message}
+CallStack:
+{exception.CallStack}
+
+{GetException(exception.InnerException, true)}
+""";
+
         var dbContextFactory = serviceProvider.GetRequiredService<IAppDbContextFactory>();
         var dbContextWrite = await dbContextFactory.CreateWriteAsync(ct);
         var entityFactory = dbContextWrite.CreateEntityFactory();
@@ -161,43 +187,46 @@ public sealed class CrashReportProcessorJob : IJob
         var crashReportMetadatas = new List<CrashReportToMetadataEntity>();
         var crashReportModules = new List<CrashReportToModuleMetadataEntity>();
         var crashReportFileIds = new List<CrashReportToFileIdEntity>();
-        await foreach (var (report, date) in databaseResultChannel.ReadAllAsync(ct))
+        await foreach (var (fileId, report, date) in databaseResultChannel.ReadAllAsync(ct))
         {
             var crashReportId = CrashReportId.From(report.Id);
-            var crashReportFileId = CrashReportFileId.From(report.Id2);
 
             if (uniqueIds.Contains(crashReportId))
             {
                 ignored.Add(new CrashReportIgnoredFileEntity
                 {
                     TenantId = tenant,
-                    Value = crashReportFileId
+                    Value = fileId
                 });
                 continue;
             }
             uniqueIds.Add(crashReportId);
 
+            var butrLoaderVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "BUTRLoaderVersion")?.Value;
+            var blseVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "BLSEVersion")?.Value;
+            var launcherExVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "LauncherExVersion")?.Value;
+
             crashReports.Add(new CrashReportEntity
             {
                 TenantId = tenant,
                 CrashReportId = crashReportId,
-                Url = CrashReportUrl.From(new Uri(new Uri(options.Endpoint), $"{report.Id2}.html")),
+                Url = CrashReportUrl.From(new Uri(new Uri(options.Endpoint), fileId.ToString())),
                 Version = CrashReportVersion.From(report.Version),
                 GameVersion = GameVersion.From(report.GameVersion),
-                ExceptionType = entityFactory.GetOrCreateExceptionTypeFromException(report.Exception),
-                Exception = report.Exception,
-                CreatedAt = report.Id2.Length == 8 ? DateTime.UnixEpoch : date.ToUniversalTime(),
+                ExceptionType = entityFactory.GetOrCreateExceptionType(ExceptionTypeId.From(report.Exception.Type)),
+                Exception = GetException(report.Exception),
+                CreatedAt = fileId.Value.Length == 8 ? DateTime.UnixEpoch : date.ToUniversalTime(),
             });
             crashReportMetadatas.Add(new CrashReportToMetadataEntity
             {
                 TenantId = tenant,
                 CrashReportId = crashReportId,
-                LauncherType = string.IsNullOrEmpty(report.LauncherType) ? null : report.LauncherType,
-                LauncherVersion = string.IsNullOrEmpty(report.LauncherVersion) ? null : report.LauncherVersion,
-                Runtime = string.IsNullOrEmpty(report.Runtime) ? null : report.Runtime,
-                BUTRLoaderVersion = string.IsNullOrEmpty(report.BUTRLoaderVersion) ? null : report.BUTRLoaderVersion,
-                BLSEVersion = string.IsNullOrEmpty(report.BLSEVersion) ? null : report.BLSEVersion,
-                LauncherExVersion = string.IsNullOrEmpty(report.LauncherExVersion) ? null : report.LauncherExVersion,
+                LauncherType = string.IsNullOrEmpty(report.Metadata.LauncherType) ? null : report.Metadata.LauncherType,
+                LauncherVersion = string.IsNullOrEmpty(report.Metadata.LauncherVersion) ? null : report.Metadata.LauncherVersion,
+                Runtime = string.IsNullOrEmpty(report.Metadata.Runtime) ? null : report.Metadata.Runtime,
+                BUTRLoaderVersion = butrLoaderVersion,
+                BLSEVersion = blseVersion,
+                LauncherExVersion = launcherExVersion,
             });
             crashReportModules.AddRange(report.Modules.Select(x => new CrashReportToModuleMetadataEntity
             {
@@ -212,7 +241,7 @@ public sealed class CrashReportProcessorJob : IJob
             {
                 TenantId = tenant,
                 CrashReportId = crashReportId,
-                FileId = crashReportFileId
+                FileId = fileId
             });
         }
 
@@ -224,7 +253,7 @@ public sealed class CrashReportProcessorJob : IJob
         // Disposing the DBContext will save the data
     }
 
-    private static async Task HandleFileIdDatesAsync(TenantId tenant, IServiceProvider serviceProvider, CrashReporterClient client, IAsyncEnumerable<FileIdDate> requests, CancellationToken ct)
+    private static async Task HandleFileIdDatesAsync(TenantId tenant, IServiceProvider serviceProvider, CrashReporterClient client, IAsyncEnumerable<CrashReportFileMetadata> requests, CancellationToken ct)
     {
         var options = serviceProvider.GetRequiredService<IOptions<CrashReporterOptions>>().Value;
         var httpResultChannel = Channel.CreateBounded<HttpResultEntry>(ParallelCount);
@@ -272,7 +301,7 @@ public sealed class CrashReportProcessorJob : IJob
                 fileIds.ExceptWith(await dbContextRead.CrashReportToFileIds.Where(x => fileIds.Contains(x.FileId)).Select(x => x.FileId).ToListAsync(ct));
                 if (fileIds.Count == 0) continue;
 
-                await HandleFileIdDatesAsync(tenant, scope.ServiceProvider, client, client.GetCrashReportDatesAsync(fileIds, ct).OfType<FileIdDate>(), ct);
+                await HandleFileIdDatesAsync(tenant, scope.ServiceProvider, client, client.GetCrashReportMetadataAsync(fileIds, ct).OfType<CrashReportFileMetadata>(), ct);
                 processed += fileIds.Count;
             }
         }

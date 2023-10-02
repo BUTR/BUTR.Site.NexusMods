@@ -1,10 +1,11 @@
-﻿using BUTR.Authentication.NexusMods.Authentication;
+﻿#if false
+using BUTR.Authentication.NexusMods.Authentication;
+using BUTR.CrashReport.Bannerlord.Parser;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
-using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -157,3 +158,4 @@ Prism.languages.cil={comment:/\/\/.*/,string:{pattern:/(["'])(?:\\(?:\r\n|[\s\S]
         return Content(html, "text/html", Encoding.UTF8);
     }
 }
+#endif

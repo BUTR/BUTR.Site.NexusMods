@@ -15,10 +15,16 @@ csharp_new_line_before_open_brace = all
 resharper_initializer_braces = pico
 
 # Code files
+[*.csproj]
+indent_size = 2
+insert_final_newline = false
+charset = utf-8
+
+# Code files
 [*.{cs,vb}]
 indent_size = 4
 insert_final_newline = false
-charset = utf-8-bom
+charset = utf-8
 
 # .NET formatting rules
 [*.{cs,vb}]

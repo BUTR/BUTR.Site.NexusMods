@@ -1,5 +1,9 @@
-﻿using BUTR.Site.NexusMods.ServerClient;
+﻿using BUTR.CrashReport.Bannerlord.Parser;
+using BUTR.CrashReport.Models;
+using BUTR.Site.NexusMods.ServerClient;
 using BUTR.Site.NexusMods.Shared.Helpers;
+
+using HtmlAgilityPack;
 
 using System;
 using System.Collections.Generic;
@@ -7,6 +11,8 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+
+using CrashReportModel = BUTR.Site.NexusMods.ServerClient.CrashReportModel;
 
 namespace BUTR.Site.NexusMods.Client.Models;
 
@@ -27,12 +33,26 @@ public static class DemoUser
     public static IAsyncEnumerable<NexusModsModModel> GetMods() => _mods.ToAsyncEnumerable();
     public static async IAsyncEnumerable<CrashReportModel> GetCrashReports(IHttpClientFactory factory)
     {
-        static async Task<CrashReport> DownloadReport(HttpClient client, string id)
+        static string GetException(ExceptionModel? exception, bool inner = false) => exception is null ? string.Empty : $"""
+
+{(inner ? "Inner ": string.Empty)}Exception information
+Type: {exception.Type}
+Message: {exception.Message}
+CallStack:
+{exception.CallStack}
+
+{GetException(exception.InnerException, true)}
+""";
+
+        static async Task<(string, CrashReport.Models.CrashReportModel)> DownloadReport(HttpClient client, string id)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"{id}.html");
             var response = await client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
-            return CrashReportParser.Parse(id, content);
+
+            var document = new HtmlDocument();
+            document.LoadHtml(content.Replace("<filename unknown>", "NULL"));
+            return (id, CrashReportParser.ParseLegacyHtml(10, document, content));
         }
 
         if (_crashReports is null)
@@ -42,9 +62,9 @@ public static class DemoUser
             var client = factory.CreateClient("InternalReports");
             var reports = new[] { "4DDA8D", "6FB0EF", "2AE0EA", "F966E3" };
             var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, r)));
-            foreach (var cr in contents)
+            foreach (var (id, cr) in contents)
             {
-                var report = new CrashReportModel(cr.Id, cr.Version, cr.GameVersion, cr.ExceptionType, cr.Exception, DateTime.UtcNow, $"{baseUrl}{cr.Id2}.html", cr.Modules.Select(x => x.Id).ToArray(), CrashReportStatus.New, string.Empty);
+                var report = new CrashReportModel(cr.Id, cr.Version, cr.GameVersion, cr.Exception.Type, GetException(cr.Exception), DateTime.UtcNow, $"{baseUrl}{id}.html", cr.Modules.Select(x => x.Id).ToArray(), CrashReportStatus.New, string.Empty);
                 crm.Add(report);
                 yield return report;
 

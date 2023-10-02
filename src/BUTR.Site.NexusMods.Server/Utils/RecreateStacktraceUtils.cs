@@ -1,7 +1,7 @@
-﻿using BUTR.Site.NexusMods.Server.Extensions;
+﻿using BUTR.CrashReport.Models;
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Utils.Reflection;
 using BUTR.Site.NexusMods.Shared.Extensions;
-using BUTR.Site.NexusMods.Shared.Helpers;
 
 using ICSharpCode.Decompiler.Metadata;
 
@@ -21,14 +21,14 @@ public record RecreatedStacktrace(string Method, string CSharpWithIL, int LineNu
 
 public static class RecreateStacktraceUtils
 {
-    public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktrace(IEnumerable<string> assemblyFiles, CrashReport crashReport, CancellationToken ct)
+    public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktrace(IEnumerable<string> assemblyFiles, CrashReportModel crashReport, CancellationToken ct)
     {
-        var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
+        var methods = crashReport.EnhancedStacktrace.Select(y => y.OriginalMethod).ToArray();
         return GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct)
             .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
 
     }
-    public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktraceUnordered(IEnumerable<string> assemblyFiles, CrashReport crashReport, CancellationToken ct)
+    public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktraceUnordered(IEnumerable<string> assemblyFiles, CrashReportModel crashReport, CancellationToken ct)
     {
         // The Harmony Like Full Description
         static string FullDescription(PEFile moduleDefinition, MethodDefinitionHandle methodHandle, MethodDefinition method)
@@ -126,15 +126,15 @@ public static class RecreateStacktraceUtils
             }
         }
 
-        static IEnumerable<RecreatedStacktrace> RecreatedStacktrace(PEFile moduleDefinition, CrashReport crashReport, CancellationToken ct)
+        static IEnumerable<RecreatedStacktrace> RecreatedStacktrace(PEFile moduleDefinition, CrashReportModel crashReport, CancellationToken ct)
         {
             const int dotLength = 1;
 
             using var _ = moduleDefinition;
-            foreach (var frame in crashReport.EnhancedStacktrace.SelectMany(y => y.Methods))
+            foreach (var frame in crashReport.EnhancedStacktrace)
             {
-                var methodName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(frame.Method);
-                var methodFullName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(frame.MethodFullName);
+                var methodName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(frame.OriginalMethod.Method);
+                var methodFullName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(frame.OriginalMethod.MethodFullName);
 
                 var utf8MethodName = Encoding.UTF8.GetBytes(methodName);
                 var foundMethods = moduleDefinition.Metadata.TypeDefinitions.Select(moduleDefinition.Metadata.GetTypeDefinition).Where(x =>
@@ -214,10 +214,9 @@ public static class RecreateStacktraceUtils
                 disassembler.DisassembleMethod(moduleDefinition, foundMethodHandle);
 
                 var code = output.ToString()!;
-                var ilOffset = crashReport.EnhancedStacktrace.First(x => x.Methods.Any(y => y == frame)).ILOffset;
-                var lineNumber = GetLineNumber(code, ilOffset);
+                var lineNumber = GetLineNumber(code, frame.ILOffset ?? 0);
 
-                yield return new RecreatedStacktrace(frame.Method, code, lineNumber);
+                yield return new RecreatedStacktrace(frame.OriginalMethod.Method, code, lineNumber);
             }
         }
 
