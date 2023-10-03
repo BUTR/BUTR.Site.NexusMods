@@ -14,8 +14,8 @@
   <ItemGroup>
     <PackageReference Include="Aragas.Extensions.Options.FluentValidation" Version="1.1.0.14" />
     <PackageReference Include="BUTR.Authentication.NexusMods" Version="1.0.0.6" />
-    <PackageReference Include="BUTR.CrashReport" Version="13.0.0.14" />
-    <PackageReference Include="butr.crashreport.bannerlord.parser" Version="13.0.0.14" />
+    <PackageReference Include="BUTR.CrashReport" Version="13.0.0.15" />
+    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.15" />
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="4.0.4" />
     <PackageReference Include="DynamicExpressions.NET" Version="1.1.0" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="8.1.1.7464" />

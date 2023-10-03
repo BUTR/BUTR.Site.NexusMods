@@ -7,8 +7,6 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 
-using HtmlAgilityPack;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -65,7 +63,7 @@ public sealed class CrashReportProcessorJob : IJob
         {
             var (fileId, version, date) = entry;
 
-            CrashReportModel model;
+            CrashReportModel? model;
             if (version <= 12)
             {
                 var content = await client.GetCrashReportAsync(fileId, ct2);
@@ -83,6 +81,12 @@ public sealed class CrashReportProcessorJob : IJob
             else
             {
                 model = await client.GetCrashReportModelAsync(fileId, ct2);
+            }
+
+            if (model is null)
+            {
+                logger.LogError("Failed to parse {FileId}", fileId);
+                return;
             }
 
 
