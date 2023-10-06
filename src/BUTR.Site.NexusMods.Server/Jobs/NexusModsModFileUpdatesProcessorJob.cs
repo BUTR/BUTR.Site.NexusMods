@@ -72,7 +72,7 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
     {
         var gameDomain = tenant.ToGameDomain();
 
-        var info = serviceProvider.GetRequiredService<NexusModsInfo>();
+        var info = serviceProvider.GetRequiredService<NexusModsModFileParser>();
         var options = serviceProvider.GetRequiredService<IOptions<NexusModsOptions>>().Value;
         var client = serviceProvider.GetRequiredService<NexusModsAPIClient>();
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
@@ -95,20 +95,21 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
         var exceptions = new List<Exception>();
         var nexusModsModModuleEntities = new List<NexusModsModToModuleEntity>();
         var nexusModsModToFileUpdateEntities = new List<NexusModsModToFileUpdateEntity>();
+        var nexusModsModToModuleInfoHistoryEntities = new List<NexusModsModToModuleInfoHistoryEntity>();
         foreach (var modUpdate in newUpdates)
         {
             try
             {
                 if (ct.IsCancellationRequested) break;
 
-                var exposedModIds = await info.GetModIdsAsync(gameDomain, modUpdate.Id, options.ApiKey, ct).Distinct().ToImmutableArrayAsync(ct);
+                var exposedModuleInfos = await info.GetModuleInfosAsync(gameDomain, modUpdate.Id, options.ApiKey, ct).Distinct().ToArrayAsync(ct);
                 var lastUpdateTime = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).UtcDateTime;
 
-                nexusModsModModuleEntities.AddRange(exposedModIds.Select(x => new NexusModsModToModuleEntity
+                nexusModsModModuleEntities.AddRange(exposedModuleInfos.DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
                 {
                     TenantId = tenant,
                     NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
-                    Module = entityFactory.GetOrCreateModule(x),
+                    Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
                     LastUpdateDate = lastUpdateTime,
                     LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure
                 }));
@@ -118,6 +119,14 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
                     NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
                     LastCheckedDate = lastUpdateTime
                 });
+                nexusModsModToModuleInfoHistoryEntities.AddRange(exposedModuleInfos.DistinctBy(x => new { x.Id, x.Version }).Select(x => new NexusModsModToModuleInfoHistoryEntity
+                {
+                    TenantId = tenant,
+                    NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
+                    Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
+                    ModuleVersion = ModuleVersion.From(x.Version.ToString()),
+                    ModuleInfo = ModuleInfoModel.Create(x),
+                }));
                 processed++;
             }
             catch (Exception e)
@@ -128,6 +137,7 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
 
         dbContextWrite.FutureUpsert(x => x.NexusModsModModules, nexusModsModModuleEntities);
         dbContextWrite.FutureUpsert(x => x.NexusModsModToFileUpdates, nexusModsModToFileUpdateEntities);
+        dbContextWrite.FutureUpsert(x => x.NexusModsModToModuleInfoHistory, nexusModsModToModuleInfoHistoryEntities);
         // Disposing the DBContext will save the data
 
         return (processed, exceptions, updatesStoredWithinDay.Count, updatedWithinDay.Length, newUpdates.Count);

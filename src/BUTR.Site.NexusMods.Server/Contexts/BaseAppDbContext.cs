@@ -56,6 +56,7 @@ public class BaseAppDbContext : DbContext
     public required DbSet<NexusModsModToNameEntity> NexusModsModName { get; set; }
     public required DbSet<NexusModsModToModuleEntity> NexusModsModModules { get; set; }
     public required DbSet<NexusModsModToFileUpdateEntity> NexusModsModToFileUpdates { get; set; }
+    public required DbSet<NexusModsModToModuleInfoHistoryEntity> NexusModsModToModuleInfoHistory { get; set; }
 
     public required DbSet<StatisticsTopExceptionsTypeEntity> StatisticsTopExceptionsTypes { get; set; }
     public required DbSet<StatisticsCrashScoreInvolvedEntity> StatisticsCrashScoreInvolveds { get; set; }
@@ -105,6 +106,7 @@ public class BaseAppDbContext : DbContext
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsModToFileUpdateEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsModToModuleEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsModToNameEntity>(modelBuilder);
+        _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsModToModuleInfoHistoryEntity>(modelBuilder);
 
         _entityConfigurationFactory.ApplyConfiguration<NexusModsUserEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsUserToCrashReportEntity>(modelBuilder);

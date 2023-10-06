@@ -69,12 +69,13 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
         {
             var articleId = NexusModsArticleId.From(articleIdRaw);
 
-            var articleDocument = await client.GetArticleAsync(gameDomain, articleId, ct);
-            if (articleDocument is null) continue;
+            if (await client.GetArticleAsync(gameDomain, articleId, ct) is not { } articleDocument)
+            {
+                articleIdRaw++;
+                continue;
+            }
 
-
-            var errorElement = articleDocument.GetElementbyId($"{articleId}-title");
-            if (errorElement is not null)
+            if (articleDocument.GetElementbyId($"{articleId}-title") is not null)
             {
                 notFoundArticles++;
                 articleIdRaw++;

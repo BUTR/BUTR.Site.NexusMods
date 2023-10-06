@@ -57,70 +57,84 @@ public sealed class NexusModsModFileProcessorJob : IJob
     {
         const int notFoundModIdsTreshold = 25;
 
-        var info = serviceProvider.GetRequiredService<NexusModsInfo>();
+        var info = serviceProvider.GetRequiredService<NexusModsModFileParser>();
         var options = serviceProvider.GetRequiredService<IOptions<NexusModsOptions>>().Value;
         var client = serviceProvider.GetRequiredService<NexusModsAPIClient>();
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
         var entityFactory = dbContextWrite.CreateEntityFactory();
-        await using var _ = dbContextWrite.CreateSaveScope();
 
         var gameDomain = tenant.ToGameDomain();
 
         var modIdRaw = 0;
         var notFoundModIds = 0;
-        while (!ct.IsCancellationRequested)
+        var @break = false;
+        while (!ct.IsCancellationRequested && !@break)
         {
-            var modId = NexusModsModId.From(modIdRaw);
-
+            await using var _ = dbContextWrite.CreateSaveScope();
             var nexusModsModModuleEntities = new List<NexusModsModToModuleEntity>();
             var nexusModsModToFileUpdateEntities = new List<NexusModsModToFileUpdateEntity>();
-
-            var updateDate = await dbContextRead.NexusModsModToFileUpdates.FirstOrDefaultAsync(x => x.NexusModsMod.NexusModsModId == modId, ct);
-            var files = await client.GetModFileInfosAsync(gameDomain, modId, options.ApiKey, ct);
-            if (files is null)
+            var nexusModsModToModuleInfoHistoryEntities = new List<NexusModsModToModuleInfoHistoryEntity>();
+            
+            for (var i = 0; i < 50; i++)
             {
-                notFoundModIds++;
+                var modId = NexusModsModId.From(modIdRaw);
+
+                var updateDate = await dbContextRead.NexusModsModToFileUpdates.FirstOrDefaultAsync(x => x.NexusModsMod.NexusModsModId == modId, ct);
+                if (await client.GetModFileInfosAsync(gameDomain, modId, options.ApiKey, ct) is not { } files)
+                {
+                    notFoundModIds++;
+                    modIdRaw++;
+                    if (notFoundModIds >= notFoundModIdsTreshold)
+                    {
+                        @break = true;
+                        break;
+                    }
+                    continue;
+                }
+                notFoundModIds = 0;
+
+                // max sequence no elements
+                var latestFileUpdate = files.Files.Select(x => DateTimeOffset.FromUnixTimeSeconds(x.UploadedTimestamp).UtcDateTime).DefaultIfEmpty(DateTime.MinValue).Max();
+                if (latestFileUpdate != DateTime.MinValue)
+                {
+                    //if (updateDate is null || updateDate.LastCheckedDate < latestFileUpdate)
+                    {
+                        var exposedModuleInfos = await info.GetModuleInfosAsync(gameDomain, modId, options.ApiKey, ct).ToArrayAsync(ct);
+
+                        var id = modIdRaw;
+                        nexusModsModModuleEntities.AddRange(exposedModuleInfos.DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
+                        {
+                            TenantId = tenant,
+                            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(NexusModsModId.From(id)),
+                            Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
+                            LastUpdateDate = latestFileUpdate,
+                            LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure,
+                        }));
+                        nexusModsModToFileUpdateEntities.Add(new NexusModsModToFileUpdateEntity
+                        {
+                            TenantId = tenant,
+                            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modId),
+                            LastCheckedDate = latestFileUpdate,
+                        });
+                        nexusModsModToModuleInfoHistoryEntities.AddRange(exposedModuleInfos.DistinctBy(x => new { x.Id, x.Version }).Select(x => new NexusModsModToModuleInfoHistoryEntity
+                        {
+                            TenantId = tenant,
+                            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modId),
+                            Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
+                            ModuleVersion = ModuleVersion.From(x.Version.ToString()),
+                            ModuleInfo = ModuleInfoModel.Create(x),
+                        }));
+                    }
+                }
+                
                 modIdRaw++;
-                if (notFoundModIds >= notFoundModIdsTreshold)
-                {
-                    break;
-                }
-                continue;
-            }
-            notFoundModIds = 0;
-
-            // max sequence no elements
-            var latestFileUpdate = files.Files.Select(x => DateTimeOffset.FromUnixTimeSeconds(x.UploadedTimestamp).UtcDateTime).DefaultIfEmpty(DateTime.MinValue).Max();
-            if (latestFileUpdate != DateTime.MinValue)
-            {
-                if (updateDate is null || updateDate.LastCheckedDate < latestFileUpdate)
-                {
-                    var exposedModIds = await info.GetModIdsAsync(gameDomain, modId, options.ApiKey, ct).Distinct().ToImmutableArrayAsync(ct);
-
-                    var id = modIdRaw;
-                    nexusModsModModuleEntities.AddRange(exposedModIds.Select(x => new NexusModsModToModuleEntity
-                    {
-                        TenantId = tenant,
-                        NexusModsMod = entityFactory.GetOrCreateNexusModsMod(NexusModsModId.From(id)),
-                        Module = entityFactory.GetOrCreateModule(x),
-                        LastUpdateDate = latestFileUpdate,
-                        LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure,
-                    }));
-                    nexusModsModToFileUpdateEntities.Add(new NexusModsModToFileUpdateEntity
-                    {
-                        TenantId = tenant,
-                        NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modId),
-                        LastCheckedDate = latestFileUpdate
-                    });
-                }
             }
 
             dbContextWrite.FutureUpsert(x => x.NexusModsModModules, nexusModsModModuleEntities);
             dbContextWrite.FutureUpsert(x => x.NexusModsModToFileUpdates, nexusModsModToFileUpdateEntities);
+            dbContextWrite.FutureUpsert(x => x.NexusModsModToModuleInfoHistory, nexusModsModToModuleInfoHistoryEntities);
             // Disposing the DBContext will save the data
-
-            modIdRaw++;
         }
     }
 }

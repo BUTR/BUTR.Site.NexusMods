@@ -224,7 +224,7 @@ public sealed class Startup
         services.AddScoped<IGOGStorage, DatabaseGOGStorage>();
 
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHttpMessageHandlerBuilderFilter, SyncLoggingHttpMessageHandlerBuilderFilter>());
-        services.AddTransient<NexusModsInfo>();
+        services.AddTransient<NexusModsModFileParser>();
         services.AddSingleton<DiffProvider>();
 
         services.AddAuthentication(ButrNexusModsAuthSchemeConstants.AuthScheme).AddNexusMods(options =>

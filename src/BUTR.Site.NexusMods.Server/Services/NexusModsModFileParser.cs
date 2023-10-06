@@ -1,4 +1,6 @@
-﻿using BUTR.Site.NexusMods.Server.Extensions;
+﻿using Bannerlord.ModuleManager;
+
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 using BUTR.Site.NexusMods.Server.Utils;
@@ -17,36 +19,23 @@ using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
+using System.Xml;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public class NexusModsInfo
+public class NexusModsModFileParser
 {
-    [XmlRoot("Module")]
-    public record SubModuleXml
-    {
-        public record IdValue
-        {
-            [XmlAttribute("value")]
-            public required string Value { get; init; }
-        }
-
-        [XmlElement("Id")]
-        public required IdValue Id { get; init; }
-    }
-
     private readonly HttpClient _httpClient;
     private readonly NexusModsAPIClient _apiClient;
 
-    public NexusModsInfo(HttpClient httpClient, NexusModsAPIClient apiClient)
+    public NexusModsModFileParser(HttpClient httpClient, NexusModsAPIClient apiClient)
     {
         _httpClient = httpClient;
         _apiClient = apiClient;
     }
 
 
-    public async IAsyncEnumerable<ModuleId> GetModIdsAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, NexusModsApiKey apiKey, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<ModuleInfoExtended> GetModuleInfosAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, NexusModsApiKey apiKey, [EnumeratorCancellation] CancellationToken ct)
     {
         const int DefaultBufferSize = 1024 * 16;
         const int LargeBufferSize = 1024 * 1024 * 5;
@@ -69,8 +58,8 @@ public class NexusModsInfo
                 httpStream.SetBufferSize(LargeBufferSize);
                 using var reader = ReaderExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
                 if (reader is null) throw new InvalidOperationException($"Failed to get Reader for file '{fileInfo.FileName}'");
-                await foreach (var id in GetModIdsFromReaderAsync(reader).WithCancellation(ct))
-                    yield return ModuleId.From(id);
+                await foreach (var moduleInfo in GetModuleInfosFromReaderAsync(reader).WithCancellation(ct))
+                    yield return moduleInfo;
                 continue;
             }
 
@@ -80,28 +69,12 @@ public class NexusModsInfo
             if (archive.Type == ArchiveType.Rar)
                 httpStream.SetBufferSize(LargeBufferSize);
 
-            await foreach (var id in GetModIdsFromArchiveAsync(archive).WithCancellation(ct))
-                yield return ModuleId.From(id);
+            await foreach (var moduleInfo in GetModuleInfosFromArchiveAsync(archive).WithCancellation(ct))
+                yield return moduleInfo;
         }
     }
 
-
-    private static bool ContainsSubModuleFile(IReadOnlyList<NexusModsModFileContentResponse.ContentEntry>? entries)
-    {
-        if (entries is null)
-            return false;
-
-        foreach (var entry in entries)
-        {
-            if (entry.Name.Equals("SubModule.xml", StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (ContainsSubModuleFile(entry.Children))
-                return true;
-        }
-        return false;
-    }
-
-    private static async IAsyncEnumerable<string> GetModIdsFromReaderAsync(IReader reader)
+    private static async IAsyncEnumerable<ModuleInfoExtended> GetModuleInfosFromReaderAsync(IReader reader)
     {
         while (reader.MoveToNextEntry())
         {
@@ -111,14 +84,14 @@ public class NexusModsInfo
 
 
             await using var stream = reader.OpenEntryStream();
-            if (GetSubModuleId(stream) is not { } id) continue;
+            if (GetModuleInfo(stream) is not { } moduleInfo) continue;
 
-            yield return id;
+            yield return moduleInfo;
             break;
         }
     }
 
-    private static async IAsyncEnumerable<string> GetModIdsFromArchiveAsync(IArchive archive)
+    private static async IAsyncEnumerable<ModuleInfoExtended> GetModuleInfosFromArchiveAsync(IArchive archive)
     {
         foreach (var entry in archive.Entries)
         {
@@ -127,15 +100,30 @@ public class NexusModsInfo
             if (!entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
 
             await using var stream = entry.OpenEntryStream();
-            if (GetSubModuleId(stream) is not { } id) continue;
+            if (GetModuleInfo(stream) is not { } moduleInfo) continue;
 
-            yield return id;
+            yield return moduleInfo;
             break;
         }
     }
 
     private async Task<bool> HasSubModuleXmlAsync(NexusModsModFilesResponse.File fileInfo)
     {
+        static bool ContainsSubModuleFile(IReadOnlyList<NexusModsModFileContentResponse.ContentEntry>? entries)
+        {
+            if (entries is null)
+                return false;
+
+            foreach (var entry in entries)
+            {
+                if (entry.Name.Equals("SubModule.xml", StringComparison.OrdinalIgnoreCase))
+                    return true;
+                if (ContainsSubModuleFile(entry.Children))
+                    return true;
+            }
+            return false;
+        }
+
         try
         {
             var content = await _httpClient.GetFromJsonAsync<NexusModsModFileContentResponse>(fileInfo.ContentPreviewUrl);
@@ -149,18 +137,17 @@ public class NexusModsInfo
         return true;
     }
 
-    private static string? GetSubModuleId(Stream stream)
+    private static ModuleInfoExtended? GetModuleInfo(Stream stream)
     {
         try
         {
-            using var streamReader = new StreamReader(stream);
-            var serializer = new XmlSerializer(typeof(SubModuleXml));
-            if (serializer.Deserialize(streamReader) is not SubModuleXml result) return null;
-            return result.Id.Value;
+            var document = new XmlDocument();
+            document.Load(stream);
+            return ModuleInfoExtended.FromXml(document);
         }
         catch (Exception)
         {
-            return "ERROR";
+            return null;
         }
     }
 }

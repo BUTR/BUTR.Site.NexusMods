@@ -40,15 +40,15 @@ public sealed class NexusModsUserController : ControllerExtended
 
     private readonly ILogger _logger;
     private readonly NexusModsAPIClient _nexusModsAPIClient;
-    private readonly NexusModsInfo _nexusModsInfo;
+    private readonly NexusModsModFileParser _nexusModsModFileParser;
     private readonly IAppDbContextWrite _dbContextWrite;
     private readonly IAppDbContextRead _dbContextRead;
 
-    public NexusModsUserController(ILogger<NexusModsUserController> logger, NexusModsAPIClient nexusModsAPIClient, NexusModsInfo nexusModsInfo, IAppDbContextWrite dbContextWrite, IAppDbContextRead dbContextRead)
+    public NexusModsUserController(ILogger<NexusModsUserController> logger, NexusModsAPIClient nexusModsAPIClient, NexusModsModFileParser nexusModsModFileParser, IAppDbContextWrite dbContextWrite, IAppDbContextRead dbContextRead)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _nexusModsAPIClient = nexusModsAPIClient ?? throw new ArgumentNullException(nameof(nexusModsAPIClient));
-        _nexusModsInfo = nexusModsInfo ?? throw new ArgumentNullException(nameof(nexusModsInfo));
+        _nexusModsModFileParser = nexusModsModFileParser ?? throw new ArgumentNullException(nameof(nexusModsModFileParser));
         _dbContextWrite = dbContextWrite ?? throw new ArgumentNullException(nameof(dbContextWrite));
         _dbContextRead = dbContextRead ?? throw new ArgumentNullException(nameof(dbContextRead));
     }
@@ -178,12 +178,12 @@ public sealed class NexusModsUserController : ControllerExtended
 
         if (HttpContext.GetIsPremium()) // Premium is needed for API based downloading
         {
-            var exposedModIds = await _nexusModsInfo.GetModIdsAsync(gameDomain, modInfo.Id, apiKey, ct).Distinct().ToImmutableArrayAsync(ct);
+            var exposedModIds = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modInfo.Id, apiKey, ct).Distinct().ToImmutableArrayAsync(ct);
             var entities = exposedModIds.Select(y => new NexusModsModToModuleEntity
             {
                 TenantId = tenant,
                 NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
-                Module = entityFactory.GetOrCreateModule(y),
+                Module = entityFactory.GetOrCreateModule(ModuleId.From(y.Id)),
                 LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure,
                 LastUpdateDate = DateTime.UtcNow
             }).ToList();

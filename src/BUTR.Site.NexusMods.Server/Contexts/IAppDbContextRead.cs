@@ -42,6 +42,7 @@ public interface IAppDbContextRead
     DbSet<NexusModsModToNameEntity> NexusModsModName { get; }
     DbSet<NexusModsModToModuleEntity> NexusModsModModules { get; }
     DbSet<NexusModsModToFileUpdateEntity> NexusModsModToFileUpdates { get; }
+    DbSet<NexusModsModToModuleInfoHistoryEntity> NexusModsModToModuleInfoHistory { get; }
 
     DbSet<StatisticsTopExceptionsTypeEntity> StatisticsTopExceptionsTypes { get; }
     DbSet<StatisticsCrashScoreInvolvedEntity> StatisticsCrashScoreInvolveds { get; }

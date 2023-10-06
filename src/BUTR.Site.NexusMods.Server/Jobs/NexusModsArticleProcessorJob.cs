@@ -54,64 +54,70 @@ public sealed class NexusModsArticleProcessorJob : IJob
         var client = serviceProvider.GetRequiredService<NexusModsClient>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
         var entityFactory = dbContextWrite.CreateEntityFactory();
-        await using var _ = dbContextWrite.CreateSaveScope();
 
         var gameDomain = tenant.ToGameDomain();
 
-        var articles = new List<NexusModsArticleEntity>();
-
         var articleIdRaw = 0;
         var notFoundArticles = 0;
-        while (!ct.IsCancellationRequested)
+        var @break = false;
+        while (!ct.IsCancellationRequested && !@break)
         {
-            var articleId = NexusModsArticleId.From(articleIdRaw);
+            await using var _ = dbContextWrite.CreateSaveScope();
+            var articles = new List<NexusModsArticleEntity>();
 
-            var articleDocument = await client.GetArticleAsync(gameDomain, articleId, ct);
-            if (articleDocument is null) continue;
-
-
-            var errorElement = articleDocument.GetElementbyId($"{articleId}-title");
-            if (errorElement is not null)
+            for (var i = 0; i < 50; i++)
             {
-                notFoundArticles++;
-                articleIdRaw++;
-                if (notFoundArticles >= notFoundArticlesTreshold)
+                var articleId = NexusModsArticleId.From(articleIdRaw);
+
+                if (await client.GetArticleAsync(gameDomain, articleId, ct) is not { } articleDocument)
                 {
-                    break;
+                    articleIdRaw++;
+                    continue;
                 }
-                continue;
+
+                if (articleDocument.GetElementbyId($"{articleId}-title") is not null)
+                {
+                    notFoundArticles++;
+                    articleIdRaw++;
+                    if (notFoundArticles >= notFoundArticlesTreshold)
+                    {
+                        @break = true;
+                        break;
+                    }
+                    continue;
+                }
+                notFoundArticles = 0;
+
+                var pagetitleElement = articleDocument.GetElementbyId("pagetitle");
+                var titleElement = pagetitleElement.ChildNodes.FindFirst("h1");
+                var title = titleElement.InnerText;
+
+                var authorElement = articleDocument.GetElementbyId("image-author-name");
+                var authorUrl = authorElement.GetAttributeValue("href", "0");
+                var authorUrlSplit = authorUrl.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                var authorIdText = authorUrlSplit.LastOrDefault() ?? string.Empty;
+                var authorId = NexusModsUserId.TryParse(authorIdText, out var val) ? val : throw new Exception("Author Id invalid");
+                var authorText = authorElement.InnerText;
+
+                var fileinfoElement = articleDocument.GetElementbyId("fileinfo");
+                var dateTimeText1 = fileinfoElement.ChildNodes.FindFirst("div");
+                var dateTimeText2 = dateTimeText1?.ChildNodes.FindFirst("time");
+                var dateTimeText = dateTimeText2?.GetAttributeValue("datetime", "");
+                var dateTime = DateTimeOffset.TryParse(dateTimeText, out var dateTimeVal) ? dateTimeVal.UtcDateTime : DateTimeOffset.MinValue.UtcDateTime;
+
+                articles.Add(new()
+                {
+                    TenantId = tenant,
+                    Title = title,
+                    NexusModsArticleId = articleId,
+                    NexusModsUser = entityFactory.GetOrCreateNexusModsUserWithName(authorId, NexusModsUserName.From(authorText)),
+                    CreateDate = dateTime
+                });
+                articleIdRaw++;
             }
-            notFoundArticles = 0;
 
-            var pagetitleElement = articleDocument.GetElementbyId("pagetitle");
-            var titleElement = pagetitleElement.ChildNodes.FindFirst("h1");
-            var title = titleElement.InnerText;
-
-            var authorElement = articleDocument.GetElementbyId("image-author-name");
-            var authorUrl = authorElement.GetAttributeValue("href", "0");
-            var authorUrlSplit = authorUrl.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            var authorIdText = authorUrlSplit.LastOrDefault() ?? string.Empty;
-            var authorId = NexusModsUserId.TryParse(authorIdText, out var val) ? val : throw new Exception("Author Id invalid");
-            var authorText = authorElement.InnerText;
-
-            var fileinfoElement = articleDocument.GetElementbyId("fileinfo");
-            var dateTimeText1 = fileinfoElement.ChildNodes.FindFirst("div");
-            var dateTimeText2 = dateTimeText1?.ChildNodes.FindFirst("time");
-            var dateTimeText = dateTimeText2?.GetAttributeValue("datetime", "");
-            var dateTime = DateTimeOffset.TryParse(dateTimeText, out var dateTimeVal) ? dateTimeVal.UtcDateTime : DateTimeOffset.MinValue.UtcDateTime;
-
-            articles.Add(new()
-            {
-                TenantId = tenant,
-                Title = title,
-                NexusModsArticleId = articleId,
-                NexusModsUser = entityFactory.GetOrCreateNexusModsUserWithName(authorId, NexusModsUserName.From(authorText)),
-                CreateDate = dateTime
-            });
-            articleIdRaw++;
+            dbContextWrite.FutureUpsert(x => x.NexusModsArticles, articles);
+            // Disposing the DBContext will save the data
         }
-
-        dbContextWrite.FutureUpsert(x => x.NexusModsArticles, articles);
-        // Disposing the DBContext will save the data
     }
 }
