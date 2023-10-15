@@ -26,9 +26,7 @@ public sealed class EntityFactory
     private readonly ConcurrentDictionary<string, IntegrationGOGTokensEntity> _gogTokens = new();
     private readonly ConcurrentDictionary<string, IntegrationSteamTokensEntity> _steamTokens = new();
 
-    private const nint Saved = 1;
-    private const nint Unsaved = 0;
-    private nint _saved;
+    private readonly SemaphoreSlim _lock = new(1);
 
     public EntityFactory(ITenantContextAccessor tenantContextAccessor, IAppDbContextWrite dbContextWrite)
     {
@@ -55,76 +53,76 @@ public sealed class EntityFactory
 
     public NexusModsUserToIntegrationSteamEntity GetOrCreateNexusModsUserSteam(NexusModsUserId nexusModsUserId, string steamUserId)
     {
-        return _steamUsers.GetOrAdd(steamUserId, ValueFactory, nexusModsUserId);
+        return _steamUsers.GetOrAdd(steamUserId, ValueFactory, (this, nexusModsUserId));
 
-        NexusModsUserToIntegrationSteamEntity ValueFactory(string steamUserId_, NexusModsUserId nexusModsUserId_) => new()
+        static NexusModsUserToIntegrationSteamEntity ValueFactory(string steamUserId_, (EntityFactory, NexusModsUserId) tuple) => new()
         {
-            NexusModsUser = GetOrCreateNexusModsUser(nexusModsUserId_),
+            NexusModsUser = tuple.Item1.GetOrCreateNexusModsUser(tuple.Item2),
             SteamUserId = steamUserId_,
         };
     }
 
     public NexusModsUserToIntegrationDiscordEntity GetOrCreateNexusModsUserDiscord(NexusModsUserId nexusModsUserId, string discordUserId)
     {
-        return _discordUsers.GetOrAdd(discordUserId, ValueFactory, nexusModsUserId);
+        return _discordUsers.GetOrAdd(discordUserId, ValueFactory, (this, nexusModsUserId));
 
-        NexusModsUserToIntegrationDiscordEntity ValueFactory(string discordUserId_, NexusModsUserId nexusModsUserId_) => new()
+        static NexusModsUserToIntegrationDiscordEntity ValueFactory(string discordUserId_, (EntityFactory, NexusModsUserId) tuple) => new()
         {
-            NexusModsUser = GetOrCreateNexusModsUser(nexusModsUserId_),
+            NexusModsUser = tuple.Item1.GetOrCreateNexusModsUser(tuple.Item2),
             DiscordUserId = discordUserId_,
         };
     }
 
     public NexusModsUserToIntegrationGOGEntity GetOrCreateNexusModsUserGOG(NexusModsUserId nexusModsUserId, string gogUserId)
     {
-        return _gogUsers.GetOrAdd(gogUserId, ValueFactory, nexusModsUserId);
+        return _gogUsers.GetOrAdd(gogUserId, ValueFactory, (this, nexusModsUserId));
 
-        NexusModsUserToIntegrationGOGEntity ValueFactory(string gogUserId_, NexusModsUserId nexusModsUserId_) => new()
+        static NexusModsUserToIntegrationGOGEntity ValueFactory(string gogUserId_, (EntityFactory, NexusModsUserId) tuple) => new()
         {
-            NexusModsUser = GetOrCreateNexusModsUser(nexusModsUserId_),
+            NexusModsUser = tuple.Item1.GetOrCreateNexusModsUser(tuple.Item2),
             GOGUserId = gogUserId_,
         };
     }
 
     public IntegrationDiscordTokensEntity GetOrCreateIntegrationDiscordTokens(NexusModsUserId nexusModsUserId, string discordUserId, string accessToken, string refreshToken, DateTimeOffset accessTokenExpiresAt)
     {
-        return _discordTokens.GetOrAdd(discordUserId, ValueFactory);
+        return _discordTokens.GetOrAdd(discordUserId, ValueFactory, (this, nexusModsUserId, accessToken, refreshToken, accessTokenExpiresAt));
 
-        IntegrationDiscordTokensEntity ValueFactory(string _) => new()
+        static IntegrationDiscordTokensEntity ValueFactory(string discordUserId, (EntityFactory, NexusModsUserId, string, string, DateTimeOffset) tuple) => new()
         {
             DiscordUserId = discordUserId,
-            NexusModsUser = GetOrCreateNexusModsUser(nexusModsUserId),
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            AccessTokenExpiresAt = accessTokenExpiresAt,
+            NexusModsUser = tuple.Item1.GetOrCreateNexusModsUser(tuple.Item2),
+            AccessToken = tuple.Item3,
+            RefreshToken = tuple.Item4,
+            AccessTokenExpiresAt = tuple.Item5,
             //UserToDiscord = GetOrCreateNexusModsUserDiscord(nexusModsUserId, discordUserId),
         };
     }
 
     public IntegrationGOGTokensEntity GetOrCreateIntegrationGOGTokens(NexusModsUserId nexusModsUserId, string gogUserId, string accessToken, string refreshToken, DateTimeOffset accessTokenExpiresAt)
     {
-        return _gogTokens.GetOrAdd(gogUserId, ValueFactory);
+        return _gogTokens.GetOrAdd(gogUserId, ValueFactory, (this, nexusModsUserId, accessToken, refreshToken, accessTokenExpiresAt));
 
-        IntegrationGOGTokensEntity ValueFactory(string _) => new()
+        static IntegrationGOGTokensEntity ValueFactory(string gogUserId, (EntityFactory, NexusModsUserId, string, string, DateTimeOffset) tuple) => new()
         {
             GOGUserId = gogUserId,
-            NexusModsUser = GetOrCreateNexusModsUser(nexusModsUserId),
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            AccessTokenExpiresAt = accessTokenExpiresAt,
+            NexusModsUser = tuple.Item1.GetOrCreateNexusModsUser(tuple.Item2),
+            AccessToken = tuple.Item3,
+            RefreshToken = tuple.Item4,
+            AccessTokenExpiresAt = tuple.Item5,
             //UserToGOG = GetOrCreateNexusModsUserGOG(nexusModsUserId, gogUserId),
         };
     }
 
     public IntegrationSteamTokensEntity GetOrCreateIntegrationSteamTokens(NexusModsUserId nexusModsUserId, string steamUserId, Dictionary<string, string> data)
     {
-        return _steamTokens.GetOrAdd(steamUserId, ValueFactory);
+        return _steamTokens.GetOrAdd(steamUserId, ValueFactory, (this, nexusModsUserId, data));
 
-        IntegrationSteamTokensEntity ValueFactory(string _) => new()
+        static IntegrationSteamTokensEntity ValueFactory(string steamUserId, (EntityFactory, NexusModsUserId, Dictionary<string, string>) tuple) => new()
         {
             SteamUserId = steamUserId,
-            NexusModsUser = GetOrCreateNexusModsUser(nexusModsUserId),
-            Data = data,
+            NexusModsUser = tuple.Item1.GetOrCreateNexusModsUser(tuple.Item2),
+            Data = tuple.Item3,
             //UserToSteam = GetOrCreateNexusModsUserSteam(nexusModsUserId, steamUserId),
         };
     }
@@ -160,29 +158,27 @@ public sealed class EntityFactory
         static ExceptionTypeEntity ValueFactory(ExceptionTypeId id, TenantId tenant) => ExceptionTypeEntity.Create(tenant, id);
     }
 
-    public async Task SaveCreated(CancellationToken ct)
+    public async Task SaveCreatedAsync(CancellationToken ct)
     {
-        var state = Interlocked.CompareExchange(ref _saved, Saved, Unsaved);
-        if (state == Saved) return;
+        await _lock.WaitAsync(ct);
 
         try
         {
-            if (!_nexusModsUsers.IsEmpty) await _dbContextWrite.NexusModsUsers.BulkMergeAsync(_nexusModsUsers.Values, ct);
-            if (!_nexusModsUserNames.IsEmpty) await _dbContextWrite.NexusModsUserToName.BulkMergeAsync(_nexusModsUserNames.Values, ct);
-            if (!_nexusModsMods.IsEmpty) await _dbContextWrite.NexusModsMods.BulkMergeAsync(_nexusModsMods.Values, ct);
-            if (!_modules.IsEmpty) await _dbContextWrite.Modules.BulkMergeAsync(_modules.Values, ct);
-            if (!_exceptionTypes.IsEmpty) await _dbContextWrite.ExceptionTypes.BulkMergeAsync(_exceptionTypes.Values, ct);
-            if (!_discordUsers.IsEmpty) await _dbContextWrite.NexusModsUserToDiscord.BulkMergeAsync(_discordUsers.Values, ct);
-            if (!_steamUsers.IsEmpty) await _dbContextWrite.NexusModsUserToSteam.BulkMergeAsync(_steamUsers.Values, ct);
-            if (!_gogUsers.IsEmpty) await _dbContextWrite.NexusModsUserToGOG.BulkMergeAsync(_gogUsers.Values, ct);
-            if (!_discordTokens.IsEmpty) await _dbContextWrite.IntegrationDiscordTokens.BulkMergeAsync(_discordTokens.Values, ct);
-            if (!_gogTokens.IsEmpty) await _dbContextWrite.IntegrationGOGTokens.BulkMergeAsync(_gogTokens.Values, ct);
-            if (!_steamTokens.IsEmpty) await _dbContextWrite.IntegrationSteamTokens.BulkMergeAsync(_steamTokens.Values, ct);
+            if (!_nexusModsUsers.IsEmpty) await _dbContextWrite.NexusModsUsers.BulkMergeAsync(_nexusModsUsers.Values, o => o.UseInternalTransaction = false, ct);
+            if (!_nexusModsUserNames.IsEmpty) await _dbContextWrite.NexusModsUserToName.BulkMergeAsync(_nexusModsUserNames.Values, o => o.UseInternalTransaction = false, ct);
+            if (!_nexusModsMods.IsEmpty) await _dbContextWrite.NexusModsMods.BulkMergeAsync(_nexusModsMods.Values, o => o.UseInternalTransaction = false, ct);
+            if (!_modules.IsEmpty) await _dbContextWrite.Modules.BulkMergeAsync(_modules.Values, o => o.UseInternalTransaction = false, ct);
+            if (!_exceptionTypes.IsEmpty) await _dbContextWrite.ExceptionTypes.BulkMergeAsync(_exceptionTypes.Values, o => o.UseInternalTransaction = false, ct);
+            if (!_discordUsers.IsEmpty) await _dbContextWrite.NexusModsUserToDiscord.BulkMergeAsync(_discordUsers.Values, o => o.UseInternalTransaction = false, ct);
+            if (!_steamUsers.IsEmpty) await _dbContextWrite.NexusModsUserToSteam.BulkMergeAsync(_steamUsers.Values, o => o.UseInternalTransaction = false, ct);
+            if (!_gogUsers.IsEmpty) await _dbContextWrite.NexusModsUserToGOG.BulkMergeAsync(_gogUsers.Values, o => o.UseInternalTransaction = false, ct);
+            if (!_discordTokens.IsEmpty) await _dbContextWrite.IntegrationDiscordTokens.BulkMergeAsync(_discordTokens.Values, o => o.UseInternalTransaction = false, ct);
+            if (!_gogTokens.IsEmpty) await _dbContextWrite.IntegrationGOGTokens.BulkMergeAsync(_gogTokens.Values, o => o.UseInternalTransaction = false, ct);
+            if (!_steamTokens.IsEmpty) await _dbContextWrite.IntegrationSteamTokens.BulkMergeAsync(_steamTokens.Values, o => o.UseInternalTransaction = false, ct);
         }
-        catch (Exception e)
+        finally
         {
-            Console.WriteLine(e);
-            throw;
+            _lock.Release();
         }
     }
 }

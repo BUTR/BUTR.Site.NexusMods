@@ -42,7 +42,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
 
     public async Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string steamUserId)
     {
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
 
         var nexusModsUserToIntegrationSteam = entityFactory.GetOrCreateNexusModsUserSteam(nexusModsUserId, steamUserId);
@@ -82,7 +82,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
 
     public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string steamUserId, Dictionary<string, string> data)
     {
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
 
         var nexusModsUserToIntegrationSteam = entityFactory.GetOrCreateNexusModsUserSteam(nexusModsUserId, steamUserId);

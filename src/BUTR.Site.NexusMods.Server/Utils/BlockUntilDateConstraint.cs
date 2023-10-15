@@ -32,7 +32,6 @@ public class BlockUntilDateConstraint : IAwaitableConstraint
         {
             await Task.Delay(timeToWait, cancellationToken);
             return new DummyDisposable();
-
         }
         finally
         {

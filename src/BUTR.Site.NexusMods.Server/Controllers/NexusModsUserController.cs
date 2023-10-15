@@ -130,7 +130,7 @@ public sealed class NexusModsUserController : ControllerExtended
     public async Task<ActionResult<APIResponse<string?>>> ToNexusModsModUpdateAsync([FromBody] NexusModsUserToNexusModsModQuery query, CancellationToken ct)
     {
         await using var _ = _dbContextWrite.CreateSaveScope();
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
 
         var userId = HttpContext.GetUserId();
         var apiKey = HttpContext.GetAPIKey();
@@ -161,7 +161,7 @@ public sealed class NexusModsUserController : ControllerExtended
     public async Task<ActionResult<APIResponse<string?>>> ToNexusModsModLinkAsync([FromQuery] NexusModsUserToNexusModsModQuery query, CancellationToken ct)
     {
         await using var _ = _dbContextWrite.CreateSaveScope();
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
 
         var userId = HttpContext.GetUserId();
         var apiKey = HttpContext.GetAPIKey();
@@ -178,8 +178,12 @@ public sealed class NexusModsUserController : ControllerExtended
 
         if (HttpContext.GetIsPremium()) // Premium is needed for API based downloading
         {
-            var exposedModIds = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modInfo.Id, apiKey, ct).Distinct().ToImmutableArrayAsync(ct);
-            var entities = exposedModIds.Select(y => new NexusModsModToModuleEntity
+            var response = await _nexusModsAPIClient.GetModFileInfosFullAsync(gameDomain, modInfo.Id, apiKey, ct);
+            if (response is null) return APIResponseError<string>("Error while fetching the mod!");
+
+            var infos = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modInfo.Id, response.Files, apiKey, ct).ToImmutableArrayAsync(ct);
+
+            var entities = infos.Select(x => x.ModuleInfo).DistinctBy(x => x.Id).Select(y => new NexusModsModToModuleEntity
             {
                 TenantId = tenant,
                 NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
@@ -227,7 +231,7 @@ public sealed class NexusModsUserController : ControllerExtended
     public async Task<ActionResult<APIResponse<string?>>> ToModuleManualLinkAsync([FromQuery] NexusModsUserToModuleQuery query)
     {
         await using var _ = _dbContextWrite.CreateSaveScope();
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
 
         var tenant = HttpContext.GetTenant();
         if (tenant == TenantId.None) return BadRequest();
@@ -274,7 +278,7 @@ public sealed class NexusModsUserController : ControllerExtended
     public async Task<ActionResult<APIResponse<string?>>> ToNexusModsModManualLinkAsync([FromQuery] NexusModsUserToNexusModsModManualLinkQuery query, CancellationToken ct)
     {
         await using var _ = _dbContextWrite.CreateSaveScope();
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
 
         var userId = HttpContext.GetUserId();
         var apiKey = HttpContext.GetAPIKey();

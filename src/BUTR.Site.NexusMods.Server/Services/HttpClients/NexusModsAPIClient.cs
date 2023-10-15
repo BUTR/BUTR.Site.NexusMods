@@ -13,6 +13,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -72,6 +73,7 @@ public sealed class NexusModsAPIClient
         }
         catch (Exception)
         {
+            await _cache.RemoveAsync(apiKeyKey, ct);
             return null;
         }
     }
@@ -82,10 +84,13 @@ public sealed class NexusModsAPIClient
     public Task<NexusModsModFilesResponse?> GetModFileInfosAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, NexusModsApiKey apiKey, CancellationToken ct) =>
         GetCachedWithTimeLimitAsync<NexusModsModFilesResponse?>($"/v1/games/{gameDomain}/mods/{modId}/files.json?category=main", apiKey, ct);
 
+    public Task<NexusModsModFilesResponse?> GetModFileInfosFullAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, NexusModsApiKey apiKey, CancellationToken ct) =>
+        GetCachedWithTimeLimitAsync<NexusModsModFilesResponse?>($"/v1/games/{gameDomain}/mods/{modId}/files.json", apiKey, ct);
+
     public Task<NexusModsDownloadLinkResponse[]?> GetModFileLinksAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, NexusModsFileId fileId, NexusModsApiKey apiKey, CancellationToken ct) =>
         GetCachedWithTimeLimitAsync<NexusModsDownloadLinkResponse[]>($"/v1/games/{gameDomain}/mods/{modId}/files/{fileId}/download_link.json", apiKey, ct);
 
-    public async Task<NexusModsUpdatedModsResponse[]?> GetAllModUpdatesAsync(NexusModsGameDomain gameDomain, NexusModsApiKey apiKey, CancellationToken ct)
+    public async Task<NexusModsUpdatedModsResponse[]?> GetAllModUpdatesWeekAsync(NexusModsGameDomain gameDomain, NexusModsApiKey apiKey, CancellationToken ct)
     {
         try
         {
@@ -115,16 +120,24 @@ public sealed class NexusModsAPIClient
         {
             return null;
         }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     private async Task<TResponse?> GetCachedWithTimeLimitAsync<TResponse>(string url, NexusModsApiKey apiKey, CancellationToken ct) where TResponse : class?
     {
         var apiKeyKey = HashString(apiKey.Value);
+        var key = $"{url}{apiKeyKey}";
         try
         {
-            if (await _cache.GetStringAsync(url, token: ct) is { } json)
+            if (await _cache.GetStringAsync(key, token: ct) is { } json)
             {
-                return string.IsNullOrEmpty(json) ? null : JsonSerializer.Deserialize<TResponse>(json, _jsonSerializerOptions);
+                if (typeof(TResponse) == typeof(string))
+                    return Unsafe.As<TResponse>(json);
+
+                return JsonSerializer.Deserialize<TResponse?>(json, _jsonSerializerOptions);
             }
 
             try
@@ -137,30 +150,24 @@ public sealed class NexusModsAPIClient
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 var response = await _httpClient.SendAsync(request, ct);
                 _timeLimiter = ParseResponseLimits(response);
-                if (!response.IsSuccessStatusCode)
-                {
-                    await _cache.SetStringAsync(url, "", _expiration, token: ct);
-                    return null;
-                }
-                json = await response.Content.ReadAsStringAsync(ct);
-                var mod = JsonSerializer.Deserialize<TResponse>(json, _jsonSerializerOptions);
-                if (mod is null)
-                {
-                    await _cache.SetStringAsync(url, "", _expiration, token: ct);
-                    return null;
-                }
+                if (!response.IsSuccessStatusCode) return null;
 
-                await _cache.SetStringAsync(url, json, _expiration, token: ct);
-                return response.IsSuccessStatusCode ? mod : null;
+                json = await response.Content.ReadAsStringAsync(ct);
+                await _cache.SetStringAsync(key, json, _expiration, token: ct);
+
+                if (typeof(TResponse) == typeof(string))
+                    return Unsafe.As<TResponse>(json);
+
+                return JsonSerializer.Deserialize<TResponse?>(json, _jsonSerializerOptions);
             }
             finally
             {
                 _lock.Release();
             }
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            await _cache.RemoveAsync(apiKeyKey, ct);
+            await _cache.RemoveAsync(key, ct);
             return null;
         }
     }
@@ -171,7 +178,12 @@ public sealed class NexusModsAPIClient
         // Nginx will however allow bursts over this for very short periods of time.
         var constraint = new CountByIntervalAwaitableConstraint(30, TimeSpan.FromSeconds(1));
 
+        // Check the Daily first
+        var dailyRemaining = int.TryParse(response.Headers.GetValues("X-RL-Daily-Remaining").FirstOrDefault(), out var dailyRemainingVal) ? dailyRemainingVal : 0;
+        if (dailyRemaining != 0)
+            return TimeLimiter.Compose(constraint);
 
+        // Use the Hours when Daily is depleted
         var hourlyLimit = int.TryParse(response.Headers.GetValues("X-RL-Hourly-Limit").FirstOrDefault(), out var hourlyLimitVal) ? hourlyLimitVal : 0;
         var hourlyLimitConstraint = new CountByIntervalAwaitableConstraint(hourlyLimit, TimeSpan.FromHours(1));
 
@@ -182,18 +194,6 @@ public sealed class NexusModsAPIClient
             ? (IAwaitableConstraint) new BlockUntilDateConstraint(hourlyReset)
             : (IAwaitableConstraint) new CountByIntervalAwaitableConstraint(hourlyRemaining, hourlyTimeLeft);
 
-
-        var dailyLimit = int.TryParse(response.Headers.GetValues("X-RL-Daily-Limit").FirstOrDefault(), out var dailyLimitVal) ? dailyLimitVal : 0;
-        var dailyLimitConstraint = new CountByIntervalAwaitableConstraint(dailyLimit, TimeSpan.FromDays(1));
-
-        var dailyRemaining = int.TryParse(response.Headers.GetValues("X-RL-Daily-Remaining").FirstOrDefault(), out var dailyRemainingVal) ? dailyRemainingVal : 0;
-        var dailyReset = DateTime.TryParse(response.Headers.GetValues("X-RL-Daily-Reset").FirstOrDefault(), out var dailyResetVal) ? dailyResetVal : DateTime.UtcNow;
-        var dailyTimeLeft = dailyReset - DateTime.UtcNow;
-        var dailyRemainingConstraint = dailyRemaining == 0
-            ? (IAwaitableConstraint) new BlockUntilDateConstraint(dailyReset)
-            : (IAwaitableConstraint) new CountByIntervalAwaitableConstraint(dailyRemaining, dailyTimeLeft);
-
-
-        return TimeLimiter.Compose(constraint, hourlyLimitConstraint, hourlyRemainingConstraint, dailyLimitConstraint, dailyRemainingConstraint);
+        return TimeLimiter.Compose(constraint, hourlyLimitConstraint, hourlyRemainingConstraint);
     }
 }

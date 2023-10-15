@@ -13,10 +13,12 @@ public class NexusModsModToModuleInfoHistoryEntityConfiguration : BaseEntityConf
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsModToModuleInfoHistoryEntity> builder)
     {
         builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_name_id").HasConversion<NexusModsModId.EfCoreValueConverter>().ValueGeneratedNever();
+        builder.Property(x => x.NexusModsFileId).HasColumnName("nexusmods_file_id").HasConversion<NexusModsFileId.EfCoreValueConverter>();
         builder.Property<ModuleId>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id").HasConversion<ModuleId.EfCoreValueConverter>();
         builder.Property(x => x.ModuleVersion).HasColumnName("module_version").HasConversion<ModuleVersion.EfCoreValueConverter>();
         builder.Property(x => x.ModuleInfo).HasColumnName("module_info").HasColumnType("jsonb");
-        builder.ToTable("nexusmods_mod_module_info_history", "nexusmods_mod").HasKey(nameof(NexusModsModToModuleInfoHistoryEntity.TenantId), nameof(NexusModsModEntity.NexusModsModId), nameof(ModuleEntity.ModuleId), nameof(NexusModsModToModuleInfoHistoryEntity.ModuleVersion));
+        builder.Property(x => x.UploadDate).HasColumnName("date_of_upload");
+        builder.ToTable("nexusmods_mod_module_info_history", "nexusmods_mod").HasKey(nameof(NexusModsModToModuleInfoHistoryEntity.TenantId), nameof(NexusModsModToModuleInfoHistoryEntity.NexusModsFileId), nameof(NexusModsModEntity.NexusModsModId), nameof(ModuleEntity.ModuleId), nameof(NexusModsModToModuleInfoHistoryEntity.ModuleVersion));
 
         builder.HasOne(x => x.NexusModsMod)
             .WithMany()

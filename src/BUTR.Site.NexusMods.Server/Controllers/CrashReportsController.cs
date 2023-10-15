@@ -1,4 +1,7 @@
-﻿using BUTR.Authentication.NexusMods.Authentication;
+﻿using Bannerlord.ModuleManager;
+
+using BUTR.Authentication.NexusMods.Authentication;
+using BUTR.CrashReport.Models;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
@@ -25,7 +28,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
 public sealed class CrashReportsController : ControllerExtended
 {
-    public sealed record CrashReportModel
+    public sealed record CrashReportModel2
     {
         public required CrashReportId Id { get; init; }
         public required CrashReportVersion Version { get; init; }
@@ -37,6 +40,12 @@ public sealed class CrashReportsController : ControllerExtended
         public required ImmutableArray<ModuleId> InvolvedModules { get; init; }
         public CrashReportStatus Status { get; init; } = CrashReportStatus.New;
         public string Comment { get; init; } = string.Empty;
+    }
+
+    public record ModuleUpdate
+    {
+        public ModuleId ModuleId { get; init; }
+        public ModuleVersion ModuleVersion { get; init; }
     }
 
     private sealed record ModuleIdToVersionView
@@ -74,7 +83,7 @@ public sealed class CrashReportsController : ControllerExtended
         _dbContextWrite = dbContextWrite ?? throw new ArgumentNullException(nameof(dbContextWrite));
     }
 
-    private async Task<BasePaginated<UserCrashReportView, CrashReportModel>> PaginatedBaseAsync(PaginatedQuery query, CancellationToken ct)
+    private async Task<BasePaginated<UserCrashReportView, CrashReportModel2>> PaginatedBaseAsync(PaginatedQuery query, CancellationToken ct)
     {
         var page = query.Page;
         var pageSize = Math.Max(Math.Min(query.PageSize, 50), 5);
@@ -137,7 +146,7 @@ public sealed class CrashReportsController : ControllerExtended
                                x.ModuleInfos.Any(y => moduleIds.Contains(y.Module.ModuleId)) ||
                                x.ModuleInfos.Where(y => y.NexusModsMod != null).Any(y => nexusModsModIds.Contains(y.NexusModsMod!.NexusModsModId)));
 
-        return new(await dbQuery.PaginatedAsync(page, pageSize, ct), items => items.Select(x => new CrashReportModel
+        return new(await dbQuery.PaginatedAsync(page, pageSize, ct), items => items.Select(x => new CrashReportModel2
         {
             Id = x.Id,
             Version = x.Version,
@@ -154,7 +163,7 @@ public sealed class CrashReportsController : ControllerExtended
 
     [HttpPost("Paginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<CrashReportModel>?>>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ActionResult<APIResponse<PagingData<CrashReportModel2>?>>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var (paginated, transform) = await PaginatedBaseAsync(query, ct);
         return APIPagingResponse(paginated, transform);
@@ -178,9 +187,9 @@ public sealed class CrashReportsController : ControllerExtended
 
     [HttpPost("Update")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> UpdateAsync([FromBody] CrashReportModel updatedCrashReport)
+    public async Task<ActionResult<APIResponse<string?>>> UpdateAsync([FromBody] CrashReportModel2 updatedCrashReport)
     {
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
 
         var userId = HttpContext.GetUserId();
@@ -197,5 +206,61 @@ public sealed class CrashReportsController : ControllerExtended
         };
         _dbContextWrite.FutureUpsert(x => x.NexusModsUserToCrashReports, entity);
         return APIResponse("Updated successful!");
+    }
+
+
+    [AllowAnonymous]
+    [HttpPost("GetUpdates")]
+    [Produces("application/json")]
+    public async Task<ActionResult<APIResponse<IEnumerable<ModuleUpdate>?>>> UpdateAsync([FromQuery] TenantId tenant, [FromBody] CrashReportModel crashReport, [FromServices] ITenantContextAccessor tenantContextAccessor)
+    {
+        if (!TenantId.Values.Contains(tenant)) return BadRequest();
+        tenantContextAccessor.Current = tenant;
+
+        var moduleIds = crashReport.Modules.Where(x => !x.IsOfficial).Select(x => ModuleId.From(x.Id)).ToArray();
+        var moduleIdVersions = crashReport.Modules.Where(x => !x.IsOfficial).Select(x => (Id: ModuleId.From(x.Id), Version: ModuleVersion.From(x.Version))).ToArray();
+        var entries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.Module.ModuleId));
+
+        if (tenant == TenantId.Bannerlord)
+        {
+            if (!ApplicationVersion.TryParse(crashReport.GameVersion, out var gVersion)) return BadRequest();
+
+            var compatible = entries
+                .AsEnumerable()
+                .Select(x => new
+                {
+                    ModuleId = x.Module.ModuleId,
+                    ModuleVersion = ApplicationVersion.TryParse(x.ModuleVersion.Value, out var v) ? v : ApplicationVersion.Empty,
+                    ModuleInfo = x.ModuleInfo,
+                })
+                .Where(x => x.ModuleInfo.DependentModuleMetadatas.Any(y =>
+                {
+                    if (y.Id != "Native") return false;
+                    var version = y.Version ?? string.Empty;
+                    if (version.StartsWith("ev")) version = version.Substring(1);
+                    return ApplicationVersion.TryParse(version, out var nVersion) && nVersion <= gVersion;
+                }))
+                .GroupBy(x => x.ModuleId)
+                .Select(x => x.MaxBy(y => y.ModuleVersion, new ApplicationVersionComparer())!)
+                .ToArray();
+
+            var updates = compatible.Where(x =>
+            {
+                var curentModule = moduleIdVersions.First(y => y.Id == x.ModuleId);
+
+                if (ApplicationVersion.TryParse(curentModule.Version.Value, out var cVersion))
+                    return cVersion < x.ModuleVersion;
+
+                return false;
+            }).ToArray();
+
+            return APIResponse(updates.Select(x => new ModuleUpdate
+            {
+                ModuleId = x.ModuleId,
+                ModuleVersion = ModuleVersion.From(x.ModuleVersion.ToString()),
+            }));
+        }
+
+        return APIResponse(Enumerable.Empty<ModuleUpdate>());
     }
 }

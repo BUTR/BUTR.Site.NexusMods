@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aragas.Extensions.Options.FluentValidation" Version="1.1.0.14" />
-    <PackageReference Include="Bannerlord.ModuleManager" Version="5.0.211" />
+    <PackageReference Include="Bannerlord.ModuleManager" Version="5.0.214" />
     <PackageReference Include="BUTR.Authentication.NexusMods" Version="1.0.0.6" />
     <PackageReference Include="BUTR.CrashReport" Version="13.0.0.22" />
     <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.22" />

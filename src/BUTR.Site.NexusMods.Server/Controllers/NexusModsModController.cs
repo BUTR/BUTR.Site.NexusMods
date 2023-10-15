@@ -68,7 +68,7 @@ public sealed class NexusModsModController : ControllerExtended
     public async Task<ActionResult<APIResponse<string?>>> ToModuleManualLinkAsync([FromQuery] NexusModsModToModuleManualLinkQuery query)
     {
         await using var _ = _dbContextWrite.CreateSaveScope();
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
 
         var tenant = HttpContext.GetTenant();
         if (tenant == TenantId.None) return BadRequest();

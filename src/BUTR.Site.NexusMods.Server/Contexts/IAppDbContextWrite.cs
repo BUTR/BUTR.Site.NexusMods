@@ -11,7 +11,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts;
 
 public interface IAppDbContextWrite : IAppDbContextRead
 {
-    EntityFactory CreateEntityFactory();
+    EntityFactory GetEntityFactory();
     
     IAsyncDisposable CreateSaveScope();
 

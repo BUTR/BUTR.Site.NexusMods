@@ -41,46 +41,37 @@ public sealed class AppDbContextWrite : BaseAppDbContext, IAppDbContextWrite
 
     public AppDbContextWrite Create() => _dbContextFactory.CreateDbContext();
 
-    public EntityFactory CreateEntityFactory() => _entityFactory ??= new EntityFactory(_tenantContextAccessor, this);
+    public EntityFactory GetEntityFactory() => _entityFactory ??= new EntityFactory(_tenantContextAccessor, this);
 
-    public IAsyncDisposable CreateSaveScope() => new AppContextSaveScope(this, CreateEntityFactory());
+    public IAsyncDisposable CreateSaveScope() => new AppContextSaveScope(this);
 
-    public void FutureUpsert<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, TEntity entity) where TEntity : class, IEntity
-    {
+    public void FutureUpsert<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, TEntity entity) where TEntity : class, IEntity =>
         FutureAction(x => dbset(x).SingleMerge(entity));
-    }
 
-    public void FutureUpsert<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, ICollection<TEntity> entities) where TEntity : class, IEntity
-    {
+    public void FutureUpsert<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, ICollection<TEntity> entities) where TEntity : class, IEntity =>
         FutureAction(x => dbset(x).BulkMerge(entities));
-    }
 
-    public void FutureSyncronize<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, ICollection<TEntity> entities) where TEntity : class, IEntity
-    {
+    public void FutureSyncronize<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, ICollection<TEntity> entities) where TEntity : class, IEntity =>
         FutureAction(x => dbset(x).BulkSynchronize(entities));
-    }
 
-    public void FutureAction(Action<IAppDbContextWrite> action) => this.FutureAction<AppDbContextWrite>(action);
+    private void FutureAction(Action<IAppDbContextWrite> action) => this.FutureAction<AppDbContextWrite>(action);
 
     public async Task SaveAsync(CancellationToken ct)
     {
         if (IsReadOnly)
-        {
             throw new NotSupportedException("The Save method is not supported on read-only database contexts.");
-        }
 
+        await using var transaction = await Database.BeginTransactionAsync(ct);
         try
         {
-            await Database.BeginTransactionAsync(ct);
-            if (_entityFactory is not null)
-                await _entityFactory.SaveCreated(ct);
+            if (_entityFactory is not null) await _entityFactory.SaveCreatedAsync(ct);
             this.ExecuteFutureAction(false);
-            await this.BulkSaveChangesAsync(ct);
-            await Database.CommitTransactionAsync(ct);
+            await this.BulkSaveChangesAsync(o => o.UseInternalTransaction = false, ct);
+            await transaction.CommitAsync(ct);
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            await Database.RollbackTransactionAsync(ct);
+            await transaction.RollbackAsync(ct);
             throw;
         }
     }

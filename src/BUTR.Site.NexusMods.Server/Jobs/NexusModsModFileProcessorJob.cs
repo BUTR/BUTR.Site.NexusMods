@@ -5,7 +5,6 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -39,6 +38,8 @@ public sealed class NexusModsModFileProcessorJob : IJob
     {
         var ct = context.CancellationToken;
 
+        var processed = 0;
+        var exceptions = new List<Exception>();
         foreach (var tenant in TenantId.Values)
         {
             await using var scope = _serviceScopeFactory.CreateAsyncScope();
@@ -46,95 +47,96 @@ public sealed class NexusModsModFileProcessorJob : IJob
             var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
             tenantContextAccessor.Current = tenant;
 
-            await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
+            var (processed_, exceptions_) = await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
+            processed += processed_;
+            exceptions.AddRange(exceptions_);
         }
 
-        context.Result = "Finished processing all available files";
-        context.SetIsSuccess(true);
+        context.Result = $"Processed {processed} files. Failed {exceptions.Count} files.{(exceptions.Count > 0 ? $"\n{string.Join('\n', exceptions)}" : string.Empty)}";
+        context.SetIsSuccess(exceptions.Count == 0);
     }
 
-    private static async Task HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    private static async Task<(int Processed, List<Exception> Exceptions)> HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
     {
-        const int notFoundModIdsTreshold = 25;
+        const int notFoundModsTreshold = 25;
 
         var info = serviceProvider.GetRequiredService<NexusModsModFileParser>();
         var options = serviceProvider.GetRequiredService<IOptions<NexusModsOptions>>().Value;
         var client = serviceProvider.GetRequiredService<NexusModsAPIClient>();
-        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
-        var entityFactory = dbContextWrite.CreateEntityFactory();
+        var entityFactory = dbContextWrite.GetEntityFactory();
 
         var gameDomain = tenant.ToGameDomain();
 
-        var modIdRaw = 0;
-        var notFoundModIds = 0;
-        var @break = false;
-        while (!ct.IsCancellationRequested && !@break)
+        var processed = 0;
+        var exceptions = new List<Exception>();
+
+        var notFoundMods = 0;
+        var modIdRaw = 1; //2907, 5090
+        while (!ct.IsCancellationRequested)
         {
-            await using var _ = dbContextWrite.CreateSaveScope();
+            var modId = NexusModsModId.From(modIdRaw);
+
             var nexusModsModModuleEntities = new List<NexusModsModToModuleEntity>();
             var nexusModsModToFileUpdateEntities = new List<NexusModsModToFileUpdateEntity>();
             var nexusModsModToModuleInfoHistoryEntities = new List<NexusModsModToModuleInfoHistoryEntity>();
-            
-            for (var i = 0; i < 50; i++)
-            {
-                var modId = NexusModsModId.From(modIdRaw);
 
-                var updateDate = await dbContextRead.NexusModsModToFileUpdates.FirstOrDefaultAsync(x => x.NexusModsMod.NexusModsModId == modId, ct);
-                if (await client.GetModFileInfosAsync(gameDomain, modId, options.ApiKey, ct) is not { } files)
+            try
+            {
+                var response = await client.GetModFileInfosFullAsync(gameDomain, modId, options.ApiKey, ct);
+                if (response is null)
                 {
-                    notFoundModIds++;
+                    notFoundMods++;
                     modIdRaw++;
-                    if (notFoundModIds >= notFoundModIdsTreshold)
-                    {
-                        @break = true;
+                    if (notFoundMods >= notFoundModsTreshold)
                         break;
-                    }
                     continue;
                 }
-                notFoundModIds = 0;
 
-                // max sequence no elements
-                var latestFileUpdate = files.Files.Select(x => DateTimeOffset.FromUnixTimeSeconds(x.UploadedTimestamp).UtcDateTime).DefaultIfEmpty(DateTime.MinValue).Max();
-                if (latestFileUpdate != DateTime.MinValue)
+                var infos = await info.GetModuleInfosAsync(gameDomain, modId, response.Files, options.ApiKey, ct).ToArrayAsync(ct);
+                var latestFileUpdate = DateTimeOffset.FromUnixTimeSeconds(response.Files.Select(x => x.UploadedTimestamp).Where(x => x is not null).Max() ?? 0).UtcDateTime;
+
+                nexusModsModModuleEntities.AddRange(infos.Select(x => x.ModuleInfo).DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
                 {
-                    //if (updateDate is null || updateDate.LastCheckedDate < latestFileUpdate)
-                    {
-                        var exposedModuleInfos = await info.GetModuleInfosAsync(gameDomain, modId, options.ApiKey, ct).ToArrayAsync(ct);
+                    TenantId = tenant,
+                    NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modId),
+                    Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
+                    LastUpdateDate = latestFileUpdate,
+                    LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure,
+                }));
+                nexusModsModToFileUpdateEntities.Add(new NexusModsModToFileUpdateEntity
+                {
+                    TenantId = tenant,
+                    NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modId),
+                    LastCheckedDate = latestFileUpdate,
+                });
+                nexusModsModToModuleInfoHistoryEntities.AddRange(infos.DistinctBy(x => new { x.ModuleInfo.Id, x.ModuleInfo.Version, x.FileId }).Select(x => new NexusModsModToModuleInfoHistoryEntity
+                {
+                    TenantId = tenant,
+                    NexusModsFileId = x.FileId,
+                    NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modId),
+                    Module = entityFactory.GetOrCreateModule(ModuleId.From(x.ModuleInfo.Id)),
+                    ModuleVersion = ModuleVersion.From(x.ModuleInfo.Version.ToString()),
+                    ModuleInfo = ModuleInfoModel.Create(x.ModuleInfo),
+                    UploadDate = x.Uploaded,
+                }));
 
-                        var id = modIdRaw;
-                        nexusModsModModuleEntities.AddRange(exposedModuleInfos.DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
-                        {
-                            TenantId = tenant,
-                            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(NexusModsModId.From(id)),
-                            Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
-                            LastUpdateDate = latestFileUpdate,
-                            LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure,
-                        }));
-                        nexusModsModToFileUpdateEntities.Add(new NexusModsModToFileUpdateEntity
-                        {
-                            TenantId = tenant,
-                            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modId),
-                            LastCheckedDate = latestFileUpdate,
-                        });
-                        nexusModsModToModuleInfoHistoryEntities.AddRange(exposedModuleInfos.DistinctBy(x => new { x.Id, x.Version }).Select(x => new NexusModsModToModuleInfoHistoryEntity
-                        {
-                            TenantId = tenant,
-                            NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modId),
-                            Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
-                            ModuleVersion = ModuleVersion.From(x.Version.ToString()),
-                            ModuleInfo = ModuleInfoModel.Create(x),
-                        }));
-                    }
-                }
-                
-                modIdRaw++;
+                await using var _ = dbContextWrite.CreateSaveScope();
+                dbContextWrite.FutureUpsert(x => x.NexusModsModModules, nexusModsModModuleEntities);
+                dbContextWrite.FutureUpsert(x => x.NexusModsModToFileUpdates, nexusModsModToFileUpdateEntities);
+                dbContextWrite.FutureUpsert(x => x.NexusModsModToModuleInfoHistory, nexusModsModToModuleInfoHistoryEntities);
+                // Disposing the DBContext will save the data
+
+                processed++;
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(new Exception($"Mod Id: {modId}", e));
             }
 
-            dbContextWrite.FutureUpsert(x => x.NexusModsModModules, nexusModsModModuleEntities);
-            dbContextWrite.FutureUpsert(x => x.NexusModsModToFileUpdates, nexusModsModToFileUpdateEntities);
-            dbContextWrite.FutureUpsert(x => x.NexusModsModToModuleInfoHistory, nexusModsModToModuleInfoHistoryEntities);
-            // Disposing the DBContext will save the data
+            modIdRaw++;
         }
+
+        return (processed, exceptions);
     }
 }

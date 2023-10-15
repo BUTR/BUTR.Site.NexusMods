@@ -34,20 +34,24 @@ public class NexusModsModFileParser
         _apiClient = apiClient;
     }
 
-
-    public async IAsyncEnumerable<ModuleInfoExtended> GetModuleInfosAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, NexusModsApiKey apiKey, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<NexusModsModFileParserResult> GetModuleInfosAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, IEnumerable<NexusModsModFilesResponse.File> files, NexusModsApiKey apiKey, [EnumeratorCancellation] CancellationToken ct)
     {
         const int DefaultBufferSize = 1024 * 16;
         const int LargeBufferSize = 1024 * 1024 * 5;
 
-        var fileInfos = await _apiClient.GetModFileInfosAsync(gameDomain, modId, apiKey, ct);
-        foreach (var fileInfo in fileInfos?.Files ?? Array.Empty<NexusModsModFilesResponse.File>())
+        foreach (var fileInfo in files)
         {
-            if (!await HasSubModuleXmlAsync(fileInfo)) continue;
+            if (fileInfo.CategoryName is null) continue;
+            if (fileInfo.FileId is not { } fileId) continue;
+            if (fileInfo.UploadedTimestamp is not { } uploadedTimestampRaw) continue;
 
-            var downloadLinks = await _apiClient.GetModFileLinksAsync(gameDomain, modId, fileInfo.Id, apiKey, ct) ?? Array.Empty<NexusModsDownloadLinkResponse>();
+            if (await SubModuleXmlCountAsync(fileInfo) is var subModuleCount && false || subModuleCount == 0) continue;
 
-            await using var httpStream = HttpRangeStream.CreateOrDefault(downloadLinks.Select(x => new Uri(x.Url)).ToArray(), _httpClient, new HttpRangeOptions { BufferSize = DefaultBufferSize });
+            var uploadedTimestamp = DateTimeOffset.FromUnixTimeSeconds(uploadedTimestampRaw).UtcDateTime;
+            var downloadLinks = await _apiClient.GetModFileLinksAsync(gameDomain, modId, fileId, apiKey, ct) ?? Array.Empty<NexusModsDownloadLinkResponse>();
+            if (downloadLinks.Length == 0) continue;
+
+            await using var httpStream = HttpRangeStream.CreateOrDefault(downloadLinks.OrderByDescending(x => x.Url.Contains("cf-files")).Select(x => new Uri(x.Url)).ToArray(), _httpClient, new HttpRangeOptions { BufferSize = DefaultBufferSize });
             if (httpStream is null) throw new InvalidOperationException($"Failed to get HttpStream for file '{fileInfo.FileName}'");
 
             using var archive = ArchiveExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
@@ -58,8 +62,8 @@ public class NexusModsModFileParser
                 httpStream.SetBufferSize(LargeBufferSize);
                 using var reader = ReaderExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
                 if (reader is null) throw new InvalidOperationException($"Failed to get Reader for file '{fileInfo.FileName}'");
-                await foreach (var moduleInfo in GetModuleInfosFromReaderAsync(reader).WithCancellation(ct))
-                    yield return moduleInfo;
+                await foreach (var moduleInfo in GetModuleInfosFromReaderAsync(reader, subModuleCount).WithCancellation(ct))
+                    yield return new() { ModuleInfo = moduleInfo, FileId = fileId, Uploaded = uploadedTimestamp };
                 continue;
             }
 
@@ -69,32 +73,33 @@ public class NexusModsModFileParser
             if (archive.Type == ArchiveType.Rar)
                 httpStream.SetBufferSize(LargeBufferSize);
 
-            await foreach (var moduleInfo in GetModuleInfosFromArchiveAsync(archive).WithCancellation(ct))
-                yield return moduleInfo;
+            await foreach (var moduleInfo in GetModuleInfosFromArchiveAsync(archive, subModuleCount).WithCancellation(ct))
+                yield return new() { ModuleInfo = moduleInfo, FileId = fileId, Uploaded = uploadedTimestamp };
         }
     }
 
-    private static async IAsyncEnumerable<ModuleInfoExtended> GetModuleInfosFromReaderAsync(IReader reader)
+    private static async IAsyncEnumerable<ModuleInfoExtended> GetModuleInfosFromReaderAsync(IReader reader, int subModuleCount)
     {
-        while (reader.MoveToNextEntry())
+        while (subModuleCount > 0 && reader.MoveToNextEntry())
         {
             if (reader.Entry.IsDirectory) continue;
 
             if (!reader.Entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
 
-
             await using var stream = reader.OpenEntryStream();
             if (GetModuleInfo(stream) is not { } moduleInfo) continue;
 
             yield return moduleInfo;
-            break;
+            subModuleCount--;
         }
     }
 
-    private static async IAsyncEnumerable<ModuleInfoExtended> GetModuleInfosFromArchiveAsync(IArchive archive)
+    private static async IAsyncEnumerable<ModuleInfoExtended> GetModuleInfosFromArchiveAsync(IArchive archive, int subModuleCount)
     {
         foreach (var entry in archive.Entries)
         {
+            if (subModuleCount > 0) break;
+
             if (entry.IsDirectory) continue;
 
             if (!entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
@@ -103,38 +108,41 @@ public class NexusModsModFileParser
             if (GetModuleInfo(stream) is not { } moduleInfo) continue;
 
             yield return moduleInfo;
-            break;
+            subModuleCount--;
         }
     }
 
-    private async Task<bool> HasSubModuleXmlAsync(NexusModsModFilesResponse.File fileInfo)
+    private async Task<int> SubModuleXmlCountAsync(NexusModsModFilesResponse.File fileInfo)
     {
-        static bool ContainsSubModuleFile(IReadOnlyList<NexusModsModFileContentResponse.ContentEntry>? entries)
+        static int ContainsSubModuleFile(IReadOnlyList<NexusModsModFileContentResponse.ContentEntry>? entries)
         {
             if (entries is null)
-                return false;
+                return 0;
 
+            var count = 0;
             foreach (var entry in entries)
             {
                 if (entry.Name.Equals("SubModule.xml", StringComparison.OrdinalIgnoreCase))
-                    return true;
-                if (ContainsSubModuleFile(entry.Children))
-                    return true;
+                {
+                    count++;
+                    continue;
+                }
+
+                count += ContainsSubModuleFile(entry.Children);
             }
-            return false;
+            return count;
         }
 
         try
         {
-            var content = await _httpClient.GetFromJsonAsync<NexusModsModFileContentResponse>(fileInfo.ContentPreviewUrl);
-            if (content is null) return false;
-            if (!ContainsSubModuleFile(content.Children)) return false;
+            var content = await _httpClient.GetFromJsonAsync<NexusModsModFileContentResponse>(fileInfo.ContentPreviewLink);
+            if (content is null) return 0;
+            return ContainsSubModuleFile(content.Children);
         }
         catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
         {
-            return false;
+            return 0;
         }
-        return true;
     }
 
     private static ModuleInfoExtended? GetModuleInfo(Stream stream)
@@ -143,6 +151,7 @@ public class NexusModsModFileParser
         {
             var document = new XmlDocument();
             document.Load(stream);
+
             return ModuleInfoExtended.FromXml(document);
         }
         catch (Exception)

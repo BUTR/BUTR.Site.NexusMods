@@ -12,8 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-using MoreAsyncLINQ;
-
 using Quartz;
 
 using System;
@@ -230,7 +228,7 @@ CallStack:
 
         var dbContextFactory = serviceProvider.GetRequiredService<IAppDbContextFactory>();
         var dbContextWrite = await dbContextFactory.CreateWriteAsync(ct);
-        var entityFactory = dbContextWrite.CreateEntityFactory();
+        var entityFactory = dbContextWrite.GetEntityFactory();
         await using var _ = dbContextWrite.CreateSaveScope();
 
         // Filter out duplicate reports
@@ -339,52 +337,9 @@ CallStack:
 
             var client = scope.ServiceProvider.GetRequiredService<CrashReporterClient>();
 
-            await foreach (var batch in client.GetNewCrashReportMetadatasAsync(DateTime.UtcNow.AddHours(-2), ct).OfType<CrashReportFileMetadata>().Batch(100).WithCancellation(ct))
+            await foreach (var batch in client.GetNewCrashReportMetadatasAsync(DateTime.UtcNow.AddHours(-2), ct).OfType<CrashReportFileMetadata>().ChunkAsync(100).WithCancellation(ct))
             {
-                processed += batch.Length;
-            }
-        }
-
-        context.Result = $"Processed {processed} crash reports";
-        context.SetIsSuccess(true);
-    }
-
-    public async Task Execute2(IJobExecutionContext context)
-    {
-        const int take = 2000;
-
-        var ct = context.CancellationToken;
-
-        var processed = 0;
-        foreach (var tenant in TenantId.Values)
-        {
-            await using var scope = _serviceScopeFactory.CreateAsyncScope();
-
-            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
-            tenantContextAccessor.Current = tenant;
-
-            var dbContextFactory = scope.ServiceProvider.GetRequiredService<IAppDbContextFactory>();
-            var dbContextRead = await dbContextFactory.CreateReadAsync(ct);
-
-            var client = scope.ServiceProvider.GetRequiredService<CrashReporterClient>();
-
-            var availableFileIds = await client.GetCrashReportNamesAsync(ct);
-            availableFileIds.ExceptWith(await dbContextRead.CrashReportIgnoredFileIds.Select(x => x.Value).ToListAsync(ct));
-
-            for (var toSkip = 0; toSkip < availableFileIds.Count; toSkip += take)
-            {
-                var toTake = availableFileIds.Count - toSkip >= take ? take : availableFileIds.Count - toSkip;
-
-                var fileIds = availableFileIds.Skip(toSkip).Take(toTake).ToHashSet();
-                fileIds.ExceptWith(await dbContextRead.CrashReportToFileIds.Where(x => fileIds.Contains(x.FileId)).Select(x => x.FileId).ToListAsync(ct));
-                if (fileIds.Count == 0) continue;
-
-                await foreach (var batch in client.GetCrashReportMetadatasAsync(fileIds, ct).OfType<CrashReportFileMetadata>().Batch(10).WithCancellation(ct))
-                {
-                    await HandleFileIdDatesAsync(tenant, scope.ServiceProvider, _logger, client, batch.ToAsyncEnumerable(), ct);
-                }
-
-                processed += fileIds.Count;
+                processed += batch.Count;
             }
         }
 

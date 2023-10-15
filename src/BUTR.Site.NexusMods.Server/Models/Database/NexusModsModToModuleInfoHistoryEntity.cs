@@ -8,9 +8,11 @@ public sealed record NexusModsModToModuleInfoHistoryEntity : IEntityWithTenant
     public required NexusModsModEntity NexusModsMod { get; init; }
     public required ModuleEntity Module { get; init; }
     public required ModuleVersion ModuleVersion { get; init; }
+    public required NexusModsFileId NexusModsFileId { get; init; }
+    public required DateTime UploadDate { get; init; }
 
     public required ModuleInfoModel ModuleInfo { get; init; }
 
 
-    public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsMod.NexusModsModId, Module.ModuleId, ModuleVersion);
+    public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsMod.NexusModsModId, NexusModsFileId, Module.ModuleId, ModuleVersion);
 }

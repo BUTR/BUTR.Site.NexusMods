@@ -59,7 +59,7 @@ public sealed class CrashReportAnalyzerProcessorJob : IJob
     {
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
-        var entityFactory = dbContextWrite.CreateEntityFactory();
+        var entityFactory = dbContextWrite.GetEntityFactory();
         await using var _ = dbContextWrite.CreateSaveScope();
 
         var allModVersionsQuery = dbContextRead.CrashReportModuleInfos

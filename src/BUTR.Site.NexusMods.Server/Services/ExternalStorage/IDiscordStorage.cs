@@ -38,7 +38,7 @@ public sealed class DatabaseDiscordStorage : IDiscordStorage
 
     public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
     {
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
 
         var nexusModsUserToIntegrationDiscord = entityFactory.GetOrCreateNexusModsUserDiscord(nexusModsUserId, discordUserId);

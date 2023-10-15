@@ -45,7 +45,7 @@ public sealed class DatabaseGOGStorage : IGOGStorage
 
     public async Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
     {
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
 
         var games = await _gogEmbedClient.GetGamesAsync(tokens.AccessToken, CancellationToken.None);
@@ -76,7 +76,7 @@ public sealed class DatabaseGOGStorage : IGOGStorage
 
     public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
     {
-        var entityFactory = _dbContextWrite.CreateEntityFactory();
+        var entityFactory = _dbContextWrite.GetEntityFactory();
         await using var _ = _dbContextWrite.CreateSaveScope();
 
         var nexusModsUserToIntegrationGOG = entityFactory.GetOrCreateNexusModsUserGOG(nexusModsUserId, gogUserId);

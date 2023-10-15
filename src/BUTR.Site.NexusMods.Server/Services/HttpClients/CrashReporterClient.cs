@@ -28,8 +28,6 @@ public sealed class CrashReporterClient
     public async Task<string> GetCrashReportAsync(CrashReportFileId id, CancellationToken ct) => await _httpClient.GetStringAsync($"{id}.html", ct);
     public async Task<CrashReportModel?> GetCrashReportModelAsync(CrashReportFileId id, CancellationToken ct) => await _httpClient.GetFromJsonAsync<CrashReportModel>($"{id}.json", ct);
 
-    public async Task<HashSet<CrashReportFileId>> GetCrashReportNamesAsync(CancellationToken ct) => await _httpClient.GetFromJsonAsync<HashSet<CrashReportFileId>>("getallfilenames", ct) ?? new HashSet<CrashReportFileId>();
-
     public async IAsyncEnumerable<CrashReportFileMetadata?> GetNewCrashReportMetadatasAsync(DateTime dateTime, [EnumeratorCancellation] CancellationToken ct)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "getnewcrashreports") { Content = JsonContent.Create(new { DateTime = dateTime.ToString("o") }, options: _jsonSerializerOptions) };

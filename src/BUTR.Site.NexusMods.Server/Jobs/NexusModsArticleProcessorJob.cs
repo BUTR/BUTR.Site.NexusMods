@@ -53,7 +53,7 @@ public sealed class NexusModsArticleProcessorJob : IJob
 
         var client = serviceProvider.GetRequiredService<NexusModsClient>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
-        var entityFactory = dbContextWrite.CreateEntityFactory();
+        var entityFactory = dbContextWrite.GetEntityFactory();
 
         var gameDomain = tenant.ToGameDomain();
 
