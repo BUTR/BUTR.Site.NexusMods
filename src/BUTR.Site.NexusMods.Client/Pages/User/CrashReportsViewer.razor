@@ -65,21 +65,21 @@
         </CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridStreamingPaging @ref="@_datagridPagingRef" TItem="CrashReportModel" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable DefaultPageSize="@UserSettings.DefaultCrashReportPageSize" PageSizes="@UserSettings.AvailableCrashReportPageSizes" GetPageSize="@(x => x.CrashReportPageSize)">
+        <DataGridStreamingPaging @ref="@_datagridPagingRef" TItem="CrashReportModel2" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable DefaultPageSize="@UserSettings.DefaultCrashReportPageSize" PageSizes="@UserSettings.AvailableCrashReportPageSizes" GetPageSize="@(x => x.CrashReportPageSize)">
             <DataGridColumns>
-                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.GameVersion)" Caption="Game Version" Filterable Placeholder="v1.0.0" Sortable SortField="@nameof(EntityFields.GameVersion)"/>
-                <DataGridColumnTextAutocomplete TItem="CrashReportModel" Field="@nameof(CrashReportModel.InvolvedModules)" Caption="Top Involved Module" Filterable Sortable SortField="@nameof(EntityFields.TopInvolvedModuleId)" GetAutocompleteValues="@GetAutocompleteValues">
+                <DataGridColumnText TItem="CrashReportModel2" Field="@nameof(CrashReportModel2.GameVersion)" Caption="Game Version" Filterable Placeholder="v1.0.0" Sortable SortField="@nameof(EntityFields.GameVersion)"/>
+                <DataGridColumnTextAutocomplete TItem="CrashReportModel2" Field="@nameof(CrashReportModel2.InvolvedModules)" Caption="Top Involved Module" Filterable Sortable SortField="@nameof(EntityFields.TopInvolvedModuleId)" GetAutocompleteValues="@GetAutocompleteValues">
                     <DisplayTemplate>@(context.InvolvedModules.FirstOrDefault())</DisplayTemplate>
                 </DataGridColumnTextAutocomplete>
-                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.ExceptionType)" Caption="Exception" Filterable Placeholder="System.NullReferenceException" Sortable SortField="@nameof(EntityFields.ExceptionType)"/>
-                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Version)" Caption="Version" Filterable Placeholder="1" Sortable SortField="@nameof(EntityFields.Version)"/>
-                <DataGridColumnDate TItem="CrashReportModel" Field="@nameof(CrashReportModel.Date)" Caption="Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.CreatedAt)">
+                <DataGridColumnText TItem="CrashReportModel2" Field="@nameof(CrashReportModel2.ExceptionType)" Caption="Exception" Filterable Placeholder="System.NullReferenceException" Sortable SortField="@nameof(EntityFields.ExceptionType)"/>
+                <DataGridColumnText TItem="CrashReportModel2" Field="@nameof(CrashReportModel2.Version)" Caption="Version" Filterable Placeholder="1" Sortable SortField="@nameof(EntityFields.Version)"/>
+                <DataGridColumnDate TItem="CrashReportModel2" Field="@nameof(CrashReportModel2.Date)" Caption="Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.CreatedAt)">
                     <DisplayTemplate>@(context.Date.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
                 </DataGridColumnDate>
-                <DataGridColumnEnum TItem="CrashReportModel" Field="@nameof(CrashReportModel.Status)" Caption="Status" Filterable Sortable SortField="@nameof(EntityFields.Status)">
+                <DataGridColumnEnum TItem="CrashReportModel2" Field="@nameof(CrashReportModel2.Status)" Caption="Status" Filterable Sortable SortField="@nameof(EntityFields.Status)">
                     <DisplayTemplate>@(context.Status.GetDisplayName())</DisplayTemplate>
                 </DataGridColumnEnum>
-                <DataGridColumnText TItem="CrashReportModel" Field="@nameof(CrashReportModel.Comment)" Caption="Comment" Filterable Sortable SortField="@nameof(EntityFields.Comment)"/>
+                <DataGridColumnText TItem="CrashReportModel2" Field="@nameof(CrashReportModel2.Comment)" Caption="Comment" Filterable Sortable SortField="@nameof(EntityFields.Comment)"/>
             </DataGridColumns>
 
             <ButtonRowTemplate>
@@ -95,7 +95,7 @@
     private enum EntityFields { GameVersion, Version, TopInvolvedModuleId, ExceptionType, CreatedAt, Status, Comment }
 
     private Modal _modalRef = default!;
-    private DataGridStreamingPaging<CrashReportModel>? _datagridPagingRef;
+    private DataGridStreamingPaging<CrashReportModel2>? _datagridPagingRef;
     private UserSettings? _userSettings;
 
     /// <inheritdoc />
@@ -129,7 +129,7 @@
             await _jsRuntime.InvokeVoidAsync("open", report.Url, "_blank");
     }
 
-    private async Task<PagingStreamingData<CrashReportModel>?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
+    private async Task<PagingStreamingData<CrashReportModel2>?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
         await _crashReportsClient.PaginatedStreamingAsync(new(page, pageSize, filterings, sortings), ct);
 
     private async Task<ICollection<string>> GetAutocompleteValues(string filter) => await _crashReportsClient.AutocompleteAsync(new(filter)) is { Data: { } data } ? data : Array.Empty<string>();

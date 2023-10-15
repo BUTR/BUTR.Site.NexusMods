@@ -1,4 +1,5 @@
-﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")]
+﻿@*
+@attribute [Authorize(Roles = $"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")]
 @page "/recreate-stacktrace-prerendered/{Id}"
 
 @inject IRecreateStacktraceClient _recreateStacktraceClient
@@ -23,3 +24,4 @@
     }
 
 }
+*@

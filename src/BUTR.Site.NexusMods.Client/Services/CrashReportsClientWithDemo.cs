@@ -40,25 +40,25 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     }
 
-    public async Task<PagingStreamingData<CrashReportModel>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken ct = default)
+    public async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-            return PagingStreamingData<CrashReportModel>.Create(new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count), crashReports.ToAsyncEnumerable(), PagingAdditionalMetadata.Empty);
+            return PagingStreamingData<CrashReportModel2>.Create(new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count), crashReports.ToAsyncEnumerable(), PagingAdditionalMetadata.Empty);
         }
 
         return await _implementation.PaginatedStreamingAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);
     }
 
-    public async Task<CrashReportModelPagingDataAPIResponse> PaginatedAsync(PaginatedQuery? body, CancellationToken ct)
+    public async Task<CrashReportModel2PagingDataAPIResponse> PaginatedAsync(PaginatedQuery? body, CancellationToken ct)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-            return new CrashReportModelPagingDataAPIResponse(new CrashReportModelPagingData(PagingAdditionalMetadata.Empty, crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count)), string.Empty);
+            return new CrashReportModel2PagingDataAPIResponse(new CrashReportModel2PagingData(PagingAdditionalMetadata.Empty, crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count)), string.Empty);
         }
 
         return await _implementation.PaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);
@@ -76,7 +76,7 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
         return new StringIQueryableAPIResponse((await _implementation.AutocompleteAsync(modId, ct)).Data ?? Array.Empty<string>(), string.Empty);
     }
 
-    public async Task<StringAPIResponse> UpdateAsync(CrashReportModel? body, CancellationToken ct)
+    public async Task<StringAPIResponse> UpdateAsync(CrashReportModel2? body, CancellationToken ct)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
@@ -85,5 +85,10 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
         }
 
         return await _implementation.UpdateAsync(body, ct);
+    }
+
+    public async Task<ModuleUpdateIEnumerableAPIResponse> GetUpdatesAsync(int? tenant, CrashReportModel? body, CancellationToken ct)
+    {
+        return await _implementation.GetUpdatesAsync(tenant, body, ct);
     }
 }

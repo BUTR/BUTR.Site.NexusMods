@@ -19,7 +19,7 @@ public partial class AuthenticationClient
 
 public partial interface ICrashReportsClient
 {
-    Task<PagingStreamingData<CrashReportModel>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken cancellationToken = default);
+    Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken cancellationToken = default);
 }
 
 public partial class CrashReportsClient
@@ -36,7 +36,7 @@ public partial class CrashReportsClient
         OnPrepareRequest(client, request, urlBuilder);
     }
 
-    public virtual async Task<PagingStreamingData<CrashReportModel>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken cancellationToken = default)
+    public virtual async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken cancellationToken = default)
     {
         var urlBuilder_ = new System.Text.StringBuilder();
         urlBuilder_.Append("api/v1/CrashReports/PaginatedStreaming");
@@ -79,11 +79,11 @@ public partial class CrashReportsClient
                     {
                         try
                         {
-                            return PagingStreamingData<CrashReportModel>.Create(response_, JsonSerializerSettings, cancellationToken);
+                            return PagingStreamingData<CrashReportModel2>.Create(response_, JsonSerializerSettings, cancellationToken);
                         }
                         catch (System.Text.Json.JsonException exception)
                         {
-                            var message = "Could not deserialize the response body stream as " + typeof(PagingStreamingData<CrashReportModel>).FullName + ".";
+                            var message = "Could not deserialize the response body stream as " + typeof(PagingStreamingData<CrashReportModel2>).FullName + ".";
                             throw new ApiException(message, (int) response_.StatusCode, string.Empty, headers_, exception);
                         }
                     }
@@ -217,6 +217,7 @@ public partial class QuartzClient
     }
 }
 
+/*
 public partial class RecreateStacktraceClient
 {
     public RecreateStacktraceClient(HttpClient client, JsonSerializerOptions options) : this(client)
@@ -224,12 +225,7 @@ public partial class RecreateStacktraceClient
         _settings = new Lazy<JsonSerializerOptions>(options);
     }
 }
-
-public partial record CrashReportModel
-{
-    [JsonIgnore]
-    public string ExceptionHtml => Exception.Replace("\r", "<br/>").Replace("\r\n", "<br/>");
-}
+*/
 
 public partial record NexusModsModModel
 {

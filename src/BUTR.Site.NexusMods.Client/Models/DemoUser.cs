@@ -1,5 +1,4 @@
 ﻿using BUTR.CrashReport.Bannerlord.Parser;
-using BUTR.CrashReport.Models;
 using BUTR.Site.NexusMods.ServerClient;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-using CrashReportModel = BUTR.Site.NexusMods.ServerClient.CrashReportModel;
+using ExceptionModel = BUTR.CrashReport.Models.ExceptionModel;
 
 namespace BUTR.Site.NexusMods.Client.Models;
 
@@ -25,11 +24,11 @@ public static class DemoUser
         new(3, "Demo Mod 3", ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
         new(4, "Demo Mod 4", ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
     };
-    private static List<CrashReportModel>? _crashReports;
+    private static List<CrashReportModel2>? _crashReports;
 
     public static Task<ProfileModel> GetProfile() => Task.FromResult(_profile);
     public static IAsyncEnumerable<NexusModsModModel> GetMods() => _mods.ToAsyncEnumerable();
-    public static async IAsyncEnumerable<CrashReportModel> GetCrashReports(IHttpClientFactory factory)
+    public static async IAsyncEnumerable<CrashReportModel2> GetCrashReports(IHttpClientFactory factory)
     {
         static string GetException(ExceptionModel? exception, bool inner = false) => exception is null ? string.Empty : $"""
 
@@ -53,14 +52,14 @@ CallStack:
 
         if (_crashReports is null)
         {
-            var crm = new List<CrashReportModel>();
+            var crm = new List<CrashReportModel2>();
             const string baseUrl = "https://report.butr.link/";
             var client = factory.CreateClient("InternalReports");
             var reports = new[] { "4DDA8D", "6FB0EF", "2AE0EA", "F966E3" };
             var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, r)));
             foreach (var (id, cr) in contents)
             {
-                var report = new CrashReportModel(cr.Id, cr.Version, cr.GameVersion, cr.Exception.Type, GetException(cr.Exception), DateTime.UtcNow, $"{baseUrl}{id}.html", cr.Modules.Select(x => x.Id).ToArray(), CrashReportStatus.New, string.Empty);
+                var report = new CrashReportModel2(cr.Id, cr.Version, cr.GameVersion, cr.Exception.Type, GetException(cr.Exception), DateTime.UtcNow, $"{baseUrl}{id}.html", cr.Modules.Select(x => x.Id).ToArray(), CrashReportStatus.New, string.Empty);
                 crm.Add(report);
                 yield return report;
 
