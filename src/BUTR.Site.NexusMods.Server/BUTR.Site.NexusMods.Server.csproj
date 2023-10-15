@@ -9,7 +9,7 @@
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    
+
     <DefineConstants>$(DefineConstants);BANNERLORDBUTRMODULEMANAGER_NULLABLE</DefineConstants>
   </PropertyGroup>
 

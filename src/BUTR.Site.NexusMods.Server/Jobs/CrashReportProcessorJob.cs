@@ -7,7 +7,6 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -58,7 +57,7 @@ public sealed class CrashReportProcessorJob : IJob
 
     private static async Task FilterCrashReportsAsync(TenantId tenant,
         IServiceProvider serviceProvider,
-        IAsyncEnumerable<CrashReportFileMetadata> requests,
+        IEnumerable<CrashReportFileMetadata> requests,
         ChannelWriter<CrashReportFileMetadata> toDownloadChannel,
         ChannelWriter<CrashReportToFileIdEntity> linkedCrashReportsChannel,
         ChannelWriter<CrashReportIgnoredFileEntity> ignoredCrashReportsChannel,
@@ -190,8 +189,8 @@ public sealed class CrashReportProcessorJob : IJob
     {
         var dbContextFactory = serviceProvider.GetRequiredService<IAppDbContextFactory>();
         var dbContextWrite = await dbContextFactory.CreateWriteAsync(ct);
-        await foreach (var entity in ignoredCrashReportsChannel.ReadAllAsync(ct))
-            dbContextWrite.CrashReportIgnoredFileIds.Add(entity);
+        var entries = await ignoredCrashReportsChannel.ReadAllAsync(ct).ToArrayAsync(ct);
+        dbContextWrite.FutureUpsert(x => x.CrashReportIgnoredFileIds, entries);
         await dbContextWrite.SaveAsync(ct);
     }
 
@@ -203,8 +202,8 @@ public sealed class CrashReportProcessorJob : IJob
     {
         var dbContextFactory = serviceProvider.GetRequiredService<IAppDbContextFactory>();
         var dbContextWrite = await dbContextFactory.CreateWriteAsync(ct);
-        await foreach (var entity in linkedCrashReportsChannel.ReadAllAsync(ct))
-            dbContextWrite.CrashReportToFileIds.Add(entity);
+        var entries = await linkedCrashReportsChannel.ReadAllAsync(ct).ToArrayAsync(ct);
+        dbContextWrite.FutureUpsert(x => x.CrashReportToFileIds, entries);
         await dbContextWrite.SaveAsync(ct);
     }
 
@@ -305,7 +304,7 @@ CallStack:
         // Disposing the DBContext will save the data
     }
 
-    private static async Task HandleFileIdDatesAsync(TenantId tenant, IServiceProvider serviceProvider, ILogger logger, CrashReporterClient client, IAsyncEnumerable<CrashReportFileMetadata> requests, CancellationToken ct)
+    private static async Task HandleFileIdDatesAsync(TenantId tenant, IServiceProvider serviceProvider, ILogger logger, CrashReporterClient client, IEnumerable<CrashReportFileMetadata> requests, CancellationToken ct)
     {
         var options = serviceProvider.GetRequiredService<IOptions<CrashReporterOptions>>().Value;
         var toDownloadChannel = Channel.CreateBounded<CrashReportFileMetadata>(ParallelCount);
@@ -339,6 +338,7 @@ CallStack:
 
             await foreach (var batch in client.GetNewCrashReportMetadatasAsync(DateTime.UtcNow.AddHours(-2), ct).OfType<CrashReportFileMetadata>().ChunkAsync(100).WithCancellation(ct))
             {
+                await HandleFileIdDatesAsync(tenant, scope.ServiceProvider, _logger, client, batch, ct);
                 processed += batch.Count;
             }
         }
