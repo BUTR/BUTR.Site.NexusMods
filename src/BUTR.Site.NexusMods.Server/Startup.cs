@@ -193,8 +193,8 @@ public sealed class Startup
             opt.AddJob<NexusModsArticleUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(12)).InTimeZone(TimeZoneInfo.Utc));
 
             // Monthly
-            opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(06)).InTimeZone(TimeZoneInfo.Utc));
-            opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(18)).InTimeZone(TimeZoneInfo.Utc));
+            //opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(06)).InTimeZone(TimeZoneInfo.Utc));
+            //opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(18)).InTimeZone(TimeZoneInfo.Utc));
 #endif
         });
 
