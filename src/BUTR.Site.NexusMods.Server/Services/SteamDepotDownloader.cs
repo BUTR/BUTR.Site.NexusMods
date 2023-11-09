@@ -21,8 +21,7 @@ public sealed class SteamDepotDownloader
     public async Task DownloadAsync(string version, string path, CancellationToken ct)
     {
         var args = $"{_options.BinaryPath} -app {_options.AppId} -depot {string.Join(" ", _options.Depots)} -beta {version} -filelist {_options.Filelist} -username {_options.Username} -password {_options.Password} -dir {path}";
-        var processInfo = new ProcessStartInfo("dotnet", args);
-        var process = Process.Start(processInfo);
+        var process = Process.Start(new ProcessStartInfo("dotnet", args));
         if (process is null) return;
         await process.WaitForExitAsync(ct);
     }

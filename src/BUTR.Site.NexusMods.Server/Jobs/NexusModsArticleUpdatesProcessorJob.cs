@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Quartz;
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,11 +56,11 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
         var entityFactory = dbContextWrite.GetEntityFactory();
-        await using var _ = dbContextWrite.CreateSaveScope();
+        await using var _ = await dbContextWrite.CreateSaveScopeAsync();
 
         var gameDomain = tenant.ToGameDomain();
 
-        var articles = new List<NexusModsArticleEntity>();
+        var articles = ImmutableArray.CreateBuilder<NexusModsArticleEntity>();
 
         var articleIdRaw = dbContextRead.NexusModsArticles.OrderBy(x => x.NexusModsArticleId).LastOrDefault()?.NexusModsArticleId.Value ?? 0;
         var notFoundArticles = 0;
@@ -102,7 +102,7 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
             var dateTimeText1 = fileinfoElement.ChildNodes.FindFirst("div");
             var dateTimeText2 = dateTimeText1?.ChildNodes.FindFirst("time");
             var dateTimeText = dateTimeText2?.GetAttributeValue("datetime", "");
-            var dateTime = DateTimeOffset.TryParse(dateTimeText, out var dateTimeVal) ? dateTimeVal.UtcDateTime : DateTimeOffset.MinValue.UtcDateTime;
+            var dateTime = DateTimeOffset.TryParse(dateTimeText, out var dateTimeVal) ? dateTimeVal.ToUniversalTime() : DateTimeOffset.MinValue.ToUniversalTime();
 
             articles.Add(new()
             {
@@ -116,7 +116,7 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
             processed++;
         }
 
-        dbContextWrite.FutureUpsert(x => x.NexusModsArticles, articles);
+        await dbContextWrite.NexusModsArticles.UpsertOnSaveAsync(articles.ToArray());
         // Disposing the DBContext will save the data
 
         return processed;

@@ -1,9 +1,11 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
-using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
+using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +21,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
+[ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantNotRequired]
 public sealed class SteamController : ControllerExtended
 {
     public sealed record SteamOpenIdUrlModel(string Url);
@@ -40,16 +42,16 @@ public sealed class SteamController : ControllerExtended
 
     [HttpGet("GetOpenIdUrl")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<SteamOpenIdUrlModel?>> GetOpenIdUrl()
+    public APIResponseActionResult<SteamOpenIdUrlModel?> GetOpenIdUrl()
     {
-        var query = QueryString.Create(new KeyValuePair<string, string?>[]
+        var query = QueryString.Create(new Dictionary<string, string?>
         {
-            new("openid.ns", "http://specs.openid.net/auth/2.0"),
-            new("openid.mode", "checkid_setup"),
-            new("openid.return_to", _options.RedirectUri),
-            new("openid.realm", _options.Realm),
-            new("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select"),
-            new("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select"),
+            ["openid.ns"] = "http://specs.openid.net/auth/2.0",
+            ["openid.mode"] = "checkid_setup",
+            ["openid.return_to"] = _options.RedirectUri,
+            ["openid.realm"] = _options.Realm,
+            ["openid.identity"] = "http://specs.openid.net/auth/2.0/identifier_select",
+            ["openid.claimed_id"] = "http://specs.openid.net/auth/2.0/identifier_select",
         });
         var steamLoginUrl = new UriBuilder("https://steamcommunity.com/openid/login") { Query = query.ToUriComponent() };
 
@@ -58,7 +60,7 @@ public sealed class SteamController : ControllerExtended
 
     [HttpGet("Link")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> LinkAsync([FromQuery] Dictionary<string, string> _, CancellationToken ct)
+    public async Task<APIResponseActionResult<string?>> LinkAsync([FromQuery] Dictionary<string, string> _, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         var queries = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value[0] ?? string.Empty);
 
@@ -69,7 +71,6 @@ public sealed class SteamController : ControllerExtended
         if (!SteamUtils.TryParse(queries["openid.claimed_id"], out var steamId))
             return APIResponseError<string>("Failed to link!");
 
-        var userId = HttpContext.GetUserId();
         var userInfo = await _steamAPIClient.GetUserInfoAsync(steamId, ct);
 
         if (!await _steamStorage.CheckOwnedGamesAsync(userId, steamId))
@@ -83,9 +84,8 @@ public sealed class SteamController : ControllerExtended
 
     [HttpPost("Unlink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> UnlinkAsync()
+    public async Task<APIResponseActionResult<string?>> UnlinkAsync([BindUserId] NexusModsUserId userId)
     {
-        var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetSteamTokens();
 
         if (tokens?.Data is null)
@@ -99,7 +99,7 @@ public sealed class SteamController : ControllerExtended
 
     [HttpPost("GetUserInfo")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<SteamUserInfo?>>> GetUserInfoByAccessTokenAsync(CancellationToken ct)
+    public async Task<APIResponseActionResult<SteamUserInfo?>> GetUserInfoByAccessTokenAsync(CancellationToken ct)
     {
         var tokens = HttpContext.GetSteamTokens();
 

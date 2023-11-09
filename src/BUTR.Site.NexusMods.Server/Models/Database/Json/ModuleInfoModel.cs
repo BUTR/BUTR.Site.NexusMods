@@ -1,5 +1,6 @@
 using Bannerlord.ModuleManager;
 
+using System.Collections.Generic;
 using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database;
@@ -54,4 +55,38 @@ public sealed record ModuleInfoModel
             }).ToArray(),
         }).ToArray(),
     };
+
+    public static ModuleInfoExtended Create(ModuleInfoModel moduleInfo) => new()
+    {
+        Id = moduleInfo.Id,
+        Name = moduleInfo.Name,
+        IsOfficial = moduleInfo.IsOfficial,
+        Version = ApplicationVersion.TryParse(moduleInfo.Version, out var v) ? v : ApplicationVersion.Empty,
+        IsSingleplayerModule = moduleInfo.IsSingleplayerModule,
+        IsMultiplayerModule = moduleInfo.IsMultiplayerModule,
+        IsServerModule = moduleInfo.IsServerModule,
+        Url = moduleInfo.Url,
+        UpdateInfo = moduleInfo.UpdateInfo,
+        DependentModuleMetadatas = moduleInfo.DependentModuleMetadatas.Select(y => new DependentModuleMetadata
+        {
+            Id = y.Id,
+            LoadType = y.Type == "LoadAfterThis" ? LoadType.LoadAfterThis : y.Type == "LoadBeforeThis" ? LoadType.LoadBeforeThis : LoadType.None,
+            IsOptional = y.IsOptional,
+            Version = ApplicationVersion.TryParse(y.Version, out var yV) ? yV : ApplicationVersion.Empty,
+            VersionRange = y.VersionRange != null ? new ApplicationVersionRange
+            {
+                Min = ApplicationVersion.TryParse(y.VersionRange?.Min, out var yVMin) ? yVMin : ApplicationVersion.Empty,
+                Max = ApplicationVersion.TryParse(y.VersionRange?.Max, out var yVMax) ? yVMax : ApplicationVersion.Empty,
+            } : ApplicationVersionRange.Empty,
+        }).ToArray(),
+        SubModules = moduleInfo.SubModules.Select(y => new SubModuleInfoExtended
+        {
+            Name = y.Name,
+            DLLName = y.DLLName,
+            Assemblies = y.Assemblies.ToArray(),
+            SubModuleClassType = y.SubModuleClassType,
+            Tags = y.Tags.ToDictionary(x => x.Key, x => (IReadOnlyList<string>) x.Value),
+        }).ToArray(),
+    };
+
 }

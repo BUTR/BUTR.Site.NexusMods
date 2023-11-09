@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ public sealed class IntegrationSteamTokensEntityConfiguration : BaseEntityConfig
 {
     protected override void ConfigureModel(EntityTypeBuilder<IntegrationSteamTokensEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("integration_steam_tokens_id").HasConversion<NexusModsUserId.EfCoreValueConverter>().ValueGeneratedNever();
+        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("integration_steam_tokens_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.SteamUserId).HasColumnName("steam_user_id");
         builder.Property(x => x.Data).HasColumnName("data").HasColumnType("hstore");
         builder.ToTable("integration_steam_tokens", "integration").HasKey(nameof(NexusModsUserEntity.NexusModsUserId));

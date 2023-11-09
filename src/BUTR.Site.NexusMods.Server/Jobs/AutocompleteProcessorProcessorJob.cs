@@ -36,7 +36,7 @@ public sealed class AutocompleteProcessorProcessorJob : IJob
     {
         new(GenerateName<CrashReportEntity, GameVersion>(x => x.GameVersion), x => x.CrashReports.Select(y => y.GameVersion.Value)),
         new(GenerateName<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId), x => x.CrashReportModuleInfos.Select(y => y.Module.ModuleId.Value)),
-        new(GenerateName<NexusModsArticleEntity, NexusModsUserName>(x => x.NexusModsUser.Name!.Name), x => x.NexusModsArticles.Include(y => y.NexusModsUser).ThenInclude(y => y.Name).Select(y => y.NexusModsUser).Select(x => x.Name).Select(x => x.Name.Value)),
+        new(GenerateName<NexusModsArticleEntity, NexusModsUserName>(x => x.NexusModsUser.Name!.Name), x => x.NexusModsArticles.Include(y => y.NexusModsUser).ThenInclude(y => y.Name).Select(y => y.NexusModsUser).Select(y => y.Name!).Select(y => y.Name.Value)),
     };
 
     //private static readonly AutocompleteGroupingEntry[] ToAutocompleteGrouping =
@@ -90,12 +90,12 @@ public sealed class AutocompleteProcessorProcessorJob : IJob
             var key = autocompleteEntry.Name;
 
             await dbContextWrite.Autocompletes.Where(x => x.Type == key).ExecuteDeleteAsync(ct);
-            await dbContextWrite.Autocompletes.BulkInsertAsync(autocompleteEntry.Query(dbContextRead).Distinct().Select(x => new AutocompleteEntity
+            await dbContextWrite.Autocompletes.UpsertAsync(autocompleteEntry.Query(dbContextRead).Distinct().Select(x => new AutocompleteEntity
             {
                 TenantId = tenant,
                 Type = key,
                 Value = x,
-            }), ct);
+            }));
         }
 
         /*

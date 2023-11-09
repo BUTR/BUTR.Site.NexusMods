@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +10,7 @@ public class TenantEntityConfiguration : BaseEntityConfiguration<TenantEntity>
 {
     protected override void ConfigureModel(EntityTypeBuilder<TenantEntity> builder)
     {
-        builder.Property(x => x.TenantId).HasColumnName("tenant_id").HasConversion<TenantId.EfCoreValueConverter>();
+        builder.Property(x => x.TenantId).HasColumnName("tenant_id").HasVogenConversion();
         builder.ToTable("tenant", "tenant").HasKey(x => x.TenantId);
 
         base.ConfigureModel(builder);

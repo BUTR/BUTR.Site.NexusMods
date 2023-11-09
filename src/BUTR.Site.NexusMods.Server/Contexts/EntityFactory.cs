@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using System;
@@ -158,23 +159,32 @@ public sealed class EntityFactory
         static ExceptionTypeEntity ValueFactory(ExceptionTypeId id, TenantId tenant) => ExceptionTypeEntity.Create(tenant, id);
     }
 
-    public async Task SaveCreatedAsync(CancellationToken ct)
+    public async Task<bool> SaveCreatedAsync(CancellationToken ct)
     {
         await _lock.WaitAsync(ct);
 
         try
         {
-            if (!_nexusModsUsers.IsEmpty) await _dbContextWrite.NexusModsUsers.BulkMergeAsync(_nexusModsUsers.Values, o => o.UseInternalTransaction = false, ct);
-            if (!_nexusModsUserNames.IsEmpty) await _dbContextWrite.NexusModsUserToName.BulkMergeAsync(_nexusModsUserNames.Values, o => o.UseInternalTransaction = false, ct);
-            if (!_nexusModsMods.IsEmpty) await _dbContextWrite.NexusModsMods.BulkMergeAsync(_nexusModsMods.Values, o => o.UseInternalTransaction = false, ct);
-            if (!_modules.IsEmpty) await _dbContextWrite.Modules.BulkMergeAsync(_modules.Values, o => o.UseInternalTransaction = false, ct);
-            if (!_exceptionTypes.IsEmpty) await _dbContextWrite.ExceptionTypes.BulkMergeAsync(_exceptionTypes.Values, o => o.UseInternalTransaction = false, ct);
-            if (!_discordUsers.IsEmpty) await _dbContextWrite.NexusModsUserToDiscord.BulkMergeAsync(_discordUsers.Values, o => o.UseInternalTransaction = false, ct);
-            if (!_steamUsers.IsEmpty) await _dbContextWrite.NexusModsUserToSteam.BulkMergeAsync(_steamUsers.Values, o => o.UseInternalTransaction = false, ct);
-            if (!_gogUsers.IsEmpty) await _dbContextWrite.NexusModsUserToGOG.BulkMergeAsync(_gogUsers.Values, o => o.UseInternalTransaction = false, ct);
-            if (!_discordTokens.IsEmpty) await _dbContextWrite.IntegrationDiscordTokens.BulkMergeAsync(_discordTokens.Values, o => o.UseInternalTransaction = false, ct);
-            if (!_gogTokens.IsEmpty) await _dbContextWrite.IntegrationGOGTokens.BulkMergeAsync(_gogTokens.Values, o => o.UseInternalTransaction = false, ct);
-            if (!_steamTokens.IsEmpty) await _dbContextWrite.IntegrationSteamTokens.BulkMergeAsync(_steamTokens.Values, o => o.UseInternalTransaction = false, ct);
+            var hasChange = false;
+            async Task DoChange(Func<Task> action)
+            {
+                hasChange = true;
+                await action();
+            }
+
+            if (!_nexusModsUsers.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsUsers.UpsertAsync(_nexusModsUsers.Values));
+            if (!_nexusModsUserNames.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsUserToName.UpsertAsync(_nexusModsUserNames.Values));
+            if (!_nexusModsMods.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsMods.UpsertAsync(_nexusModsMods.Values));
+            if (!_modules.IsEmpty) await DoChange(() => _dbContextWrite.Modules.UpsertAsync(_modules.Values));
+            if (!_exceptionTypes.IsEmpty) await DoChange(() => _dbContextWrite.ExceptionTypes.UpsertAsync(_exceptionTypes.Values));
+            if (!_discordUsers.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsUserToDiscord.UpsertAsync(_discordUsers.Values));
+            if (!_steamUsers.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsUserToSteam.UpsertAsync(_steamUsers.Values));
+            if (!_gogUsers.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsUserToGOG.UpsertAsync(_gogUsers.Values));
+            if (!_discordTokens.IsEmpty) await DoChange(() => _dbContextWrite.IntegrationDiscordTokens.UpsertAsync(_discordTokens.Values));
+            if (!_gogTokens.IsEmpty) await DoChange(() => _dbContextWrite.IntegrationGOGTokens.UpsertAsync(_gogTokens.Values));
+            if (!_steamTokens.IsEmpty) await DoChange(() => _dbContextWrite.IntegrationSteamTokens.UpsertAsync(_steamTokens.Values));
+
+            return hasChange;
         }
         finally
         {

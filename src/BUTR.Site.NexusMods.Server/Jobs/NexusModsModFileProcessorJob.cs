@@ -13,6 +13,7 @@ using Quartz;
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -77,9 +78,9 @@ public sealed class NexusModsModFileProcessorJob : IJob
         {
             var modId = NexusModsModId.From(modIdRaw);
 
-            var nexusModsModModuleEntities = new List<NexusModsModToModuleEntity>();
-            var nexusModsModToFileUpdateEntities = new List<NexusModsModToFileUpdateEntity>();
-            var nexusModsModToModuleInfoHistoryEntities = new List<NexusModsModToModuleInfoHistoryEntity>();
+            var nexusModsModModuleEntities = ImmutableArray.CreateBuilder<NexusModsModToModuleEntity>();
+            var nexusModsModToFileUpdateEntities = ImmutableArray.CreateBuilder<NexusModsModToFileUpdateEntity>();
+            var nexusModsModToModuleInfoHistoryEntities = ImmutableArray.CreateBuilder<NexusModsModToModuleInfoHistoryEntity>();
 
             try
             {
@@ -94,7 +95,7 @@ public sealed class NexusModsModFileProcessorJob : IJob
                 }
 
                 var infos = await info.GetModuleInfosAsync(gameDomain, modId, response.Files, options.ApiKey, ct).ToArrayAsync(ct);
-                var latestFileUpdate = DateTimeOffset.FromUnixTimeSeconds(response.Files.Select(x => x.UploadedTimestamp).Where(x => x is not null).Max() ?? 0).UtcDateTime;
+                var latestFileUpdate = DateTimeOffset.FromUnixTimeSeconds(response.Files.Select(x => x.UploadedTimestamp).Where(x => x is not null).Max() ?? 0).ToUniversalTime();
 
                 nexusModsModModuleEntities.AddRange(infos.Select(x => x.ModuleInfo).DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
                 {
@@ -121,10 +122,10 @@ public sealed class NexusModsModFileProcessorJob : IJob
                     UploadDate = x.Uploaded,
                 }));
 
-                await using var _ = dbContextWrite.CreateSaveScope();
-                dbContextWrite.FutureUpsert(x => x.NexusModsModModules, nexusModsModModuleEntities);
-                dbContextWrite.FutureUpsert(x => x.NexusModsModToFileUpdates, nexusModsModToFileUpdateEntities);
-                dbContextWrite.FutureUpsert(x => x.NexusModsModToModuleInfoHistory, nexusModsModToModuleInfoHistoryEntities);
+                await using var _ = await dbContextWrite.CreateSaveScopeAsync();
+                await dbContextWrite.NexusModsModModules.UpsertOnSaveAsync(nexusModsModModuleEntities.ToArray());
+                await dbContextWrite.NexusModsModToFileUpdates.UpsertOnSaveAsync(nexusModsModToFileUpdateEntities.ToArray());
+                await dbContextWrite.NexusModsModToModuleInfoHistory.UpsertOnSaveAsync(nexusModsModToModuleInfoHistoryEntities.ToArray());
                 // Disposing the DBContext will save the data
 
                 processed++;

@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Utils;
 
-public class AuthResponsesOperationFilter : IOperationFilter
+public sealed class AuthResponsesOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext? context)
     {

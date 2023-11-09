@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Utils;
 
-public class BlockUntilDateConstraint : IAwaitableConstraint
+public sealed class BlockUntilDateConstraint : IAwaitableConstraint
 {
     private class DummyDisposable : IDisposable
     {

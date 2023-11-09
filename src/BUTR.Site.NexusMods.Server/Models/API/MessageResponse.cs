@@ -1,10 +1,12 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models.API;
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace BUTR.Site.NexusMods.Server.Models.API;
 
 public abstract record APIResponse
 {
-    public static APIResponse<T?> From<T>(T? data, string error = "") => new(data, error);
-    public static APIResponse<T?> Error<T>(string error) => new(default, error);
+    public static APIResponse<T?> FromResult<T>(T? data, ProblemDetails? error = null) => new(data, error);
+    public static APIResponse<T?> FromError<T>(ProblemDetails error) => new(default, error);
 }
-public record APIResponse<T>(T? Data, string HumanReadableError) : APIResponse;
+public record APIResponse<T>(T? Value, ProblemDetails? Error) : APIResponse;
 
-public record APIStreamingResponse(string HumanReadableError) : APIResponse;
+public record APIStreamingResponse(ProblemDetails? Error) : APIResponse;

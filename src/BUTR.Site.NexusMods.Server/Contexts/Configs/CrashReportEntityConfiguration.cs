@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -12,13 +13,13 @@ public class CrashReportEntityConfiguration : BaseEntityConfigurationWithTenant<
 
     protected override void ConfigureModel(EntityTypeBuilder<CrashReportEntity> builder)
     {
-        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_id").HasConversion<CrashReportId.EfCoreValueConverter>().ValueGeneratedNever();
-        builder.Property(x => x.Version).HasColumnName("version").HasConversion<CrashReportVersion.EfCoreValueConverter>();
-        builder.Property(x => x.GameVersion).HasColumnName("game_version").HasConversion<GameVersion.EfCoreValueConverter>();
-        builder.Property<ExceptionTypeId>(nameof(ExceptionTypeEntity.ExceptionTypeId)).HasColumnName("exception_type_id").HasConversion<ExceptionTypeId.EfCoreValueConverter>();
+        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property(x => x.Version).HasColumnName("version").HasVogenConversion();
+        builder.Property(x => x.GameVersion).HasColumnName("game_version").HasVogenConversion();
+        builder.Property<ExceptionTypeId>(nameof(ExceptionTypeEntity.ExceptionTypeId)).HasColumnName("exception_type_id").HasVogenConversion();
         builder.Property(x => x.Exception).HasColumnName("exception");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
-        builder.Property(x => x.Url).HasColumnName("url").HasConversion<CrashReportUrl.EfCoreValueConverter>();
+        builder.Property(x => x.Url).HasColumnName("url").HasVogenConversion();
         builder.ToTable("crash_report", "crashreport").HasKey(x => new { x.TenantId, x.CrashReportId });
 
         builder.HasOne(x => x.ExceptionType)

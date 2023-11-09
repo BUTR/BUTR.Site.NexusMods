@@ -60,7 +60,7 @@ public sealed class CrashReportAnalyzerProcessorJob : IJob
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
         var entityFactory = dbContextWrite.GetEntityFactory();
-        await using var _ = dbContextWrite.CreateSaveScope();
+        await using var _ = await dbContextWrite.CreateSaveScopeAsync();
 
         var allModVersionsQuery = dbContextRead.CrashReportModuleInfos
             .GroupBy(x => new { x.Module.ModuleId, x.Version })
@@ -116,9 +116,9 @@ public sealed class CrashReportAnalyzerProcessorJob : IJob
             TotalCount = x.TotalCount,
             RawValue = x.Value,
             Score = x.CrashScore,
-        }).ToListAsync(ct);
+        }).ToArrayAsync(ct);
 
-        dbContextWrite.FutureSyncronize(x => x.StatisticsCrashScoreInvolveds, statisticsCrashScoreInvolved);
+        await dbContextWrite.StatisticsCrashScoreInvolveds.SynchronizeOnSaveAsync(statisticsCrashScoreInvolved);
         // Disposing the DBContext will save the data
     }
 }

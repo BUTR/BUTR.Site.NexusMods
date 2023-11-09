@@ -1,10 +1,10 @@
 ﻿using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.Quartz;
 
 using Quartz;
 
 using System;
 using System.Globalization;
-using System.Text;
 
 namespace BUTR.Site.NexusMods.Server.Extensions;
 
@@ -37,43 +37,18 @@ public static class JobExecutionContextExtensions
     public static string? GetReturnCode(this IJobExecutionContext context)
     {
         var val = context.Get(JobDataMapKeys.ReturnCode);
-        if (val != null)
-            return Convert.ToString(val, CultureInfo.InvariantCulture);
-        return null;
+        return val != null ? Convert.ToString(val, CultureInfo.InvariantCulture) : null;
     }
 
     public static string? GetExecutionDetails(this IJobExecutionContext context)
     {
         var val = context.Get(JobDataMapKeys.ExecutionDetails);
-        if (val != null)
-            return Convert.ToString(val, CultureInfo.InvariantCulture);
-
-        return null;
+        return val != null ? Convert.ToString(val, CultureInfo.InvariantCulture) : null;
     }
 
     public static bool? GetIsSuccess(this IJobExecutionContext context)
     {
-        var value = context.Get(JobDataMapKeys.IsSuccess);
-        if (value == null)
-            return null;
-        return Convert.ToBoolean(value);
-    }
-
-    public static string? GetReturnCodeAndResult(this IJobExecutionContext context)
-    {
-        var returnCode = context.GetReturnCode();
-        var strBldr = new StringBuilder();
-        if (!string.IsNullOrEmpty(returnCode))
-        {
-            strBldr.Append($"Return {returnCode}. ");
-        }
-
-        var result = context.Result?.ToString();
-        if (!string.IsNullOrEmpty(result))
-        {
-            strBldr.Append(result);
-        }
-
-        return strBldr.ToString();
+        var val = context.Get(JobDataMapKeys.IsSuccess);
+        return val == null ? null : Convert.ToBoolean(val);
     }
 }

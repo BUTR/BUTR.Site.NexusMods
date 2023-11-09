@@ -1,9 +1,9 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.DynamicExpressions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Utils.Npgsql;
-
-using DynamicExpressions;
+using BUTR.Site.NexusMods.Server.Utils.Vogen;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore.Query.Internal;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -107,6 +108,12 @@ public static class QueryableExtensions
 
     private static bool TryConvertValue(Type type, string rawValue, [NotNullWhen((true))] out object? value)
     {
+        if (type.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IVogen<,>)) is { } vogen)
+        {
+            if (vogen.GetGenericArguments() is [_, { } valueObject])
+                type = valueObject;
+        }
+        
         if (type.IsEnum)
             return Enum.TryParse(type, rawValue, out value);
 
@@ -206,11 +213,24 @@ public static class QueryableExtensions
                 value = DateTime.SpecifyKind(val, DateTimeKind.Utc);
                 return result;
             }
-            default:
-            {
-                value = null;
-                return false;
-            }
+        }
+
+        var typeConverter = TypeDescriptor.GetConverter(type);
+        if (typeConverter.CanConvertFrom(typeof(string)))
+        {
+            value = typeConverter.ConvertFrom(rawValue)!;
+            return true;
+        }
+        
+        try
+        {
+            value = System.Convert.ChangeType(rawValue, type);
+            return true;
+        }
+        catch (Exception)
+        {
+            value = null;
+            return false;
         }
     }
 

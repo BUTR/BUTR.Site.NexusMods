@@ -110,19 +110,19 @@
         if (!NexusModsUtils.TryParse(model.ModUrl, out _, out var modId) && !uint.TryParse(model.ModUrl, out modId))
             return false;
 
-        return await _userClient.ToNexusModsModLinkAsync((int) modId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        return await _userClient.ToNexusModsModLinkAsync((int) modId) is { Error: not null };
     }
 
     private async Task<bool> DoUnlinkMod(NexusModsModModel model)
     {
-        return await _userClient.ToNexusModsModUnlinkAsync(model.NexusModsModId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        return await _userClient.ToNexusModsModUnlinkAsync(model.NexusModsModId) is { Error: not null };
     }
 
     private async Task<DataGridPaging<NexusModsModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _userClient.ToNexusModsModPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+        await _userClient.ToNexusModsModPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
     private async Task<DataGridPaging<NexusModsModAvailableModel>.ItemsResponse?> GetAllowedMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _modClient.AvailablePaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+        await _modClient.AvailablePaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
     private async Task OnClick(NexusModsModModel? mod)
     {

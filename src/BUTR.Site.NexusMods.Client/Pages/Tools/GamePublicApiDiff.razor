@@ -77,7 +77,7 @@
     protected override async Task OnInitializedAsync()
     {
         var availableDiffs = await _gamePublicApiClient.ListAsync();
-        Nodes.AddRange(availableDiffs.Data?.Select(x => new Node
+        Nodes.AddRange(availableDiffs.Value?.Select(x => new Node
         {
             Type = NodeType.Root,
             Path = x,
@@ -129,7 +129,7 @@
                     {
                         _gamePublicApiClient.TreeFlatAsync(GetPath(node)).ContinueWith(async x =>
                         {
-                            FillNode(node, (await x).Data ?? Array.Empty<string>());
+                            FillNode(node, (await x).Value ?? Array.Empty<string>());
                             StateHasChanged();
                         });
                     }
@@ -145,12 +145,11 @@
                     {
                         _gamePublicApiClient.GetAsync(GetPath(node)).ContinueWith(x =>
                         {
-                            node.Content = x.Result.Data?
-                                .Select(content =>
-                                {
-                                    var title = GetDiffTitle(content);
-                                    return new DiffContent(title, content);
-                                }).ToList() ?? new List<DiffContent>();
+                            node.Content = x.Result.Value?.Select(content =>
+                            {
+                                var title = GetDiffTitle(content);
+                                return new DiffContent(title, content);
+                            }).ToList() ?? new List<DiffContent>();
                             StateHasChanged();
                         });
                     }

@@ -2,9 +2,7 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 
-using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
@@ -13,11 +11,11 @@ public interface IAppDbContextWrite : IAppDbContextRead
 {
     EntityFactory GetEntityFactory();
     
-    IAsyncDisposable CreateSaveScope();
+    Task<IAppDbContextSaveScope> CreateSaveScopeAsync();
 
-    void FutureUpsert<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, TEntity entity) where TEntity : class, IEntity;
-    void FutureUpsert<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, ICollection<TEntity> entities) where TEntity : class, IEntity;
-    void FutureSyncronize<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, ICollection<TEntity> entities) where TEntity : class, IEntity;
+    Task BulkUpsertAsync<TEntity>(DbSet<TEntity> dbSet, IEnumerable<TEntity> entities) where TEntity : class, IEntity;
+    Task BulkSynchronizeAsync<TEntity>(DbSet<TEntity> dbSet, IEnumerable<TEntity> entities) where TEntity : class, IEntity;
 
-    Task SaveAsync(CancellationToken ct = default);
+    Task BulkUpsertAsync<TEntity>(DbSet<TEntity> dbSet, IAsyncEnumerable<TEntity> entities) where TEntity : class, IEntity;
+    Task BulkSynchronizeAsync<TEntity>(DbSet<TEntity> dbSet, IAsyncEnumerable<TEntity> entities) where TEntity : class, IEntity;
 }

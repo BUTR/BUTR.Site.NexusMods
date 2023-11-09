@@ -1,27 +1,48 @@
-﻿using System;
+﻿using BUTR.Site.NexusMods.Server.Utils.Vogen;
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 using Vogen;
 
 namespace BUTR.Site.NexusMods.Server.Models;
 
-[ValueObject<int>(conversions: Conversions.Default | Conversions.EfCoreValueConverter | Conversions.SystemTextJson)]
-public readonly partial struct NexusModsModId
+using TType = NexusModsModId;
+using TValueType = Int32;
+
+[TypeConverter(typeof(VogenTypeConverter<TType, TValueType>))]
+[JsonConverter(typeof(VogenJsonConverter<TType, TValueType>))]
+[ValueObject<TValueType>(conversions: Conversions.None)]
+[Instance("None", 0)]
+public readonly partial record struct NexusModsModId : IVogen<TType, TValueType>, IVogenParsable<TType, TValueType>, IVogenSpanParsable<TType, TValueType>, IVogenUtf8SpanParsable<TType, TValueType>
 {
-    public static bool TryParseUrl(string url, out NexusModsModId modId)
+    public static TType Copy(TType instance) => instance with { };
+    public static bool IsInitialized(TType instance) => instance._isInitialized;
+    public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);
+    public static TType DefaultValue => None;
+
+    public static bool TryParseUrl(string urlRaw, out TType modId)
     {
-        modId = From(0);
+        modId = DefaultValue;
 
-        if (!url.Contains("nexusmods.com/"))
+        if (!Uri.TryCreate(urlRaw, UriKind.Absolute, out var url))
             return false;
 
-        var str1 = url.Split("nexusmods.com/");
-        if (str1.Length != 2)
+        if (!url.Host.EndsWith("nexusmods.com"))
             return false;
 
-        var split = str1[1].Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (split.Length != 3)
+        if (url.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is not [ _, _, var modIdRaw, .. ])
             return false;
 
-        return TryParse(split[2], out modId);
+        return TryParse(modIdRaw, out modId);
     }
+
+    public static int GetHashCode(TType instance) => VogenDefaults<TType, TValueType>.GetHashCode(instance);
+
+    public static bool Equals(TType left, TType right) => VogenDefaults<TType, TValueType>.Equals(left, right);
+    public static bool Equals(TType left, TType right, IEqualityComparer<TType> comparer) => VogenDefaults<TType, TValueType>.Equals(left, right, comparer);
+
+    public static int CompareTo(TType left, TType right) => VogenDefaults<TType, TValueType>.CompareTo(left, right);
 }

@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -12,8 +13,8 @@ public class NexusModsModToModuleEntityConfiguration : BaseEntityConfigurationWi
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsModToModuleEntity> builder)
     {
-        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_module_id").HasConversion<NexusModsModId.EfCoreValueConverter>().ValueGeneratedNever();
-        builder.Property<ModuleId>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id").HasConversion<ModuleId.EfCoreValueConverter>();
+        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_module_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property<ModuleId>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id").HasVogenConversion();
         builder.Property(x => x.LinkType).HasColumnName("nexusmods_mod_module_link_type_id");
         builder.Property(x => x.LastUpdateDate).HasColumnName("date_of_last_update");
         builder.ToTable("nexusmods_mod_module", "nexusmods_mod").HasKey(nameof(NexusModsModToModuleEntity.TenantId), nameof(NexusModsModEntity.NexusModsModId), nameof(ModuleEntity.ModuleId), nameof(NexusModsModToModuleEntity.LinkType));

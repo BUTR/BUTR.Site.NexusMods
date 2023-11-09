@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +12,7 @@ public class CrashReportIgnoredFileIdEntityConfiguration : BaseEntityConfigurati
 
     protected override void ConfigureModel(EntityTypeBuilder<CrashReportIgnoredFileEntity> builder)
     {
-        builder.Property(x => x.Value).HasColumnName("crash_report_file_ignored_id").HasConversion<CrashReportFileId.EfCoreValueConverter>().ValueGeneratedNever();
+        builder.Property(x => x.Value).HasColumnName("crash_report_file_ignored_id").HasVogenConversion().ValueGeneratedNever();
         builder.ToTable("crash_report_file_ignored", "crashreport").HasKey(x => new { x.TenantId, x.Value });
 
         base.ConfigureModel(builder);

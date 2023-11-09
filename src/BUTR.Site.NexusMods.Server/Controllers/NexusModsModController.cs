@@ -5,6 +5,9 @@ using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Services;
+using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
@@ -19,7 +22,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
+[ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantRequired]
 public sealed class NexusModsModController : ControllerExtended
 {
     public sealed record RawNexusModsModModel(NexusModsModId NexusModsModId, string Name);
@@ -47,11 +50,8 @@ public sealed class NexusModsModController : ControllerExtended
 
     [HttpGet("Raw/{gameDomain}/{modId}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<RawNexusModsModModel?>>> RawAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, CancellationToken ct)
+    public async Task<APIResponseActionResult<RawNexusModsModModel?>> RawAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, [BindApiKey] NexusModsApiKey apiKey, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
-        var userId = HttpContext.GetUserId();
-        var apiKey = HttpContext.GetAPIKey();
-
         if (await _nexusModsAPIClient.GetModAsync(gameDomain, modId, apiKey, ct) is not { } modInfo)
             return APIResponseError<RawNexusModsModModel>("Mod not found!");
 
@@ -63,15 +63,12 @@ public sealed class NexusModsModController : ControllerExtended
 
 
     [HttpGet("ToModuleManualLink")]
-    [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
+    [ButrNexusModsAuthorization(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ToModuleManualLinkAsync([FromQuery] NexusModsModToModuleManualLinkQuery query)
+    public async Task<APIResponseActionResult<string?>> ToModuleManualLinkAsync([FromQuery] NexusModsModToModuleManualLinkQuery query, [BindTenant] TenantId tenant)
     {
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
         var entityFactory = _dbContextWrite.GetEntityFactory();
-
-        var tenant = HttpContext.GetTenant();
-        if (tenant == TenantId.None) return BadRequest();
 
         var nexusModsModToModule = new NexusModsModToModuleEntity
         {
@@ -79,16 +76,16 @@ public sealed class NexusModsModController : ControllerExtended
             NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
             Module = entityFactory.GetOrCreateModule(query.ModuleId),
             LinkType = NexusModsModToModuleLinkType.ByStaff,
-            LastUpdateDate = DateTime.UtcNow,
+            LastUpdateDate = DateTimeOffset.UtcNow,
         };
-        _dbContextWrite.FutureUpsert(x => x.NexusModsModModules, nexusModsModToModule);
+        await _dbContextWrite.NexusModsModModules.UpsertOnSaveAsync(nexusModsModToModule);
         return APIResponse("Linked successful!");
     }
 
     [HttpGet("ToModuleManualUnlink")]
-    [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
+    [ButrNexusModsAuthorization(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ToModuleManualUnlinkAsync([FromQuery] NexusModsModToModuleManualLinkQuery query)
+    public async Task<APIResponseActionResult<string?>> ToModuleManualUnlinkAsync([FromQuery] NexusModsModToModuleManualLinkQuery query)
     {
         await _dbContextWrite.NexusModsModModules
             .Where(x => x.Module.ModuleId == query.ModuleId && x.NexusModsMod.NexusModsModId == query.NexusModsModId && x.LinkType == NexusModsModToModuleLinkType.ByStaff)
@@ -98,9 +95,9 @@ public sealed class NexusModsModController : ControllerExtended
     }
 
     [HttpPost("ToModuleManualLinkPaginated")]
-    [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
+    [ButrNexusModsAuthorization(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<NexusModsModToModuleModel>?>>> ToModuleManualLinkPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<PagingData<NexusModsModToModuleModel>?>> ToModuleManualLinkPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var paginated = await _dbContextRead.NexusModsModModules
             .Where(x => x.LinkType == NexusModsModToModuleLinkType.ByStaff)
@@ -112,21 +109,15 @@ public sealed class NexusModsModController : ControllerExtended
 
     [HttpPost("AvailablePaginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<NexusModsModAvailableModel>?>>> AvailablePaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<PagingData<NexusModsModAvailableModel>?>> AvailablePaginatedAsync([FromBody] PaginatedQuery query, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
-        var userId = HttpContext.GetUserId();
-
         var userToModIds = _dbContextRead.NexusModsUserToNexusModsMods
-            .Include(x => x.NexusModsMod)
-            .ThenInclude(x => x.Name)
+            .Include(x => x.NexusModsMod).ThenInclude(x => x.Name)
             .Where(x => x.NexusModsUser.NexusModsUserId == userId)
             .Select(x => x.NexusModsMod);
 
         var userToModuleIdsToModIds = _dbContextRead.NexusModsUserToModules
-            .Include(x => x.Module)
-            .ThenInclude(x => x.ToNexusModsMods)
-            .ThenInclude(x => x.NexusModsMod)
-            .ThenInclude(x => x.Name)
+            .Include(x => x.Module).ThenInclude(x => x.ToNexusModsMods).ThenInclude(x => x.NexusModsMod).ThenInclude(x => x.Name)
             .Where(x => x.NexusModsUser.NexusModsUserId == userId)
             .Select(x => x.Module)
             .SelectMany(x => x.ToNexusModsMods)

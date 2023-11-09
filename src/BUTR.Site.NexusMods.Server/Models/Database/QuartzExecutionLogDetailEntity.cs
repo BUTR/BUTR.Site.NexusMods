@@ -2,8 +2,9 @@
 
 public sealed record QuartzExecutionLogDetailEntity
 {
-    public string? ExecutionDetails { get; set; }
-    public string? ErrorStackTrace { get; set; }
-    public int? ErrorCode { get; set; }
-    public string? ErrorHelpLink { get; set; }
+    public required string? ExecutionDetails { get; init; }
+
+    public required int? ErrorCode { get; init; }
+    public required string? ErrorStackTrace { get; init; }
+    public required string? ErrorHelpLink { get; init; }
 }

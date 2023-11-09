@@ -1,11 +1,16 @@
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,20 +18,58 @@ namespace BUTR.Site.NexusMods.Server.Contexts;
 
 public sealed class AppDbContextWrite : BaseAppDbContext, IAppDbContextWrite
 {
+    private sealed class AppDbContextSaveScope : IAppDbContextSaveScope
+    {
+        public static AppDbContextSaveScope Create(AppDbContextWrite dbContextWrite, Action onDispose) => new(dbContextWrite, onDispose);
+
+        private readonly AppDbContextWrite _dbContextWrite;
+        private readonly Action _onDispose;
+        private bool _hasCancelled;
+
+        private AppDbContextSaveScope(AppDbContextWrite dbContextWrite, Action onDispose)
+        {
+            _dbContextWrite = dbContextWrite;
+            _onDispose = onDispose;
+        }
+
+        public Task CancelAsync()
+        {
+            if (!_hasCancelled) _hasCancelled = true;
+
+            return Task.CompletedTask;
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            try
+            {
+                if (!_hasCancelled)
+                {
+                    await _dbContextWrite.SaveAsync(CancellationToken.None);
+                }
+            }
+            finally
+            {
+                _onDispose();
+            }
+        }
+    }
+
     private readonly IDbContextFactory<AppDbContextWrite> _dbContextFactory;
     private readonly ITenantContextAccessor _tenantContextAccessor;
     private EntityFactory? _entityFactory;
+    private List<Func<Task>>? _onSave;
 
     public AppDbContextWrite(
         IDbContextFactory<AppDbContextWrite> dbContextFactory,
-        IOptions<ConnectionStringsOptions> connectionStringOptions,
-        DbContextOptions<AppDbContextWrite> options,
         ITenantContextAccessor tenantContextAccessor,
-        IEntityConfigurationFactory entityConfigurationFactory) : base(connectionStringOptions, options, entityConfigurationFactory)
+        IOptions<ConnectionStringsOptions> connectionStringsOptions,
+        IEntityConfigurationFactory entityConfigurationFactory,
+        IOptions<JsonSerializerOptions> jsonSerializerOptions,
+        DbContextOptions<AppDbContextWrite> options) : base(connectionStringsOptions, entityConfigurationFactory, jsonSerializerOptions, options)
     {
-        _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
-        _tenantContextAccessor = tenantContextAccessor ?? throw new ArgumentNullException(nameof(tenantContextAccessor));
-        ChangeTracker.LazyLoadingEnabled = false;
+        _dbContextFactory = dbContextFactory;
+        _tenantContextAccessor = tenantContextAccessor;
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -38,47 +81,86 @@ public sealed class AppDbContextWrite : BaseAppDbContext, IAppDbContextWrite
 
         base.OnConfiguring(optionsBuilder);
     }
+    
 
-    public AppDbContextWrite Create() => _dbContextFactory.CreateDbContext();
+    public AppDbContextWrite New() => _dbContextFactory.CreateDbContext();
 
     public EntityFactory GetEntityFactory() => _entityFactory ??= new EntityFactory(_tenantContextAccessor, this);
 
-    public IAsyncDisposable CreateSaveScope() => new AppContextSaveScope(this);
-
-    public void FutureUpsert<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, TEntity entity) where TEntity : class, IEntity =>
-        FutureAction(x => dbset(x).SingleMerge(entity));
-
-    public void FutureUpsert<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, ICollection<TEntity> entities) where TEntity : class, IEntity =>
-        FutureAction(x => dbset(x).BulkMerge(entities));
-
-    public void FutureSyncronize<TEntity>(Func<IAppDbContextWrite, DbSet<TEntity>> dbset, ICollection<TEntity> entities) where TEntity : class, IEntity =>
-        FutureAction(x => dbset(x).BulkSynchronize(entities));
-
-    private void FutureAction(Action<IAppDbContextWrite> action) => this.FutureAction<AppDbContextWrite>(action);
+    public Task<IAppDbContextSaveScope> CreateSaveScopeAsync()
+    {
+        _onSave = new();
+        return Task.FromResult<IAppDbContextSaveScope>(AppDbContextSaveScope.Create(this, () => _onSave = null));
+    }
 
     public async Task SaveAsync(CancellationToken ct)
     {
         if (IsReadOnly)
             throw new NotSupportedException("The Save method is not supported on read-only database contexts.");
 
-        await using var transaction = await Database.BeginTransactionAsync(ct);
-        try
+        if (!ChangeTracker.HasChanges() && _entityFactory is null && _onSave?.Count == 0)
+            return;
+
+        var executionStrategy = Database.CreateExecutionStrategy();
+        await executionStrategy.ExecuteAsync(this, static async (dbContext, ct) =>
         {
-            if (_entityFactory is not null) await _entityFactory.SaveCreatedAsync(ct);
-            this.ExecuteFutureAction(false);
-            await this.BulkSaveChangesAsync(o => o.UseInternalTransaction = false, ct);
-            await transaction.CommitAsync(ct);
-        }
-        catch (Exception)
-        {
-            await transaction.RollbackAsync(ct);
-            throw;
-        }
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(ct);
+            try
+            {
+                if (dbContext._entityFactory is not null)
+                    await dbContext._entityFactory.SaveCreatedAsync(ct);
+
+                foreach (var func in dbContext._onSave ?? Enumerable.Empty<Func<Task>>())
+                    await func();
+
+                await dbContext.BulkSaveChangesAsync(o =>
+                {
+                    o.IncludeGraph = false;
+                    o.LegacyIncludeGraph = false;
+                }, CancellationToken.None);
+
+                await transaction.CommitAsync(ct);
+            }
+            catch (Exception e)
+            {
+                await transaction.RollbackAsync(ct);
+                throw;
+            }
+        }, ct);
     }
 
-    public override async ValueTask DisposeAsync()
+    public Task BulkUpsertAsync<TEntity>(DbSet<TEntity> dbSet, IEnumerable<TEntity> entities) where TEntity : class, IEntity
     {
-        await SaveAsync(CancellationToken.None);
-        await base.DisposeAsync();
+        if (_onSave is null) throw new Exception();
+        if (!ReferenceEquals(dbSet.GetService<ICurrentDbContext>().Context, this)) throw new Exception();
+
+        _onSave.Add(async () => await dbSet.UpsertAsync(entities));
+        return Task.CompletedTask;
+    }
+
+    public Task BulkSynchronizeAsync<TEntity>(DbSet<TEntity> dbSet, IEnumerable<TEntity> entities) where TEntity : class, IEntity
+    {
+        if (_onSave is null) throw new Exception();
+        if (!ReferenceEquals(dbSet.GetService<ICurrentDbContext>().Context, this)) throw new Exception();
+
+        _onSave.Add(async () => await dbSet.SynchronizeAsync(entities));
+        return Task.CompletedTask;
+    }
+
+    public Task BulkUpsertAsync<TEntity>(DbSet<TEntity> dbSet, IAsyncEnumerable<TEntity> entities) where TEntity : class, IEntity
+    {
+        if (_onSave is null) throw new Exception();
+        if (!ReferenceEquals(dbSet.GetService<ICurrentDbContext>().Context, this)) throw new Exception();
+
+        _onSave.Add(async () => await dbSet.UpsertAsync(entities));
+        return Task.CompletedTask;
+    }
+    public Task BulkSynchronizeAsync<TEntity>(DbSet<TEntity> dbSet, IAsyncEnumerable<TEntity> entities) where TEntity : class, IEntity
+    {
+        if (_onSave is null) throw new Exception();
+        if (!ReferenceEquals(dbSet.GetService<ICurrentDbContext>().Context, this)) throw new Exception();
+
+        _onSave.Add(async () => await dbSet.SynchronizeAsync(entities));
+        return Task.CompletedTask;
     }
 }

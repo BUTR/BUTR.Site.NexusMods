@@ -19,11 +19,13 @@ namespace BUTR.Site.NexusMods.Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0-rc.1.23419.6")
+                .HasAnnotation("ProductVersion", "8.0.0-rc.2.23480.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "hstore");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.HasSequence<int>("quartz_log_id_seq", "quartz");
 
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.AutocompleteEntity", b =>
                 {
@@ -65,7 +67,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("crash_report_id");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -374,7 +376,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("nexusmods_article_entity_id");
 
-                    b.Property<DateTime>("CreateDate")
+                    b.Property<DateTimeOffset>("CreateDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("create_date");
 
@@ -419,7 +421,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("nexusmods_mod_file_update_id");
 
-                    b.Property<DateTime>("LastCheckedDate")
+                    b.Property<DateTimeOffset>("LastCheckedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_of_last_check");
 
@@ -446,7 +448,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("nexusmods_mod_module_link_type_id");
 
-                    b.Property<DateTime>("LastUpdateDate")
+                    b.Property<DateTimeOffset>("LastUpdateDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_of_last_update");
 
@@ -469,7 +471,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
 
                     b.Property<int>("NexusModsModId")
                         .HasColumnType("integer")
-                        .HasColumnName("nexusmods_mod_name_id");
+                        .HasColumnName("nexusmods_mod_module_info_history_id");
 
                     b.Property<string>("ModuleId")
                         .HasColumnType("text")
@@ -484,7 +486,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("module_info");
 
-                    b.Property<DateTime>("UploadDate")
+                    b.Property<DateTimeOffset>("UploadDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_of_upload");
 
@@ -702,12 +704,33 @@ namespace BUTR.Site.NexusMods.Server.Migrations
 
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.QuartzExecutionLogEntity", b =>
                 {
-                    b.Property<long>("LogId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("quartz_execution_log_id");
+                    b.Property<string>("RunInstanceId")
+                        .HasColumnType("text")
+                        .HasColumnName("run_instance_id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("LogId"));
+                    b.Property<string>("JobName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("job_name");
+
+                    b.Property<string>("JobGroup")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("job_group");
+
+                    b.Property<string>("TriggerName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("trigger_name");
+
+                    b.Property<string>("TriggerGroup")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("trigger_group");
+
+                    b.Property<DateTimeOffset>("FireTimeUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fire_time_utc");
 
                     b.Property<DateTimeOffset>("DateAddedUtc")
                         .HasColumnType("timestamp with time zone")
@@ -719,11 +742,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
 
                     b.Property<QuartzExecutionLogDetailEntity>("ExecutionLogDetail")
                         .HasColumnType("jsonb")
-                        .HasColumnName("execution_log_detail");
-
-                    b.Property<DateTimeOffset?>("FireTimeUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("fire_time_utc");
+                        .HasColumnName("log_detail");
 
                     b.Property<bool?>("IsException")
                         .HasColumnType("boolean")
@@ -737,25 +756,15 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_vetoed");
 
-                    b.Property<string>("JobGroup")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)")
-                        .HasColumnName("job_group");
-
-                    b.Property<string>("JobName")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)")
-                        .HasColumnName("job_name");
-
-                    b.Property<TimeSpan?>("JobRunTime")
+                    b.Property<TimeSpan>("JobRunTime")
                         .HasColumnType("interval")
                         .HasColumnName("job_run_time");
 
-                    b.Property<string>("LogType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("log_type");
+                    b.Property<int>("LogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("quartz_log_id")
+                        .HasDefaultValueSql("nextval('\"quartz\".\"quartz_log_id_seq\"')");
 
                     b.Property<string>("MachineName")
                         .HasColumnType("text")
@@ -765,7 +774,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("text")
                         .HasColumnName("result");
 
-                    b.Property<int?>("RetryCount")
+                    b.Property<int>("RetryCount")
                         .HasColumnType("integer")
                         .HasColumnName("retry_count");
 
@@ -773,33 +782,13 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("text")
                         .HasColumnName("return_code");
 
-                    b.Property<string>("RunInstanceId")
-                        .HasColumnType("text")
-                        .HasColumnName("run_instance_id");
-
                     b.Property<DateTimeOffset?>("ScheduleFireTimeUtc")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("_schedule_fire_time_utc");
+                        .HasColumnName("schedule_fire_time_utc");
 
-                    b.Property<string>("TriggerGroup")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)")
-                        .HasColumnName("trigger_group");
+                    b.HasKey("RunInstanceId", "JobName", "JobGroup", "TriggerName", "TriggerGroup", "FireTimeUtc");
 
-                    b.Property<string>("TriggerName")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)")
-                        .HasColumnName("trigger_name");
-
-                    b.HasKey("LogId");
-
-                    b.HasIndex("RunInstanceId");
-
-                    b.HasIndex("DateAddedUtc", "LogType");
-
-                    b.HasIndex("TriggerName", "TriggerGroup", "JobName", "JobGroup", "DateAddedUtc");
-
-                    b.ToTable("quartz_execution_log", "quartz");
+                    b.ToTable("quartz_log", "quartz");
                 });
 
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.StatisticsCrashScoreInvolvedEntity", b =>

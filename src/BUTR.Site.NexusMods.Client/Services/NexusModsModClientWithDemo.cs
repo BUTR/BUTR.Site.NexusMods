@@ -17,25 +17,28 @@ public sealed class NexusModsModClientWithDemo : INexusModsModClient
         _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
     }
 
-    public async Task<RawNexusModsModModelAPIResponse> RawAsync(string gameDomain, int modId, CancellationToken ct = default) => await _implementation.RawAsync(gameDomain, modId, ct);
+    public async Task<RawNexusModsModModelAPIResponseActionResult> RawAsync(string gameDomain, int modId, CancellationToken ct = default)
+    {
+        return await _implementation.RawAsync(gameDomain, modId, ct);
+    }
 
-    public async Task<StringAPIResponse> ToModuleManualLinkAsync(string? moduleId = null, int? nexusModsModId = null, CancellationToken ct = default)
+    public async Task<StringAPIResponseActionResult> ToModuleManualLinkAsync(string? moduleId = null, int? nexusModsModId = null, CancellationToken ct = default)
     {
         return await _implementation.ToModuleManualLinkAsync(moduleId, nexusModsModId, ct);
     }
 
-    public async Task<StringAPIResponse> ToModuleManualUnlinkAsync(string? moduleId = null, int? nexusModsModId = null, CancellationToken ct = default)
+    public async Task<StringAPIResponseActionResult> ToModuleManualUnlinkAsync(string? moduleId = null, int? nexusModsModId = null, CancellationToken ct = default)
     {
         return await _implementation.ToModuleManualUnlinkAsync(moduleId, nexusModsModId, ct);
     }
 
-    public async Task<NexusModsModToModuleModelPagingDataAPIResponse> ToModuleManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
+    public async Task<NexusModsModToModuleModelPagingDataAPIResponseActionResult> ToModuleManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
     {
         return await _implementation.ToModuleManualLinkPaginatedAsync(body, ct);
     }
 
-    public async Task<NexusModsModAvailableModelPagingDataAPIResponse> AvailablePaginatedAsync(PaginatedQuery? body = null, CancellationToken cancellationToken = default)
+    public async Task<NexusModsModAvailableModelPagingDataAPIResponseActionResult> AvailablePaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
     {
-        return await _implementation.AvailablePaginatedAsync(body, cancellationToken);
+        return await _implementation.AvailablePaginatedAsync(body, ct);
     }
 }

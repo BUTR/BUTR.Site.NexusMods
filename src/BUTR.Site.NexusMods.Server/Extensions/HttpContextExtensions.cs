@@ -34,7 +34,11 @@ public static class HttpContextExtensions
             GOGUserId = GetGOGId(metadata, jsonSerializerOptions),
             SteamUserId = GetSteamId(metadata, jsonSerializerOptions),
             HasTenantGame = context.OwnsTenantGame(context.GetTenant()),
-            AvailableTenants = TenantId.Values.ToImmutableDictionary(x => x, x => x.ToName()),
+            AvailableTenants = TenantId.Values.Select(x => new ProfileTenantModel
+            {
+                TenantId = x,
+                Name = x.ToName(),
+            }).ToImmutableArray(),
         };
     }
 
@@ -55,7 +59,11 @@ public static class HttpContextExtensions
             GOGUserId = GetGOGId(context.GetMetadata(), jsonSerializerOptions),
             SteamUserId = GetSteamId(context.GetMetadata(), jsonSerializerOptions),
             HasTenantGame = context.OwnsTenantGame(context.GetTenant()),
-            AvailableTenants = TenantId.Values.ToImmutableDictionary(x => x, x => x.ToName()),
+            AvailableTenants = TenantId.Values.Select(x => new ProfileTenantModel
+            {
+                TenantId = x,
+                Name = x.ToName(),
+            }).ToImmutableArray(),
         };
     }
 

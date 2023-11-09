@@ -5,6 +5,9 @@ using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Services;
+using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
@@ -13,7 +16,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -21,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
+[ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantRequired]
 public sealed class NexusModsUserController : ControllerExtended
 {
     public sealed record SetRoleBody(NexusModsUserId NexusModsUserId, ApplicationRole Role);
@@ -37,6 +39,14 @@ public sealed class NexusModsUserController : ControllerExtended
     public sealed record NexusModsUserToModuleManualLinkModel(NexusModsUserId NexusModsUserId, ImmutableArray<ModuleId> AllowedModuleIds);
 
     public sealed record NexusModsUserToNexusModsModManualLinkModel(NexusModsModId NexusModsModId, ImmutableArray<NexusModsUserId> AllowedNexusModsUserIds);
+
+    public sealed record NexusModsModModel(
+        NexusModsModId NexusModsModId,
+        string Name,
+        ImmutableArray<NexusModsUserId> AllowedNexusModsUserIds,
+        ImmutableArray<NexusModsUserId> ManuallyLinkedNexusModsUserIds,
+        ImmutableArray<ModuleId> ManuallyLinkedModuleIds,
+        ImmutableArray<ModuleId> KnownModuleIds);
 
     private readonly ILogger _logger;
     private readonly NexusModsAPIClient _nexusModsAPIClient;
@@ -56,48 +66,38 @@ public sealed class NexusModsUserController : ControllerExtended
 
     [HttpGet("Profile")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<ProfileModel?>> Profile() => APIResponse(HttpContext.GetProfile());
+    public APIResponseActionResult<ProfileModel?> Profile() => APIResponse(HttpContext.GetProfile());
 
 
     [HttpPost("SetRole")]
-    [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
+    [ButrNexusModsAuthorization(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> SetRoleAsync([FromQuery] SetRoleBody body, CancellationToken ct)
+    public async Task<APIResponseActionResult<string?>> SetRoleAsync([FromQuery] SetRoleBody body, [BindTenant] TenantId tenant, CancellationToken ct)
     {
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
 
-        var tenant = HttpContext.GetTenant();
-        if (tenant == TenantId.None) return BadRequest();
-
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUsers, NexusModsUserEntity.CreateWithRole(body.NexusModsUserId, tenant, body.Role));
+        await _dbContextWrite.NexusModsUsers.UpsertOnSaveAsync(NexusModsUserEntity.CreateWithRole(body.NexusModsUserId, tenant, body.Role));
         return APIResponse("Set successful!");
     }
 
     [HttpDelete("RemoveRole")]
-    [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
+    [ButrNexusModsAuthorization(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> RemoveRoleAsync([FromQuery] RemoveRoleBody body, CancellationToken ct)
+    public async Task<APIResponseActionResult<string?>> RemoveRoleAsync([FromQuery] RemoveRoleBody body, [BindTenant] TenantId tenant, CancellationToken ct)
     {
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
 
-        var tenant = HttpContext.GetTenant();
-        if (tenant == TenantId.None) return BadRequest();
-
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUsers, NexusModsUserEntity.CreateWithRole(body.NexusModsUserId, tenant, ApplicationRole.User));
+        await _dbContextWrite.NexusModsUsers.UpsertOnSaveAsync(NexusModsUserEntity.CreateWithRole(body.NexusModsUserId, tenant, ApplicationRole.User));
         return APIResponse("Removed successful!");
     }
 
     [HttpPost("ToNexusModsModPaginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<NexusModsModModel>?>>> ToNexusModsModPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<PagingData<NexusModsModModel>?>> ToNexusModsModPaginatedAsync([FromBody] PaginatedQuery query, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
-        var userId = HttpContext.GetUserId();
 
-       var availableModsByNexusModsModLinkage = _dbContextRead.NexusModsUsers
-            .Include(x => x.ToNexusModsMods)
-            .ThenInclude(x => x.NexusModsMod)
-            .ThenInclude(x => x.ToNexusModsUsers)
-            .ThenInclude(x => x.NexusModsUser)
+        var availableModsByNexusModsModLinkage = _dbContextRead.NexusModsUsers
+            .Include(x => x.ToNexusModsMods).ThenInclude(x => x.NexusModsMod).ThenInclude(x => x.ToNexusModsUsers).ThenInclude(x => x.NexusModsUser)
             .AsSplitQuery()
             .Where(x => x.NexusModsUserId == userId)
             .SelectMany(x => x.ToNexusModsMods)
@@ -127,15 +127,10 @@ public sealed class NexusModsUserController : ControllerExtended
 
     [HttpPost("ToNexusModsModUpdate")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ToNexusModsModUpdateAsync([FromBody] NexusModsUserToNexusModsModQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<string?>> ToNexusModsModUpdateAsync([FromBody] NexusModsUserToNexusModsModQuery query, [BindApiKey] NexusModsApiKey apiKey, [BindUserId] NexusModsUserId userId, [BindTenant] TenantId tenant, CancellationToken ct)
     {
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
         var entityFactory = _dbContextWrite.GetEntityFactory();
-
-        var userId = HttpContext.GetUserId();
-        var apiKey = HttpContext.GetAPIKey();
-        var tenant = HttpContext.GetTenant();
-        if (tenant == TenantId.None) return BadRequest();
 
         var gameDomain = tenant.ToGameDomain();
 
@@ -151,22 +146,17 @@ public sealed class NexusModsUserController : ControllerExtended
             NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
             Name = modInfo.Name,
         };
-        _dbContextWrite.FutureUpsert(x => x.NexusModsModName, entity);
+        await _dbContextWrite.NexusModsModName.UpsertOnSaveAsync(entity);
         return APIResponse("Updated successful!");
     }
 
 
     [HttpGet("ToNexusModsModLink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ToNexusModsModLinkAsync([FromQuery] NexusModsUserToNexusModsModQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<string?>> ToNexusModsModLinkAsync([FromQuery] NexusModsUserToNexusModsModQuery query, [BindApiKey] NexusModsApiKey apiKey, [BindUserId] NexusModsUserId userId, [BindTenant] TenantId tenant, CancellationToken ct)
     {
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
         var entityFactory = _dbContextWrite.GetEntityFactory();
-
-        var userId = HttpContext.GetUserId();
-        var apiKey = HttpContext.GetAPIKey();
-        var tenant = HttpContext.GetTenant();
-        if (tenant == TenantId.None) return BadRequest();
 
         var gameDomain = tenant.ToGameDomain();
 
@@ -189,9 +179,9 @@ public sealed class NexusModsUserController : ControllerExtended
                 NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
                 Module = entityFactory.GetOrCreateModule(ModuleId.From(y.Id)),
                 LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure,
-                LastUpdateDate = DateTime.UtcNow
-            }).ToList();
-            _dbContextWrite.FutureUpsert(x => x.NexusModsModModules, entities);
+                LastUpdateDate = DateTimeOffset.UtcNow
+            }).ToArray();
+            await _dbContextWrite.NexusModsModModules.UpsertOnSaveAsync(entities);
         }
 
         var nexusModsModToName = new NexusModsModToNameEntity
@@ -200,7 +190,7 @@ public sealed class NexusModsUserController : ControllerExtended
             NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
             Name = modInfo.Name,
         };
-        _dbContextWrite.FutureUpsert(x => x.NexusModsModName, nexusModsModToName);
+        await _dbContextWrite.NexusModsModName.UpsertOnSaveAsync(nexusModsModToName);
         var nexusModsUserToNexusModsMod = new NexusModsUserToNexusModsModEntity
         {
             TenantId = tenant,
@@ -208,16 +198,14 @@ public sealed class NexusModsUserController : ControllerExtended
             NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
             LinkType = NexusModsUserToNexusModsModLinkType.ByAPIConfirmation,
         };
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToNexusModsMods, nexusModsUserToNexusModsMod);
+        await _dbContextWrite.NexusModsUserToNexusModsMods.UpsertOnSaveAsync(nexusModsUserToNexusModsMod);
         return APIResponse("Linked successful!");
     }
 
     [HttpGet("ToNexusModsModUnlink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ToNexusModsModUnlinkAsync([FromQuery] NexusModsUserToNexusModsModQuery query)
+    public async Task<APIResponseActionResult<string?>> ToNexusModsModUnlinkAsync([FromQuery] NexusModsUserToNexusModsModQuery query, [BindUserId] NexusModsUserId userId)
     {
-        var userId = HttpContext.GetUserId();
-
         await _dbContextWrite.NexusModsUserToNexusModsMods
             .Where(x => x.NexusModsUser.NexusModsUserId == userId && x.NexusModsMod.NexusModsModId == query.NexusModsModId && x.LinkType == NexusModsUserToNexusModsModLinkType.ByOwner)
             .ExecuteDeleteAsync();
@@ -226,15 +214,12 @@ public sealed class NexusModsUserController : ControllerExtended
 
 
     [HttpGet("ToModuleManualLink")]
-    [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
+    [ButrNexusModsAuthorization(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ToModuleManualLinkAsync([FromQuery] NexusModsUserToModuleQuery query)
+    public async Task<APIResponseActionResult<string?>> ToModuleManualLinkAsync([FromQuery] NexusModsUserToModuleQuery query, [BindTenant] TenantId tenant)
     {
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
         var entityFactory = _dbContextWrite.GetEntityFactory();
-
-        var tenant = HttpContext.GetTenant();
-        if (tenant == TenantId.None) return BadRequest();
 
         var nexusModsUserToModule = new NexusModsUserToModuleEntity
         {
@@ -243,25 +228,25 @@ public sealed class NexusModsUserController : ControllerExtended
             Module = entityFactory.GetOrCreateModule(query.ModuleId),
             LinkType = NexusModsUserToModuleLinkType.ByStaff,
         };
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToModules, nexusModsUserToModule);
+        await _dbContextWrite.NexusModsUserToModules.UpsertOnSaveAsync(nexusModsUserToModule);
         return APIResponse("Allowed successful!");
     }
 
     [HttpGet("ToModuleManualUnlink")]
-    [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
+    [ButrNexusModsAuthorization(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ToModuleManualUnlinkAsync([FromQuery] NexusModsUserToModuleQuery query)
+    public async Task<APIResponseActionResult<string?>> ToModuleManualUnlinkAsync([FromQuery] NexusModsUserToModuleQuery query)
     {
         await _dbContextWrite.NexusModsUserToModules
             .Where(x => x.NexusModsUser.NexusModsUserId == query.NexusModsUserId && x.Module.ModuleId == query.ModuleId && x.LinkType == NexusModsUserToModuleLinkType.ByStaff)
-            .DeleteFromQueryAsync();
+            .ExecuteDeleteAsync();
         return APIResponse("Disallowed successful!");
     }
 
     [HttpPost("ToModuleManualLinkPaginated")]
-    [Authorize(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
+    [ButrNexusModsAuthorization(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<NexusModsUserToModuleManualLinkModel>?>>> ToModuleManualLinkPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<PagingData<NexusModsUserToModuleManualLinkModel>?>> ToModuleManualLinkPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var paginated = await _dbContextRead.NexusModsUserToModules
             .Where(x => x.LinkType == NexusModsUserToModuleLinkType.ByStaff)
@@ -275,15 +260,10 @@ public sealed class NexusModsUserController : ControllerExtended
 
     [HttpGet("ToNexusModsModManualLink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ToNexusModsModManualLinkAsync([FromQuery] NexusModsUserToNexusModsModManualLinkQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<string?>> ToNexusModsModManualLinkAsync([FromQuery] NexusModsUserToNexusModsModManualLinkQuery query, [BindApiKey] NexusModsApiKey apiKey, [BindUserId] NexusModsUserId userId, [BindTenant] TenantId tenant, CancellationToken ct)
     {
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
         var entityFactory = _dbContextWrite.GetEntityFactory();
-
-        var userId = HttpContext.GetUserId();
-        var apiKey = HttpContext.GetAPIKey();
-        var tenant = HttpContext.GetTenant();
-        if (tenant == TenantId.None) return BadRequest();
 
         var gameDomain = tenant.ToGameDomain();
 
@@ -300,8 +280,8 @@ public sealed class NexusModsUserController : ControllerExtended
             NexusModsMod = entityFactory.GetOrCreateNexusModsMod(query.NexusModsModId),
             Name = modInfo.Name,
         };
-        _dbContextWrite.FutureUpsert(x => x.NexusModsModName, nexusModsModToName);
-        var nexusModsUserToNexusModsMods = new List<NexusModsUserToNexusModsModEntity>
+        await _dbContextWrite.NexusModsModName.UpsertOnSaveAsync(nexusModsModToName);
+        var nexusModsUserToNexusModsMods = new NexusModsUserToNexusModsModEntity[]
         {
             new()
             {
@@ -318,13 +298,13 @@ public sealed class NexusModsUserController : ControllerExtended
                 LinkType = NexusModsUserToNexusModsModLinkType.ByOwner,
             }
         };
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToNexusModsMods, nexusModsUserToNexusModsMods);
+        await _dbContextWrite.NexusModsUserToNexusModsMods.UpsertOnSaveAsync(nexusModsUserToNexusModsMods);
         return APIResponse("Allowed successful!");
     }
 
     [HttpGet("ToNexusModsModManualUnlink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> ToNexusModsModManualUnlinkAsync([FromQuery] NexusModsUserToNexusModsModManualLinkQuery query)
+    public async Task<APIResponseActionResult<string?>> ToNexusModsModManualUnlinkAsync([FromQuery] NexusModsUserToNexusModsModManualLinkQuery query)
     {
         await _dbContextWrite.NexusModsUserToNexusModsMods
             .Where(x => x.NexusModsUser.NexusModsUserId == query.NexusModsUserId && x.NexusModsMod.NexusModsModId == query.NexusModsModId && x.LinkType == NexusModsUserToNexusModsModLinkType.ByOwner)
@@ -334,10 +314,8 @@ public sealed class NexusModsUserController : ControllerExtended
 
     [HttpPost("ToNexusModsModManualLinkPaginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<NexusModsUserToNexusModsModManualLinkModel>?>>> ToNexusModsModManualLinkPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<PagingData<NexusModsUserToNexusModsModManualLinkModel>?>> ToNexusModsModManualLinkPaginatedAsync([FromBody] PaginatedQuery query, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
-        var userId = HttpContext.GetUserId();
-
         var paginated = await _dbContextRead.NexusModsUserToNexusModsMods
             .Where(x => x.NexusModsUser.NexusModsUserId == userId && x.LinkType == NexusModsUserToNexusModsModLinkType.ByOwner)
             .GroupBy(x =>  new { NexusModsModId = x.NexusModsMod.NexusModsModId })

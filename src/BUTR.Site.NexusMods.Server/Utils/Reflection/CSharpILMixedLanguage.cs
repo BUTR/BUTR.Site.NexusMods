@@ -16,7 +16,7 @@ using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading;
 
-namespace BUTR.Site.NexusMods.Server.Utils;
+namespace BUTR.Site.NexusMods.Server.Utils.Reflection;
 
 internal static class CSharpILMixedLanguage
 {
@@ -133,6 +133,8 @@ internal static class CSharpILMixedLanguage
                 {
                     for (var line = info.StartLine; line <= info.EndLine; line++)
                     {
+                        //if (_stringBuilderLinesIndices.Count < line) continue; // TODO:
+
                         plainTextOutput2.WriteLine();
                         plainTextOutput2.Write("// ");
 

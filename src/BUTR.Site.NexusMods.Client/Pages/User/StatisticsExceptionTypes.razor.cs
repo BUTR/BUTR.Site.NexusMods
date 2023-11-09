@@ -27,7 +27,7 @@ public partial class StatisticsExceptionTypes
 
     protected override async Task OnInitializedAsync()
     {
-        var data = (await StatisticsClient.TopExceptionsTypesAsync()).Data ?? Array.Empty<TopExceptionsEntry>();
+        var data = (await StatisticsClient.TopExceptionsTypesAsync()).Value ?? Array.Empty<TopExceptionsEntry>();
 
         _dataGridRef.Values = data;
 

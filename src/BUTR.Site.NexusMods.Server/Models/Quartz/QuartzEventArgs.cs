@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Threading;
 
 namespace BUTR.Site.NexusMods.Server.Models.Quartz;
 
-public class EventArgs<TArgs> : EventArgs
+public class QuartzEventArgs<TArgs> : EventArgs
 {
     public TArgs Args { get; init; }
     public CancellationToken CancelToken { get; init; }
 
-    public EventArgs(TArgs args, CancellationToken cancelToken = default)
+    public QuartzEventArgs(TArgs args, CancellationToken cancelToken = default)
     {
         Args = args;
         CancelToken = cancelToken;

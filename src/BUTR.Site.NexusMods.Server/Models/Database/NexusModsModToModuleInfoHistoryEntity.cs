@@ -9,7 +9,7 @@ public sealed record NexusModsModToModuleInfoHistoryEntity : IEntityWithTenant
     public required ModuleEntity Module { get; init; }
     public required ModuleVersion ModuleVersion { get; init; }
     public required NexusModsFileId NexusModsFileId { get; init; }
-    public required DateTime UploadDate { get; init; }
+    public required DateTimeOffset UploadDate { get; init; }
 
     public required ModuleInfoModel ModuleInfo { get; init; }
 

@@ -1,6 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
-
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
@@ -12,6 +10,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
+
+public sealed record GOGUserInfo(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("username")] string Username);
 
 public sealed class GOGEmbedClient
 {

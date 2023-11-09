@@ -110,7 +110,7 @@
         await _modalRef.Hide();
         if (save && _dataGridRef?.Value is not null && _userIdToDelete is not null)
         {
-            if (await _userClient.ToNexusModsModManualUnlinkAsync(_userIdToDelete, _dataGridRef.Value.NexusModsModId, CancellationToken.None) is { HumanReadableError: var error } && string.IsNullOrEmpty(error))
+            if (await _userClient.ToNexusModsModManualUnlinkAsync(_userIdToDelete, _dataGridRef.Value.NexusModsModId, CancellationToken.None) is { Error: not null })
             {
                 await _notificationService.Success($"Disallowed succesfully!", "Success!");
                 await _dataGridRef.Reload();
@@ -149,7 +149,7 @@
     }
 
     private async Task<DataGridPaging<NexusModsUserToNexusModsModManualLinkModel>.ItemsResponse?> GetAllowUserMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _userClient.ToNexusModsModManualLinkPaginatedAsync(new(page, pageSize, filters, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+        await _userClient.ToNexusModsModManualLinkPaginatedAsync(new(page, pageSize, filters, sortings), ct) is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
     private async Task OnDisallow(ButtonRowContext<NexusModsUserToNexusModsModManualLinkModel?> context)
     {
@@ -167,7 +167,7 @@
         if (!NexusModsUtils.TryParse(model.ModUrl, out _, out var nexusModsModId) && !uint.TryParse(model.ModUrl, out nexusModsModId))
             return false;
         
-        return await _userClient.ToNexusModsModManualLinkAsync((int) nexusModsUserId, (int) nexusModsModId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        return await _userClient.ToNexusModsModManualLinkAsync((int) nexusModsUserId, (int) nexusModsModId) is { Error: not null };
     }
     private async Task<bool> DoUserDisallowMod(NexusModsUserToNexusModsModManualLinkModel model)
     {

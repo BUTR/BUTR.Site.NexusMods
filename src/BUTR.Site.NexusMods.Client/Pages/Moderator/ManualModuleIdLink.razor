@@ -100,7 +100,7 @@
     }
 
     private async Task<DataGridPaging<NexusModsModToModuleModel>.ItemsResponse?> GetManualLinks(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _modClient.ToModuleManualLinkPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+        await _modClient.ToModuleManualLinkPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
 
     private async Task OnDisallow(ButtonRowContext<NexusModsModToModuleModel?> context)
     {
@@ -115,10 +115,10 @@
         if (!NexusModsUtils.TryParse(model.NexusModsUrl, out _, out var nexusModsId) && !uint.TryParse(model.NexusModsUrl, out nexusModsId))
             return false;
         
-        return await _modClient.ToModuleManualLinkAsync(model.ModuleId, (int) nexusModsId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        return await _modClient.ToModuleManualLinkAsync(model.ModuleId, (int) nexusModsId) is { Error: not null };
     }
     private async Task<bool> DoManualUnlink(NexusModsModToModuleModel model)
     {
-        return await _modClient.ToModuleManualUnlinkAsync(model.ModuleId) is { HumanReadableError: var error } && string.IsNullOrEmpty(error);
+        return await _modClient.ToModuleManualUnlinkAsync(model.ModuleId) is { Error: not null };
     }
 }

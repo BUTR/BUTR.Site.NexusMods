@@ -12,7 +12,7 @@ namespace BUTR.Site.NexusMods.Server.Models.API;
 /// <summary>
 /// This is an optimized class for json serialization of the Pagination functionality.
 /// We start with the <see cref="BUTR.Site.NexusMods.Server.Models.Database.Paging{T}"/> class.
-/// With the EF Core query provided, it will capture the current time and start database read with <see cref="System.Linq.Queryable.Count"/>.
+/// With the EF Core query provided, it will capture the current time and start database read with <see cref="System.Linq.Queryable.Count{T}(System.Linq.IQueryable{T})"/>.
 /// The Read of the data will not be yet done. It will start lazily after the json serializer will start to serialize it.
 /// After the serialization is done, our Async wrappers will capture the end time to be consumed by json next.
 /// It's quite complex, but we avoid data bufferization on the server and also start to send the data to the client as early as possible.
@@ -74,7 +74,7 @@ public sealed record PagingData<T> where T : class
     [JsonIgnore]
     private long EndTime { get; set; }
 
-    private PagingAdditionalMetadata? _additionalMetadata = default!;
+    private PagingAdditionalMetadata? _additionalMetadata;
     [JsonPropertyOrder(3)]
     public PagingAdditionalMetadata AdditionalMetadata => _additionalMetadata ??= new()
     {

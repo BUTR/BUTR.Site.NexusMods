@@ -9,7 +9,7 @@ public sealed record NexusModsUserToIntegrationGOGEntity : IEntity
     public IntegrationGOGTokensEntity? ToTokens { get; init; }
 
     public required string GOGUserId { get; init; }
-    public ICollection<IntegrationGOGToOwnedTenantEntity> ToOwnedTenants { get; init; }
+    public ICollection<IntegrationGOGToOwnedTenantEntity> ToOwnedTenants { get; init; } = new List<IntegrationGOGToOwnedTenantEntity>();
 
     public override int GetHashCode() => HashCode.Combine(NexusModsUser.NexusModsUserId, GOGUserId);
 }

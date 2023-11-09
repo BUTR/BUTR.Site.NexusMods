@@ -2,8 +2,10 @@
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
-using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
+[ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantRequired]
 public sealed class StatisticsController : ControllerExtended
 {
     public record TopExceptionsEntry(ExceptionTypeId Type, decimal Percentage);
@@ -61,21 +63,21 @@ public sealed class StatisticsController : ControllerExtended
 
     [HttpGet("AutocompleteGameVersion")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<string>?>> AutocompleteGameVersion([FromQuery] GameVersion gameVersion)
+    public APIResponseActionResult<IQueryable<string>?> AutocompleteGameVersion([FromQuery] GameVersion gameVersion)
     {
         return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportEntity, GameVersion>(x => x.GameVersion, gameVersion));
     }
 
     [HttpGet("AutocompleteModuleId")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<string>?>> AutocompleteModuleId([FromQuery] ModuleId moduleId)
+    public APIResponseActionResult<IQueryable<string>?> AutocompleteModuleId([FromQuery] ModuleId moduleId)
     {
         return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId, moduleId));
     }
 
     [HttpGet("TopExceptionsTypes")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<IEnumerable<TopExceptionsEntry>?>>> TopExceptionsTypesAsync(CancellationToken ct)
+    public async Task<APIResponseActionResult<IEnumerable<TopExceptionsEntry>?>> TopExceptionsTypesAsync(CancellationToken ct)
     {
         var types = await _dbContextRead.StatisticsTopExceptionsTypes
             .Include(x => x.ExceptionType)
@@ -88,7 +90,7 @@ public sealed class StatisticsController : ControllerExtended
 
     [HttpGet("Involved")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<GameStorage>?>> Involved([FromQuery] GameVersion[]? gameVersions, [FromQuery] ModuleId[]? moduleIds, [FromQuery] ModuleVersion[]? moduleVersions)
+    public APIResponseActionResult<IQueryable<GameStorage>?> Involved([FromQuery] GameVersion[]? gameVersions, [FromQuery] ModuleId[]? moduleIds, [FromQuery] ModuleVersion[]? moduleVersions)
     {
         //if (gameVersions?.Length == 0 && modIds?.Length == 0 && modVersions?.Length == 0)
         //    return StatusCode(StatusCodes.Status403Forbidden, Array.Empty<GameStorage>());
@@ -114,10 +116,10 @@ public sealed class StatisticsController : ControllerExtended
                             Score = 1 - q.Score,
                             Value = q.RawValue,
                             CountStable = q.NotInvolvedCount,
-                            CountUnstable = q.InvolvedCount
-                        }).ToArray()
-                    }).ToArray()
-                }).ToArray()
+                            CountUnstable = q.InvolvedCount,
+                        }).ToArray(),
+                    }).ToArray(),
+                }).ToArray(),
             });
 
         return APIResponse(data);

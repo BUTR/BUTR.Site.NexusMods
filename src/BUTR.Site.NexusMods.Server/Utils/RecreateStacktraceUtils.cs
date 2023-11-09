@@ -25,7 +25,7 @@ public static class RecreateStacktraceUtils
     {
         var methods = crashReport.EnhancedStacktrace.Select(y => y.OriginalMethod).ToArray();
         return GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct)
-            .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
+            .OrderBy(x => Array.FindIndex(methods, y => y.MethodName == x.Method)); // Was Method isntead of MethodName
 
     }
     public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktraceUnordered(IEnumerable<string> assemblyFiles, CrashReportModel crashReport, CancellationToken ct)
@@ -133,8 +133,8 @@ public static class RecreateStacktraceUtils
             using var _ = moduleDefinition;
             foreach (var frame in crashReport.EnhancedStacktrace)
             {
-                var methodName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(frame.OriginalMethod.Method);
-                var methodFullName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(frame.OriginalMethod.MethodFullName);
+                var methodName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(frame.OriginalMethod.MethodName);  // Was Method isntead of MethodName
+                var methodFullName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(frame.OriginalMethod.MethodFullDescription);  // Was MethodFullName isntead of MethodName
 
                 var utf8MethodName = Encoding.UTF8.GetBytes(methodName);
                 var foundMethods = moduleDefinition.Metadata.TypeDefinitions.Select(moduleDefinition.Metadata.GetTypeDefinition).Where(x =>
@@ -216,7 +216,7 @@ public static class RecreateStacktraceUtils
                 var code = output.ToString()!;
                 var lineNumber = GetLineNumber(code, frame.ILOffset ?? 0);
 
-                yield return new RecreatedStacktrace(frame.OriginalMethod.Method, code, lineNumber);
+                yield return new RecreatedStacktrace(frame.OriginalMethod.MethodName, code, lineNumber); // Was Method isntead of MethodName
             }
         }
 

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Quartz;
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,8 +62,8 @@ public sealed class NexusModsArticleProcessorJob : IJob
         var @break = false;
         while (!ct.IsCancellationRequested && !@break)
         {
-            await using var _ = dbContextWrite.CreateSaveScope();
-            var articles = new List<NexusModsArticleEntity>();
+            await using var _ = await dbContextWrite.CreateSaveScopeAsync();
+            var articles = ImmutableArray.CreateBuilder<NexusModsArticleEntity>();
 
             for (var i = 0; i < 50; i++)
             {
@@ -103,7 +103,7 @@ public sealed class NexusModsArticleProcessorJob : IJob
                 var dateTimeText1 = fileinfoElement.ChildNodes.FindFirst("div");
                 var dateTimeText2 = dateTimeText1?.ChildNodes.FindFirst("time");
                 var dateTimeText = dateTimeText2?.GetAttributeValue("datetime", "");
-                var dateTime = DateTimeOffset.TryParse(dateTimeText, out var dateTimeVal) ? dateTimeVal.UtcDateTime : DateTimeOffset.MinValue.UtcDateTime;
+                var dateTime = DateTimeOffset.TryParse(dateTimeText, out var dateTimeVal) ? dateTimeVal.ToUniversalTime() : DateTimeOffset.MinValue.ToUniversalTime();
 
                 articles.Add(new()
                 {
@@ -116,7 +116,7 @@ public sealed class NexusModsArticleProcessorJob : IJob
                 articleIdRaw++;
             }
 
-            dbContextWrite.FutureUpsert(x => x.NexusModsArticles, articles);
+            await dbContextWrite.NexusModsArticles.UpsertOnSaveAsync(articles.ToArray());
             // Disposing the DBContext will save the data
         }
     }

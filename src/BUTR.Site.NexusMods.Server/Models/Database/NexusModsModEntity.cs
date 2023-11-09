@@ -24,7 +24,7 @@ public record NexusModsModEntity : IEntityWithTenant
     [SetsRequiredMembers]
     private NexusModsModEntity(TenantId tenant, NexusModsModId modId) : this() => (TenantId,NexusModsModId) = (tenant, modId);
     [SetsRequiredMembers]
-    private NexusModsModEntity(TenantId tenant, NexusModsModId modId, DateTime lastCheckedDate) : this(tenant, modId) => FileUpdate = new()
+    private NexusModsModEntity(TenantId tenant, NexusModsModId modId, DateTimeOffset lastCheckedDate) : this(tenant, modId) => FileUpdate = new()
     {
         TenantId = tenant,
         NexusModsMod = this,
@@ -32,7 +32,7 @@ public record NexusModsModEntity : IEntityWithTenant
     };
 
     public static NexusModsModEntity Create(TenantId tenant, NexusModsModId modId) => new(tenant, modId);
-    public static NexusModsModEntity Create(TenantId tenant, NexusModsModId modId, DateTime lastCheckedDate) => new(tenant, modId, lastCheckedDate);
+    public static NexusModsModEntity Create(TenantId tenant, NexusModsModId modId, DateTimeOffset lastCheckedDate) => new(tenant, modId, lastCheckedDate);
 }
 
 /*

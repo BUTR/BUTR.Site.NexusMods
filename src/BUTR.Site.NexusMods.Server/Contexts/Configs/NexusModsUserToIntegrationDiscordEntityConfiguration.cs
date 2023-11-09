@@ -1,4 +1,5 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ public class NexusModsUserToIntegrationDiscordEntityConfiguration : BaseEntityCo
 {
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToIntegrationDiscordEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_to_discord_id").HasConversion<NexusModsUserId.EfCoreValueConverter>().ValueGeneratedNever();
+        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_to_discord_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.DiscordUserId).HasColumnName("discord_user_id");
         builder.ToTable("nexusmods_user_to_integration_discord", "nexusmods_user").HasKey(nameof(NexusModsUserEntity.NexusModsUserId));
 

@@ -4,6 +4,9 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
+[ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantRequired]
 public class ExposedModsController : ControllerExtended
 {
     public record ExposedNexusModsModModel(NexusModsModId NexusModsModId, ExposedModuleModel[] Mods);
@@ -34,19 +37,19 @@ public class ExposedModsController : ControllerExtended
 
     [HttpPost("Paginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<ExposedNexusModsModModel>?>>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<PagingData<ExposedNexusModsModModel>?>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var paginated = await _dbContextRead.NexusModsModModules
             .Where(x => x.LinkType == NexusModsModToModuleLinkType.ByUnverifiedFileExposure)
             .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 
         return APIPagingResponse(paginated, items => items.GroupBy(x => x.NexusModsMod.NexusModsModId).SelectAwaitWithCancellation(async (x, ct2) =>
-            new ExposedNexusModsModModel(x.Key, await x.Select(y => new ExposedModuleModel(y.Module.ModuleId, y.LastUpdateDate)).ToArrayAsync(ct2))));
+            new ExposedNexusModsModModel(x.Key, await x.Select(y => new ExposedModuleModel(y.Module.ModuleId, y.LastUpdateDate.ToUniversalTime())).ToArrayAsync(ct2))));
     }
 
     [HttpGet("Autocomplete")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] ModuleId modId)
+    public APIResponseActionResult<IQueryable<string>?> Autocomplete([FromQuery] ModuleId modId)
     {
         return APIResponse(_dbContextRead.AutocompleteStartsWith<NexusModsModToModuleEntity, ModuleId>(x => x.Module.ModuleId, modId));
     }

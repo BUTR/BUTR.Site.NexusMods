@@ -106,7 +106,7 @@
             _ = await _authenticationProvider.ValidateAsync();
 
             var userInfo = await _discordClient.GetUserInfoAsync();
-            _userInfo = new DiscordUserInfo2(userInfo.Data);
+            _userInfo = new DiscordUserInfo2(userInfo.Value);
             _status = "SUCCESS";
             _image = Success;
         }

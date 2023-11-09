@@ -1,10 +1,12 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,11 +45,11 @@ public sealed class DatabaseSteamStorage : ISteamStorage
     public async Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string steamUserId)
     {
         var entityFactory = _dbContextWrite.GetEntityFactory();
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
 
         var nexusModsUserToIntegrationSteam = entityFactory.GetOrCreateNexusModsUserSteam(nexusModsUserId, steamUserId);
 
-        var list = new List<IntegrationSteamToOwnedTenantEntity>();
+        var list = ImmutableArray.CreateBuilder<IntegrationSteamToOwnedTenantEntity>();
         foreach (var (tenant, gameIds) in TenantToGameIds)
         {
             var ownsTenant = false;
@@ -67,8 +69,8 @@ public sealed class DatabaseSteamStorage : ISteamStorage
             }
         }
 
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToSteam, nexusModsUserToIntegrationSteam);
-        _dbContextWrite.FutureUpsert(x => x.IntegrationSteamToOwnedTenants, list);
+        await _dbContextWrite.NexusModsUserToSteam.UpsertOnSaveAsync(nexusModsUserToIntegrationSteam);
+        await _dbContextWrite.IntegrationSteamToOwnedTenants.UpsertOnSaveAsync(list.ToArray());
         await _dbContextWrite.IntegrationSteamToOwnedTenants.Where(x => x.SteamUserId == steamUserId).ExecuteDeleteAsync(CancellationToken.None);
         return true;
     }
@@ -83,13 +85,13 @@ public sealed class DatabaseSteamStorage : ISteamStorage
     public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string steamUserId, Dictionary<string, string> data)
     {
         var entityFactory = _dbContextWrite.GetEntityFactory();
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
 
         var nexusModsUserToIntegrationSteam = entityFactory.GetOrCreateNexusModsUserSteam(nexusModsUserId, steamUserId);
         var tokensSteam = entityFactory.GetOrCreateIntegrationSteamTokens(nexusModsUserId, steamUserId, data);
 
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToSteam, nexusModsUserToIntegrationSteam);
-        _dbContextWrite.FutureUpsert(x => x.IntegrationSteamTokens, tokensSteam);
+        await _dbContextWrite.NexusModsUserToSteam.UpsertOnSaveAsync(nexusModsUserToIntegrationSteam);
+        await _dbContextWrite.IntegrationSteamTokens.UpsertOnSaveAsync(tokensSteam);
         return true;
     }
 

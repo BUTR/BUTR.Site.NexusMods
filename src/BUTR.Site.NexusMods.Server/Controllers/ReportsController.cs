@@ -1,6 +1,8 @@
 ﻿using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
+using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), AllowAnonymous]
+[ApiController, Route("api/v1/[controller]"), AllowAnonymous, TenantRequired]
 public sealed class ReportsController : ControllerExtended
 {
     private readonly ILogger _logger;

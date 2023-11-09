@@ -14,7 +14,7 @@ public sealed record PagingStreamingData<T> where T : class
 
     private static PagingStreamingData<T> Create()
     {
-        LazyTask<APIStreamingResponse> GetStatusAsync() => LazyTask<APIStreamingResponse>.FromResult(new APIStreamingResponse(string.Empty));
+        LazyTask<APIStreamingResponse> GetStatusAsync() => LazyTask<APIStreamingResponse>.FromResult(new APIStreamingResponse(null));
         LazyTask<PagingMetadata> GetMetadataAsync() => LazyTask<PagingMetadata>.FromResult(PagingMetadata.Empty);
         LazyTask<IAsyncEnumerable<T>> GetItemsAsync() => LazyTask<IAsyncEnumerable<T>>.FromResult(AsyncEnumerable.Empty<T>());
         LazyTask<PagingAdditionalMetadata> GetQueryExecutionTimeMilliseconds() => LazyTask<PagingAdditionalMetadata>.FromResult(PagingAdditionalMetadata.Empty);
@@ -30,7 +30,7 @@ public sealed record PagingStreamingData<T> where T : class
 
     public static PagingStreamingData<T> Create(PagingMetadata pagingMetadata, IAsyncEnumerable<T> items, PagingAdditionalMetadata additionalMetadata)
     {
-        LazyTask<APIStreamingResponse> GetStatusAsync() => LazyTask<APIStreamingResponse>.FromResult(new APIStreamingResponse(string.Empty));
+        LazyTask<APIStreamingResponse> GetStatusAsync() => LazyTask<APIStreamingResponse>.FromResult(new APIStreamingResponse(null));
         LazyTask<PagingMetadata> GetMetadataAsync() => LazyTask<PagingMetadata>.FromResult(pagingMetadata);
         LazyTask<IAsyncEnumerable<T>> GetItemsAsync() => LazyTask<IAsyncEnumerable<T>>.FromResult(items);
         LazyTask<PagingAdditionalMetadata> GetQueryExecutionTimeMillisecondsAsync() => LazyTask<PagingAdditionalMetadata>.FromResult(additionalMetadata);
@@ -58,7 +58,7 @@ public sealed record PagingStreamingData<T> where T : class
         {
             var stream = await streamingJsonContext.ReadLfSeparatedJsonAsync(ct);
             var result = await JsonSerializer.DeserializeAsync<APIStreamingResponse>(stream, jsonSerializerOptions, ct);
-            hasError = result is null || !string.IsNullOrEmpty(result.HumanReadableError);
+            hasError = result is null || !string.IsNullOrEmpty(result.Error?.Detail);
             return result!;
         }
         async LazyTask<PagingMetadata> GetMetadataAsync()

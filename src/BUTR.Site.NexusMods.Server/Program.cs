@@ -22,8 +22,6 @@ using Quartz;
 using System;
 using System.Threading.Tasks;
 
-using Z.EntityFramework.Extensions;
-
 namespace BUTR.Site.NexusMods.Server;
 
 public static class Program
@@ -31,22 +29,22 @@ public static class Program
     private static void PreBulkSaveChanges(DbContext context)
     {
         if (context is AppDbContextRead)
-            throw new NotSupportedException("Write operations not supported with 'AppDbContextRead'!");
+            AppDbContextRead.WriteNotSupported();
     }
     private static void PreBulkOperation(DbContext context, object o) => PreBulkSaveChanges(context);
 
     public static async Task Main(string[] args)
     {
-        EntityFrameworkManager.PreBulkInsert = PreBulkOperation;
-        EntityFrameworkManager.PreBulkDelete = PreBulkOperation;
-        EntityFrameworkManager.PreBulkMerge  = PreBulkOperation;
-        EntityFrameworkManager.PreBulkUpdate = PreBulkOperation;
-        EntityFrameworkManager.PreBulkSynchronize = PreBulkOperation;
-        EntityFrameworkManager.PreBulkSaveChanges = PreBulkSaveChanges;
-        EntityFrameworkManager.ContextFactory = context => context switch
+        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkInsert = PreBulkOperation;
+        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkDelete = PreBulkOperation;
+        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkMerge  = PreBulkOperation;
+        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkUpdate = PreBulkOperation;
+        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkSynchronize = PreBulkOperation;
+        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkSaveChanges = PreBulkSaveChanges;
+        Z.EntityFramework.Extensions.EntityFrameworkManager.ContextFactory = context => context switch
         {
-            AppDbContextRead appDbContextRead => appDbContextRead.Create(),
-            AppDbContextWrite appDbContextWrite => appDbContextWrite.Create(),
+            AppDbContextRead appDbContextRead => appDbContextRead.New(),
+            AppDbContextWrite appDbContextWrite => appDbContextWrite.New(),
             _ => null
         };
 
@@ -66,7 +64,7 @@ public static class Program
             });
 
             var oltpSection = ctx.Configuration.GetSection("Oltp");
-            if (oltpSection is not null)
+            if (oltpSection != null!)
             {
                 var openTelemetry = services.AddOpenTelemetry()
                     .ConfigureResource(builder =>
@@ -81,7 +79,7 @@ public static class Program
                         builder.AddTelemetrySdk();
                     });
 
-                var metricsEndpoint = oltpSection.GetValue<string>("MetricsEndpoint");
+                var metricsEndpoint = oltpSection.GetValue<string?>("MetricsEndpoint");
                 if (metricsEndpoint is not null)
                 {
                     var metricsProtocol = oltpSection.GetValue<OtlpExportProtocol>("MetricsProtocol");
@@ -92,10 +90,7 @@ public static class Program
                             
                         })
                         .AddHttpClientInstrumentation()
-                        .AddAspNetCoreInstrumentation(instrumentationOptions =>
-                        {
-                            
-                        })
+                        .AddAspNetCoreInstrumentation()
                         .AddOtlpExporter(o =>
                         {
                             o.Endpoint = new Uri(metricsEndpoint);
@@ -103,7 +98,7 @@ public static class Program
                         }));
                 }
 
-                var tracingEndpoint = oltpSection.GetValue<string>("TracingEndpoint");
+                var tracingEndpoint = oltpSection.GetValue<string?>("TracingEndpoint");
                 if (tracingEndpoint is not null)
                 {
                     var tracingProtocol = oltpSection.GetValue<OtlpExportProtocol>("TracingProtocol");
@@ -114,11 +109,11 @@ public static class Program
                         })
                         .AddNpgsql(instrumentationOptions =>
                         {
-                            
+
                         })
                         .AddGrpcClientInstrumentation(instrumentationOptions =>
                         {
-                            
+
                         })
                         .AddHttpClientInstrumentation(instrumentationOptions =>
                         {
@@ -147,7 +142,7 @@ public static class Program
         .ConfigureLogging((ctx, builder) =>
         {
             var oltpSection = ctx.Configuration.GetSection("Oltp");
-            if (oltpSection is null) return;
+            if (oltpSection == null!) return;
             
             var loggingEndpoint = oltpSection.GetValue<string>("LoggingEndpoint");
             if (loggingEndpoint is null) return;

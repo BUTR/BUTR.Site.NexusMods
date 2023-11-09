@@ -44,12 +44,12 @@
                                     @_currentTenant
                                 </BarDropdownToggle>
                                 <BarDropdownMenu Background="@Background.Dark">
-                                    @foreach (var (tenant, name) in _user?.AvailableTenants ?? new Dictionary<string, string>())
+                                    @foreach (var kv in _user?.AvailableTenants ?? Enumerable.Empty<ProfileTenantModel>())
                                     {
-                                        if (_currentTenant == name) continue;
+                                        if (_currentTenant == kv.Name) continue;
 
                                         <BarDropdownItem Background="@Background.Dark">
-                                            <BarLink Clicked="async () => await SwitchTenantAsync(tenant)">@name</BarLink>
+                                            <BarLink Clicked="@(async () => await SwitchTenantAsync(kv.TenantId))">@kv.Name</BarLink>
                                         </BarDropdownItem>
                                     }
                                 </BarDropdownMenu>
@@ -208,7 +208,7 @@
         if (state.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role) is { } claim && claim.Value !=  ApplicationRoles.Anonymous)
         {
             var response = await _userClient.ProfileAsync();
-            _user = response.Data;
+            _user = response.Value;
             StateHasChanged();
         }
 
@@ -216,7 +216,7 @@
         _currentTenant = TenantUtils.FromTenantToName(currentTenantId);
     }
 
-    private async Task SwitchTenantAsync(string value)
+    private async Task SwitchTenantAsync(int value)
     {
         await _tenantProvider.SetTenantAsync(value);
         _navigationManager.NavigateTo(_navigationManager.Uri, true);

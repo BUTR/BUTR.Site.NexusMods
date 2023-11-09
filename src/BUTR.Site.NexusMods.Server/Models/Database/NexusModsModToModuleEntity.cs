@@ -12,7 +12,7 @@ public sealed record NexusModsModToModuleEntity : IEntityWithTenant
 
     public required NexusModsModToModuleLinkType LinkType { get; init; }
 
-    public required DateTime LastUpdateDate { get; init; }
+    public required DateTimeOffset LastUpdateDate { get; init; }
 
     public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsMod.NexusModsModId, Module.ModuleId, LinkType, LastUpdateDate);
 }

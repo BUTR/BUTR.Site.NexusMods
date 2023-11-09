@@ -1,12 +1,14 @@
-﻿using BUTR.Site.NexusMods.Server.Extensions;
-using BUTR.Site.NexusMods.Server.Models.Database;
+﻿using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
 
+using Npgsql;
+
 using System;
+using System.Text.Json;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
@@ -15,8 +17,9 @@ namespace BUTR.Site.NexusMods.Server.Contexts;
 /// </summary>
 public class BaseAppDbContext : DbContext
 {
-    private readonly IEntityConfigurationFactory _entityConfigurationFactory;
     private readonly ConnectionStringsOptions _options;
+    private readonly IEntityConfigurationFactory _entityConfigurationFactory;
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
 
     public required bool IsReadOnly { get; set; }
 
@@ -63,16 +66,26 @@ public class BaseAppDbContext : DbContext
 
     public required DbSet<QuartzExecutionLogEntity> QuartzExecutionLogs { get; set; }
 
-    public BaseAppDbContext(IOptions<ConnectionStringsOptions> connectionStringOptions, DbContextOptions<BaseAppDbContext> options, IEntityConfigurationFactory entityConfigurationFactory) : base(options)
+    public BaseAppDbContext(
+        IOptions<ConnectionStringsOptions> option,
+        IEntityConfigurationFactory entityConfigurationFactory,
+        IOptions<JsonSerializerOptions> jsonSerializerOptions,
+        DbContextOptions<BaseAppDbContext> options) : base(options)
     {
-        _entityConfigurationFactory = entityConfigurationFactory ?? throw new ArgumentNullException(nameof(entityConfigurationFactory));
-        _options = connectionStringOptions.Value ?? throw new ArgumentNullException(nameof(connectionStringOptions));
+        _options = option.Value;
+        _entityConfigurationFactory = entityConfigurationFactory;
+        _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
-    protected BaseAppDbContext(IOptions<ConnectionStringsOptions> connectionStringOptions, DbContextOptions options, IEntityConfigurationFactory entityConfigurationFactory) : base(options)
+    protected BaseAppDbContext(
+        IOptions<ConnectionStringsOptions> connectionStringsOptions,
+        IEntityConfigurationFactory entityConfigurationFactory,
+        IOptions<JsonSerializerOptions> jsonSerializerOptions,
+        DbContextOptions options) : base(options)
     {
-        _entityConfigurationFactory = entityConfigurationFactory ?? throw new ArgumentNullException(nameof(entityConfigurationFactory));
-        _options = connectionStringOptions.Value ?? throw new ArgumentNullException(nameof(connectionStringOptions));
+        _options = connectionStringsOptions.Value;
+        _entityConfigurationFactory = entityConfigurationFactory;
+        _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -130,15 +143,18 @@ public class BaseAppDbContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>();
+            var dataSource = new NpgsqlDataSourceBuilder(IsReadOnly && !string.IsNullOrEmpty(_options.Replica) ? _options.Replica : _options.Main)
+                .EnableDynamicJsonMappings(_jsonSerializerOptions)
+                .Build();
 
             optionsBuilder
-                .UseNpgsql(IsReadOnly && !string.IsNullOrEmpty(_options.Replica) ? _options.Replica : _options.Main, opt =>
+                .ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>()
+                .UseNpgsql(dataSource, opt =>
                 {
-                    opt.EnableRetryOnFailure();
+                    opt.EnableRetryOnFailure(50, TimeSpan.FromSeconds(5), null);
                     opt.MigrationsHistoryTable("ef_migrations_history", "ef");
                 })
-                .AddPrepareInterceptor()
+                //.AddPrepareInterceptor()
                 .EnableSensitiveDataLogging()
                 /*.UseLoggerFactory(LoggerFactory.Create(b => b.AddFilter(level => level >= LogLevel.Information)))*/;
         }

@@ -20,12 +20,12 @@ public class EntityConfigurationFactory : IEntityConfigurationFactory
     public void ApplyConfiguration<TEntity>(ModelBuilder modelBuilder) where TEntity : class, IEntity
     {
         var configuration = _serviceProvider.GetRequiredService<BaseEntityConfiguration<TEntity>>();
-        configuration.Configure(modelBuilder.Entity<TEntity>());
+        configuration.Configure(modelBuilder);
     }
 
     public void ApplyConfigurationWithTenant<TEntity>(ModelBuilder modelBuilder) where TEntity : class, IEntityWithTenant
     {
         var configuration = _serviceProvider.GetRequiredService<BaseEntityConfigurationWithTenant<TEntity>>();
-        configuration.Configure(modelBuilder.Entity<TEntity>());
+        configuration.Configure(modelBuilder);
     }
 }

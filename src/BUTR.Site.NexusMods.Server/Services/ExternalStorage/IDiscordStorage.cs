@@ -1,4 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 
 using Microsoft.EntityFrameworkCore;
@@ -39,13 +40,13 @@ public sealed class DatabaseDiscordStorage : IDiscordStorage
     public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
     {
         var entityFactory = _dbContextWrite.GetEntityFactory();
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
 
         var nexusModsUserToIntegrationDiscord = entityFactory.GetOrCreateNexusModsUserDiscord(nexusModsUserId, discordUserId);
         var tokensDiscord = entityFactory.GetOrCreateIntegrationDiscordTokens(nexusModsUserId, discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt);
 
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToDiscord, nexusModsUserToIntegrationDiscord);
-        _dbContextWrite.FutureUpsert(x => x.IntegrationDiscordTokens, tokensDiscord);
+        await _dbContextWrite.NexusModsUserToDiscord.UpsertOnSaveAsync(nexusModsUserToIntegrationDiscord);
+        await _dbContextWrite.IntegrationDiscordTokens.UpsertOnSaveAsync(tokensDiscord);
         return true;
     }
 

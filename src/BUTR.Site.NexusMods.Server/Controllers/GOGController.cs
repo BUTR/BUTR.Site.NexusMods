@@ -1,8 +1,10 @@
 ﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
-using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
+using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
+[ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantNotRequired]
 public sealed class GOGController : ControllerExtended
 {
     public sealed record GOGOAuthUrlModel(string Url);
@@ -32,20 +34,18 @@ public sealed class GOGController : ControllerExtended
 
     [HttpGet("GetOAuthUrl")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<GOGOAuthUrlModel?>> GetOpenIdUrl()
+    public APIResponseActionResult<GOGOAuthUrlModel?> GetOpenIdUrl()
     {
         return APIResponse(new GOGOAuthUrlModel(_gogAuthClient.GetOAuth2Url()));
     }
 
     [HttpGet("Link")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> LinkAsync([FromQuery] string code, CancellationToken ct)
+    public async Task<APIResponseActionResult<string?>> LinkAsync([FromQuery] string code, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         var tokens = await _gogAuthClient.CreateTokensAsync(code, ct);
         if (tokens is null)
             return APIResponseError<string>("Failed to link!");
-
-        var userId = HttpContext.GetUserId();
 
         if (!await _gogStorage.CheckOwnedGamesAsync(userId, tokens.UserId, tokens))
             return APIResponseError<string>("Failed to link!");
@@ -58,9 +58,8 @@ public sealed class GOGController : ControllerExtended
 
     [HttpPost("Unlink")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> UnlinkAsync()
+    public async Task<APIResponseActionResult<string?>> UnlinkAsync([BindUserId] NexusModsUserId userId)
     {
-        var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetGOGTokens();
 
         if (tokens?.Data is null)
@@ -74,9 +73,8 @@ public sealed class GOGController : ControllerExtended
 
     [HttpPost("GetUserInfo")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<GOGUserInfo?>>> GetUserInfoByAccessTokenAsync(CancellationToken ct)
+    public async Task<APIResponseActionResult<GOGUserInfo?>> GetUserInfoByAccessTokenAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
-        var userId = HttpContext.GetUserId();
         var tokens = HttpContext.GetGOGTokens();
 
         if (tokens?.Data is null)

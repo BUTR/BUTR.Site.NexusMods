@@ -3,7 +3,7 @@
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
-using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.Http;
 
 using SharpCompress.Archives;
 using SharpCompress.Common;
@@ -22,6 +22,13 @@ using System.Threading.Tasks;
 using System.Xml;
 
 namespace BUTR.Site.NexusMods.Server.Services;
+
+public sealed record NexusModsModFileParserResult
+{
+    public required ModuleInfoExtended ModuleInfo { get; init; }
+    public required NexusModsFileId FileId { get; init; }
+    public required DateTimeOffset Uploaded { get; init; }
+}
 
 public class NexusModsModFileParser
 {
@@ -47,7 +54,7 @@ public class NexusModsModFileParser
 
             if (await SubModuleXmlCountAsync(fileInfo) is var subModuleCount && false || subModuleCount == 0) continue;
 
-            var uploadedTimestamp = DateTimeOffset.FromUnixTimeSeconds(uploadedTimestampRaw).UtcDateTime;
+            var uploadedTimestamp = DateTimeOffset.FromUnixTimeSeconds(uploadedTimestampRaw).ToUniversalTime();
             var downloadLinks = await _apiClient.GetModFileLinksAsync(gameDomain, modId, fileId, apiKey, ct) ?? Array.Empty<NexusModsDownloadLinkResponse>();
             if (downloadLinks.Length == 0) continue;
 

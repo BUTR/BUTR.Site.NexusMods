@@ -1,12 +1,12 @@
-﻿using Bannerlord.ModuleManager;
-
-using BUTR.Authentication.NexusMods.Authentication;
-using BUTR.CrashReport.Models;
+﻿using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
@@ -25,7 +25,8 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
+[TenantNotRequired]
+[ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantRequired]
 public sealed class CrashReportsController : ControllerExtended
 {
     public sealed record CrashReportModel2
@@ -35,17 +36,11 @@ public sealed class CrashReportsController : ControllerExtended
         public required GameVersion GameVersion { get; init; }
         public required ExceptionTypeId ExceptionType { get; init; }
         public required string Exception { get; init; }
-        public required DateTime Date { get; init; }
+        public required DateTimeOffset Date { get; init; }
         public required CrashReportUrl Url { get; init; }
         public required ImmutableArray<ModuleId> InvolvedModules { get; init; }
         public CrashReportStatus Status { get; init; } = CrashReportStatus.New;
         public string Comment { get; init; } = string.Empty;
-    }
-
-    public record ModuleUpdate
-    {
-        public ModuleId ModuleId { get; init; }
-        public ModuleVersion ModuleVersion { get; init; }
     }
 
     private sealed record ModuleIdToVersionView
@@ -60,7 +55,7 @@ public sealed class CrashReportsController : ControllerExtended
         public required GameVersion GameVersion { get; init; }
         public required ExceptionTypeId ExceptionType { get; init; }
         public required string Exception { get; init; }
-        public required DateTime CreatedAt { get; init; }
+        public required DateTimeOffset CreatedAt { get; init; }
         public required ModuleId[] ModuleIds { get; init; }
         public required ModuleIdToVersionView[] ModuleIdToVersion { get; init; }
         public required ModuleId? TopInvolvedModuleId { get; init; }
@@ -83,7 +78,7 @@ public sealed class CrashReportsController : ControllerExtended
         _dbContextWrite = dbContextWrite ?? throw new ArgumentNullException(nameof(dbContextWrite));
     }
 
-    private async Task<BasePaginated<UserCrashReportView, CrashReportModel2>> PaginatedBaseAsync(PaginatedQuery query, CancellationToken ct)
+    private async Task<BasePaginated<UserCrashReportView, CrashReportModel2>> PaginatedBaseAsync(PaginatedQuery query, NexusModsUserId userId, CancellationToken ct)
     {
         var page = query.Page;
         var pageSize = Math.Max(Math.Min(query.PageSize, 50), 5);
@@ -91,8 +86,6 @@ public sealed class CrashReportsController : ControllerExtended
         var sortings = query.Sotings is null || query.Sotings.Count == 0
             ? new List<Sorting> { new() { Property = nameof(CrashReportEntity.CreatedAt), Type = SortingType.Descending } }
             : query.Sotings;
-
-        var userId = HttpContext.GetUserId();
 
         var user = await _dbContextRead.NexusModsUsers
             .Include(x => x.ToModules)
@@ -163,40 +156,36 @@ public sealed class CrashReportsController : ControllerExtended
 
     [HttpPost("Paginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<CrashReportModel2>?>>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<PagingData<CrashReportModel2>?>> PaginatedAsync([FromBody] PaginatedQuery query, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
-        var (paginated, transform) = await PaginatedBaseAsync(query, ct);
+        var (paginated, transform) = await PaginatedBaseAsync(query, userId, ct);
         return APIPagingResponse(paginated, transform);
     }
 
     [HttpPost("PaginatedStreaming")]
     [Produces("application/x-ndjson-butr-paging")]
     [ApiExplorerSettings(IgnoreApi = true)]
-    public async Task<StreamingJsonActionResult> PaginatedStreamingAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<StreamingJsonActionResult> PaginatedStreamingAsync([FromBody] PaginatedQuery query, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
-        var (paginated, transform) = await PaginatedBaseAsync(query, ct);
+        var (paginated, transform) = await PaginatedBaseAsync(query, userId, ct);
         return APIPagingResponseStreaming(paginated, transform);
     }
 
     [HttpGet("Autocomplete")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] ModuleId modId)
+    public APIResponseActionResult<IQueryable<string>?> Autocomplete([FromQuery] ModuleId modId)
     {
         return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId, modId));
     }
 
     [HttpPost("Update")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> UpdateAsync([FromBody] CrashReportModel2 updatedCrashReport)
+    public async Task<APIResponseActionResult<string?>> UpdateAsync([FromBody] CrashReportModel2 updatedCrashReport, [BindUserId] NexusModsUserId userId, [BindTenant] TenantId tenant)
     {
         var entityFactory = _dbContextWrite.GetEntityFactory();
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
 
-        var userId = HttpContext.GetUserId();
-        var tenant = HttpContext.GetTenant();
-        if (tenant == TenantId.None) return BadRequest();
-
-        var entity = new NexusModsUserToCrashReportEntity()
+        var entity = new NexusModsUserToCrashReportEntity
         {
             TenantId = tenant,
             NexusModsUser = entityFactory.GetOrCreateNexusModsUser(userId),
@@ -204,63 +193,7 @@ public sealed class CrashReportsController : ControllerExtended
             Status = updatedCrashReport.Status,
             Comment = updatedCrashReport.Comment
         };
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToCrashReports, entity);
+        await _dbContextWrite.NexusModsUserToCrashReports.UpsertOnSaveAsync(entity);
         return APIResponse("Updated successful!");
-    }
-
-
-    [AllowAnonymous]
-    [HttpPost("GetUpdates")]
-    [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<IEnumerable<ModuleUpdate>?>>> UpdateAsync([FromQuery] TenantId tenant, [FromBody] CrashReportModel crashReport, [FromServices] ITenantContextAccessor tenantContextAccessor)
-    {
-        if (!TenantId.Values.Contains(tenant)) return BadRequest();
-        tenantContextAccessor.Current = tenant;
-
-        var moduleIds = crashReport.Modules.Where(x => !x.IsOfficial).Select(x => ModuleId.From(x.Id)).ToArray();
-        var moduleIdVersions = crashReport.Modules.Where(x => !x.IsOfficial).Select(x => (Id: ModuleId.From(x.Id), Version: ModuleVersion.From(x.Version))).ToArray();
-        var entries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.Module.ModuleId));
-
-        if (tenant == TenantId.Bannerlord)
-        {
-            if (!ApplicationVersion.TryParse(crashReport.GameVersion, out var gVersion)) return BadRequest();
-
-            var compatible = entries
-                .AsEnumerable()
-                .Select(x => new
-                {
-                    ModuleId = x.Module.ModuleId,
-                    ModuleVersion = ApplicationVersion.TryParse(x.ModuleVersion.Value, out var v) ? v : ApplicationVersion.Empty,
-                    ModuleInfo = x.ModuleInfo,
-                })
-                .Where(x => x.ModuleInfo.DependentModuleMetadatas.Any(y =>
-                {
-                    if (y.Id != "Native") return false;
-                    var version = y.Version ?? string.Empty;
-                    if (version.StartsWith("ev")) version = version.Substring(1);
-                    return ApplicationVersion.TryParse(version, out var nVersion) && nVersion <= gVersion;
-                }))
-                .GroupBy(x => x.ModuleId)
-                .Select(x => x.MaxBy(y => y.ModuleVersion, new ApplicationVersionComparer())!)
-                .ToArray();
-
-            var updates = compatible.Where(x =>
-            {
-                var curentModule = moduleIdVersions.First(y => y.Id == x.ModuleId);
-
-                if (ApplicationVersion.TryParse(curentModule.Version.Value, out var cVersion))
-                    return cVersion < x.ModuleVersion;
-
-                return false;
-            }).ToArray();
-
-            return APIResponse(updates.Select(x => new ModuleUpdate
-            {
-                ModuleId = x.ModuleId,
-                ModuleVersion = ModuleVersion.From(x.ModuleVersion.ToString()),
-            }));
-        }
-
-        return APIResponse(Enumerable.Empty<ModuleUpdate>());
     }
 }

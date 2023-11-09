@@ -28,7 +28,7 @@ public sealed class AuthenticationProvider
 
         try
         {
-            var response = (await _authenticationClient.AuthenticateAsync(apiKey, ct)).Data;
+            var response = (await _authenticationClient.AuthenticateAsync(apiKey, ct)).Value;
 
             await _tokenContainer.SetTokenAsync(new Token(type, response.Token), ct);
 
@@ -54,7 +54,7 @@ public sealed class AuthenticationProvider
 
         try
         {
-            var response = (await _authenticationClient.ValidateAsync(ct)).Data;
+            var response = (await _authenticationClient.ValidateAsync(ct)).Value;
             await _tokenContainer.RefreshTokenAsync(token with { Value = response.Token }, ct);
             return response.Profile;
         }

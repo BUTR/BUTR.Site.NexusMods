@@ -67,7 +67,7 @@
             _ = await _authenticationProvider.ValidateAsync();
 
             var userInfo = await _gogClient.GetUserInfoAsync();
-            _userInfo = new GOGUserInfo2(userInfo.Data);
+            _userInfo = new GOGUserInfo2(userInfo.Value);
             _status = "SUCCESS";
             _image = Success;
         }

@@ -1,5 +1,6 @@
 ﻿using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
 using BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
 
 using Microsoft.AspNetCore.Mvc;
@@ -20,11 +21,11 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 public class ControllerExtended : ControllerBase
 {
     [NonAction]
-    protected ActionResult<APIResponse<PagingData<TResult>?>> APIPagingResponse<TResult, TSource>(Paging<TSource> data, Func<IAsyncEnumerable<TSource>, IAsyncEnumerable<TResult>> func)
+    protected APIResponseActionResult<PagingData<TResult>?> APIPagingResponse<TResult, TSource>(Paging<TSource> data, Func<IAsyncEnumerable<TSource>, IAsyncEnumerable<TResult>> func)
         where TResult : class
         where TSource : class
     {
-        return APIResponse(PagingData<TResult>.Create<TSource>(data, func));
+        return APIResponse(PagingData<TResult>.Create(data, func));
     }
 
     [NonAction]
@@ -35,7 +36,7 @@ public class ControllerExtended : ControllerBase
         var options = HttpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value;
         IEnumerable<Func<Stream, CancellationToken, Task>> GetContent()
         {
-            yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, new APIStreamingResponse(string.Empty), options.JsonSerializerOptions, ct_);
+            yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, new APIStreamingResponse(null), options.JsonSerializerOptions, ct_);
             yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, data.Metadata, options.JsonSerializerOptions, ct_);
             yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, func(data.Items), options.JsonSerializerOptions, ct_);
             yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, new PagingAdditionalMetadata
@@ -48,21 +49,38 @@ public class ControllerExtended : ControllerBase
     }
 
     [NonAction]
-    protected ActionResult<APIResponse<PagingData<TResult>?>> APIPagingResponse<TResult>(Paging<TResult> data, Func<IAsyncEnumerable<TResult>, IAsyncEnumerable<TResult>> func)
+    protected APIResponseActionResult<PagingData<TResult>?> APIPagingResponse<TResult>(Paging<TResult> data, Func<IAsyncEnumerable<TResult>, IAsyncEnumerable<TResult>> func)
         where TResult : class
     {
         return APIResponse(PagingData<TResult>.Create(data, func));
     }
 
     [NonAction]
-    protected ActionResult<APIResponse<PagingData<TResult>?>> APIPagingResponse<TResult>(Paging<TResult> paginated)
+    protected APIResponseActionResult<PagingData<TResult>?> APIPagingResponse<TResult>(Paging<TResult> paginated)
         where TResult : class
     {
         return APIResponse(PagingData<TResult>.Create(paginated));
     }
 
     [NonAction]
-    protected ActionResult<APIResponse<T?>> APIResponse<T>([ActionResultObjectValue] T? value) => Models.API.APIResponse.From(value);
+    protected APIResponseActionResult<T?> APIResponse<T>([ActionResultObjectValue] T? value) => APIResponseActionResult<T>.FromResult(value);
+
     [NonAction]
-    protected ActionResult<APIResponse<T?>> APIResponseError<T>(string error) => Models.API.APIResponse.Error<T>(error);
+    protected APIResponseActionResult<T?> APIResponseError<T>(string error) => APIResponseActionResult<T>.FromError(new ProblemDetails
+    {
+        Detail = error,
+    });
+
+    [NonAction]
+    protected APIResponseActionResult<T?> APIResponseError<T>(int statusCode) => APIResponseActionResult<T>.FromError(new ProblemDetails
+    {
+        Status = statusCode,
+    });
+
+    [NonAction]
+    protected APIResponseActionResult<T?> APIResponseError<T>(string error, int statusCode) => APIResponseActionResult<T>.FromError(new ProblemDetails
+    {
+        Detail = error,
+        Status = statusCode,
+    });
 }

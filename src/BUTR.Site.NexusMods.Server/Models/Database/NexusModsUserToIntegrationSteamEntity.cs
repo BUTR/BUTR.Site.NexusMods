@@ -9,7 +9,7 @@ public sealed record NexusModsUserToIntegrationSteamEntity : IEntity
     public IntegrationSteamTokensEntity? ToTokens { get; init; }
 
     public required string SteamUserId { get; init; }
-    public ICollection<IntegrationSteamToOwnedTenantEntity> ToOwnedTenants { get; init; }
+    public ICollection<IntegrationSteamToOwnedTenantEntity> ToOwnedTenants { get; init; } = new List<IntegrationSteamToOwnedTenantEntity>();
 
 
     public override int GetHashCode() => HashCode.Combine(NexusModsUser.NexusModsUserId, SteamUserId);

@@ -18,5 +18,5 @@ public sealed record ProfileModel
 
     public required bool HasTenantGame { get; init; }
 
-    public ImmutableDictionary<TenantId, string> AvailableTenants { get; init; }
+    public required ImmutableArray<ProfileTenantModel> AvailableTenants { get; init; }
 }

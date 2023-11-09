@@ -8,7 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 
-namespace BUTR.Site.NexusMods.Server.Utils;
+namespace BUTR.Site.NexusMods.Server.Utils.Http;
 
 public sealed record HttpRangeOptions
 {
@@ -97,15 +97,10 @@ public sealed class HttpRangeStream : Stream
 
         try
         {
-            using var request = new HttpRequestMessage
-            {
-                RequestUri = url,
-                Method = HttpMethod.Get,
-                Headers =
-                {
-                    Range = new RangeHeaderValue(from, to)
-                },
-            };
+            using var request = new HttpRequestMessage();
+            request.RequestUri = url;
+            request.Method = HttpMethod.Get;
+            request.Headers.Range = new RangeHeaderValue(from, to);
 
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
             using var response = _httpClient.Send(request, HttpCompletionOption.ResponseHeadersRead, cts.Token);

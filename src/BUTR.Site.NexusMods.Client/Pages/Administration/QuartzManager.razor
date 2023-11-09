@@ -63,7 +63,7 @@
                     <DisplayTemplate>@(context.ScheduleFireTimeUtc?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)</DisplayTemplate>
                 </DataGridColumnDateTime>
                 <DataGridColumnDateTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.FireTimeUtc)" Caption="Actual Fire Time" Filterable Sortable SortField="@nameof(EntityFields.FireTimeUtc)" >
-                    <DisplayTemplate>@(context.FireTimeUtc?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)</DisplayTemplate>
+                    <DisplayTemplate>@(context.FireTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)</DisplayTemplate>
                 </DataGridColumnDateTime>
                 <DataGridColumnTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobRunTime)" Caption="Run Time" Filterable="@false" Sortable SortField="@nameof(EntityFields.JobRunTime)" >
                 </DataGridColumnTime>
@@ -75,7 +75,7 @@
                 </Field>
                 <Field>
                     <FieldLabel>Retry Count</FieldLabel>
-                    <TextEdit Text="@((context.RetryCount ?? 0).ToString())" Disabled  />
+                    <TextEdit Text="@((context.RetryCount).ToString())" Disabled  />
                 </Field>
                 <Field>
                     <FieldLabel>Result</FieldLabel>
@@ -102,7 +102,7 @@
     private DataGridPaging<QuartzExecutionLogEntity>? _dataGridRef;
     
     private async Task<DataGridPaging<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _quartzClient.HistoryPaginatedAsync(new PaginatedQuery(page, pageSize, filters, sortings), ct) is { Data: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+        await _quartzClient.HistoryPaginatedAsync(new PaginatedQuery(page, pageSize, filters, sortings), ct) is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
     
     private async Task OnSubmit()
     {

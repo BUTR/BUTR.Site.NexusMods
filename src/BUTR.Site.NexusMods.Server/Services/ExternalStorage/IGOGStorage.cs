@@ -1,4 +1,5 @@
 ﻿using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -46,7 +47,7 @@ public sealed class DatabaseGOGStorage : IGOGStorage
     public async Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
     {
         var entityFactory = _dbContextWrite.GetEntityFactory();
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
 
         var games = await _gogEmbedClient.GetGamesAsync(tokens.AccessToken, CancellationToken.None);
         if (games is null)
@@ -59,10 +60,10 @@ public sealed class DatabaseGOGStorage : IGOGStorage
         {
             GOGUserId = gogUserId,
             OwnedTenant = x,
-        }).ToList();
+        }).ToArray();
 
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToGOG, nexusModsUserToIntegrationGOG);
-        _dbContextWrite.FutureUpsert(x => x.IntegrationGOGToOwnedTenants, list);
+        await _dbContextWrite.NexusModsUserToGOG.UpsertOnSaveAsync(nexusModsUserToIntegrationGOG);
+        await _dbContextWrite.IntegrationGOGToOwnedTenants.UpsertOnSaveAsync(list);
         await _dbContextWrite.IntegrationGOGToOwnedTenants.Where(x => x.GOGUserId == gogUserId).ExecuteDeleteAsync(CancellationToken.None);
         return true;
     }
@@ -77,13 +78,13 @@ public sealed class DatabaseGOGStorage : IGOGStorage
     public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
     {
         var entityFactory = _dbContextWrite.GetEntityFactory();
-        await using var _ = _dbContextWrite.CreateSaveScope();
+        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
 
         var nexusModsUserToIntegrationGOG = entityFactory.GetOrCreateNexusModsUserGOG(nexusModsUserId, gogUserId);
         var tokensGOG = entityFactory.GetOrCreateIntegrationGOGTokens(nexusModsUserId, gogUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt);
 
-        _dbContextWrite.FutureUpsert(x => x.NexusModsUserToGOG, nexusModsUserToIntegrationGOG);
-        _dbContextWrite.FutureUpsert(x => x.IntegrationGOGTokens, tokensGOG);
+        await _dbContextWrite.NexusModsUserToGOG.UpsertOnSaveAsync(nexusModsUserToIntegrationGOG);
+        await _dbContextWrite.IntegrationGOGTokens.UpsertOnSaveAsync(tokensGOG);
         return true;
     }
 

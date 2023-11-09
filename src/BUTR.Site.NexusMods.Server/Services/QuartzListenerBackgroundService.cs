@@ -3,6 +3,7 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Models.Quartz;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -27,28 +28,18 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
     private readonly ILogger _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly QuartzEventProviderService _quartzEventProviderService;
-    private readonly ISchedulerFactory _schedulerFactory;
     private readonly Channel<Func<IAppDbContextWrite, CancellationToken, ValueTask>> _taskQueue;
 
-    public QuartzListenerBackgroundService(ILogger<QuartzListenerBackgroundService> logger, IServiceProvider serviceProvider, QuartzEventProviderService quartzEventProviderService, ISchedulerFactory schedulerFactory)
+    public QuartzListenerBackgroundService(ILogger<QuartzListenerBackgroundService> logger, IServiceProvider serviceProvider, QuartzEventProviderService quartzEventProviderService)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _quartzEventProviderService = quartzEventProviderService;
-        _schedulerFactory = schedulerFactory;
         _taskQueue = Channel.CreateUnbounded<Func<IAppDbContextWrite, CancellationToken, ValueTask>>(new UnboundedChannelOptions { SingleReader = true });
 
         _quartzEventProviderService.OnJobToBeExecuted += OnJobToBeExecuted;
         _quartzEventProviderService.OnJobWasExecuted += OnJobWasExecuted;
         _quartzEventProviderService.OnJobExecutionVetoed += OnJobExecutionVetoed;
-        _quartzEventProviderService.OnJobDeleted += OnJobDeleted;
-        _quartzEventProviderService.OnJobInterrupted += OnJobInterrupted;
-        _quartzEventProviderService.OnSchedulerError += OnSchedulerError;
-        _quartzEventProviderService.OnTriggerMisfired += OnTriggerMisfired;
-        _quartzEventProviderService.OnTriggerPaused += OnTriggerPaused;
-        _quartzEventProviderService.OnTriggerResumed += OnTriggerResumed;
-        _quartzEventProviderService.OnTriggerFinalized += OnTriggerFinalized;
-        _quartzEventProviderService.OnJobScheduled += OnJobScheduled;
     }
 
     public override void Dispose()
@@ -56,180 +47,46 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         _quartzEventProviderService.OnJobToBeExecuted -= OnJobToBeExecuted;
         _quartzEventProviderService.OnJobWasExecuted -= OnJobWasExecuted;
         _quartzEventProviderService.OnJobExecutionVetoed -= OnJobExecutionVetoed;
-        _quartzEventProviderService.OnJobDeleted -= OnJobDeleted;
-        _quartzEventProviderService.OnJobInterrupted -= OnJobInterrupted;
-        _quartzEventProviderService.OnSchedulerError -= OnSchedulerError;
-        _quartzEventProviderService.OnTriggerMisfired -= OnTriggerMisfired;
-        _quartzEventProviderService.OnTriggerPaused -= OnTriggerPaused;
-        _quartzEventProviderService.OnTriggerResumed -= OnTriggerResumed;
-        _quartzEventProviderService.OnTriggerFinalized -= OnTriggerFinalized;
-        _quartzEventProviderService.OnJobScheduled -= OnJobScheduled;
 
         base.Dispose();
     }
 
-    private void OnJobScheduled(object? sender, EventArgs<ITrigger> e)
-    {
-        var jKey = e.Args.JobKey;
-        var tKey = e.Args.Key;
-        var log = new QuartzExecutionLogEntity
-        {
-            JobName = jKey.Name,
-            JobGroup = jKey.Group,
-            TriggerName = tKey.Name,
-            TriggerGroup = tKey.Group,
-            LogType = QuartzLogType.Trigger,
-            Result = "Job scheduled"
-        };
-        QueueInsertTask(log);
-    }
-
-    private void OnTriggerFinalized(object? sender, EventArgs<ITrigger> e)
-    {
-        var jKey = e.Args.JobKey;
-        var tKey = e.Args.Key;
-        var log = new QuartzExecutionLogEntity
-        {
-            JobName = jKey.Name,
-            JobGroup = jKey.Group,
-            TriggerName = tKey.Name,
-            TriggerGroup = tKey.Group,
-            LogType = QuartzLogType.Trigger,
-            Result = "Trigger ended"
-        };
-        QueueInsertTask(log);
-    }
-
-    private void OnTriggerResumed(object? sender, EventArgs<TriggerKey> e)
-    {
-        var tKey = e.Args;
-        var log = new QuartzExecutionLogEntity
-        {
-            TriggerName = tKey.Name,
-            TriggerGroup = tKey.Group,
-            LogType = QuartzLogType.Trigger,
-            Result = "Trigger resumed"
-        };
-        QueueGetJobKeyAndInsertTask(log);
-    }
-
-    private void OnTriggerPaused(object? sender, EventArgs<TriggerKey> e)
-    {
-        var tKey = e.Args;
-        var log = new QuartzExecutionLogEntity
-        {
-            TriggerName = tKey.Name,
-            TriggerGroup = tKey.Group,
-            LogType = QuartzLogType.Trigger,
-            Result = "Trigger paused"
-        };
-        QueueGetJobKeyAndInsertTask(log);
-    }
-
-    private void OnTriggerMisfired(object? sender, EventArgs<ITrigger> e)
-    {
-        var jKey = e.Args.JobKey;
-        var tKey = e.Args.Key;
-        var log = new QuartzExecutionLogEntity
-        {
-            LogType = QuartzLogType.Trigger,
-            JobName = jKey.Name,
-            JobGroup = jKey.Group,
-            TriggerName = tKey.Name,
-            TriggerGroup = tKey.Group,
-            Result = "Trigger misfired"
-        };
-        QueueInsertTask(log);
-    }
-
-    private void OnSchedulerError(object? sender, SchedulerErrorEventArgs e)
-    {
-        var log = new QuartzExecutionLogEntity
-        {
-            LogType = QuartzLogType.System,
-            IsException = true,
-            ErrorMessage = e.ErrorMessage,
-            ExecutionLogDetail = new()
-            {
-                ErrorStackTrace = NonNullStackTrace(e.Exception)
-            }
-        };
-        QueueInsertTask(log);
-    }
-
-    private void OnJobInterrupted(object? sender, EventArgs<JobKey> e)
-    {
-        var jKey = e.Args;
-        var log = new QuartzExecutionLogEntity
-        {
-            JobName = jKey.Name,
-            JobGroup = jKey.Group,
-            LogType = QuartzLogType.System,
-            Result = "Job interrupted"
-        };
-        QueueInsertTask(log);
-    }
-
-    private void OnJobDeleted(object? sender, EventArgs<JobKey> e)
-    {
-        var jKey = e.Args;
-        var log = new QuartzExecutionLogEntity
-        {
-            JobName = jKey.Name,
-            JobGroup = jKey.Group,
-            LogType = QuartzLogType.System,
-            Result = "Job deleted"
-        };
-        QueueInsertTask(log);
-    }
-
-    private void OnJobExecutionVetoed(object? sender, EventArgs<IJobExecutionContext> e)
-    {
-        var log = CreateScheduleJobLogEntry(e.Args, defaultIsSuccess: false);
-        log.IsVetoed = true;
-        QueueUpdateTask(log);
-    }
-
-    private void OnJobWasExecuted(object? sender, JobWasExecutedEventArgs e)
-    {
-        QueueUpdateTask(CreateScheduleJobLogEntry(e.JobExecutionContext, e.JobException, true));
-    }
-
-    private void OnJobToBeExecuted(object? sender, EventArgs<IJobExecutionContext> e)
-    {
+    private void OnJobToBeExecuted(object? sender, QuartzEventArgs<IJobExecutionContext> e) =>
         QueueInsertTask(CreateScheduleJobLogEntry(e.Args));
-    }
 
-    public override async Task StartAsync(CancellationToken cancellationToken)
-    {
-        await base.StartAsync(cancellationToken);
-    }
+    private void OnJobWasExecuted(object? sender, JobWasExecutedEventArgs e) =>
+        QueueUpdateTask(CreateScheduleJobLogEntry(e.JobExecutionContext, e.JobException, true));
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        await MarkIncompleteExecutionAsync(stoppingToken);
-
-        while (!stoppingToken.IsCancellationRequested)
+    private void OnJobExecutionVetoed(object? sender, QuartzEventArgs<IJobExecutionContext> e) =>
+        QueueUpdateTask(CreateScheduleJobLogEntry(e.Args, defaultIsSuccess: false) with
         {
-            await ProcessTaskAsync(stoppingToken);
+            IsVetoed = true
+        });
+
+
+    protected override async Task ExecuteAsync(CancellationToken ct)
+    {
+        await MarkIncompleteExecutionAsync(ct);
+
+        while (!ct.IsCancellationRequested)
+        {
+            await ProcessTaskAsync(ct);
         }
     }
 
-    internal async Task MarkIncompleteExecutionAsync(CancellationToken stoppingToken)
+    private async Task MarkIncompleteExecutionAsync(CancellationToken ct)
     {
         try
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContextWrite>();
 
-            var isSuccessNullJobs = dbContext.QuartzExecutionLogs.Where(x => !x.IsSuccess.HasValue && x.LogType == QuartzLogType.ScheduleJob);
-            foreach (var log in isSuccessNullJobs)
-            {
-                log.IsSuccess = false;
-                log.ErrorMessage = "Incomplete execution.";
-                log.JobRunTime = null;
-            }
-            await dbContext.SaveAsync(CancellationToken.None);
+            await dbContext.QuartzExecutionLogs
+                .Where(x => !x.IsSuccess.HasValue)
+                .ExecuteUpdateAsync(calls => calls
+                    .SetProperty(x => x.IsSuccess, false)
+                    .SetProperty(x => x.ErrorMessage, "Incomplete execution.")
+                    .SetProperty(x => x.JobRunTime, TimeSpan.Zero), CancellationToken.None);
         }
         catch (OperationCanceledException)
         {
@@ -241,29 +98,21 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         }
     }
 
-    internal async Task ProcessTaskAsync(CancellationToken stoppingToken = default)
+    private async Task ProcessTaskAsync(CancellationToken ct = default)
     {
-        var batch = await GetBatchAsync(stoppingToken);
+        var batch = await GetBatchAsync(ct);
 
         _logger.LogInformation("Got a batch with {TaskCount} task(s). Saving to data store", batch.Count);
 
+        await using var scope = _serviceProvider.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContextWrite>();
         try
         {
-            await using var scope = _serviceProvider.CreateAsyncScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContextWrite>();
+            await using var _ = await dbContext.CreateSaveScopeAsync();
 
             foreach (var workItem in batch)
             {
-                await workItem(dbContext, stoppingToken);
-            }
-
-            try
-            {
-                await dbContext.SaveAsync(CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while saving execution logs");
+                await workItem(dbContext, ct);
             }
         }
         catch (OperationCanceledException)
@@ -276,62 +125,18 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         }
     }
 
-
-    private QuartzExecutionLogEntity CreateScheduleJobLogEntry(IJobExecutionContext context, JobExecutionException? jobException = null, bool? defaultIsSuccess = null)
+    private void QueueTask(Func<IAppDbContextWrite, CancellationToken, ValueTask> task)
     {
-        var log = new QuartzExecutionLogEntity
+        if (!_taskQueue.Writer.TryWrite(task))
         {
-            RunInstanceId = context.FireInstanceId,
-            JobGroup = context.JobDetail.Key.Group,
-            JobName = context.JobDetail.Key.Name,
-            TriggerName = context.Trigger.Key.Name,
-            TriggerGroup = context.Trigger.Key.Group,
-            FireTimeUtc = context.FireTimeUtc,
-            ScheduleFireTimeUtc = context.ScheduledFireTimeUtc,
-            RetryCount = context.RefireCount,
-            JobRunTime = context.JobRunTime,
-            LogType = QuartzLogType.ScheduleJob
-        };
-        var logDetail = new QuartzExecutionLogDetailEntity();
-
-        log.ReturnCode = context.GetReturnCode();
-        log.IsSuccess = context.GetIsSuccess() ?? defaultIsSuccess;
-
-        var execDetail = context.GetExecutionDetails();
-        if (!string.IsNullOrEmpty(execDetail))
-        {
-            logDetail.ExecutionDetails = execDetail;
-            log.ExecutionLogDetail = logDetail;
+            // Should not happen since it's unbounded Channel. It 'should' only fail if we call writer.Complete()
+            throw new InvalidOperationException("Failed to write the log message");
         }
-
-        if (jobException != null)
-        {
-            log.ErrorMessage = jobException.Message;
-            log.ExecutionLogDetail = logDetail;
-            logDetail.ErrorCode = jobException.HResult;
-            logDetail.ErrorStackTrace = jobException.ToString();
-            logDetail.ErrorHelpLink = jobException.HelpLink;
-
-            log.ReturnCode ??= jobException.HResult.ToString();
-
-            log.IsException = true;
-            log.IsSuccess = false;
-        }
-        else
-        {
-            if (context.Result != null)
-            {
-                var result = Convert.ToString(context.Result, CultureInfo.InvariantCulture);
-                log.Result = result?.Substring(0, Math.Min(result.Length, RESULT_MAX_LENGTH));
-            }
-        }
-
-        return log;
     }
 
-    private async Task<List<Func<IAppDbContextWrite, CancellationToken, ValueTask>>> GetBatchAsync(CancellationToken cancellationToken)
+    private async Task<List<Func<IAppDbContextWrite, CancellationToken, ValueTask>>> GetBatchAsync(CancellationToken ct)
     {
-        await _taskQueue.Reader.WaitToReadAsync(cancellationToken);
+        await _taskQueue.Reader.WaitToReadAsync(ct);
 
         var batch = new List<Func<IAppDbContextWrite, CancellationToken, ValueTask>>();
 
@@ -343,118 +148,73 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         return batch;
     }
 
-    private void QueueUpdateTask(QuartzExecutionLogEntity log)
+    private void QueueUpdateTask(QuartzExecutionLogEntity log) => QueueTask(async (dbContext, ct) =>
     {
-        QueueTask(async (dbContext, ct) =>
+        try
         {
-            try
-            {
-                await dbContext.QuartzExecutionLogs.SingleMergeAsync(log, o => { o.ColumnPrimaryKeyExpression = e => e.RunInstanceId; }, CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                if (log.LogType == QuartzLogType.ScheduleJob)
-                {
-                    _logger.LogError(ex,
-                        "Error occurred while updating execution log with job key [{JobGroup}.{JobName}] run instance id [{RunInstanceId}]",
-                        log.JobGroup, log.JobName, log.RunInstanceId);
-                }
-                else
-                {
-                    _logger.LogError(ex,
-                        "Error occurred while updating {LogType} execution log with job key [{JobGroup}.{JobName}] trigger key [{TriggerGroup}.{TriggerName}]",
-                        log.LogType, log.JobGroup, log.JobName, log.TriggerGroup, log.TriggerName);
-                }
-            }
-        });
-    }
-
-    private void QueueGetJobKeyAndInsertTask(QuartzExecutionLogEntity log)
-    {
-        QueueTask(async (dbContext, ct) =>
-        {
-            try
-            {
-                if (log.JobName == null && log is { TriggerName: not null, TriggerGroup: not null})
-                {
-                    // when there is no job name but has trigger name
-                    // try to determine the job name
-                    var scheduler = await _schedulerFactory.GetScheduler(ct);
-                    var trigger = await scheduler.GetTrigger(new TriggerKey(log.TriggerName, log.TriggerGroup), ct);
-                    if (trigger != null)
-                    {
-                        log.JobName = trigger.JobKey.Name;
-                        log.JobGroup = trigger.JobKey.Group;
-                    }
-                }
-
-                await dbContext.QuartzExecutionLogs.AddAsync(log, CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                if (log.LogType == QuartzLogType.ScheduleJob)
-                {
-                    _logger.LogError(ex, "Error occurred while adding execution log with job key [{JobGroup}.{JobName}] run instance id [{RunInstanceId}]",
-                        log.JobGroup, log.JobName, log.RunInstanceId);
-                }
-                else
-                {
-                    _logger.LogError(ex, "Error occurred while adding {LogType} execution log with job key [{JobGroup}.{JobName}] trigger key [{TriggerGroup}.{TriggerName}]",
-                        log.LogType, log.JobGroup, log.JobName, log.TriggerGroup, log.TriggerName);
-                }
-            }
-        });
-    }
-
-
-    private void QueueInsertTask(QuartzExecutionLogEntity log)
-    {
-        QueueTask(async (dbContext, ct) =>
-        {
-            try
-            {
-                await dbContext.QuartzExecutionLogs.AddAsync(log, CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                if (log.LogType == QuartzLogType.ScheduleJob)
-                {
-                    _logger.LogError(ex, "Error occurred while adding execution log with job key [{JobGroup}.{JobName}] run instance id [{RunInstanceId}]",
-                        log.JobGroup, log.JobName, log.RunInstanceId);
-                }
-                else
-                {
-                    _logger.LogError(ex, "Error occurred while adding {LogType} execution log with job key [{JobGroup}.{JobName}] trigger key [{TriggerGroup}.{TriggerName}]",
-                        log.LogType, log.JobGroup, log.JobName, log.TriggerGroup, log.TriggerName);
-                }
-            }
-        });
-    }
-
-    private void QueueTask(Func<IAppDbContextWrite, CancellationToken, ValueTask> task)
-    {
-        if (!_taskQueue.Writer.TryWrite(task))
-        {
-            // Should not happen since it's unbounded Channel. It 'should' only fail if we call writer.Complete()
-            throw new InvalidOperationException("Failed to write the log message");
+            await Task.Yield();
+            dbContext.QuartzExecutionLogs.Update(log);
         }
-    }
-
-    /// <summary>
-    /// Return closest non null stack trace of exception.
-    /// Loop until null InnerException to get stack trace.
-    /// </summary>
-    /// <param name="exception"></param>
-    /// <returns>null if inner exceptions does not have stack trace</returns>
-    private static string? NonNullStackTrace(Exception? exception)
-    {
-        var currentException = exception;
-        while (currentException?.StackTrace == null)
+        catch (Exception ex)
         {
-            currentException = currentException?.InnerException;
-            if (currentException == null)
-                break;
+            _logger.LogError(ex, "Error occurred while updating execution log with job key [{JobGroup}.{JobName}] trigger key [{TriggerGroup}.{TriggerName}] run instance id [{RunInstanceId}]",
+                log.JobGroup, log.JobName, log.TriggerGroup, log.TriggerName, log.RunInstanceId);
         }
-        return currentException?.StackTrace;
+    });
+
+    private void QueueInsertTask(QuartzExecutionLogEntity log) => QueueTask(async (dbContext, ct) =>
+    {
+        try
+        {
+            await Task.Yield();
+            dbContext.QuartzExecutionLogs.Add(log);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while adding execution log with job key [{JobGroup}.{JobName}] trigger key [{TriggerGroup}.{TriggerName}] run instance id [{RunInstanceId}]",
+                log.JobGroup, log.JobName, log.TriggerGroup, log.TriggerName, log.RunInstanceId);
+        }
+    });
+
+    private static QuartzExecutionLogEntity CreateScheduleJobLogEntry(IJobExecutionContext context, JobExecutionException? jobException = null, bool? defaultIsSuccess = null)
+    {
+        var result = context.Result != null ? Convert.ToString(context.Result, CultureInfo.InvariantCulture) : null;
+        var isSuccess = jobException == null ? context.GetIsSuccess() ?? defaultIsSuccess : false;
+
+        var logDetail = new QuartzExecutionLogDetailEntity
+        {
+            ExecutionDetails = context.GetExecutionDetails(),
+
+            ErrorCode = jobException?.HResult,
+            ErrorStackTrace = jobException?.ToString(),
+            ErrorHelpLink = jobException?.HelpLink,
+        };
+
+        var log = new QuartzExecutionLogEntity
+        {
+            LogId = 0,
+            RunInstanceId = context.FireInstanceId,
+            JobName = context.JobDetail.Key.Name,
+            JobGroup = context.JobDetail.Key.Group,
+            TriggerName = context.Trigger.Key.Name,
+            TriggerGroup = context.Trigger.Key.Group,
+            FireTimeUtc = context.FireTimeUtc,
+            JobRunTime = context.JobRunTime,
+
+            ScheduleFireTimeUtc = context.ScheduledFireTimeUtc,
+
+            RetryCount = context.RefireCount,
+
+            IsSuccess = isSuccess,
+            IsException = jobException == null ? !isSuccess : true,
+            IsVetoed = null,
+
+            ErrorMessage = jobException?.GetBaseException().Message,
+            ExecutionLogDetail = logDetail,
+            Result = result?.Substring(0, Math.Min(result.Length, RESULT_MAX_LENGTH)),
+            ReturnCode = context.GetReturnCode() ?? jobException?.HResult.ToString(),
+        };
+
+        return log;
     }
 }

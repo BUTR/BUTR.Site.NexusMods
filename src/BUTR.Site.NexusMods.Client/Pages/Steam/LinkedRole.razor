@@ -11,13 +11,13 @@
         await base.OnInitializedAsync();
         
         var response = await _steamClient.GetOpenIdUrlAsync();
-        if (response?.Data?.Url is null)
+        if (response?.Value?.Url is null)
         {
             _navigationManager.NavigateTo("profile");
             return;
         }
         
-        _navigationManager.NavigateTo(response.Data.Url);
+        _navigationManager.NavigateTo(response.Value.Url);
     }
 
 }

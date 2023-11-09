@@ -4,6 +4,9 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme, Roles = $"{ApplicationRoles.Administrator}")]
+[ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization(Roles = $"{ApplicationRoles.Administrator}"), TenantNotRequired]
 public sealed class QuartzController : ControllerExtended
 {
     private readonly ILogger _logger;
@@ -38,10 +41,9 @@ public sealed class QuartzController : ControllerExtended
 
     [HttpPost("HistoryPaginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<QuartzExecutionLogEntity>?>>> HistoryPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<PagingData<QuartzExecutionLogEntity>?>> HistoryPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var paginated = await _dbContextRead.QuartzExecutionLogs.Prepare()
-            .Where(x => x.LogType == QuartzLogType.ScheduleJob)
             .PaginatedAsync(query, 100, new() { Property = nameof(QuartzExecutionLogEntity.DateAddedUtc), Type = SortingType.Descending }, ct);
 
         return APIPagingResponse(paginated);
@@ -49,7 +51,7 @@ public sealed class QuartzController : ControllerExtended
 
     [HttpGet("Delete")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<string?>>> DeleteAsync([FromQuery] long logId)
+    public async Task<APIResponseActionResult<string?>> DeleteAsync([FromQuery] long logId)
     {
         if (await _dbContextWrite.QuartzExecutionLogs.Where(x => x.LogId == logId).ExecuteDeleteAsync() > 0)
             return APIResponse("Deleted successful!");
@@ -59,9 +61,8 @@ public sealed class QuartzController : ControllerExtended
 
     [HttpGet("TriggerJob")]
     [Produces("application/json")]
-    public async Task<ActionResult> TriggerJobAsync(string jobId, CancellationToken ct)
+    public async Task<APIResponseActionResult<DateTimeOffset>> TriggerJobAsync(string jobId, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
-        var userId = HttpContext.GetUserId();
         var userName = HttpContext.GetName();
 
         var jobKey = JobKey.Create(jobId);
@@ -73,7 +74,6 @@ public sealed class QuartzController : ControllerExtended
 
         var scheduler = await _schedulerFactory.GetScheduler(ct);
         var startTime = await scheduler.ScheduleJob(trigger, CancellationToken.None);
-
-        return Ok();
+        return APIResponse(startTime);
     }
 }

@@ -162,13 +162,13 @@ else
     protected override async Task OnInitializedAsync()
     {
         var userResponse = await _userClient.ProfileAsync();
-        _user = userResponse.Data;
+        _user = userResponse.Value;
 
         if (_user?.DiscordUserId is not null)
         {
             _ = _discordClient.GetUserInfoAsync().ContinueWith(x =>
             {
-                _discordUser = new(x.Result?.Data);
+                _discordUser = new(x.Result?.Value);
                 StateHasChanged();
             });
         }
@@ -177,7 +177,7 @@ else
         {
             _ = _steamClient.GetUserInfoAsync().ContinueWith(x =>
             {
-                _steamUser = new(x.Result?.Data);
+                _steamUser = new(x.Result?.Value);
                 StateHasChanged();
             });
         }
@@ -186,7 +186,7 @@ else
         {
             _ = _gogClient.GetUserInfoAsync().ContinueWith(x =>
             {
-                _gogUser = new(x.Result?.Data);
+                _gogUser = new(x.Result?.Value);
                 StateHasChanged();
             });
         }

@@ -1,4 +1,4 @@
-﻿namespace BUTR.Site.NexusMods.Server.Utils;
+﻿namespace BUTR.Site.NexusMods.Server.Utils.Quartz;
 
 public static class JobDataMapKeys
 {

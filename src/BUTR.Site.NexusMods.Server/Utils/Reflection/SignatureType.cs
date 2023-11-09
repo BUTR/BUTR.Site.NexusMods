@@ -26,7 +26,7 @@ internal record SignatureType
     public bool IsFunctionPointer { get; set; }
     public MethodSignature<SignatureType> FunctionPointerSignature { get; set; }
 
-    public override string? ToString()
+    public override string ToString()
     {
         var name = IsRef ? $"{Name}&" : Name;
         return IsGeneric

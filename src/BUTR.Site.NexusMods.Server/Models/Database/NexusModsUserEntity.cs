@@ -28,18 +28,18 @@ public sealed record NexusModsUserEntity : IEntity
     private NexusModsUserEntity(NexusModsUserId userId, NexusModsUserName? name = null, TenantId? tenant = null, ApplicationRole? role = null) : this()
     {
         NexusModsUserId = userId;
-        Name = name is not null ? new()
+        Name = name is { } nameVal ? new()
         {
             NexusModsUser = this,
-            Name = name.Value,
+            Name = nameVal,
         } : null;
-        if (tenant is not null && role is not null)
+        if (tenant is { } tenantVal && role is { } roleVal)
         {
             ToRoles.Add(new()
             {
                 NexusModsUser = this,
-                TenantId = tenant.Value,
-                Role = role.Value,
+                TenantId = tenantVal,
+                Role = roleVal,
             });
         }
     }

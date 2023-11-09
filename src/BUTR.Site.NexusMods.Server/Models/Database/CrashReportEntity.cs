@@ -19,9 +19,9 @@ public sealed record CrashReportEntity : IEntityWithTenant
 
     public required ExceptionTypeEntity ExceptionType { get; init; }
 
-    public required string Exception { get; init; } = string.Empty;
+    public required string Exception { get; init; }
 
-    public required DateTime CreatedAt { get; init; } = DateTime.MinValue;
+    public required DateTimeOffset CreatedAt { get; init; }
 
     public required CrashReportUrl Url { get; init; }
 

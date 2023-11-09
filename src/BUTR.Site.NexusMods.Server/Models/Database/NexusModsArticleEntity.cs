@@ -12,7 +12,7 @@ public sealed record NexusModsArticleEntity : IEntityWithTenant
 
     public required NexusModsUserEntity NexusModsUser { get; init; }
 
-    public required DateTime CreateDate { get; init; }
+    public required DateTimeOffset CreateDate { get; init; }
 
     public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsArticleId, Title, NexusModsUser.NexusModsUserId, CreateDate);
 }

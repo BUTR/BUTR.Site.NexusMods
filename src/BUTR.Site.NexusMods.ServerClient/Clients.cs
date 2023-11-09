@@ -1,9 +1,12 @@
 ﻿using BUTR.Site.NexusMods.ServerClient.Utils;
 
 using System;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,87 +32,85 @@ public partial class CrashReportsClient
         _settings = new Lazy<JsonSerializerOptions>(options);
     }
 
-    protected virtual void OnPrepareRequest(HttpClient client, HttpRequestMessage request, System.Text.StringBuilder urlBuilder) { }
+    protected virtual void OnPrepareRequest(HttpClient client, HttpRequestMessage request, StringBuilder urlBuilder) { }
 
-    partial void PrepareRequest(HttpClient client, HttpRequestMessage request, System.Text.StringBuilder urlBuilder)
+    partial void PrepareRequest(HttpClient client, HttpRequestMessage request, StringBuilder urlBuilder)
     {
         OnPrepareRequest(client, request, urlBuilder);
     }
 
     public virtual async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken cancellationToken = default)
     {
-        var urlBuilder_ = new System.Text.StringBuilder();
+        var urlBuilder_ = new StringBuilder();
         urlBuilder_.Append("api/v1/CrashReports/PaginatedStreaming");
 
         var client_ = _httpClient;
         var disposeClient_ = false;
         try
         {
-            using (var request_ = new System.Net.Http.HttpRequestMessage())
+            using var request_ = new HttpRequestMessage();
+            request_.Content = JsonContent.Create(body, MediaTypeHeaderValue.Parse("application/json"), _settings.Value);
+            request_.Method = HttpMethod.Post;
+            request_.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/x-ndjson-butr-paging"));
+
+            PrepareRequest(client_, request_, urlBuilder_);
+
+            var url_ = urlBuilder_.ToString();
+            request_.RequestUri = new Uri(url_, UriKind.RelativeOrAbsolute);
+
+            PrepareRequest(client_, request_, url_);
+
+            var response_ = await client_.SendAsync(request_, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            var disposeResponse_ = true;
+            try
             {
-                var json_ = System.Text.Json.JsonSerializer.Serialize(body, _settings.Value);
-                var content_ = new System.Net.Http.StringContent(json_);
-                content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
-                request_.Content = content_;
-                request_.Method = new System.Net.Http.HttpMethod("POST");
-                request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/x-ndjson-butr-paging"));
-
-                PrepareRequest(client_, request_, urlBuilder_);
-
-                var url_ = urlBuilder_.ToString();
-                request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
-
-                PrepareRequest(client_, request_, url_);
-
-                var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-                var disposeResponse_ = false;
-                try
+                var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                if (response_.Content is { Headers: not null })
                 {
-                    var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
-                    if (response_.Content != null && response_.Content.Headers != null)
-                    {
-                        foreach (var item_ in response_.Content.Headers)
-                            headers_[item_.Key] = item_.Value;
-                    }
+                    foreach (var item_ in response_.Content.Headers)
+                        headers_[item_.Key] = item_.Value;
+                }
 
-                    ProcessResponse(client_, response_);
+                ProcessResponse(client_, response_);
 
-                    var status_ = (int) response_.StatusCode;
-                    if (status_ == 200)
+                var status_ = (int) response_.StatusCode;
+                switch (response_.StatusCode)
+                {
+                    case HttpStatusCode.OK:
                     {
                         try
                         {
-                            return PagingStreamingData<CrashReportModel2>.Create(response_, JsonSerializerSettings, cancellationToken);
+                            var pagingStreamingData = PagingStreamingData<CrashReportModel2>.Create(response_, JsonSerializerSettings, cancellationToken);
+                            disposeResponse_ = false;
+                            return pagingStreamingData;
                         }
-                        catch (System.Text.Json.JsonException exception)
+                        catch (JsonException exception)
                         {
-                            var message = "Could not deserialize the response body stream as " + typeof(PagingStreamingData<CrashReportModel2>).FullName + ".";
+                            var message = $"Could not deserialize the response body stream as {typeof(PagingStreamingData<CrashReportModel2>).FullName}.";
                             throw new ApiException(message, (int) response_.StatusCode, string.Empty, headers_, exception);
                         }
                     }
-                    else
-                    if (status_ == 401)
+                    case HttpStatusCode.Unauthorized:
                     {
-                        string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var responseText_ = response_.Content == null! ? string.Empty : await response_.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                         throw new ApiException("User not authenticated.", status_, responseText_, headers_, null);
                     }
-                    else
-                    if (status_ == 403)
+                    case HttpStatusCode.Forbidden:
                     {
-                        string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var responseText_ = response_.Content == null! ? string.Empty : await response_.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                         throw new ApiException("User not authorized to access this endpoint.", status_, responseText_, headers_, null);
                     }
-                    else
+                    default:
                     {
-                        var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                        throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        var responseData_ = response_.Content == null! ? null : await response_.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                        throw new ApiException($"The HTTP status code of the response was not expected ({status_}).", status_, responseData_, headers_, null);
                     }
                 }
-                finally
-                {
-                    if (disposeResponse_)
-                        response_.Dispose();
-                }
+            }
+            finally
+            {
+                if (disposeResponse_)
+                    response_.Dispose();
             }
         }
         finally

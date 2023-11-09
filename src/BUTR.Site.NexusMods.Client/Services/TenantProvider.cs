@@ -14,13 +14,13 @@ public sealed class TenantProvider
         _localStorage = localStorage;
     }
 
-    public async Task<string> GetTenantAsync()
+    public async Task<int> GetTenantAsync()
     {
         if (! await _localStorage.ContainKeyAsync("tenant"))
-            await SetTenantAsync("1");
+            await SetTenantAsync(1);
 
-        return await _localStorage.GetItemAsStringAsync("tenant", CancellationToken.None);
+        return await _localStorage.GetItemAsync<int>("tenant", CancellationToken.None);
     }
 
-    public async Task SetTenantAsync(string tenant) => await _localStorage.SetItemAsStringAsync("tenant", tenant, CancellationToken.None);
+    public async Task SetTenantAsync(int tenant) => await _localStorage.SetItemAsync("tenant", tenant, CancellationToken.None);
 }

@@ -51,16 +51,16 @@ public sealed class TopExceptionsTypesAnalyzerProcessorJob : IJob
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
         var entityFactory = dbContextWrite.GetEntityFactory();
-        await using var _ = dbContextWrite.CreateSaveScope();
+        await using var _ = await dbContextWrite.CreateSaveScopeAsync();
 
         var statisticsQuery = await dbContextRead.ExceptionTypes.Include(x => x.ToCrashReports).AsSplitQuery().Select(x => new StatisticsTopExceptionsTypeEntity
         {
             TenantId = tenant,
             ExceptionType = entityFactory.GetOrCreateExceptionType(x.ExceptionTypeId),
             ExceptionCount = x.ToCrashReports.Count
-        }).ToListAsync(ct);
+        }).ToArrayAsync(ct);
 
-        dbContextWrite.FutureSyncronize(x => x.StatisticsTopExceptionsTypes, statisticsQuery);
+        await dbContextWrite.StatisticsTopExceptionsTypes.SynchronizeOnSaveAsync(statisticsQuery);
         // Disposing the DBContext will save the data
     }
 }

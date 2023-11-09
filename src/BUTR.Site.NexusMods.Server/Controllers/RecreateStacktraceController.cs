@@ -39,7 +39,7 @@ public sealed class RecreateStacktraceController : ControllerExtended
 
     [HttpGet("Json/{id}")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<IEnumerable<RecreatedStacktrace>?>>> JsonAsync(CrashReportFileId id, CancellationToken ct)
+    public async Task<APIActionResult<IEnumerable<RecreatedStacktrace>?>> JsonAsync(CrashReportFileId id, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
             return Unauthorized();

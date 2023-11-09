@@ -4,18 +4,27 @@ using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Authentication.NexusMods.Extensions;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Contexts.Configs;
+using BUTR.Site.NexusMods.Server.Controllers;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Jobs;
+using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Server.Utils.Http.Logging;
 using BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
+using BUTR.Site.NexusMods.Server.Utils.Vogen;
 
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +54,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
+using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server;
 
@@ -86,7 +96,7 @@ public sealed class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        var userAgent = $"{(_assemblyName.Name ?? "ERROR")} v{(_assemblyName.Version?.ToString() ?? "ERROR")} (github.com/BUTR)";
+        var userAgent = $"{_assemblyName.Name ?? "ERROR"} v{_assemblyName.Version?.ToString() ?? "ERROR"} (github.com/BUTR)";
 
         var connectionStringSection = _configuration.GetSection(ConnectionStringsSectionName);
         var crashReporterSection = _configuration.GetSection(CrashReporterSectionName);
@@ -165,7 +175,6 @@ public sealed class Startup
         {
             opt.AddJobListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
             opt.AddTriggerListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
-            opt.AddSchedulerListener<QuartzEventProviderService>(sp => sp.GetRequiredService<QuartzEventProviderService>());
 
             string AtEveryFirstDayOfMonth(int hour = 0) => $"0 0 {hour} ? 1-12 * *";
             string AtEveryMonday(int hour = 0) => $"0 0 {hour} ? * MON *";
@@ -201,18 +210,18 @@ public sealed class Startup
         services.AddMemoryCache();
 
         services.AddSingleton<ITenantContextAccessor, TenantContextAccessor>();
-
-        services.AddScoped<IEntityConfigurationFactory, EntityConfigurationFactory>();
+        
+        services.AddSingleton<IEntityConfigurationFactory, EntityConfigurationFactory>();
         var types = typeof(Startup).Assembly.GetTypes().Where(x => x is { IsAbstract: false, BaseType: { IsGenericType: true } }).ToList();
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfigurationWithTenant<>)))
-            services.AddScoped(typeof(BaseEntityConfigurationWithTenant<>).MakeGenericType(type.BaseType!.GetGenericArguments()), type);
+            services.AddSingleton(typeof(BaseEntityConfigurationWithTenant<>).MakeGenericType(type.BaseType!.GetGenericArguments()), type);
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfiguration<>)))
-            services.AddScoped(typeof(BaseEntityConfiguration<>).MakeGenericType(type.BaseType!.GetGenericArguments()), type);
+            services.AddSingleton(typeof(BaseEntityConfiguration<>).MakeGenericType(type.BaseType!.GetGenericArguments()), type);
 
         services.AddDbContext<BaseAppDbContext>(ServiceLifetime.Scoped);
-        services.AddDbContextFactory<AppDbContextRead>(lifetime: ServiceLifetime.Scoped);
-        services.AddDbContextFactory<AppDbContextWrite>(lifetime: ServiceLifetime.Scoped);
-        services.AddScoped<IAppDbContextFactory, AppDbContextFactory>();
+        services.AddDbContextFactory<AppDbContextRead>( lifetime: ServiceLifetime.Singleton);
+        services.AddDbContextFactory<AppDbContextWrite>(lifetime: ServiceLifetime.Singleton);
+        services.AddSingleton<IAppDbContextFactory, AppDbContextFactory>();
         services.AddScoped<IAppDbContextRead>(sp => sp.GetRequiredService<IAppDbContextFactory>().CreateRead());
         services.AddScoped<IAppDbContextWrite>(sp => sp.GetRequiredService<IAppDbContextFactory>().CreateWrite());
 
@@ -224,6 +233,7 @@ public sealed class Startup
         services.AddScoped<IGOGStorage, DatabaseGOGStorage>();
 
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHttpMessageHandlerBuilderFilter, SyncLoggingHttpMessageHandlerBuilderFilter>());
+        services.AddTransient<CrashReportBatchedHandler>();
         services.AddTransient<NexusModsModFileParser>();
         services.AddSingleton<DiffProvider>();
 
@@ -233,7 +243,31 @@ public sealed class Startup
             options.EncryptionKey = opts?.EncryptionKey ?? string.Empty;
         });
 
-        services.AddControllers().AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
+        services.AddTransient(typeof(APIResponseActionResultExecutor<>));
+
+        services.AddTransient<IProblemDetailsWriter, APIResponseProblemDetailsWriter>();
+        services.AddProblemDetails();
+
+        services.AddControllers(opt => opt.ValueProviderFactories.Add(new ClaimsValueProviderFactory()))
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                var oldFactory = options.InvalidModelStateResponseFactory;
+                options.InvalidModelStateResponseFactory = context2 =>
+                {
+                    if (context2.ActionDescriptor is ControllerActionDescriptor context)
+                    {
+                        if (APIResponseUtils.IsReturnTypeAPIResponse(context.MethodInfo))
+                        {
+                            var problemDetailsFactory = context2.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                            var problemDetails = problemDetailsFactory.CreateValidationProblemDetails(context2.HttpContext, context2.ModelState);
+                            return new ObjectResult(APIResponse.FromError<object>(problemDetails)) {StatusCode = problemDetails.Status,};
+                        }
+                    }
+
+                    return oldFactory(context2);
+                };
+            })
+            .AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
         services.AddHttpContextAccessor();
         services.AddRouting();
         services.AddResponseCompression(options =>
@@ -282,7 +316,9 @@ public sealed class Startup
 
             opt.DescribeAllParametersInCamelCase();
             opt.SupportNonNullableReferenceTypes();
+            opt.OperationFilter<BindIgnoreFilter>();
             opt.OperationFilter<AuthResponsesOperationFilter>();
+            opt.OperationFilter<APIResponseOperationFilter>();
             opt.SchemaFilter<VogenSchemaFilter>();
 
             // Really .NET?
@@ -331,6 +367,10 @@ public sealed class Startup
         {
             app.UseDeveloperExceptionPage();
             app.UseCors("Development");
+        }
+        else
+        {
+            app.UseExceptionHandler();
         }
 
         app.UseResponseCompression();

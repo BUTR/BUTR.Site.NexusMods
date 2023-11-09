@@ -4,6 +4,9 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-[ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
+[ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantRequired]
 public class NexusModsArticleController : ControllerExtended
 {
     public record NexusModsArticleModel(NexusModsArticleId NexusModsArticleId, string Title, NexusModsUserId NexusModsUserId, NexusModsUserName Author, DateTimeOffset CreateDate);
@@ -34,11 +37,10 @@ public class NexusModsArticleController : ControllerExtended
 
     [HttpPost("Paginated")]
     [Produces("application/json")]
-    public async Task<ActionResult<APIResponse<PagingData<NexusModsArticleModel>?>>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<APIResponseActionResult<PagingData<NexusModsArticleModel>?>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var paginated = await _dbContextRead.NexusModsArticles
-            .Include(x => x.NexusModsUser)
-            .ThenInclude(x => x.Name)
+            .Include(x => x.NexusModsUser).ThenInclude(x => x.Name)
             .Select(x => new
             {
                 NexusModsArticleId = x.NexusModsArticleId,
@@ -54,11 +56,10 @@ public class NexusModsArticleController : ControllerExtended
 
     [HttpGet("Autocomplete")]
     [Produces("application/json")]
-    public ActionResult<APIResponse<IQueryable<string>?>> Autocomplete([FromQuery] string authorName)
+    public APIResponseActionResult<IQueryable<string>?> Autocomplete([FromQuery] string authorName)
     {
         var moduleIds = _dbContextRead.NexusModsArticles
-            .Include(x => x.NexusModsUser)
-            .ThenInclude(x => x.Name)
+            .Include(x => x.NexusModsUser).ThenInclude(x => x.Name)
             .Select(x => x.NexusModsUser)
             .Select(x => x.Name!)
             .Where(x => EF.Functions.ILike(x.Name.Value, $"{authorName}%"))
