@@ -6,6 +6,7 @@ WORKDIR /build
 
 COPY ["src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj", "src/BUTR.Site.NexusMods.Server/"]
 COPY ["src/BUTR.Site.NexusMods.Shared/BUTR.Site.NexusMods.Shared.csproj", "src/BUTR.Site.NexusMods.Shared/"]
+COPY ["src/nuget.config", "src/"]
 
 RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -r linux-x64;
 #RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -r linux-x64 -p:PublishReadyToRun=true;
