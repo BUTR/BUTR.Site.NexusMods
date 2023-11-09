@@ -2,6 +2,7 @@
 using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
 
@@ -148,6 +149,7 @@ public class BaseAppDbContext : DbContext
                 .Build();
 
             optionsBuilder
+                .ConfigureWarnings(x => x.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
                 .ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>()
                 .UseNpgsql(dataSource, opt =>
                 {
