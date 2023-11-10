@@ -50,7 +50,7 @@
     <PackageReference Include="SharpCompress" Version="0.34.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
-    <PackageReference Include="Vogen" Version="3.0.22" />
+    <PackageReference Include="Vogen" Version="3.0.23" />
     <PackageReference Update="GitVersion.MsBuild" Version="5.11.1" />
     <PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="8.0.0-rc.2.23480.1-02" />
   </ItemGroup>
