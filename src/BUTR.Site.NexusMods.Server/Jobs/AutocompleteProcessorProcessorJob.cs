@@ -95,7 +95,7 @@ public sealed class AutocompleteProcessorProcessorJob : IJob
                 TenantId = tenant,
                 Type = key,
                 Value = x,
-            }));
+            }), true);
         }
 
         /*

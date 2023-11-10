@@ -45,17 +45,17 @@ public static class DbSetExtensions
     }
 
 
-    public static async Task UpsertAsync<TEntity>(this DbSet<TEntity> dbSet, IEnumerable<TEntity> entities) where TEntity : class, IEntity
+    public static async Task UpsertAsync<TEntity>(this DbSet<TEntity> dbSet, IEnumerable<TEntity> entities, bool @unsafe = false) where TEntity : class, IEntity
     {
-        await dbSet.BulkMergeAsync(entities);
+        await dbSet.BulkMergeAsync(entities, o => o.UnsafeMode = @unsafe);
     }
-    public static async Task UpsertAsync<TEntity>(this DbSet<TEntity> dbSet, IAsyncEnumerable<TEntity> entities) where TEntity : class, IEntity
+    public static async Task UpsertAsync<TEntity>(this DbSet<TEntity> dbSet, IAsyncEnumerable<TEntity> entities, bool @unsafe = false) where TEntity : class, IEntity
     {
-        await dbSet.BulkMergeAsync(await entities.ToArrayAsync());
+        await dbSet.BulkMergeAsync(await entities.ToArrayAsync(), o => o.UnsafeMode = @unsafe);
     }
-    public static async Task UpsertAsync<TEntity>(this DbSet<TEntity> dbSet, params TEntity[] entities) where TEntity : class, IEntity
+    public static async Task UpsertAsync<TEntity>(this DbSet<TEntity> dbSet, bool @unsafe = false, params TEntity[] entities) where TEntity : class, IEntity
     {
-        await dbSet.BulkMergeAsync(entities);
+        await dbSet.BulkMergeAsync(entities, o => o.UnsafeMode = @unsafe);
     }
 
     public static async Task SynchronizeAsync<TEntity>(this DbSet<TEntity> dbSet, IEnumerable<TEntity> entities) where TEntity : class, IEntity
