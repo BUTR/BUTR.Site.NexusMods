@@ -88,22 +88,28 @@ public static class DynamicExpressions
 
     private static Expression GetContainsMethodCallExpression(MemberExpression prop, ConstantExpression constant)
     {
-        if (prop.Type == typeof(string)) // Check if it's convertible to string
+        var type = Nullable.GetUnderlyingType(constant.Type) ?? constant.Type;
+        
+        if (type == typeof(string)) // Check if it's convertible to string
             return Expression.Call(prop, _stringContainsMethod, AsString(constant));
-        else if (prop.Type.GetInterfaces().Contains(typeof(IDictionary)))
+        else if (TypeDescriptor.GetConverter(type) is { } typeConverter && typeConverter.CanConvertTo(typeof(string))) 
+            return Expression.Call(AsString(prop), _stringContainsMethod, AsString(constant));
+        else if (type.GetInterfaces().Contains(typeof(IDictionary)))
             return Expression.Or(Expression.Call(prop, _dictionaryContainsKeyMethod, AsString(constant)), Expression.Call(prop, _dictionaryContainsValueMethod, AsString(constant)));
-        else if (prop.Type.GetInterfaces().Contains(typeof(IEnumerable)))
+        else if (type.GetInterfaces().Contains(typeof(IEnumerable)))
             return Expression.Call(_enumerableContainsMethod, prop, AsString(constant));
 
-        throw new NotImplementedException($"{prop.Type} contains is not implemented.");
+        throw new NotImplementedException($"{type} contains is not implemented.");
     }
     
     private static Expression AsString(Expression constant)
     {
-        if (constant.Type == typeof(string))
+        var type = Nullable.GetUnderlyingType(constant.Type) ?? constant.Type;
+        
+        if (type == typeof(string))
             return constant;
         
-        if (TypeDescriptor.GetConverter(constant.Type) is { } typeConverter && typeConverter.CanConvertTo(typeof(string))) 
+        if (TypeDescriptor.GetConverter(type) is { } typeConverter && typeConverter.CanConvertTo(typeof(string))) 
             return Expression.Convert(constant, typeof(string));
         
         var convertedExpr = Expression.Convert(constant, typeof(object));

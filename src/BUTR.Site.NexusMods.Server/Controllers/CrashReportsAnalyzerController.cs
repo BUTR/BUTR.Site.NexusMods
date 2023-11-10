@@ -109,11 +109,11 @@ public sealed class CrashReportsAnalyzerController : ControllerExtended
         var moduleIds = crashReport.Modules.Where(x => !x.IsOfficial && string.IsNullOrEmpty(x.Url) && string.IsNullOrEmpty(x.UpdateInfo))
             .Select(x => ModuleId.From(x.Id)).ToArray();
         var nexusModsIds = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.Url))
-            .Select(x => NexusModsModId.From(NexusModsUtils.TryParse(x.Url, out _, out var id) ? (int) id : -1))
-            .Where(x => x != -1).ToArray();
+            .Select(x => NexusModsModId.TryParseUrl(x.Url, out var modId) ? modId : NexusModsModId.None)
+            .Where(x => x != NexusModsModId.None).ToArray();
         var nexusModsIds2 = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.Url))
             .Select(x => new { ModuelId = ModuleId.From(x.Id), NexusModsId = NexusModsModId.From(NexusModsUtils.TryParse(x.Url, out _, out var id) ? (int) id : -1) })
-            .Where(x => x.NexusModsId != -1).ToArray();
+            .Where(x => x.NexusModsId != NexusModsModId.None).ToArray();
         var updateInfos = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.UpdateInfo))
             .Select(x => new { ModuleId = ModuleId.From(x.Id), x.UpdateInfo }).ToArray();
         var moduleIdVersions = crashReport.Modules
