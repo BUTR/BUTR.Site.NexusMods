@@ -43,7 +43,7 @@
         <Progress @ref="@_progressRef" Color="@Color.Primary" Value="@_progressValue" Max="100"></Progress>
     </LoadingTemplate>
     <EmptyTemplate>
-        @if (_loadCancellationTokenSource is not null)
+        @if (_progressValue != 0)
         {
             <Progress @ref="@_progressRef" Color="@Color.Primary" Value="@_progressValue" Max="100"></Progress>
         }
@@ -107,7 +107,6 @@
     public TItem? Value;
     public List<TItem> Values = new();
 
-    private CancellationTokenSource? _loadCancellationTokenSource;
     private int _progressValue = default!;
 
     private DataGrid<TItem> _dataGridRef = default!;
@@ -128,52 +127,51 @@
 
     private async Task OnReadData(DataGridReadDataEventArgs<TItem> e)
     {
-        if (!e.CancellationToken.IsCancellationRequested)
-        {
-            var sortings = e.Columns
-                .Where(x => x.SortIndex != -1)
-                .OrderBy(x => x.SortIndex)
-                .Select(x => new Sorting(x.SortField, x.SortDirection.ToSortingType()))
-                .ToArray();
-            var filterings = GetFilters is not null ? GetFilters(e.Columns).ToArray() : Array.Empty<Filtering>();
-            
-            if (_loadCancellationTokenSource is not null && !_loadCancellationTokenSource.IsCancellationRequested)
-            {
-                _loadCancellationTokenSource.Cancel();
-                _loadCancellationTokenSource.Dispose();
-                _loadCancellationTokenSource = null;
-            }
-            
-            _loadCancellationTokenSource = new CancellationTokenSource();
-            await LoadItems(e.Page, e.PageSize, filterings, sortings, _loadCancellationTokenSource.Token);
-        }
+        if (e.CancellationToken.IsCancellationRequested)
+            return;
+        
+        var sortings = e.Columns
+            .Where(x => x.SortIndex != -1)
+            .OrderBy(x => x.SortIndex)
+            .Select(x => new Sorting(x.SortField, x.SortDirection.ToSortingType()))
+            .ToArray();
+        var filterings = GetFilters is not null ? GetFilters(e.Columns).ToArray() : Array.Empty<Filtering>();
+
+        await LoadItems(e.Page, e.PageSize, filterings, sortings, e.CancellationToken);
     }
 
     private async Task LoadItems(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
-        await using var progress = ProgressUtils.DoProgress(x => _progressValue = x, () => _progressValue, () => InvokeAsync(StateHasChanged));
-        
-        Values.Clear();
-        StateHasChanged();
-
-        var response = (GetItems is not null ? await GetItems(page, pageSize, filterings, sortings, ct) : null) ?? PagingStreamingData<TItem>.Empty;
-        var status = await response.Status;
-        Metadata = await response.Metadata;
-        var counter = 0;
-        var items = await response.Items;
-        await foreach (var item in items.WithCancellation(ct))
+        try
         {
-            Values.Add(item);
-            
-            counter++;
-            if (counter >= 10)
+            await using var progress = ProgressUtils.DoProgress(x => _progressValue = x, () => _progressValue, () => InvokeAsync(StateHasChanged));
+        
+            Values.Clear();
+            StateHasChanged();
+
+            var response = (GetItems is not null ? await GetItems(page, pageSize, filterings, sortings, ct) : null) ?? PagingStreamingData<TItem>.Empty;
+            var status = await response.Status;
+            Metadata = await response.Metadata;
+            var counter = 0;
+            var items = await response.Items;
+            await foreach (var item in items.WithCancellation(ct))
             {
-                counter = 0;
-                StateHasChanged();
+                Values.Add(item);
+            
+                counter++;
+                if (counter >= 10)
+                {
+                    counter = 0;
+                    StateHasChanged();
+                }
             }
+            AdditionalMetadata = await response.AdditionalMetadata;
+            StateHasChanged();
         }
-        AdditionalMetadata = await response.AdditionalMetadata;
-        StateHasChanged();
+        finally
+        {
+            _progressValue = 0;
+        }
     }
 
     private async Task<int> GetPageSizeInternal()

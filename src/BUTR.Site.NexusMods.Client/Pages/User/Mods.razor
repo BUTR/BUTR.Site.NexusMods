@@ -15,7 +15,7 @@
             <Field>
                 <FieldLabel>NexusMods Mod Url</FieldLabel>
                 <FieldBody>
-                    <TextEdit Role="@TextRole.Url" @bind-Text="@_model.ModUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1"></TextEdit>
+                    <TextEdit ElementId="mod-url" Role="@TextRole.Url" @bind-Text="@_model.ModUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1"></TextEdit>
                 </FieldBody>
             </Field>
             <Field>
@@ -35,18 +35,18 @@
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef" TItem="NexusModsModModel" GetItems="@GetMods">
             <DataGridColumns>
-                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.NexusModsModId)" Caption="Mod Id"/>
-                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.Name)" Caption="Name"/>
-                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.AllowedNexusModsUserIds)" Caption="Allowed User Ids">
+                <DataGridColumn TItem="NexusModsModModel" ElementId="mod-id" Field="@nameof(NexusModsModModel.NexusModsModId)" Caption="Mod Id"/>
+                <DataGridColumn TItem="NexusModsModModel" ElementId="mod-name" Field="@nameof(NexusModsModModel.Name)" Caption="Name"/>
+                <DataGridColumn TItem="NexusModsModModel" ElementId="user-ids" Field="@nameof(NexusModsModModel.AllowedNexusModsUserIds)" Caption="Allowed User Ids">
                     <DisplayTemplate>@(string.Join(", ", context.AllowedNexusModsUserIds))</DisplayTemplate>
                 </DataGridColumn>
-                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.ManuallyLinkedNexusModsUserIds)" Caption="Manually Linked User Ids">
+                <DataGridColumn TItem="NexusModsModModel" ElementId="manual-user-ids" Field="@nameof(NexusModsModModel.ManuallyLinkedNexusModsUserIds)" Caption="Manually Linked User Ids">
                     <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedNexusModsUserIds))</DisplayTemplate>
                 </DataGridColumn>
-                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.ManuallyLinkedModuleIds)" Caption="Confirmed Module Id">
+                <DataGridColumn TItem="NexusModsModModel" ElementId="confirmed-mod-ids" Field="@nameof(NexusModsModModel.ManuallyLinkedModuleIds)" Caption="Confirmed Module Id">
                     <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedModuleIds))</DisplayTemplate>
                 </DataGridColumn>
-                <DataGridColumn TItem="NexusModsModModel" Field="@nameof(NexusModsModModel.ManuallyLinkedModuleIds)" Caption="Known Module Id">
+                <DataGridColumn TItem="NexusModsModModel" ElementId="known-mod-ids" Field="@nameof(NexusModsModModel.ManuallyLinkedModuleIds)" Caption="Known Module Id">
                     <DisplayTemplate>@(string.Join(", ", context.KnownModuleIds))</DisplayTemplate>
                 </DataGridColumn>
             </DataGridColumns>
@@ -69,8 +69,8 @@
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef2" TItem="NexusModsModAvailableModel" GetItems="@GetAllowedMods" PageSizes="@(new[] { 5, 10, 20 })">
             <DataGridColumns>
-                <DataGridColumn TItem="NexusModsModAvailableModel" Field="@nameof(NexusModsModAvailableModel.NexusModsModId)" Caption="Mod Id"/>
-                <DataGridColumn TItem="NexusModsModAvailableModel" Field="@nameof(NexusModsModAvailableModel.Name)" Caption="Name"/>
+                <DataGridColumn TItem="NexusModsModAvailableModel" ElementId="mod-id" Field="@nameof(NexusModsModAvailableModel.NexusModsModId)" Caption="Mod Id"/>
+                <DataGridColumn TItem="NexusModsModAvailableModel" ElementId="mod-name" Field="@nameof(NexusModsModAvailableModel.Name)" Caption="Name"/>
             </DataGridColumns>
         </DataGridPaging>
     </CardBody>

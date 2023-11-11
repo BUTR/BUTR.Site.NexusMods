@@ -15,7 +15,8 @@
         <link href="_content/Blazorise.Bootstrap5/blazorise.bootstrap5.css" rel="stylesheet" />
         <link href="_content/Blazorise.Snackbar/blazorise.snackbar.css" rel="stylesheet" />
         <link href="_content/Blazorise.TreeView/blazorise.treeview.css" rel="stylesheet" />
-
+        <link href="_content/Blazorise.LoadingIndicator/blazorise.loadingindicator.css" rel="stylesheet" />
+        
         <link rel="stylesheet" href="css/app.css" />
         <link rel="stylesheet" href="BUTR.Site.NexusMods.Client.styles.css" />
     </head>
@@ -59,7 +60,7 @@
 
                     return (async function () {
                         const filename = name.substring(name.lastIndexOf('/') + 1);
-                        if (filename === "blazor.boot.json" || (filename.startsWith("appsettings") && filename.endsWith(".json"))){
+                        if (filename === 'blazor.boot.json' || (filename.startsWith('appsettings') && filename.endsWith('.json'))){
                             return await fetch(defaultUri, {cache: 'no-cache'});
                         }
 
@@ -91,7 +92,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.1/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js" integrity="sha512-QSkVNOCYLtj73J4hbmVoOV6KVZuMluZlioC+trLpewV8qMjsWqlIQvkn1KGX2StWvPMdWGBqim1xlC8krl1EKQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <!-- Since GitHub doesn't provide any way to get simple metrics from Pages, we use Yandex. -->
-        <!-- Metrics are public. You can see if via the link below. -->
+        <!-- Metrics are public. You can see if via the link below. Authorization needed. -->
         <!-- https://metrica.yandex.com/dashboard?id=87711623 -->
         <!-- Please create an issue on our repo if you have a better alternative! -->
         <!-- https://github.com/BUTR/BUTR.Site.NexusMods -->

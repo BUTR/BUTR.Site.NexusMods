@@ -132,7 +132,6 @@ public static class Program
                 });
                 services.AddBootstrap5Providers();
                 services.AddFontAwesomeIcons();
-                services.Replace(ServiceDescriptor.Scoped<ITextLocalizerService, InvariantTextLocalizerService>());
 
                 services.AddSingleton<IJSInProcessRuntime>(sp => (IJSInProcessRuntime) sp.GetRequiredService<IJSRuntime>());
             });

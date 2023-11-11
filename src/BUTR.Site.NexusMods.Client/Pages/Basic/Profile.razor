@@ -2,6 +2,7 @@
 @page "/profile"
 
 @inject NavigationManager _navigationManager
+@inject ITokenContainer _tokenContainer
 @inject INexusModsUserClient _userClient
 @inject IDiscordClient _discordClient
 @inject ISteamClient _steamClient
@@ -65,6 +66,9 @@ else
                 {
                     <CardText TextColor="@TextColor.Secondary">Owns Game</CardText>
                 }
+                @*
+                <QRCode Value="@_tokenUrl" Alt="QRCode image" EccLevel="EccLevel.H" />
+                *@
             </CardBody>
         </Card>;
 
@@ -158,9 +162,14 @@ else
     private DiscordUserInfo2? _discordUser;
     private SteamUserInfo2? _steamUser;
     private GOGUserInfo2? _gogUser;
+    private string? _tokenUrl;
 
     protected override async Task OnInitializedAsync()
     {
+        //var token = await _tokenContainer.GetTokenAsync();
+        //var base64Token = Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(token));
+        //_tokenUrl = $"{_navigationManager.BaseUri}/{base64Token}";
+        
         var userResponse = await _userClient.ProfileAsync();
         _user = userResponse.Value;
 

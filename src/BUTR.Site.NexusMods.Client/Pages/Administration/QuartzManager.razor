@@ -12,7 +12,7 @@
             <Field>
                 <FieldLabel>Job Id</FieldLabel>
                 <FieldBody>
-                    <TextEdit Role="@TextRole.Text" @bind-Text="@_jobId"/>
+                    <TextEdit ElementId="execute-job-id" Role="@TextRole.Text" @bind-Text="@_jobId"/>
                 </FieldBody>
             </Field>
             <Field>
@@ -36,7 +36,7 @@
     <CardBody>
         <DataGridPaging @ref="@_dataGridRef" TItem="QuartzExecutionLogEntity" DetailRowTrigger="@(x => x.Item.LogId == _dataGridRef?.Value?.LogId)" GetFilters="@GetFilters" GetItems="@Paging" Sortable Filterable>
             <DataGridColumns>
-                <DataGridColumn TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="" Filterable="@false" Sortable="@false" >
+                <DataGridColumn TItem="QuartzExecutionLogEntity" ElementId="job-name" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="" Filterable="@false" Sortable="@false" >
                     <DisplayTemplate>
                         @if (context.IsSuccess == true)
                         {
@@ -56,13 +56,13 @@
                         }
                     </DisplayTemplate>
                 </DataGridColumn>
-                <DataGridColumnText TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.MachineName)" Caption="Machine Name" Filterable Sortable SortField="@nameof(EntityFields.MachineName)" />
-                <DataGridColumnText TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="Job" Filterable Sortable SortField="@nameof(EntityFields.JobName)" />
+                <DataGridColumnText TItem="QuartzExecutionLogEntity" ElementId="quartz-machine-name" Field="@nameof(QuartzExecutionLogEntity.MachineName)" Caption="Machine Name" Filterable Sortable SortField="@nameof(EntityFields.MachineName)" />
+                <DataGridColumnText TItem="QuartzExecutionLogEntity" ElementId="quartz-job" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="Job" Filterable Sortable SortField="@nameof(EntityFields.JobName)" />
                 <DataGridColumnText TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.TriggerName)" Caption="Trigger" Filterable="@false" Sortable="@false" />
                 <DataGridColumnDateTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.ScheduleFireTimeUtc)" Caption="Schedule Fire Time" Filterable="@false" Sortable="@false" >
                     <DisplayTemplate>@(context.ScheduleFireTimeUtc?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)</DisplayTemplate>
                 </DataGridColumnDateTime>
-                <DataGridColumnDateTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.FireTimeUtc)" Caption="Actual Fire Time" Filterable Sortable SortField="@nameof(EntityFields.FireTimeUtc)" >
+                <DataGridColumnDateTime TItem="QuartzExecutionLogEntity" ElementId="quartz-actual-fire-time" Field="@nameof(QuartzExecutionLogEntity.FireTimeUtc)" Caption="Actual Fire Time" Filterable Sortable SortField="@nameof(EntityFields.FireTimeUtc)" >
                     <DisplayTemplate>@(context.FireTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)</DisplayTemplate>
                 </DataGridColumnDateTime>
                 <DataGridColumnTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobRunTime)" Caption="Run Time" Filterable="@false" Sortable SortField="@nameof(EntityFields.JobRunTime)" >

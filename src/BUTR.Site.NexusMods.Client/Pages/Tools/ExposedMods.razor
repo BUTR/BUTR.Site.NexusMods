@@ -12,8 +12,8 @@
     <CardBody>
         <DataGridPaging TItem="ExposedNexusModsModModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetExposedMods" Sortable Filterable>
             <DataGridColumns>
-                <DataGridColumnText TItem="ExposedNexusModsModModel" Field="@nameof(ExposedNexusModsModModel.NexusModsModId)" Caption="NexusMods Mod Id" Filterable Sortable SortField="@nameof(EntityFields.NexusModsModId)"/>
-                <DataGridColumnTextAutocomplete TItem="ExposedNexusModsModModel" Field="@nameof(ExposedNexusModsModModel.Mods)" Caption="Module Id's" Filterable Sortable SortField="@nameof(EntityFields.ModuleId)" GetAutocompleteValues="GetAutocompleteValues">
+                <DataGridColumnText TItem="ExposedNexusModsModModel" ElementId="mod-id" Field="@nameof(ExposedNexusModsModModel.NexusModsModId)" Caption="NexusMods Mod Id" Filterable Sortable SortField="@nameof(EntityFields.NexusModsModId)"/>
+                <DataGridColumnTextAutocomplete TItem="ExposedNexusModsModModel" ElementId="module-id" Field="@nameof(ExposedNexusModsModModel.Mods)" Caption="Module Id's" Filterable Sortable SortField="@nameof(EntityFields.ModuleId)" MinLength="3" GetAutocompleteValues="GetAutocompleteValues">
                     <DisplayTemplate>@(string.Join(", ", context.Mods.Select(x => x.ModuleId)))</DisplayTemplate>
                 </DataGridColumnTextAutocomplete>
             </DataGridColumns>
@@ -40,13 +40,13 @@
             await _jsRuntime.InvokeVoidAsync("open", mod.Url(TenantUtils.FromTenantToGameDomain(await _tenantProvider.GetTenantAsync())!), "_blank");
     }
 
-    private async Task<ICollection<string>> GetAutocompleteValues(string filter) => (await _exposedModsClient.AutocompleteAsync(new(filter))).Value ?? Array.Empty<string>();
+    private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => (await _exposedModsClient.AutocompleteAsync(new(filter), ct)).Value ?? Array.Empty<string>();
 
     private static IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
     {
         foreach (var columnInfo in columnInfos)
         {
-            if (columnInfo.SortField is nameof(EntityFields.LastUpdateDate) && columnInfo.SearchValue is string[] dates)
+            if (columnInfo is { SortField: nameof(EntityFields.LastUpdateDate), SearchValue: string[] dates })
             {
                 yield return new Filtering(columnInfo.SortField, FilteringType.GreaterThanOrEqual, dates[0]);
                 yield return new Filtering(columnInfo.SortField, FilteringType.LessThanOrEqual, dates[1]);

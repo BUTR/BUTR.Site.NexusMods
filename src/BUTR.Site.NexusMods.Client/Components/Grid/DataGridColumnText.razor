@@ -2,11 +2,14 @@
 
 <DataGridColumn TItem="TItem" Field="@Field" Caption="@Caption" Filterable="@Filterable" SortField="@SortField" Sortable="@Sortable" DisplayTemplate="@DisplayTemplate" @attributes="@AdditionalAttributes">
     <FilterTemplate>
-        <TextEdit TextChanged="@(x => { context.TriggerFilterChange(x); })" Placeholder="@Placeholder" Debounce="true" DebounceInterval="500" />
+        <TextEdit ElementId="@ElementId" TextChanged="@(x => { context.TriggerFilterChange(x); })" Placeholder="@Placeholder" Debounce="true" DebounceInterval="500" />
     </FilterTemplate>
 </DataGridColumn>
 
 @code {
+
+    [Parameter]
+    public string? ElementId { get; set; }
 
     [Parameter]
     public string Field { get; set; } = string.Empty;

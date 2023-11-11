@@ -10,7 +10,9 @@
             <Column ColumnSize="@ColumnSize.Is6">
                 <Card Margin="@Margin.Is4">
                     <CardBody>
-                        <DoughnutChart @ref="doughnutChart" TItem="double" Options="@doughnutChartOptions"/>
+                        <LoadingIndicator @ref="loadingIndicator">
+                            <DoughnutChart @ref="doughnutChart" TItem="double" Options="@doughnutChartOptions"/>
+                        </LoadingIndicator>
                     </CardBody>
                 </Card>        
             </Column>

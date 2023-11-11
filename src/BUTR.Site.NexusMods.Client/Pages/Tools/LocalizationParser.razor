@@ -22,8 +22,8 @@
         <Field>
             <DataGridInMemory @ref="@_dataGridRef" TItem="LocalizationString" Resizable ResizeMode="@TableResizeMode.Header">
                 <DataGridColumns>
-                    <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Assembly)" Caption="@nameof(LocalizationString.Assembly)"/>
-                    <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Text)" Caption="@nameof(LocalizationString.Text)"/>
+                    <DataGridColumn TItem="LocalizationString" ElementId="assembly" Field="@nameof(LocalizationString.Assembly)" Caption="@nameof(LocalizationString.Assembly)"/>
+                    <DataGridColumn TItem="LocalizationString" ElementId="text" Field="@nameof(LocalizationString.Text)" Caption="@nameof(LocalizationString.Text)"/>
                 </DataGridColumns>
             </DataGridInMemory>
             <Button Color="@Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@OnClear">Clear</Button>

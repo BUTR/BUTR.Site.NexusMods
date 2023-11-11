@@ -9,6 +9,7 @@
                 <FieldBody>
                     <Autocomplete TItem="string"
                                   TValue="string"
+                                  ElementId="game-version"
                                   Data="@_gameVersionsAutocompleteValues"
                                   ReadData="@OnHandleGameVersionReadData"
                                   TextField="@(x => x)"
@@ -26,6 +27,7 @@
                 <FieldBody>
                     <Autocomplete TItem="string"
                                   TValue="string"
+                                  ElementId="module-id"
                                   Data="@_modIdsAutocompleteValues"
                                   ReadData="@OnHandleModIdReadData"
                                   TextField="@(x => x)"

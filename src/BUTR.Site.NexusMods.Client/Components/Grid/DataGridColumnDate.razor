@@ -3,6 +3,7 @@
 <DataGridColumn TItem="TItem" Field="@Field" Caption="@Caption" Filterable="@Filterable" SortField="@SortField" Sortable="@Sortable" DisplayTemplate="@DisplayTemplate" @attributes="@AdditionalAttributes">
     <FilterTemplate>
         <DatePicker TValue="DateTime?"
+                    ElementId="@ElementId"
                     TimeAs24hr
                     Placeholder="yyyy-MM-dd"
                     InputMode="@DateInputMode.Date"
@@ -13,6 +14,9 @@
 </DataGridColumn>
 
 @code {
+    
+    [Parameter]
+    public string? ElementId { get; set; }
 
     [Parameter]
     public string Field { get; set; } = string.Empty;

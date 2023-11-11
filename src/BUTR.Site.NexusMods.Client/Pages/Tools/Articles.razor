@@ -18,9 +18,9 @@
         <DataGridPaging TItem="NexusModsArticleModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetArticles" Sortable Filterable>
             <DataGridColumns>
                 <DataGridColumnText TItem="NexusModsArticleModel" Field="@nameof(NexusModsArticleModel.NexusModsArticleId)" Caption="Id" Sortable SortField="@nameof(EntityFields.NexusModsArticleId)"/>
-                <DataGridColumnText TItem="NexusModsArticleModel" Field="@nameof(NexusModsArticleModel.Title)" Caption="Title" Filterable Sortable SortField="@nameof(EntityFields.Title)"/>
-                <DataGridColumnTextAutocomplete TItem="NexusModsArticleModel" Field="@nameof(NexusModsArticleModel.Author)" Caption="Author" Filterable Sortable SortField="@nameof(EntityFields.Author)" GetAutocompleteValues="GetAutocompleteValues"/>
-                <DataGridColumnDate TItem="NexusModsArticleModel" Field="@nameof(NexusModsArticleModel.CreateDate)" Caption="Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.CreateDate)">
+                <DataGridColumnText TItem="NexusModsArticleModel" ElementId="article-title" Field="@nameof(NexusModsArticleModel.Title)" Caption="Title" Filterable Sortable SortField="@nameof(EntityFields.Title)"/>
+                <DataGridColumnTextAutocomplete TItem="NexusModsArticleModel" ElementId="article-author" Field="@nameof(NexusModsArticleModel.Author)" Caption="Author" Filterable Sortable SortField="@nameof(EntityFields.Author)" MinLength="3" GetAutocompleteValues="GetAutocompleteValues"/>
+                <DataGridColumnDate TItem="NexusModsArticleModel" ElementId="article-date" Field="@nameof(NexusModsArticleModel.CreateDate)" Caption="Date (UTC)" Filterable Sortable SortField="@nameof(EntityFields.CreateDate)">
                     <DisplayTemplate>@(context.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
                 </DataGridColumnDate>
             </DataGridColumns>
@@ -47,7 +47,7 @@
             await _jsRuntime.InvokeVoidAsync("open", mod.Url(TenantUtils.FromTenantToGameDomain(await _tenantProvider.GetTenantAsync())!), "_blank");
     }
 
-    private async Task<ICollection<string>> GetAutocompleteValues(string filter) => (await _articlesClient.AutocompleteAsync(filter)).Value ?? Array.Empty<string>();
+    private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => (await _articlesClient.AutocompleteAsync(filter, ct)).Value ?? Array.Empty<string>();
 
     private static IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
     {

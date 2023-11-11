@@ -8,15 +8,23 @@
                       ReadData="@OnHandleReadData"
                       TextField="@(x => x)"
                       ValueField="@(x => x)"
-                      SelectedValueChanged="@(value => { OnStatusChanged(value, context); })"
+                      SelectedValueChanged="@(value => { OnInputChanged(value, context); })"
                       Placeholder="@Placeholder"
-                      FreeTyping>
+                      MinLength="@MinLength"
+                      Debounce="true"
+                      DebounceInterval="500"
+                      FreeTyping
+                      AutoPreSelect
+                      CloseOnSelection>
         </Autocomplete>
     </FilterTemplate>
 </DataGridColumn>
 
 @code {
 
+    [Parameter]
+    public string? ElementId { get; set; }
+    
     [Parameter]
     public string Field { get; set; } = string.Empty;
 
@@ -42,21 +50,51 @@
     public RenderFragment<TItem>? DisplayTemplate { get; set; }
 
     [Parameter]
-    public Func<string, Task<ICollection<string>>>? GetAutocompleteValues { get; set; }
+    public Func<string, CancellationToken, Task<ICollection<string>>>? GetAutocompleteValues { get; set; }
 
+    [Parameter]
+    public int MinLength { get; set; } = 0;
+
+    private string _oldValue = string.Empty;
     private ICollection<string> _autocompleteValues = default!;
+    public string _selectedSearchValue;
+    private string _selectedAutoCompleteText;
 
+    private ElementReference _elementReference;
     private async Task OnHandleReadData(AutocompleteReadDataEventArgs autocompleteReadDataEventArgs)
     {
-        if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested && autocompleteReadDataEventArgs.SearchValue.Length >= 3)
+        if (autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested)
+            return;
+        
+        var value = autocompleteReadDataEventArgs.SearchValue;
+        
+        if (_oldValue == value)
+            return;
+        
+        if (value.Length < MinLength)
+            return;
+
+        if (!string.IsNullOrEmpty(_oldValue) && value.StartsWith(_oldValue))
         {
-            _autocompleteValues = (GetAutocompleteValues is not null ? await GetAutocompleteValues(autocompleteReadDataEventArgs.SearchValue) : null) ?? Array.Empty<string>();
+            // We don't need to call Autocomplete if we already got a set of values
+            _autocompleteValues = _autocompleteValues.Where(x => x.StartsWith(value, StringComparison.OrdinalIgnoreCase)).ToArray();
         }
+        else if (GetAutocompleteValues is not null)
+        {
+            _autocompleteValues = Array.Empty<string>();
+            _autocompleteValues = await GetAutocompleteValues(value, autocompleteReadDataEventArgs.CancellationToken);
+        }
+        else
+        {
+            _autocompleteValues = Array.Empty<string>();
+        }
+        
+        _oldValue = value;
     }
 
-    private static void OnStatusChanged(string status, FilterContext<TItem> context)
+    private void OnInputChanged(string value, FilterContext<TItem> context)
     {
-        context.TriggerFilterChange(status);
+        context.TriggerFilterChange(value);
     }
 
 }

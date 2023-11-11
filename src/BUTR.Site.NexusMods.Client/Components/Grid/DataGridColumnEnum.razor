@@ -2,7 +2,7 @@
 
 <DataGridColumn TItem="TItem" Field="@Field" Caption="@Caption" Filterable="@Filterable" SortField="@SortField" Sortable="@Sortable" DisplayTemplate="@DisplayTemplate" @attributes="@AdditionalAttributes">
     <FilterTemplate>
-        <Select TValue="string" SelectedValueChanged="@(value => { OnStatusChanged(value, context); })">
+        <Select TValue="string" ElementId="@ElementId" SelectedValueChanged="@(value => { OnStatusChanged(value, context); })">
             <SelectItem Value="@string.Empty">Any</SelectItem>
             @foreach (var crs in Enum.GetValues<CrashReportStatus>())
             {
@@ -14,6 +14,9 @@
 
 @code {
 
+    [Parameter]
+    public string? ElementId { get; set; }
+    
     [Parameter]
     public string Field { get; set; } = string.Empty;
 

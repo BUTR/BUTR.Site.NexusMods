@@ -26,13 +26,13 @@
             <DataGridInMemory @ref="@_dataGridRef" TItem="LocalizationString" Editable EditMode="@DataGridEditMode.Inline" Resizable ResizeMode="@TableResizeMode.Header">
                 <DataGridColumns>
                     <DataGridCommandColumn TItem="LocalizationString" NewCommandAllowed="@false" DeleteCommandAllowed="@false"/>
-                    <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Assembly)" Caption="@nameof(LocalizationString.Assembly)"/>
-                    <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Text)" Caption="@nameof(LocalizationString.Text)" Editable>
+                    <DataGridColumn TItem="LocalizationString" ElementId="assembly" Field="@nameof(LocalizationString.Assembly)" Caption="@nameof(LocalizationString.Assembly)"/>
+                    <DataGridColumn TItem="LocalizationString" ElementId="text" Field="@nameof(LocalizationString.Text)" Caption="@nameof(LocalizationString.Text)" Editable>
                         <EditTemplate>
                             <TextEdit Text="@((string) context.CellValue)" TextChanged="@(v => OnEdit(context, v))"/>
                         </EditTemplate>
                     </DataGridColumn>
-                    <DataGridColumn TItem="LocalizationString" Field="@nameof(LocalizationString.Location)" Caption="@nameof(LocalizationString.Location)"/>
+                    <DataGridColumn TItem="LocalizationString" ElementId="location" Field="@nameof(LocalizationString.Location)" Caption="@nameof(LocalizationString.Location)"/>
                 </DataGridColumns>
             </DataGridInMemory>
             <Button Color="@Color.Primary" Disabled="@(_dataGridRef?.Values.Count <= 0)" Clicked="@OnClear">Clear</Button>

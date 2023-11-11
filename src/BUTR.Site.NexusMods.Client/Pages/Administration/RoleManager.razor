@@ -16,13 +16,13 @@
                         <Field>
                             <FieldLabel>NexusMods User Id</FieldLabel>
                             <FieldBody>
-                                <NumericEdit TValue="uint" @bind-Value="@_model.UserId"/>
+                                <NumericEdit ElementId="user-id" TValue="uint" @bind-Value="@_model.UserId"/>
                             </FieldBody>
                         </Field>
                         <Field>
                             <FieldLabel>Role</FieldLabel>
                             <FieldBody>
-                                <Select @bind-SelectedValue="@_model.Role" TValue="string">
+                                <Select ElementId="role" @bind-SelectedValue="@_model.Role" TValue="string">
                                     <SelectItem Value="@ApplicationRoles.User">@nameof(ApplicationRoles.User)</SelectItem>
                                     <SelectItem Value="@ApplicationRoles.Moderator">@nameof(ApplicationRoles.Moderator)</SelectItem>
                                     <SelectItem Value="@ApplicationRoles.Administrator">@nameof(ApplicationRoles.Administrator)</SelectItem>

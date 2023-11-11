@@ -17,7 +17,7 @@
                     <Field>
                         <FieldLabel>User Id to Remove</FieldLabel>
                         <FieldBody>
-                            <Select TValue="int?" @bind-SelectedValue="@_userIdToDelete">
+                            <Select ElementId="user-id" TValue="int?" @bind-SelectedValue="@_userIdToDelete">
                                 @{
                                     _userIdToDelete = _dataGridRef.Value.AllowedNexusModsUserIds.First();
                                     foreach (var allowedModId in _dataGridRef.Value.AllowedNexusModsUserIds)
@@ -47,13 +47,13 @@
             <Field>
                 <FieldLabel>NexusMods User Url</FieldLabel>
                 <FieldBody>
-                    <TextEdit Role="@TextRole.Url" @bind-Text="@_model.UserUrl" Placeholder="https://nexusmods.com/users/1" />
+                    <TextEdit ElementId="user-url" Role="@TextRole.Url" @bind-Text="@_model.UserUrl" Placeholder="https://nexusmods.com/users/1" />
                 </FieldBody>
             </Field>
             <Field>
                 <FieldLabel>NexusMods Mod Url</FieldLabel>
                 <FieldBody>
-                    <TextEdit Role="@TextRole.Url" @bind-Text="@_model.UserUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1" />
+                    <TextEdit ElementId="mod-url" Role="@TextRole.Url" @bind-Text="@_model.UserUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1" />
                 </FieldBody>
             </Field>
             <Field>

@@ -5,7 +5,7 @@
 function BlazorScrollToId(id) {
     const element = document.getElementById(id);
     if (element instanceof HTMLElement) {
-        const y = element.getBoundingClientRect().top + window.pageYOffset + -80;
+        const y = element.getBoundingClientRect().top + window.scrollY + -80;
         window.scrollTo({ top: y, behavior: "smooth" });
     }
 }

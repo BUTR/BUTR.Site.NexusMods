@@ -1,5 +1,5 @@
 ﻿// obtain plugin
-var cc = initCookieConsent();
+const cc = initCookieConsent();
 
 // run plugin with your configuration
 cc.run({
