@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Utils.Npgsql;
+using BUTR.Site.NexusMods.Server.Utils.Npgsql;
 
 using Microsoft.EntityFrameworkCore;
 

@@ -1,4 +1,4 @@
-﻿using Bannerlord.ModuleManager;
+using Bannerlord.ModuleManager;
 
 using BUTR.CrashReport.Models;
 using BUTR.CrashReport.Models.Analyzer;
@@ -117,7 +117,7 @@ public sealed class CrashReportsAnalyzerController : ControllerExtended
         var updateInfos = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.UpdateInfo))
             .Select(x => new { ModuleId = ModuleId.From(x.Id), x.UpdateInfo }).ToArray();
         var moduleIdVersions = crashReport.Modules
-            .Where(x => !x.IsOfficial).Select(x => new { ModuleId = ModuleId.From(x.Id), Version = ModuleVersion.From(x.Version)}).ToArray();
+            .Where(x => !x.IsOfficial).Select(x => new { ModuleId = ModuleId.From(x.Id), Version = ModuleVersion.From(x.Version) }).ToArray();
 
         // SMAPI uses different update providers - Chucklefish, NexusMods, GitHub
         // We curectly will only use NexusMods

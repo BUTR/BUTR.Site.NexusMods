@@ -1,4 +1,4 @@
-﻿using Blazorise;
+using Blazorise;
 
 using System;
 using System.Net.Http;

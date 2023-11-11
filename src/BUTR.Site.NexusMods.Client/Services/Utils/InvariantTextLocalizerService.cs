@@ -1,4 +1,4 @@
-﻿using Blazorise.Localization;
+using Blazorise.Localization;
 
 using System;
 using System.Collections.Generic;

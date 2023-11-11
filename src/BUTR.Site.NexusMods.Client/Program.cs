@@ -1,4 +1,4 @@
-﻿using Blazored.LocalStorage;
+using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 
 using Blazorise;
@@ -63,7 +63,7 @@ public static class Program
     {
         var assemblyName = Assembly.GetEntryAssembly()?.GetName();
         var userAgent = $"{assemblyName?.Name ?? "ERROR"} v{assemblyName?.Version?.ToString() ?? "ERROR"}";
-        
+
         return WebAssemblyHostBuilder
             .CreateDefault(args)
             .AddRootComponent<App>("#app")
@@ -71,7 +71,7 @@ public static class Program
             {
                 services.Configure<BackendOptions>(builder.Configuration.GetSection("Backend"));
 
-                services.AddScoped(_ => new HttpClient {BaseAddress = new Uri(builder.HostEnvironment.BaseAddress), DefaultRequestHeaders = {{"User-Agent", userAgent}}});
+                services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress), DefaultRequestHeaders = { { "User-Agent", userAgent } } });
                 services.AddHttpClient("InternalReports").ConfigureHttpClient((_, client) =>
                 {
                     client.BaseAddress = new Uri($"{builder.HostEnvironment.BaseAddress}reports/");

@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Utils.Vogen;
+using BUTR.Site.NexusMods.Server.Utils.Vogen;
 
 using System;
 using System.Collections.Generic;
@@ -33,7 +33,7 @@ public readonly partial record struct NexusModsArticleId : IVogen<TType, TValueT
         if (!url.Host.EndsWith("nexusmods.com"))
             return false;
 
-        if (url.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is not [ _, _, var articleIdRaw, .. ])
+        if (url.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is not [_, _, var articleIdRaw, ..])
             return false;
 
         return TryParse(articleIdRaw, out articleId);

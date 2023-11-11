@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace BUTR.Site.NexusMods.ServerClient.LazyTasks;

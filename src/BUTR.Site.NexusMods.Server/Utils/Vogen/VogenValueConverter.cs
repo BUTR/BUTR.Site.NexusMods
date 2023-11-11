@@ -11,5 +11,6 @@ public class VogenValueConverter<TVogen, TValueObject> : ValueConverter<TVogen, 
     public VogenValueConverter() : this(null) { }
     public VogenValueConverter(ConverterMappingHints? mappingHints = null) : base(
         vo => VogenDefaults<TVogen, TValueObject>.Convert(vo),
-        value => VogenDefaults<TVogen, TValueObject>.Deserialize(value), mappingHints) { }
+        value => VogenDefaults<TVogen, TValueObject>.Deserialize(value), mappingHints)
+    { }
 }

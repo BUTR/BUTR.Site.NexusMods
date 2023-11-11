@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Client.Models;
+using BUTR.Site.NexusMods.Client.Models;
 using BUTR.Site.NexusMods.ServerClient;
 using BUTR.Site.NexusMods.ServerClient.Utils;
 
@@ -22,7 +22,7 @@ public sealed class CrashReportsClientWithStreaming : CrashReportsClient
     protected override void OnPrepareRequest(HttpClient client, HttpRequestMessage request, StringBuilder urlBuilder)
     {
         request.SetBrowserResponseStreamingEnabled(true);
-        
+
         base.OnPrepareRequest(client, request, urlBuilder);
     }
 }

@@ -1,4 +1,4 @@
-﻿using RateLimiter;
+using RateLimiter;
 
 using System;
 using System.Threading;

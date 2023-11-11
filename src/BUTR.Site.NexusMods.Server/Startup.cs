@@ -260,7 +260,7 @@ public sealed class Startup
                         {
                             var problemDetailsFactory = context2.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
                             var problemDetails = problemDetailsFactory.CreateValidationProblemDetails(context2.HttpContext, context2.ModelState);
-                            return new ObjectResult(APIResponse.FromError<object>(problemDetails)) {StatusCode = problemDetails.Status,};
+                            return new ObjectResult(APIResponse.FromError<object>(problemDetails)) { StatusCode = problemDetails.Status, };
                         }
                     }
 

@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Utils.Vogen;
+using BUTR.Site.NexusMods.Server.Utils.Vogen;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using System;
@@ -47,7 +47,7 @@ public readonly partial record struct NexusModsGameDomain : IVogen<TType, TValue
         if (!url.Host.EndsWith("nexusmods.com"))
             return false;
 
-        if (url.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is not [ var gameDomainStr, .. ])
+        if (url.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is not [var gameDomainStr, ..])
             return false;
 
         gameDomain = From(gameDomainStr);

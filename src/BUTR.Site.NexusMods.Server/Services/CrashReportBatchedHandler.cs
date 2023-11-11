@@ -28,7 +28,7 @@ public sealed class CrashReportBatchedHandler : IAsyncDisposable
 
     private static string GetException(ExceptionModel? exception, bool inner = false) => exception is null ? string.Empty : $"""
 
-         {(inner ? "Inner ": string.Empty)}Exception information
+         {(inner ? "Inner " : string.Empty)}Exception information
          Type: {exception.Type}
          Message: {exception.Message}
          CallStack:

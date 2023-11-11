@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Models.Database;
 
 using System;
 using System.Collections.Generic;

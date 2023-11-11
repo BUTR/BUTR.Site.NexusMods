@@ -1,4 +1,4 @@
-﻿using Blazorise.DataGrid;
+using Blazorise.DataGrid;
 
 namespace BUTR.Site.NexusMods.Client.Utils;
 

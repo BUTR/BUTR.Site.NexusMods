@@ -1,4 +1,4 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models;
+namespace BUTR.Site.NexusMods.Server.Models;
 
 public sealed record Filtering
 {

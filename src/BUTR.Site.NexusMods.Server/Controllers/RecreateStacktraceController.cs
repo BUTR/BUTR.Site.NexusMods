@@ -1,4 +1,4 @@
-﻿#if false
+#if false
 using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.CrashReport.Bannerlord.Parser;
 using BUTR.Site.NexusMods.Server.Extensions;

@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Extensions;
 
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
@@ -82,15 +82,15 @@ internal static class CSharpILMixedLanguage
                 var settings = new DecompilerSettings(LanguageVersion.Latest);
                 var decompiler = CreateDecompiler(module, settings, _cancellationToken);
                 var syntaxTree = decompiler.Decompile(handle);
-                
+
                 using var csharpOutput = new StringWriter();
                 WriteCode(csharpOutput, settings, syntaxTree);
                 var mapping = decompiler.CreateSequencePoints(syntaxTree).FirstOrDefault(kvp => (kvp.Key.MoveNextMethod ?? kvp.Key.Method)?.MetadataToken == handle);
                 sequencePoints = (mapping.Value ?? Empty).ToDictionary(x => x.Offset, x => x);
-                
+
                 _stringBuilder = csharpOutput.GetStringBuilder();
                 IndexStringBuilder();
-                
+
                 base.Disassemble(module, handle);
             }
             finally

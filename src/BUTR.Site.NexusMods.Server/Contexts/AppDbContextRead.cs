@@ -14,7 +14,7 @@ public sealed class AppDbContextRead : BaseAppDbContext, IAppDbContextRead
 {
     public static Exception WriteNotSupported() => throw new NotSupportedException($"Write operations not supported with '{nameof(AppDbContextRead)}'!");
 
-    
+
     private readonly IDbContextFactory<AppDbContextRead> _dbContextFactory;
 
     public AppDbContextRead(

@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Models.API;
+using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Utils.APIResponses;
 using BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
@@ -44,7 +44,7 @@ public class ControllerExtended : ControllerBase
                 QueryExecutionTimeMilliseconds = (uint) Stopwatch.GetElapsedTime(data.StartTime).Milliseconds
             }, options.JsonSerializerOptions, ct_);
         }
-        
+
         return new StreamingJsonActionResult(GetContent(), "application/x-ndjson-butr-paging");
     }
 

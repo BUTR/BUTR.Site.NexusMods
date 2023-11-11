@@ -1,4 +1,4 @@
-﻿using Blazorise.Utilities;
+using Blazorise.Utilities;
 
 using System;
 using System.Threading;

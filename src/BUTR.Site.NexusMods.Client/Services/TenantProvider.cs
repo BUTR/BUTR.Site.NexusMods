@@ -1,4 +1,4 @@
-﻿using Blazored.LocalStorage;
+using Blazored.LocalStorage;
 
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +16,7 @@ public sealed class TenantProvider
 
     public async Task<int> GetTenantAsync()
     {
-        if (! await _localStorage.ContainKeyAsync("tenant"))
+        if (!await _localStorage.ContainKeyAsync("tenant"))
             await SetTenantAsync(1);
 
         return await _localStorage.GetItemAsync<int>("tenant", CancellationToken.None);

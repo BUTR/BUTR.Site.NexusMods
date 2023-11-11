@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 using Npgsql.EntityFrameworkCore.PostgreSQL.Storage.ValueConversion;
 

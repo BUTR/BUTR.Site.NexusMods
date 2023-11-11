@@ -1,4 +1,4 @@
-﻿using Blazorise.Charts;
+using Blazorise.Charts;
 
 using System;
 using System.Collections.Generic;

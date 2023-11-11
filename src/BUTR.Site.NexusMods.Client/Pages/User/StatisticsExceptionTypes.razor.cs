@@ -1,4 +1,4 @@
-﻿using Blazorise.Charts;
+using Blazorise.Charts;
 using Blazorise.LoadingIndicator;
 
 using BUTR.Site.NexusMods.Client.Components.Grid;
@@ -19,7 +19,7 @@ public partial class StatisticsExceptionTypes
     private IStatisticsClient StatisticsClient { get; set; } = default!;
 
     private LoadingIndicator loadingIndicator = default!;
-    
+
     private DoughnutChart<double> doughnutChart = default!;
     private readonly DoughnutChartOptions doughnutChartOptions = new()
     {
@@ -32,9 +32,9 @@ public partial class StatisticsExceptionTypes
     {
         if (!firstRender)
             return;
-        
+
         await loadingIndicator.Show();
-        
+
         var data = (await StatisticsClient.TopExceptionsTypesAsync()).Value ?? Array.Empty<TopExceptionsEntry>();
 
         _dataGridRef.Values = data;
@@ -45,7 +45,7 @@ public partial class StatisticsExceptionTypes
         await doughnutChart.AddLabelsDatasetsAndUpdate(labels, new DoughnutChartDataset<double> { Label = "Top Exception Types", Data = values, BackgroundColor = ChartUtiities.GetColors(data.Count, 0.2f).ToList(), BorderColor = ChartUtiities.GetColors(data.Count, 1f).ToList(), BorderWidth = 1 });
 
         await loadingIndicator.Hide();
-        
+
         await base.OnAfterRenderAsync(firstRender);
     }
 }

@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Options;
+using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;

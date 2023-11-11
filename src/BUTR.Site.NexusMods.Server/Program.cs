@@ -1,5 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Contexts;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +36,7 @@ public static class Program
     {
         Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkInsert = PreBulkOperation;
         Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkDelete = PreBulkOperation;
-        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkMerge  = PreBulkOperation;
+        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkMerge = PreBulkOperation;
         Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkUpdate = PreBulkOperation;
         Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkSynchronize = PreBulkOperation;
         Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkSaveChanges = PreBulkSaveChanges;
@@ -87,7 +86,7 @@ public static class Program
                         .AddProcessInstrumentation()
                         .AddRuntimeInstrumentation(instrumentationOptions =>
                         {
-                            
+
                         })
                         .AddHttpClientInstrumentation()
                         .AddAspNetCoreInstrumentation()
@@ -143,11 +142,11 @@ public static class Program
         {
             var oltpSection = ctx.Configuration.GetSection("Oltp");
             if (oltpSection == null!) return;
-            
+
             var loggingEndpoint = oltpSection.GetValue<string>("LoggingEndpoint");
             if (loggingEndpoint is null) return;
             var loggingProtocol = oltpSection.GetValue<OtlpExportProtocol>("LoggingProtocol");
-            
+
             builder.AddOpenTelemetry(o =>
             {
                 o.IncludeScopes = true;

@@ -9,7 +9,7 @@ public static class VogenDefaultsUtf8SpanParsable<TVogen, TValueObject>
 {
     public static bool TryParse(ReadOnlySpan<byte> utf8Text, IFormatProvider provider, [NotNullWhen(true)] out TVogen? result)
     {
-        if(TValueObject.TryParse(utf8Text, provider, out var r))
+        if (TValueObject.TryParse(utf8Text, provider, out var r))
         {
             result = TVogen.From(r);
             return true;
@@ -21,7 +21,7 @@ public static class VogenDefaultsUtf8SpanParsable<TVogen, TValueObject>
 
     public static bool TryParse(ReadOnlySpan<byte> utf8Text, [NotNullWhen(true)] out TVogen? result)
     {
-        if(TValueObject.TryParse(utf8Text, null, out var r))
+        if (TValueObject.TryParse(utf8Text, null, out var r))
         {
             result = TVogen.From(r);
             return true;

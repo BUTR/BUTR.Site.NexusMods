@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Models.Quartz;
+using BUTR.Site.NexusMods.Server.Models.Quartz;
 
 using Quartz;
 
@@ -13,7 +13,7 @@ public class QuartzEventProviderService : IJobListener, ITriggerListener
     public event EventHandler<QuartzEventArgs<IJobExecutionContext>>? OnJobToBeExecuted;
     public event EventHandler<QuartzEventArgs<IJobExecutionContext>>? OnJobExecutionVetoed;
     public event EventHandler<JobWasExecutedEventArgs>? OnJobWasExecuted;
-	public event EventHandler<TriggerEventArgs>? OnTriggerComplete;
+    public event EventHandler<TriggerEventArgs>? OnTriggerComplete;
     public event EventHandler<TriggerEventArgs>? OnTriggerFired;
 
     public string Name => nameof(QuartzEventProviderService);

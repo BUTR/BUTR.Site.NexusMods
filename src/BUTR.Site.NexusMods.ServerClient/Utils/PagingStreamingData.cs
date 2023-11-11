@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.ServerClient.LazyTasks;
+using BUTR.Site.NexusMods.ServerClient.LazyTasks;
 
 using System.Collections.Generic;
 using System.Linq;

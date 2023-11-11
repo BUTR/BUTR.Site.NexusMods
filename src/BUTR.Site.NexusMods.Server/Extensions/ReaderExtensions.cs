@@ -1,4 +1,4 @@
-﻿using SharpCompress.Readers;
+using SharpCompress.Readers;
 
 using System;
 using System.Diagnostics.CodeAnalysis;

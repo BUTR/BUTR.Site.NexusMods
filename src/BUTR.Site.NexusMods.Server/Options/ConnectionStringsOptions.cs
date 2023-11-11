@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace BUTR.Site.NexusMods.Server.Options;
 

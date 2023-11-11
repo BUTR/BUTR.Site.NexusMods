@@ -1,4 +1,4 @@
-﻿namespace BUTR.Site.NexusMods.Client.Options;
+namespace BUTR.Site.NexusMods.Client.Options;
 
 public sealed record BackendOptions
 {

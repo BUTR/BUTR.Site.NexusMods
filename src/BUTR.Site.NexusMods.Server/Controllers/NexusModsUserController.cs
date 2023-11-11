@@ -1,4 +1,4 @@
-﻿using BUTR.Authentication.NexusMods.Authentication;
+using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
@@ -120,7 +120,7 @@ public sealed class NexusModsUserController : ControllerExtended
             NexusModsModId: m.NexusModsModId,
             Name: m.Name,
             AllowedNexusModsUserIds: m.AllowedNexusModsUserIds.AsImmutableArray(),
-            ManuallyLinkedNexusModsUserIds:  m.NexusModsUserIds.AsImmutableArray(),
+            ManuallyLinkedNexusModsUserIds: m.NexusModsUserIds.AsImmutableArray(),
             ManuallyLinkedModuleIds: m.LinkedModuleIds.AsImmutableArray(),
             KnownModuleIds: m.KnownModuleIds.AsImmutableArray())));
     }
@@ -250,7 +250,7 @@ public sealed class NexusModsUserController : ControllerExtended
     {
         var paginated = await _dbContextRead.NexusModsUserToModules
             .Where(x => x.LinkType == NexusModsUserToModuleLinkType.ByStaff)
-            .GroupBy(x =>  new { x.NexusModsUser.NexusModsUserId })
+            .GroupBy(x => new { x.NexusModsUser.NexusModsUserId })
             .Select(x => new { NexusModsUserId = x.Key.NexusModsUserId, ModuleIds = x.Select(y => y.Module.ModuleId).ToArray() })
             .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsUserEntity.NexusModsUserId), Type = SortingType.Ascending }, ct);
 
@@ -318,7 +318,7 @@ public sealed class NexusModsUserController : ControllerExtended
     {
         var paginated = await _dbContextRead.NexusModsUserToNexusModsMods
             .Where(x => x.NexusModsUser.NexusModsUserId == userId && x.LinkType == NexusModsUserToNexusModsModLinkType.ByOwner)
-            .GroupBy(x =>  new { NexusModsModId = x.NexusModsMod.NexusModsModId })
+            .GroupBy(x => new { NexusModsModId = x.NexusModsMod.NexusModsModId })
             .Select(x => new { NexusModsModId = x.Key.NexusModsModId, NexusModsUserIds = x.Select(y => y.NexusModsUser.NexusModsUserId).ToArray() })
             .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
 

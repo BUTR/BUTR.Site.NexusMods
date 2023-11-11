@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Contexts.Configs;
+using BUTR.Site.NexusMods.Server.Contexts.Configs;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;

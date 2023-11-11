@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Shared.Helpers;
+using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Components.Authorization;
 

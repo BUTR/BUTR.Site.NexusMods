@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 
 namespace BUTR.Site.NexusMods.Server.Utils;

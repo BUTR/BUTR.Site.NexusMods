@@ -10,7 +10,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts;
 public interface IAppDbContextWrite : IAppDbContextRead
 {
     EntityFactory GetEntityFactory();
-    
+
     Task<IAppDbContextSaveScope> CreateSaveScopeAsync();
 
     Task BulkUpsertAsync<TEntity>(DbSet<TEntity> dbSet, IEnumerable<TEntity> entities) where TEntity : class, IEntity;

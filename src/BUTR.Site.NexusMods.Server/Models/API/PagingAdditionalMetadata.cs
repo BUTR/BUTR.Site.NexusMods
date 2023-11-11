@@ -1,4 +1,4 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models.API;
+namespace BUTR.Site.NexusMods.Server.Models.API;
 
 public sealed record PagingAdditionalMetadata
 {

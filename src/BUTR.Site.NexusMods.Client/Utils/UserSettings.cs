@@ -1,4 +1,4 @@
-﻿namespace BUTR.Site.NexusMods.Client.Utils;
+namespace BUTR.Site.NexusMods.Client.Utils;
 
 public sealed record UserSettings
 {

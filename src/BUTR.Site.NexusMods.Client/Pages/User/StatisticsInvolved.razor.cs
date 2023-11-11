@@ -1,4 +1,4 @@
-﻿using Blazorise.Charts;
+using Blazorise.Charts;
 using Blazorise.Components;
 
 using BUTR.Site.NexusMods.Client.Extensions;

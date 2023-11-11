@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -26,7 +26,7 @@ public class NexusModsUserToNexusModsModEntityConfiguration : BaseEntityConfigur
 
         builder.HasOne(x => x.NexusModsMod)
             .WithMany(x => x.ToNexusModsUsers)
-            .HasForeignKey(nameof(NexusModsUserToNexusModsModEntity.TenantId),nameof(NexusModsModEntity.NexusModsModId))
+            .HasForeignKey(nameof(NexusModsUserToNexusModsModEntity.TenantId), nameof(NexusModsModEntity.NexusModsModId))
             .HasPrincipalKey(x => new { x.TenantId, x.NexusModsModId })
             .OnDelete(DeleteBehavior.Cascade);
 

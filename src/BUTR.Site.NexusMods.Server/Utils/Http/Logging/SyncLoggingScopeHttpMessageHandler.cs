@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
 using System;

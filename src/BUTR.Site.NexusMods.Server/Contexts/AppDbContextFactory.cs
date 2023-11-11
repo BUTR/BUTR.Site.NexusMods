@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
-public class AppDbContextFactory: IAppDbContextFactory
+public class AppDbContextFactory : IAppDbContextFactory
 {
     private readonly IDbContextFactory<AppDbContextWrite> _dbContextFactoryWrite;
     private readonly IDbContextFactory<AppDbContextRead> _dbContextFactoryRead;

@@ -1,4 +1,4 @@
-﻿using BUTR.CrashReport.Models;
+using BUTR.CrashReport.Models;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Utils.Reflection;
 using BUTR.Site.NexusMods.Shared.Extensions;

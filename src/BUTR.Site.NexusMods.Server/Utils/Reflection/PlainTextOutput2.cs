@@ -22,9 +22,9 @@ public class PlainTextOutput2 : ITextOutput
     private int _line = 1;
     private int _column = 1;
 
-	public string IndentationString { get; set; } = "\t";
+    public string IndentationString { get; set; } = "\t";
 
-	public PlainTextOutput2(TextWriter writer) => _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+    public PlainTextOutput2(TextWriter writer) => _writer = writer ?? throw new ArgumentNullException(nameof(writer));
 
     public PlainTextOutput2() => _writer = new StringWriter();
 
@@ -37,17 +37,17 @@ public class PlainTextOutput2 : ITextOutput
     public void Unindent() => _indent--;
 
     void WriteIndent()
-	{
-		if (_needsIndent)
-		{
-			_needsIndent = false;
-			for (var i = 0; i < _indent; i++)
-			{
-				_writer.Write(IndentationString);
-			}
-			_column += _indent;
-		}
-	}
+    {
+        if (_needsIndent)
+        {
+            _needsIndent = false;
+            for (var i = 0; i < _indent; i++)
+            {
+                _writer.Write(IndentationString);
+            }
+            _column += _indent;
+        }
+    }
 
     public void Write(ReadOnlySpan<char> span)
     {
@@ -55,81 +55,81 @@ public class PlainTextOutput2 : ITextOutput
         _writer.Write(span);
         _column += span.Length;
     }
-    
+
     public void Write(StringBuilder sb, int offset, int length)
     {
         WriteIndent();
         _writer.Write(sb, offset, length);
         _column += length;
     }
-    
-	public void Write(char ch)
-	{
-		WriteIndent();
-		_writer.Write(ch);
-		_column++;
-	}
 
-	public void Write(string text)
-	{
-		WriteIndent();
-		_writer.Write(text);
-		_column += text.Length;
-	}
+    public void Write(char ch)
+    {
+        WriteIndent();
+        _writer.Write(ch);
+        _column++;
+    }
 
-	public void WriteLine()
-	{
-		_writer.WriteLine();
-		_needsIndent = true;
-		_line++;
-		_column = 1;
-	}
+    public void Write(string text)
+    {
+        WriteIndent();
+        _writer.Write(text);
+        _column += text.Length;
+    }
 
-	public void WriteLine(ReadOnlySpan<char> line)
-	{
-		_writer.WriteLine(line);
-		_needsIndent = true;
-		_line++;
-		_column = 1;
-	}
+    public void WriteLine()
+    {
+        _writer.WriteLine();
+        _needsIndent = true;
+        _line++;
+        _column = 1;
+    }
 
-	public void WriteReference(OpCodeInfo opCode, bool omitSuffix = false)
-	{
-		if (omitSuffix)
-		{
-			var lastDot = opCode.Name.LastIndexOf('.');
-			if (lastDot > 0)
-			{
-				Write(opCode.Name.Remove(lastDot + 1));
-			}
-		}
-		else
-		{
-			Write(opCode.Name);
-		}
-	}
+    public void WriteLine(ReadOnlySpan<char> line)
+    {
+        _writer.WriteLine(line);
+        _needsIndent = true;
+        _line++;
+        _column = 1;
+    }
 
-	public void WriteReference(PEFile module, Handle handle, string text, string protocol = "decompile", bool isDefinition = false)
-	{
-		Write(text);
-	}
+    public void WriteReference(OpCodeInfo opCode, bool omitSuffix = false)
+    {
+        if (omitSuffix)
+        {
+            var lastDot = opCode.Name.LastIndexOf('.');
+            if (lastDot > 0)
+            {
+                Write(opCode.Name.Remove(lastDot + 1));
+            }
+        }
+        else
+        {
+            Write(opCode.Name);
+        }
+    }
 
-	public void WriteReference(IType type, string text, bool isDefinition = false)
-	{
-		Write(text);
-	}
+    public void WriteReference(PEFile module, Handle handle, string text, string protocol = "decompile", bool isDefinition = false)
+    {
+        Write(text);
+    }
 
-	public void WriteReference(IMember member, string text, bool isDefinition = false)
-	{
-		Write(text);
-	}
+    public void WriteReference(IType type, string text, bool isDefinition = false)
+    {
+        Write(text);
+    }
 
-	public void WriteLocalReference(string text, object reference, bool isDefinition = false)
-	{
-		Write(text);
-	}
+    public void WriteReference(IMember member, string text, bool isDefinition = false)
+    {
+        Write(text);
+    }
 
-	void ITextOutput.MarkFoldStart(string collapsedText, bool defaultCollapsed, bool isDefinition) { }
+    public void WriteLocalReference(string text, object reference, bool isDefinition = false)
+    {
+        Write(text);
+    }
 
-	void ITextOutput.MarkFoldEnd() { }    
+    void ITextOutput.MarkFoldStart(string collapsedText, bool defaultCollapsed, bool isDefinition) { }
+
+    void ITextOutput.MarkFoldEnd() { }
 }

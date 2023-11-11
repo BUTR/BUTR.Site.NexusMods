@@ -1,4 +1,4 @@
-﻿using ICSharpCode.Decompiler.Metadata;
+using ICSharpCode.Decompiler.Metadata;
 
 using System.Reflection.Metadata;
 

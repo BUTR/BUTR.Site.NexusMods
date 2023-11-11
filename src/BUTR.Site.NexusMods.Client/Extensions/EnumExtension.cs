@@ -1,4 +1,4 @@
-﻿using Blazorise;
+using Blazorise;
 
 using BUTR.Site.NexusMods.ServerClient;
 

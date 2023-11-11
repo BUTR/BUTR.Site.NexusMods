@@ -17,7 +17,7 @@ public static class DynamicExpressions
     private static readonly MethodInfo _enumerableContainsMethod = typeof(Enumerable).GetMethods().Where(x => string.Equals(x.Name, "Contains", StringComparison.OrdinalIgnoreCase)).Single(x => x.GetParameters().Length == 2).MakeGenericMethod(typeof(string));
     private static readonly MethodInfo _dictionaryContainsKeyMethod = typeof(Dictionary<string, string>).GetMethods().Single(x => string.Equals(x.Name, "ContainsKey", StringComparison.OrdinalIgnoreCase));
     private static readonly MethodInfo _dictionaryContainsValueMethod = typeof(Dictionary<string, string>).GetMethods().Single(x => string.Equals(x.Name, "ContainsValue", StringComparison.OrdinalIgnoreCase));
-    
+
     private static readonly MethodInfo _endsWithMethod = typeof(string).GetMethod("EndsWith", new[] { typeof(string) })!;
     private static readonly MethodInfo _isNullOrEmtpyMethod = typeof(string).GetMethod("IsNullOrEmpty", new[] { typeof(string) })!;
     private static readonly MethodInfo _startsWithMethod = typeof(string).GetMethod("StartsWith", new[] { typeof(string) })!;
@@ -82,17 +82,17 @@ public static class DynamicExpressions
         {
             return Expression.Equal(prop, Expression.Convert(constant, prop.Type));
         }
-        
+
         return Expression.Equal(prop, constant);
     }
 
     private static Expression GetContainsMethodCallExpression(MemberExpression prop, ConstantExpression constant)
     {
         var type = Nullable.GetUnderlyingType(constant.Type) ?? constant.Type;
-        
+
         if (type == typeof(string)) // Check if it's convertible to string
             return Expression.Call(prop, _stringContainsMethod, AsString(constant));
-        else if (TypeDescriptor.GetConverter(type) is { } typeConverter && typeConverter.CanConvertTo(typeof(string))) 
+        else if (TypeDescriptor.GetConverter(type) is { } typeConverter && typeConverter.CanConvertTo(typeof(string)))
             return Expression.Call(AsString(prop), _stringContainsMethod, AsString(constant));
         else if (type.GetInterfaces().Contains(typeof(IDictionary)))
             return Expression.Or(Expression.Call(prop, _dictionaryContainsKeyMethod, AsString(constant)), Expression.Call(prop, _dictionaryContainsValueMethod, AsString(constant)));
@@ -101,17 +101,17 @@ public static class DynamicExpressions
 
         throw new NotImplementedException($"{type} contains is not implemented.");
     }
-    
+
     private static Expression AsString(Expression constant)
     {
         var type = Nullable.GetUnderlyingType(constant.Type) ?? constant.Type;
-        
+
         if (type == typeof(string))
             return constant;
-        
-        if (TypeDescriptor.GetConverter(type) is { } typeConverter && typeConverter.CanConvertTo(typeof(string))) 
+
+        if (TypeDescriptor.GetConverter(type) is { } typeConverter && typeConverter.CanConvertTo(typeof(string)))
             return Expression.Convert(constant, typeof(string));
-        
+
         var convertedExpr = Expression.Convert(constant, typeof(object));
         return Expression.Call(convertedExpr, _toStringMethod);
     }

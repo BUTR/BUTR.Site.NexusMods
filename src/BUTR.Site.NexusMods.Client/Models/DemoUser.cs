@@ -1,4 +1,4 @@
-﻿using BUTR.CrashReport.Bannerlord.Parser;
+using BUTR.CrashReport.Bannerlord.Parser;
 using BUTR.Site.NexusMods.ServerClient;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
@@ -32,7 +32,7 @@ public static class DemoUser
     {
         static string GetException(ExceptionModel? exception, bool inner = false) => exception is null ? string.Empty : $"""
 
-{(inner ? "Inner ": string.Empty)}Exception information
+{(inner ? "Inner " : string.Empty)}Exception information
 Type: {exception.Type}
 Message: {exception.Message}
 CallStack:

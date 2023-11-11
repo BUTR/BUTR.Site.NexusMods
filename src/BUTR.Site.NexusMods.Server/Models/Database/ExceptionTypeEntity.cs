@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Extensions;
 
 using System;
 using System.Collections.Generic;
@@ -34,7 +34,7 @@ public sealed record ExceptionTypeEntity : IEntityWithTenant
         {
             if (idx < 3)
             {
-                idx ++;
+                idx++;
                 continue;
             }
 

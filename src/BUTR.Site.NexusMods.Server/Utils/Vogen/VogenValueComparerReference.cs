@@ -11,7 +11,8 @@ public class VogenValueComparerReference<TVogen, TValueObject> : ValueComparer<T
     public VogenValueComparerReference() : base(
         CreateDefaultEqualsExpression(),
         instance => VogenDefaults<TVogen, TValueObject>.GetHashCode(instance),
-        instance => VogenDefaults<TVogen, TValueObject>.Copy(instance)) { }
+        instance => VogenDefaults<TVogen, TValueObject>.Copy(instance))
+    { }
 
     public override int GetHashCode(TVogen instance) => VogenDefaults<TVogen, TValueObject>.GetHashCode(instance);
 }

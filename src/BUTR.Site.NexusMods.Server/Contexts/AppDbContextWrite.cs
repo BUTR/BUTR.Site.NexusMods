@@ -81,7 +81,7 @@ public sealed class AppDbContextWrite : BaseAppDbContext, IAppDbContextWrite
 
         base.OnConfiguring(optionsBuilder);
     }
-    
+
 
     public AppDbContextWrite New() => _dbContextFactory.CreateDbContext();
 

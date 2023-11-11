@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -22,7 +22,7 @@ public record NexusModsModEntity : IEntityWithTenant
 
     private NexusModsModEntity() { }
     [SetsRequiredMembers]
-    private NexusModsModEntity(TenantId tenant, NexusModsModId modId) : this() => (TenantId,NexusModsModId) = (tenant, modId);
+    private NexusModsModEntity(TenantId tenant, NexusModsModId modId) : this() => (TenantId, NexusModsModId) = (tenant, modId);
     [SetsRequiredMembers]
     private NexusModsModEntity(TenantId tenant, NexusModsModId modId, DateTimeOffset lastCheckedDate) : this(tenant, modId) => FileUpdate = new()
     {

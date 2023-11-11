@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Utils.Vogen;
+using BUTR.Site.NexusMods.Server.Utils.Vogen;
 
 using System;
 using System.Collections.Generic;

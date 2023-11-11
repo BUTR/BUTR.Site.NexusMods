@@ -1,4 +1,4 @@
-﻿using Bannerlord.ModuleManager;
+using Bannerlord.ModuleManager;
 
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;

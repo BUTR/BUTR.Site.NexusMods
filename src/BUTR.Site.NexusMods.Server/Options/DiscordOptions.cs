@@ -1,4 +1,4 @@
-﻿using Aragas.Extensions.Options.FluentValidation.Extensions;
+using Aragas.Extensions.Options.FluentValidation.Extensions;
 
 using FluentValidation;
 
