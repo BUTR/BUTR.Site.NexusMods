@@ -18,8 +18,8 @@
     <PackageReference Include="Aragas.Extensions.Options.FluentValidation" Version="1.1.0.14" />
     <PackageReference Include="Bannerlord.ModuleManager" Version="5.0.214" />
     <PackageReference Include="BUTR.Authentication.NexusMods" Version="1.0.0.6" />
-    <PackageReference Include="BUTR.CrashReport" Version="13.0.0.30" />
-    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.30" />
+    <PackageReference Include="BUTR.CrashReport.Models" Version="13.0.0.32" />
+    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.32" />
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="4.0.4" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="8.2.0.7535" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" />
@@ -50,8 +50,8 @@
     <PackageReference Include="SharpCompress" Version="0.34.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
-    <PackageReference Include="Vogen" Version="3.0.22" />
-    <PackageReference Update="GitVersion.MsBuild" Version="5.11.1" />
+    <PackageReference Include="Vogen" Version="3.0.23" />
+    <PackageReference Update="GitVersion.MsBuild" Version="5.12.0" />
     <PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="8.0.0-rc.2.23480.1-02" />
   </ItemGroup>
 
