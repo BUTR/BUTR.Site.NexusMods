@@ -39,6 +39,9 @@ jobs:
     - name: Build Server
       run: dotnet build src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj --configuration Release;
 
+    - name: Restore Workload
+      run: dotnet workload restore src/BUTR.Site.NexusMods.Client/BUTR.Site.NexusMods.Client.csproj;
+
     - name: Publish Client
       run: dotnet publish src/BUTR.Site.NexusMods.Client/BUTR.Site.NexusMods.Client.csproj --configuration Release --output build;
     
