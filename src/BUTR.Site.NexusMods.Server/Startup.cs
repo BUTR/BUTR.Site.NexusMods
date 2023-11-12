@@ -1,4 +1,4 @@
-﻿using Aragas.Extensions.Options.FluentValidation.Extensions;
+using Aragas.Extensions.Options.FluentValidation.Extensions;
 
 using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Authentication.NexusMods.Extensions;

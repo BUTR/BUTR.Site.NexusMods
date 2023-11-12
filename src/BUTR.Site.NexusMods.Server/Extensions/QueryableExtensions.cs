@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.DynamicExpressions;
+using BUTR.Site.NexusMods.Server.DynamicExpressions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
@@ -113,7 +113,7 @@ public static class QueryableExtensions
             if (vogen.GetGenericArguments() is [_, { } valueObject])
                 type = valueObject;
         }
-        
+
         if (type.IsEnum)
             return Enum.TryParse(type, rawValue, out value);
 
@@ -221,7 +221,7 @@ public static class QueryableExtensions
             value = typeConverter.ConvertFrom(rawValue)!;
             return true;
         }
-        
+
         try
         {
             value = System.Convert.ChangeType(rawValue, type);
