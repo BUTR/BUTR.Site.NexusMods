@@ -7,10 +7,12 @@
     <HybridGlobalization>true</HybridGlobalization>
   </PropertyGroup>
 
+  <!--
   <PropertyGroup>
     <RunAOTCompilation>true</RunAOTCompilation>
     <WasmStripILAfterAOT>true</WasmStripILAfterAOT>
   </PropertyGroup>
+  -->
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.4.0" />
