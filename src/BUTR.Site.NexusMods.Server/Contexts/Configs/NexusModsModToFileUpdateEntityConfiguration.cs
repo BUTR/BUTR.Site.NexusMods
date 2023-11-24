@@ -1,4 +1,3 @@
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -13,7 +12,7 @@ public class NexusModsModToFileUpdateEntityConfiguration : BaseEntityConfigurati
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsModToFileUpdateEntity> builder)
     {
-        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_file_update_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_file_update_id").HasValueObjectConversion().ValueGeneratedNever();
         builder.Property(x => x.LastCheckedDate).HasColumnName("date_of_last_check");
         builder.ToTable("nexusmods_mod_file_update", "nexusmods_mod").HasKey(nameof(NexusModsModToFileUpdateEntity.TenantId), nameof(NexusModsModEntity.NexusModsModId));
 

@@ -1,4 +1,3 @@
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -13,9 +12,9 @@ public class NexusModsUserToRoleEntityConfiguration : BaseEntityConfigurationWit
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToRoleEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_role_id").HasVogenConversion().ValueGeneratedNever();
-        builder.Property(x => x.Role).HasColumnName("role").HasVogenConversion();
-        builder.Property(x => x.TenantId).HasColumnName("tenant").HasVogenConversion();
+        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_role_id").HasValueObjectConversion().ValueGeneratedNever();
+        builder.Property(x => x.Role).HasColumnName("role").HasValueObjectConversion();
+        builder.Property(x => x.TenantId).HasColumnName("tenant").HasValueObjectConversion();
         builder.ToTable("nexusmods_user_role", "nexusmods_user").HasKey(nameof(NexusModsUserToRoleEntity.TenantId), nameof(NexusModsUserEntity.NexusModsUserId));
 
         builder.HasOne(x => x.NexusModsUser)

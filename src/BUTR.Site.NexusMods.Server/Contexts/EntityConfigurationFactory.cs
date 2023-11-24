@@ -2,30 +2,30 @@ using BUTR.Site.NexusMods.Server.Contexts.Configs;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
-using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
 public class EntityConfigurationFactory : IEntityConfigurationFactory
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IEntityConfiguration[] _entityConfigurations;
 
-    public EntityConfigurationFactory(IServiceProvider serviceProvider)
+    public EntityConfigurationFactory(IEnumerable<IEntityConfiguration> entityConfigurations)
     {
-        _serviceProvider = serviceProvider;
+        _entityConfigurations = entityConfigurations.ToArray();
     }
 
     public void ApplyConfiguration<TEntity>(ModelBuilder modelBuilder) where TEntity : class, IEntity
     {
-        var configuration = _serviceProvider.GetRequiredService<BaseEntityConfiguration<TEntity>>();
+        var configuration = _entityConfigurations.OfType<BaseEntityConfiguration<TEntity>>().First();
         configuration.Configure(modelBuilder);
     }
 
     public void ApplyConfigurationWithTenant<TEntity>(ModelBuilder modelBuilder) where TEntity : class, IEntityWithTenant
     {
-        var configuration = _serviceProvider.GetRequiredService<BaseEntityConfigurationWithTenant<TEntity>>();
+        var configuration = _entityConfigurations.OfType<BaseEntityConfigurationWithTenant<TEntity>>().First();
         configuration.Configure(modelBuilder);
     }
 }

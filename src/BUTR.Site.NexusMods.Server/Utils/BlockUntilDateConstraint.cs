@@ -21,16 +21,16 @@ public sealed class BlockUntilDateConstraint : IAwaitableConstraint
         _blockUntil = blockUntil;
     }
 
-    public async Task<IDisposable> WaitForReadiness(CancellationToken cancellationToken)
+    public async Task<IDisposable> WaitForReadiness(CancellationToken ct)
     {
-        await _semaphore.WaitAsync(cancellationToken);
+        await _semaphore.WaitAsync(ct);
         var timeToWait = _blockUntil - DateTime.Now;
         if (timeToWait < TimeSpan.Zero)
             return new DummyDisposable();
 
         try
         {
-            await Task.Delay(timeToWait, cancellationToken);
+            await Task.Delay(timeToWait, ct);
             return new DummyDisposable();
         }
         finally

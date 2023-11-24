@@ -40,11 +40,11 @@ public class SyncLoggingHttpMessageHandler : DelegatingHandler
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
-    protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
+    protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken ct)
     {
-        return Core(request, cancellationToken);
+        return Core(request, ct);
 
-        HttpResponseMessage Core(HttpRequestMessage request, CancellationToken cancellationToken)
+        HttpResponseMessage Core(HttpRequestMessage request, CancellationToken ct)
         {
             var shouldRedactHeaderValue = _options?.ShouldRedactHeaderValue ?? _shouldNotRedactHeaderValue;
 
@@ -52,7 +52,7 @@ public class SyncLoggingHttpMessageHandler : DelegatingHandler
             // not really anything to surround.
             Log.RequestStart(_logger, request, shouldRedactHeaderValue);
             var stopwatch = Stopwatch.StartNew();
-            var response = base.Send(request, cancellationToken);
+            var response = base.Send(request, ct);
             Log.RequestEnd(_logger, response, stopwatch.Elapsed, shouldRedactHeaderValue);
 
             return response;

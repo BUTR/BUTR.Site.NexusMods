@@ -40,11 +40,11 @@ public class SyncLoggingScopeHttpMessageHandler : DelegatingHandler
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
-    protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
+    protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken ct)
     {
-        return Core(request, cancellationToken);
+        return Core(request, ct);
 
-        HttpResponseMessage Core(HttpRequestMessage request, CancellationToken cancellationToken)
+        HttpResponseMessage Core(HttpRequestMessage request, CancellationToken ct)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -53,7 +53,7 @@ public class SyncLoggingScopeHttpMessageHandler : DelegatingHandler
             using (Log.BeginRequestPipelineScope(_logger, request))
             {
                 Log.RequestPipelineStart(_logger, request, shouldRedactHeaderValue);
-                var response = base.Send(request, cancellationToken);
+                var response = base.Send(request, ct);
                 Log.RequestPipelineEnd(_logger, response, stopwatch.Elapsed, shouldRedactHeaderValue);
 
                 return response;

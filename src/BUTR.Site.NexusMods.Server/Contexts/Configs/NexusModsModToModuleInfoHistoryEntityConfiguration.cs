@@ -1,4 +1,3 @@
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -13,10 +12,10 @@ public class NexusModsModToModuleInfoHistoryEntityConfiguration : BaseEntityConf
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsModToModuleInfoHistoryEntity> builder)
     {
-        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_module_info_history_id").HasVogenConversion().ValueGeneratedNever();
-        builder.Property(x => x.NexusModsFileId).HasColumnName("nexusmods_file_id").HasVogenConversion();
-        builder.Property<ModuleId>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id").HasVogenConversion();
-        builder.Property(x => x.ModuleVersion).HasColumnName("module_version").HasVogenConversion();
+        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_module_info_history_id").HasValueObjectConversion().ValueGeneratedNever();
+        builder.Property(x => x.NexusModsFileId).HasColumnName("nexusmods_file_id").HasValueObjectConversion();
+        builder.Property<ModuleId>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id").HasValueObjectConversion();
+        builder.Property(x => x.ModuleVersion).HasColumnName("module_version").HasValueObjectConversion();
         builder.Property(x => x.ModuleInfo).HasColumnName("module_info").HasColumnType("jsonb");
         builder.Property(x => x.UploadDate).HasColumnName("date_of_upload");
         builder.ToTable("nexusmods_mod_module_info_history", "nexusmods_mod").HasKey(nameof(NexusModsModToModuleInfoHistoryEntity.TenantId), nameof(NexusModsModToModuleInfoHistoryEntity.NexusModsFileId), nameof(NexusModsModEntity.NexusModsModId), nameof(ModuleEntity.ModuleId), nameof(NexusModsModToModuleInfoHistoryEntity.ModuleVersion));

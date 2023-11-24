@@ -2,8 +2,8 @@ using BUTR.Site.NexusMods.Server.DynamicExpressions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.Npgsql;
-using BUTR.Site.NexusMods.Server.Utils.Vogen;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -108,11 +108,7 @@ public static class QueryableExtensions
 
     private static bool TryConvertValue(Type type, string rawValue, [NotNullWhen((true))] out object? value)
     {
-        if (type.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IVogen<,>)) is { } vogen)
-        {
-            if (vogen.GetGenericArguments() is [_, { } valueObject])
-                type = valueObject;
-        }
+        type = QueryableHelper.ConvertValueObject(type);
 
         if (type.IsEnum)
             return Enum.TryParse(type, rawValue, out value);

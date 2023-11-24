@@ -16,5 +16,5 @@ public sealed class NexusModsOptionsValidator : AbstractValidator<NexusModsOptio
 
 public sealed record NexusModsOptions
 {
-    public required NexusModsApiKey ApiKey { get; init; }
+    public required NexusModsApiKey ApiKey { get; init; } = NexusModsApiKey.None;
 }

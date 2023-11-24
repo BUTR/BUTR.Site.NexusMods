@@ -28,14 +28,14 @@ public sealed class CrashReportBatchedHandler : IAsyncDisposable
 
     private static string GetException(ExceptionModel? exception, bool inner = false) => exception is null ? string.Empty : $"""
 
-         {(inner ? "Inner " : string.Empty)}Exception information
-         Type: {exception.Type}
-         Message: {exception.Message}
-         CallStack:
-         {exception.CallStack}
+{(inner ? "Inner " : string.Empty)}Exception information
+Type: {exception.Type}
+Message: {exception.Message}
+CallStack:
+{exception.CallStack}
 
-         {GetException(exception.InnerException, true)}
-         """;
+{GetException(exception.InnerException, true)}
+""";
 
     private Channel<CrashReportFileMetadata> _toDownloadChannel = Channel.CreateBounded<CrashReportFileMetadata>(ParallelCount * 2);
     private Channel<HttpResultEntry> _httpResultChannel = Channel.CreateBounded<HttpResultEntry>(ParallelCount * 2);

@@ -5,10 +5,13 @@ namespace BUTR.Site.NexusMods.Shared.Helpers;
 
 public static class NexusModsUtils
 {
-    public static bool TryParse(string url, [NotNullWhen(true)] out string? gameDomain, out uint modId)
+    public static bool TryParse(string? url, [NotNullWhen(true)] out string? gameDomain, out uint modId)
     {
         gameDomain = default;
         modId = default;
+
+        if (url is null)
+            return false;
 
         if (!url.Contains("nexusmods.com/"))
             return false;

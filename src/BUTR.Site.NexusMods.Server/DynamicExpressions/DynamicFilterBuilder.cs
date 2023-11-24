@@ -50,10 +50,7 @@ public class DynamicFilterBuilder<TEntity>
         return this;
     }
 
-    public Expression<Func<TEntity, bool>> Build()
-    {
-        return Expression.Lambda<Func<TEntity, bool>>(Expression, _param);
-    }
+    public Expression<Func<TEntity, bool>> Build() => Expression.Lambda<Func<TEntity, bool>>(Expression!, _param);
 
     public Func<TEntity, bool> Compile() => Build().Compile();
 }

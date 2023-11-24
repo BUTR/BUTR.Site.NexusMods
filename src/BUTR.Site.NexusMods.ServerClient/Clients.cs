@@ -22,7 +22,7 @@ public partial class AuthenticationClient
 
 public partial interface ICrashReportsClient
 {
-    Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken cancellationToken = default);
+    Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken ct = default);
 }
 
 public partial class CrashReportsClient
@@ -39,7 +39,7 @@ public partial class CrashReportsClient
         OnPrepareRequest(client, request, urlBuilder);
     }
 
-    public virtual async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken cancellationToken = default)
+    public virtual async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken ct = default)
     {
         var urlBuilder_ = new StringBuilder();
         urlBuilder_.Append("api/v1/CrashReports/PaginatedStreaming");
@@ -60,7 +60,7 @@ public partial class CrashReportsClient
 
             PrepareRequest(client_, request_, url_);
 
-            var response_ = await client_.SendAsync(request_, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            var response_ = await client_.SendAsync(request_, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
             var disposeResponse_ = true;
             try
             {
@@ -80,7 +80,7 @@ public partial class CrashReportsClient
                     {
                         try
                         {
-                            var pagingStreamingData = PagingStreamingData<CrashReportModel2>.Create(response_, JsonSerializerSettings, cancellationToken);
+                            var pagingStreamingData = PagingStreamingData<CrashReportModel2>.Create(response_, JsonSerializerSettings, ct);
                             disposeResponse_ = false;
                             return pagingStreamingData;
                         }
@@ -92,17 +92,17 @@ public partial class CrashReportsClient
                     }
                     case HttpStatusCode.Unauthorized:
                     {
-                        var responseText_ = response_.Content == null! ? string.Empty : await response_.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                        var responseText_ = response_.Content == null! ? string.Empty : await response_.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                         throw new ApiException("User not authenticated.", status_, responseText_, headers_, null);
                     }
                     case HttpStatusCode.Forbidden:
                     {
-                        var responseText_ = response_.Content == null! ? string.Empty : await response_.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                        var responseText_ = response_.Content == null! ? string.Empty : await response_.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                         throw new ApiException("User not authorized to access this endpoint.", status_, responseText_, headers_, null);
                     }
                     default:
                     {
-                        var responseData_ = response_.Content == null! ? null : await response_.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                        var responseData_ = response_.Content == null! ? null : await response_.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                         throw new ApiException($"The HTTP status code of the response was not expected ({status_}).", status_, responseData_, headers_, null);
                     }
                 }

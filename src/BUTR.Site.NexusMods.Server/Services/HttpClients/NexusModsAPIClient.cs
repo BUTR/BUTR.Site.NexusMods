@@ -165,7 +165,7 @@ public sealed class NexusModsAPIClient
                 _lock.Release();
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
             await _cache.RemoveAsync(key, ct);
             return null;

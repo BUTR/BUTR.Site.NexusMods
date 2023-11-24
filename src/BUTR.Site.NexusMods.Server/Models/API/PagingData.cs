@@ -66,7 +66,7 @@ public sealed record PagingData<T> where T : class
 
         public AsyncEnumerableWrapper(IAsyncEnumerable<T> inner, Action onLastItem) => (_inner, _onLastItem) = (inner, onLastItem);
 
-        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new AsyncEnumeratorWrapper(_inner.GetAsyncEnumerator(cancellationToken), _onLastItem);
+        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken ct = default) => new AsyncEnumeratorWrapper(_inner.GetAsyncEnumerator(ct), _onLastItem);
     }
 
     [JsonIgnore]

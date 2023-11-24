@@ -1,16 +1,12 @@
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
-using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -55,35 +51,29 @@ public sealed class AppDbContextWrite : BaseAppDbContext, IAppDbContextWrite
         }
     }
 
-    private readonly IDbContextFactory<AppDbContextWrite> _dbContextFactory;
     private readonly ITenantContextAccessor _tenantContextAccessor;
+    
     private EntityFactory? _entityFactory;
     private List<Func<Task>>? _onSave;
 
     public AppDbContextWrite(
-        IDbContextFactory<AppDbContextWrite> dbContextFactory,
         ITenantContextAccessor tenantContextAccessor,
-        IOptions<ConnectionStringsOptions> connectionStringsOptions,
+        NpgsqlDataSourceProvider dataSourceProvider,
         IEntityConfigurationFactory entityConfigurationFactory,
-        IOptions<JsonSerializerOptions> jsonSerializerOptions,
-        DbContextOptions<AppDbContextWrite> options) : base(connectionStringsOptions, entityConfigurationFactory, jsonSerializerOptions, options)
+        DbContextOptions<AppDbContextWrite> options) : base(dataSourceProvider, entityConfigurationFactory, options)
     {
-        _dbContextFactory = dbContextFactory;
         _tenantContextAccessor = tenantContextAccessor;
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
-        }
+        optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
 
         base.OnConfiguring(optionsBuilder);
     }
 
 
-    public AppDbContextWrite New() => _dbContextFactory.CreateDbContext();
+    public AppDbContextWrite New() => this.GetService<IDbContextFactory<AppDbContextWrite>>().CreateDbContext();
 
     public EntityFactory GetEntityFactory() => _entityFactory ??= new EntityFactory(_tenantContextAccessor, this);
 
@@ -95,9 +85,6 @@ public sealed class AppDbContextWrite : BaseAppDbContext, IAppDbContextWrite
 
     public async Task SaveAsync(CancellationToken ct)
     {
-        if (IsReadOnly)
-            throw new NotSupportedException("The Save method is not supported on read-only database contexts.");
-
         if (!ChangeTracker.HasChanges() && _entityFactory is null && _onSave?.Count == 0)
             return;
 

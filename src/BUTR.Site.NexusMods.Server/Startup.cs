@@ -4,9 +4,9 @@ using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.Authentication.NexusMods.Extensions;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Contexts.Configs;
-using BUTR.Site.NexusMods.Server.Controllers;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Jobs;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
@@ -15,7 +15,6 @@ using BUTR.Site.NexusMods.Server.Utils.APIResponses;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Server.Utils.Http.Logging;
 using BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
-using BUTR.Site.NexusMods.Server.Utils.Vogen;
 
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
@@ -54,7 +53,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
-using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server;
 
@@ -166,7 +164,7 @@ public sealed class Startup
 
         services.AddMultipartSupport();
 
-        services.AddSingleton<BannerlordBinaryCache>();
+        services.AddSingleton<SteamBinaryCache>();
         services.AddSingleton<SteamDepotDownloader>();
 
         services.AddSingleton<QuartzEventProviderService>();
@@ -184,8 +182,9 @@ public sealed class Startup
             opt.AddJob<CrashReportProcessorJob>();
             opt.AddJob<CrashReportAnalyzerProcessorJob>();
             opt.AddJob<TopExceptionsTypesAnalyzerProcessorJob>();
-            opt.AddJob<AutocompleteProcessorProcessorJob>();
+            opt.AddJobAtStartup<AutocompleteProcessorProcessorJob>();
             opt.AddJob<NexusModsModFileProcessorJob>();
+            //opt.AddJobAtStartup<NexusModsModFileProcessorJob>();
             opt.AddJob<NexusModsModFileUpdatesProcessorJob>();
             opt.AddJob<NexusModsArticleProcessorJob>();
             opt.AddJob<NexusModsArticleUpdatesProcessorJob>();
@@ -209,19 +208,20 @@ public sealed class Startup
 
         services.AddMemoryCache();
 
-        services.AddSingleton<ITenantContextAccessor, TenantContextAccessor>();
-        
-        services.AddSingleton<IEntityConfigurationFactory, EntityConfigurationFactory>();
+        services.AddScoped<ITenantContextAccessor, TenantContextAccessor>();
+
+        services.AddScoped<IEntityConfigurationFactory, EntityConfigurationFactory>();
         var types = typeof(Startup).Assembly.GetTypes().Where(x => x is { IsAbstract: false, BaseType: { IsGenericType: true } }).ToList();
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfigurationWithTenant<>)))
-            services.AddSingleton(typeof(BaseEntityConfigurationWithTenant<>).MakeGenericType(type.BaseType!.GetGenericArguments()), type);
+            services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfiguration<>)))
-            services.AddSingleton(typeof(BaseEntityConfiguration<>).MakeGenericType(type.BaseType!.GetGenericArguments()), type);
-
+            services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
+        
+        services.AddSingleton<NpgsqlDataSourceProvider>();
         services.AddDbContext<BaseAppDbContext>(ServiceLifetime.Scoped);
-        services.AddDbContextFactory<AppDbContextRead>( lifetime: ServiceLifetime.Singleton);
-        services.AddDbContextFactory<AppDbContextWrite>(lifetime: ServiceLifetime.Singleton);
-        services.AddSingleton<IAppDbContextFactory, AppDbContextFactory>();
+        services.AddDbContextFactory<AppDbContextRead>(lifetime: ServiceLifetime.Scoped);
+        services.AddDbContextFactory<AppDbContextWrite>(lifetime: ServiceLifetime.Scoped);
+        services.AddScoped<IAppDbContextFactory, AppDbContextFactory>();
         services.AddScoped<IAppDbContextRead>(sp => sp.GetRequiredService<IAppDbContextFactory>().CreateRead());
         services.AddScoped<IAppDbContextWrite>(sp => sp.GetRequiredService<IAppDbContextFactory>().CreateWrite());
 
@@ -319,7 +319,7 @@ public sealed class Startup
             opt.OperationFilter<BindIgnoreFilter>();
             opt.OperationFilter<AuthResponsesOperationFilter>();
             opt.OperationFilter<APIResponseOperationFilter>();
-            opt.SchemaFilter<VogenSchemaFilter>();
+            opt.ValueObjectFilter();
 
             // Really .NET?
             opt.MapType<TimeSpan>(() => new OpenApiSchema { Type = "string", Format = "time-span" });

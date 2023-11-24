@@ -1,15 +1,10 @@
 using BUTR.Site.NexusMods.Server.Models.Database;
-using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.Extensions.Options;
-
-using Npgsql;
 
 using System;
-using System.Text.Json;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
@@ -18,75 +13,70 @@ namespace BUTR.Site.NexusMods.Server.Contexts;
 /// </summary>
 public class BaseAppDbContext : DbContext
 {
-    private readonly ConnectionStringsOptions _options;
+    private readonly NpgsqlDataSourceProvider _dataSourceProvider;
     private readonly IEntityConfigurationFactory _entityConfigurationFactory;
-    private readonly JsonSerializerOptions _jsonSerializerOptions;
 
-    public required bool IsReadOnly { get; set; }
+    public virtual bool IsReadOnly => false;
 
-    public required DbSet<TenantEntity> Tenants { get; set; }
+    public DbSet<TenantEntity> Tenants { get; set; } = default!;
 
-    public required DbSet<AutocompleteEntity> Autocompletes { get; set; }
+    public DbSet<AutocompleteEntity> Autocompletes { get; set; } = default!;
 
-    public required DbSet<ExceptionTypeEntity> ExceptionTypes { get; set; }
+    public DbSet<ExceptionTypeEntity> ExceptionTypes { get; set; } = default!;
 
-    public required DbSet<ModuleEntity> Modules { get; set; }
+    public DbSet<ModuleEntity> Modules { get; set; } = default!;
 
-    public required DbSet<CrashReportEntity> CrashReports { get; set; }
-    public required DbSet<CrashReportToMetadataEntity> CrashReportToMetadatas { get; set; }
-    public required DbSet<CrashReportToModuleMetadataEntity> CrashReportModuleInfos { get; set; }
-    public required DbSet<CrashReportToFileIdEntity> CrashReportToFileIds { get; set; }
-    public required DbSet<CrashReportIgnoredFileEntity> CrashReportIgnoredFileIds { get; set; }
+    public DbSet<CrashReportEntity> CrashReports { get; set; } = default!;
+    public DbSet<CrashReportToMetadataEntity> CrashReportToMetadatas { get; set; } = default!;
+    public DbSet<CrashReportToModuleMetadataEntity> CrashReportModuleInfos { get; set; } = default!;
+    public DbSet<CrashReportToFileIdEntity> CrashReportToFileIds { get; set; } = default!;
+    public DbSet<CrashReportIgnoredFileEntity> CrashReportIgnoredFileIds { get; set; } = default!;
 
-    public required DbSet<NexusModsUserEntity> NexusModsUsers { get; set; }
-    public required DbSet<NexusModsUserToNameEntity> NexusModsUserToName { get; set; }
-    public required DbSet<NexusModsUserToCrashReportEntity> NexusModsUserToCrashReports { get; set; }
-    public required DbSet<NexusModsUserToNexusModsModEntity> NexusModsUserToNexusModsMods { get; set; }
-    public required DbSet<NexusModsUserToModuleEntity> NexusModsUserToModules { get; set; }
+    public DbSet<NexusModsUserEntity> NexusModsUsers { get; set; } = default!;
+    public DbSet<NexusModsUserToNameEntity> NexusModsUserToName { get; set; } = default!;
+    public DbSet<NexusModsUserToCrashReportEntity> NexusModsUserToCrashReports { get; set; } = default!;
+    public DbSet<NexusModsUserToNexusModsModEntity> NexusModsUserToNexusModsMods { get; set; } = default!;
+    public DbSet<NexusModsUserToModuleEntity> NexusModsUserToModules { get; set; } = default!;
 
-    public required DbSet<NexusModsUserToIntegrationDiscordEntity> NexusModsUserToDiscord { get; set; }
-    public required DbSet<NexusModsUserToIntegrationGOGEntity> NexusModsUserToGOG { get; set; }
-    public required DbSet<NexusModsUserToIntegrationSteamEntity> NexusModsUserToSteam { get; set; }
+    public DbSet<NexusModsUserToIntegrationDiscordEntity> NexusModsUserToDiscord { get; set; } = default!;
+    public DbSet<NexusModsUserToIntegrationGOGEntity> NexusModsUserToGOG { get; set; } = default!;
+    public DbSet<NexusModsUserToIntegrationSteamEntity> NexusModsUserToSteam { get; set; } = default!;
 
-    public required DbSet<IntegrationDiscordTokensEntity> IntegrationDiscordTokens { get; set; }
-    public required DbSet<IntegrationGOGTokensEntity> IntegrationGOGTokens { get; set; }
-    public required DbSet<IntegrationGOGToOwnedTenantEntity> IntegrationGOGToOwnedTenants { get; set; }
-    public required DbSet<IntegrationSteamTokensEntity> IntegrationSteamTokens { get; set; }
-    public required DbSet<IntegrationSteamToOwnedTenantEntity> IntegrationSteamToOwnedTenants { get; set; }
+    public DbSet<IntegrationDiscordTokensEntity> IntegrationDiscordTokens { get; set; } = default!;
+    public DbSet<IntegrationGOGTokensEntity> IntegrationGOGTokens { get; set; } = default!;
+    public DbSet<IntegrationGOGToOwnedTenantEntity> IntegrationGOGToOwnedTenants { get; set; } = default!;
+    public DbSet<IntegrationSteamTokensEntity> IntegrationSteamTokens { get; set; } = default!;
+    public DbSet<IntegrationSteamToOwnedTenantEntity> IntegrationSteamToOwnedTenants { get; set; } = default!;
 
-    public required DbSet<NexusModsArticleEntity> NexusModsArticles { get; set; }
+    public DbSet<NexusModsArticleEntity> NexusModsArticles { get; set; } = default!;
 
-    public required DbSet<NexusModsModEntity> NexusModsMods { get; set; }
-    public required DbSet<NexusModsModToNameEntity> NexusModsModName { get; set; }
-    public required DbSet<NexusModsModToModuleEntity> NexusModsModModules { get; set; }
-    public required DbSet<NexusModsModToFileUpdateEntity> NexusModsModToFileUpdates { get; set; }
-    public required DbSet<NexusModsModToModuleInfoHistoryEntity> NexusModsModToModuleInfoHistory { get; set; }
+    public DbSet<NexusModsModEntity> NexusModsMods { get; set; } = default!;
+    public DbSet<NexusModsModToNameEntity> NexusModsModName { get; set; } = default!;
+    public DbSet<NexusModsModToModuleEntity> NexusModsModModules { get; set; } = default!;
+    public DbSet<NexusModsModToFileUpdateEntity> NexusModsModToFileUpdates { get; set; } = default!;
+    public DbSet<NexusModsModToModuleInfoHistoryEntity> NexusModsModToModuleInfoHistory { get; set; } = default!;
 
-    public required DbSet<StatisticsTopExceptionsTypeEntity> StatisticsTopExceptionsTypes { get; set; }
-    public required DbSet<StatisticsCrashScoreInvolvedEntity> StatisticsCrashScoreInvolveds { get; set; }
+    public DbSet<StatisticsTopExceptionsTypeEntity> StatisticsTopExceptionsTypes { get; set; } = default!;
+    public DbSet<StatisticsCrashScoreInvolvedEntity> StatisticsCrashScoreInvolveds { get; set; } = default!;
 
-    public required DbSet<QuartzExecutionLogEntity> QuartzExecutionLogs { get; set; }
+    public DbSet<QuartzExecutionLogEntity> QuartzExecutionLogs { get; set; } = default!;
 
     public BaseAppDbContext(
-        IOptions<ConnectionStringsOptions> option,
+        NpgsqlDataSourceProvider dataSourceProvider,
         IEntityConfigurationFactory entityConfigurationFactory,
-        IOptions<JsonSerializerOptions> jsonSerializerOptions,
         DbContextOptions<BaseAppDbContext> options) : base(options)
     {
-        _options = option.Value;
+        _dataSourceProvider = dataSourceProvider;
         _entityConfigurationFactory = entityConfigurationFactory;
-        _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
     protected BaseAppDbContext(
-        IOptions<ConnectionStringsOptions> connectionStringsOptions,
+        NpgsqlDataSourceProvider dataSourceProvider,
         IEntityConfigurationFactory entityConfigurationFactory,
-        IOptions<JsonSerializerOptions> jsonSerializerOptions,
         DbContextOptions options) : base(options)
     {
-        _options = connectionStringsOptions.Value;
+        _dataSourceProvider = dataSourceProvider;
         _entityConfigurationFactory = entityConfigurationFactory;
-        _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -142,23 +132,19 @@ public class BaseAppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (!optionsBuilder.IsConfigured)
-        {
-            var dataSource = new NpgsqlDataSourceBuilder(IsReadOnly && !string.IsNullOrEmpty(_options.Replica) ? _options.Replica : _options.Main)
-                .EnableDynamicJsonMappings(_jsonSerializerOptions)
-                .Build();
+        var dataSource = IsReadOnly ? _dataSourceProvider.ReadDataSource() : _dataSourceProvider.WriteDataSource();
 
-            optionsBuilder
-                .ConfigureWarnings(x => x.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning))
-                .ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>()
-                .UseNpgsql(dataSource, opt =>
-                {
-                    opt.EnableRetryOnFailure(50, TimeSpan.FromSeconds(5), null);
-                    opt.MigrationsHistoryTable("ef_migrations_history", "ef");
-                })
-                //.AddPrepareInterceptor()
-                .EnableSensitiveDataLogging()
-                /*.UseLoggerFactory(LoggerFactory.Create(b => b.AddFilter(level => level >= LogLevel.Information)))*/;
-        }
+        optionsBuilder
+            .ConfigureWarnings(x => x.Ignore(CoreEventId.SensitiveDataLoggingEnabledWarning))
+            .ConfigureWarnings(x => x.Ignore(RelationalEventId.ModelValidationKeyDefaultValueWarning))
+            .ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>()
+            .UseNpgsql(dataSource, opt =>
+            {
+                opt.EnableRetryOnFailure(50, TimeSpan.FromSeconds(5), null);
+                opt.MigrationsHistoryTable("ef_migrations_history", "ef");
+            })
+            //.AddPrepareInterceptor()
+            .EnableSensitiveDataLogging()
+            /*.UseLoggerFactory(LoggerFactory.Create(b => b.AddFilter(level => level >= LogLevel.Information)))*/;
     }
 }

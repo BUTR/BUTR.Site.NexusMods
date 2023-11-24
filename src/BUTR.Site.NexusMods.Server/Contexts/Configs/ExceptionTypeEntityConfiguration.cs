@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +12,7 @@ public class ExceptionTypeEntityConfiguration : BaseEntityConfigurationWithTenan
 
     protected override void ConfigureModel(EntityTypeBuilder<ExceptionTypeEntity> builder)
     {
-        builder.Property(x => x.ExceptionTypeId).HasColumnName("exception_type_id").HasVogenConversion();
+        builder.Property(x => x.ExceptionTypeId).HasColumnName("exception_type_id").HasValueObjectConversion();
         builder.ToTable("exception_type", "exception").HasKey(x => new { x.TenantId, x.ExceptionTypeId });
 
         base.ConfigureModel(builder);

@@ -9,9 +9,9 @@ namespace BUTR.Site.NexusMods.Server.Extensions;
 
 public static class IAsyncEnumerableExtensions
 {
-    private static ConfiguredCancelableAsyncEnumerable<T>.Enumerator GetConfiguredAsyncEnumerator<T>(this IAsyncEnumerable<T> enumerable, CancellationToken cancellationToken, bool continueOnCapturedContext)
+    private static ConfiguredCancelableAsyncEnumerable<T>.Enumerator GetConfiguredAsyncEnumerator<T>(this IAsyncEnumerable<T> enumerable, CancellationToken ct, bool continueOnCapturedContext)
     {
-        return enumerable.ConfigureAwait(continueOnCapturedContext).WithCancellation(cancellationToken).GetAsyncEnumerator();
+        return enumerable.ConfigureAwait(continueOnCapturedContext).WithCancellation(ct).GetAsyncEnumerator();
     }
 
     public static async Task<ImmutableArray<TSource>> ToImmutableArrayAsync<TSource>(this IAsyncEnumerable<TSource> source, CancellationToken ct = default)

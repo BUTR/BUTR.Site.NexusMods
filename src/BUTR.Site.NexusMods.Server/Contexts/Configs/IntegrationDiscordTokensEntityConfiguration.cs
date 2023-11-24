@@ -1,4 +1,3 @@
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -11,7 +10,7 @@ public class IntegrationDiscordTokensEntityConfiguration : BaseEntityConfigurati
 {
     protected override void ConfigureModel(EntityTypeBuilder<IntegrationDiscordTokensEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("integration_discord_tokens_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("integration_discord_tokens_id").HasValueObjectConversion().ValueGeneratedNever();
         builder.Property(x => x.DiscordUserId).HasColumnName("discord_user_id");
         builder.Property(x => x.RefreshToken).HasColumnName("refresh_token");
         builder.Property(x => x.AccessToken).HasColumnName("access_token");

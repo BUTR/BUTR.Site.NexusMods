@@ -68,8 +68,11 @@ public sealed class CrashReportsAnalyzerController : ControllerExtended
 
     private async IAsyncEnumerable<ModuleSuggestedFix> GetModuleSuggestionsAsync(CrashReportModel crashReport, [EnumeratorCancellation] CancellationToken ct)
     {
-        static bool GetTypeLoadExceptionLevel(ExceptionModel? exceptionModel, ref int level)
+        static bool GetTypeLoadExceptionLevel(ExceptionModel? exceptionModel, ref int level, CancellationToken ct)
         {
+            if (ct.IsCancellationRequested)
+                return false;
+            
             if (exceptionModel is null)
                 return false;
 
@@ -77,14 +80,14 @@ public sealed class CrashReportsAnalyzerController : ControllerExtended
                 return true;
 
             level++;
-            return GetTypeLoadExceptionLevel(exceptionModel.InnerException, ref level);
+            return GetTypeLoadExceptionLevel(exceptionModel.InnerException, ref level, ct);
         }
 
         await Task.Yield();
 
         //
         var level = 1;
-        if (GetTypeLoadExceptionLevel(crashReport.Exception, ref level))
+        if (GetTypeLoadExceptionLevel(crashReport.Exception, ref level, ct))
         {
             var involvedModule = crashReport.InvolvedModules[level];
             yield return new ModuleSuggestedFix

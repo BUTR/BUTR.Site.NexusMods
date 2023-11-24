@@ -34,5 +34,5 @@ internal class OneTimeEnumerable<T> : IAsyncEnumerable<T>
         _enumerator = new OneTimeEnumerator(inner.GetAsyncEnumerator(), () => Enumeration.SetResult());
     }
 
-    public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default) => _enumerator;
+    public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken ct = default) => _enumerator;
 }

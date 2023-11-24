@@ -11,7 +11,7 @@ internal sealed partial class StreamWithLfEnding : Stream
     private static readonly byte[] Lf = "\n"u8.ToArray();
 
     private readonly Stream _streamImplementation;
-    private bool _endRead = false;
+    private bool _endRead;
 
     public IMemoryOwner<byte>? _leftoverBytes;
     public int _leftoverBytesLength;
@@ -28,7 +28,7 @@ internal sealed partial class StreamWithLfEnding : Stream
     }
 
     public override int Read(byte[] buffer, int offset, int count) => _streamImplementation.Read(buffer, offset, count);
-    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken ct = default)
     {
         if (_endRead) return 0;
 
@@ -45,7 +45,7 @@ internal sealed partial class StreamWithLfEnding : Stream
         }
         else
         {
-            length = await _streamImplementation.ReadAsync(buffer, cancellationToken);
+            length = await _streamImplementation.ReadAsync(buffer, ct);
             var memory = buffer.Slice(0, length);
             if (memory.Span.IndexOfAny(Lf) is not (var idx and not -1)) return length;
             lfIdx = idx;

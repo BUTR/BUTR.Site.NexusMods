@@ -1,4 +1,3 @@
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -13,7 +12,7 @@ public class NexusModsModToNameEntityConfiguration : BaseEntityConfigurationWith
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsModToNameEntity> builder)
     {
-        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_name_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_name_id").HasValueObjectConversion().ValueGeneratedNever();
         builder.Property(x => x.Name).HasColumnName("name");
         builder.ToTable("nexusmods_mod_name", "nexusmods_mod").HasKey(nameof(NexusModsModToNameEntity.TenantId), nameof(NexusModsModEntity.NexusModsModId));
 

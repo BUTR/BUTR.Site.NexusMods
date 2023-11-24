@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +11,7 @@ public class IntegrationGOGToOwnedTenantEntityConfiguration : BaseEntityConfigur
     protected override void ConfigureModel(EntityTypeBuilder<IntegrationGOGToOwnedTenantEntity> builder)
     {
         builder.Property(x => x.GOGUserId).HasColumnName("integration_gog_owned_tenant_id");
-        builder.Property(x => x.OwnedTenant).HasColumnName("owned_tenant").HasVogenConversion();
+        builder.Property(x => x.OwnedTenant).HasColumnName("owned_tenant").HasValueObjectConversion();
         builder.ToTable("integration_gog_owned_tenant", "integration").HasKey(x => new { x.GOGUserId, x.OwnedTenant });
 
         builder.HasOne<NexusModsUserToIntegrationGOGEntity>()

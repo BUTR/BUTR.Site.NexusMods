@@ -1,4 +1,3 @@
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -13,7 +12,7 @@ public class StatisticsTopExceptionsTypeEntityConfiguration : BaseEntityConfigur
 
     protected override void ConfigureModel(EntityTypeBuilder<StatisticsTopExceptionsTypeEntity> builder)
     {
-        builder.Property<ExceptionTypeId>(nameof(ExceptionTypeEntity.ExceptionTypeId)).HasColumnName("top_exceptions_type_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property<ExceptionTypeId>(nameof(ExceptionTypeEntity.ExceptionTypeId)).HasColumnName("top_exceptions_type_id").HasValueObjectConversion().ValueGeneratedNever();
         builder.Property(x => x.ExceptionCount).HasColumnName("count");
         builder.ToTable("top_exceptions_type", "statistics").HasKey(nameof(StatisticsTopExceptionsTypeEntity.TenantId), nameof(ExceptionTypeEntity.ExceptionTypeId));
 
