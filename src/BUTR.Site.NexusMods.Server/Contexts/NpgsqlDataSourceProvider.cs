@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Options;
+using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Options;
 
@@ -12,7 +12,7 @@ public sealed class NpgsqlDataSourceProvider
 {
     private ConnectionStringsOptions _options;
     private JsonSerializerOptions _jsonSerializerOptions;
-    
+
     private NpgsqlDataSource _main;
     private NpgsqlDataSource _replica;
 
@@ -20,7 +20,7 @@ public sealed class NpgsqlDataSourceProvider
     {
         _options = option.CurrentValue;
         _jsonSerializerOptions = jsonSerializerOptions.CurrentValue;
-        
+
         option.OnChange(Listener1);
         jsonSerializerOptions.OnChange(Listener2);
 
@@ -38,7 +38,7 @@ public sealed class NpgsqlDataSourceProvider
             .ConfigureJsonOptions(_jsonSerializerOptions)
             .EnableDynamicJson()
             .Build();
-        
+
         _replica = new NpgsqlDataSourceBuilder(_options.Replica)
             .ConfigureJsonOptions(_jsonSerializerOptions)
             .EnableDynamicJson()

@@ -216,7 +216,7 @@ public sealed class Startup
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfiguration<>)))
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
-        
+
         services.AddSingleton<NpgsqlDataSourceProvider>();
         services.AddDbContext<BaseAppDbContext>(ServiceLifetime.Scoped);
         services.AddDbContextFactory<AppDbContextRead>(lifetime: ServiceLifetime.Scoped);

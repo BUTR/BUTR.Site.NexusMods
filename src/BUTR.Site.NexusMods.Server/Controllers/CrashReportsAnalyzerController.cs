@@ -72,7 +72,7 @@ public sealed class CrashReportsAnalyzerController : ControllerExtended
         {
             if (ct.IsCancellationRequested)
                 return false;
-            
+
             if (exceptionModel is null)
                 return false;
 

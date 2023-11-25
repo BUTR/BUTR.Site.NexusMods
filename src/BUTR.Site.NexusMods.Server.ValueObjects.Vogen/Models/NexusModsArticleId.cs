@@ -11,7 +11,7 @@ public readonly partial record struct NexusModsArticleId : IVogen<TType, TValueT
     public static readonly TType None = From(0);
 
     public static TType DefaultValue => None;
-    
+
     public static TType Copy(TType instance) => instance with { };
     public static bool IsInitialized(TType instance) => instance._isInitialized;
     public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);

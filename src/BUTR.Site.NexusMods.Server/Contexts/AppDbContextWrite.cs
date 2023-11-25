@@ -52,7 +52,7 @@ public sealed class AppDbContextWrite : BaseAppDbContext, IAppDbContextWrite
     }
 
     private readonly ITenantContextAccessor _tenantContextAccessor;
-    
+
     private EntityFactory? _entityFactory;
     private List<Func<Task>>? _onSave;
 

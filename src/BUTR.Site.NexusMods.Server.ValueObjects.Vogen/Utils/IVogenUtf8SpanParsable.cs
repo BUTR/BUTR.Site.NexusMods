@@ -1,4 +1,4 @@
-﻿namespace BUTR.Site.NexusMods.Server.ValueObjects.Utils;
+namespace BUTR.Site.NexusMods.Server.ValueObjects.Utils;
 
 public interface IVogenUtf8SpanParsable<TVogen, TValueObject>
     where TVogen : IVogen<TVogen, TValueObject>

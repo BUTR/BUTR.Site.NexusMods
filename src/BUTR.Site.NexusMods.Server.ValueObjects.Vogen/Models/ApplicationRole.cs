@@ -12,9 +12,9 @@ public readonly partial record struct ApplicationRole : IVogen<TType, TValueType
     public static readonly TType User = From(ApplicationRoles.User);
     public static readonly TType Moderator = From(ApplicationRoles.Moderator);
     public static readonly TType Administrator = From(ApplicationRoles.Administrator);
-    
+
     public static TType DefaultValue => Anonymous;
-    
+
     public static TType Copy(TType instance) => instance with { };
     public static bool IsInitialized(TType instance) => instance._isInitialized;
     public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);

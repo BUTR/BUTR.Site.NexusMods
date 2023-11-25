@@ -9,9 +9,9 @@ using TValueType = String;
 public readonly partial record struct NexusModsApiKey : IVogen<TType, TValueType>, IHasDefaultValue<TType>
 {
     public static readonly TType None = From(string.Empty);
-    
+
     public static NexusModsApiKey DefaultValue => None;
-    
+
     public static TType Copy(TType instance) => instance with { };
     public static bool IsInitialized(TType instance) => instance._isInitialized;
     public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);

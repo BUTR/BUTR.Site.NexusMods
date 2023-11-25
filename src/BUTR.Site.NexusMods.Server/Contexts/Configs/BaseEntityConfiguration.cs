@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BUTR.Site.NexusMods.Server.Contexts.Configs;
 
-public abstract class BaseEntityConfiguration<TEntity>: IEntityConfiguration where TEntity : class, IEntity
+public abstract class BaseEntityConfiguration<TEntity> : IEntityConfiguration where TEntity : class, IEntity
 {
     public virtual void Configure(ModelBuilder builder) => ConfigureModel(builder.Entity<TEntity>());
     protected virtual void ConfigureModel(EntityTypeBuilder<TEntity> builder) { }
