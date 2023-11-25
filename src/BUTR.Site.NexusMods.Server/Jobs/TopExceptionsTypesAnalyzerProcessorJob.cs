@@ -30,7 +30,9 @@ public sealed class TopExceptionsTypesAnalyzerProcessorJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var ct = context.CancellationToken;
+        using var ctsTimeout = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, ctsTimeout.Token);
+        var ct = cts.Token;
 
         foreach (var tenant in TenantId.Values)
         {

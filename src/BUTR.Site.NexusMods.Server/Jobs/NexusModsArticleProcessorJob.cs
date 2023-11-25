@@ -31,7 +31,9 @@ public sealed class NexusModsArticleProcessorJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var ct = context.CancellationToken;
+        using var ctsTimeout = new CancellationTokenSource(TimeSpan.FromMinutes(30));
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, ctsTimeout.Token);
+        var ct = cts.Token;
 
         foreach (var tenant in TenantId.Values)
         {

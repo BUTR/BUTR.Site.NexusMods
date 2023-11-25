@@ -10,6 +10,7 @@ using Quartz;
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Jobs;
@@ -28,7 +29,9 @@ public sealed class CrashReportProcessorJob : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var ct = context.CancellationToken;
+        using var ctsTimeout = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(context.CancellationToken, ctsTimeout.Token);
+        var ct = cts.Token;
 
         var processed = 0;
         foreach (var tenant in TenantId.Values)
