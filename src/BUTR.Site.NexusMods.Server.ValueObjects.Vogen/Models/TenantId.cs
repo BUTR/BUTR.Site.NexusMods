@@ -12,7 +12,7 @@ public readonly partial record struct TenantId : IVogen<TType, TValueType>, IVog
     public static readonly TType Bannerlord = From(TenantUtils.BannerlordId);
     public static readonly TType Rimworld = From(TenantUtils.RimworldId);
     public static readonly TType StardewValley = From(TenantUtils.StardewValleyId);
-    
+
     public static TType DefaultValue => None;
 
     public static IEnumerable<TType> Values
@@ -25,7 +25,7 @@ public readonly partial record struct TenantId : IVogen<TType, TValueType>, IVog
             //yield return DarkestDungeon;
         }
     }
-    
+
     public static TType Copy(TType instance) => instance with { };
     public static bool IsInitialized(TType instance) => instance._isInitialized;
     public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);

@@ -12,7 +12,7 @@ public readonly partial record struct NexusModsGameDomain : IVogen<TType, TValue
     public static readonly TType Bannerlord = From(TenantUtils.BannerlordGameDomain);
     public static readonly TType Rimworld = From(TenantUtils.RimworldGameDomain);
     public static readonly TType StardewValley = From(TenantUtils.StardewValleyGameDomain);
-    
+
     public static TType DefaultValue => None;
 
     public static IEnumerable<TType> Values
@@ -24,7 +24,7 @@ public readonly partial record struct NexusModsGameDomain : IVogen<TType, TValue
             yield return StardewValley;
         }
     }
-    
+
     public static TType Copy(TType instance) => instance with { };
     public static bool IsInitialized(TType instance) => instance._isInitialized;
     public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);

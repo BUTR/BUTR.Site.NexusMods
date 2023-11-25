@@ -1,4 +1,4 @@
-﻿namespace BUTR.Site.NexusMods.Server.ValueObjects.Utils;
+namespace BUTR.Site.NexusMods.Server.ValueObjects.Utils;
 
 public sealed class VogenSchemaFilter : ISchemaFilter
 {

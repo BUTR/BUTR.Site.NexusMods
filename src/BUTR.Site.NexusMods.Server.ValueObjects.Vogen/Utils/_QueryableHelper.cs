@@ -1,4 +1,4 @@
-﻿namespace BUTR.Site.NexusMods.Server.Utils;
+namespace BUTR.Site.NexusMods.Server.Utils;
 
 public static class QueryableHelper
 {

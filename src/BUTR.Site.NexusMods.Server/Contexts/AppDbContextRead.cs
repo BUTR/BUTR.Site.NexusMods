@@ -18,7 +18,7 @@ public sealed class AppDbContextRead : BaseAppDbContext, IAppDbContextRead
         IEntityConfigurationFactory entityConfigurationFactory,
         DbContextOptions<AppDbContextRead> options) : base(dataSourceProvider, entityConfigurationFactory, options)
     {
-        
+
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
