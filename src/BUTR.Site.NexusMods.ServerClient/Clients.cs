@@ -22,7 +22,7 @@ public partial class AuthenticationClient
 
 public partial interface ICrashReportsClient
 {
-    Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken ct = default);
+    Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery body, CancellationToken ct = default);
 }
 
 public partial class CrashReportsClient
@@ -39,7 +39,7 @@ public partial class CrashReportsClient
         OnPrepareRequest(client, request, urlBuilder);
     }
 
-    public virtual async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken ct = default)
+    public virtual async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery body, CancellationToken ct = default)
     {
         var urlBuilder_ = new StringBuilder();
         urlBuilder_.Append("api/v1/CrashReports/PaginatedStreaming");

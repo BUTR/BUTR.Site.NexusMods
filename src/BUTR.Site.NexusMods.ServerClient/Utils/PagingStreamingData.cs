@@ -58,7 +58,7 @@ public sealed record PagingStreamingData<T> where T : class
         {
             var stream = await streamingJsonContext.ReadLfSeparatedJsonAsync(ct);
             var result = await JsonSerializer.DeserializeAsync<APIStreamingResponse>(stream, jsonSerializerOptions, ct);
-            hasError = result is null || !string.IsNullOrEmpty(result.Error.Detail);
+            hasError = result is null || !string.IsNullOrEmpty(result.Error?.Detail); // Do not remove
             return result!;
         }
         async LazyTask<PagingMetadata> GetMetadataAsync()

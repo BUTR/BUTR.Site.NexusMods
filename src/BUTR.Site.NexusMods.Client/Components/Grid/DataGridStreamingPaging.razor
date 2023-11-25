@@ -8,7 +8,6 @@
           SelectedRowChanged="@(model => { DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
           ReadData="@OnReadData"
           TotalItems="@Metadata.TotalCount"
-          CurrentPage="@Metadata.CurrentPage"
           PageSize="@Metadata.PageSize"
           SelectionMode="@DataGridSelectionMode.Single"
           ShowPager
