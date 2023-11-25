@@ -74,4 +74,10 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="GenerateOpenApi" Condition="$(DOTNET_RUNNING_IN_CONTAINER) != true" AfterTargets="PostBuildEvent">
+    <Exec Command="dotnet new tool-manifest --force" />
+    <Exec Command="dotnet tool install --local Swashbuckle.AspNetCore.Cli --version 6.5.0" />
+    <Exec Command="dotnet swagger tofile --output ../swagger.json $(OutputPath)$(AssemblyName).dll v1" />
+  </Target>
+
 </Project>
