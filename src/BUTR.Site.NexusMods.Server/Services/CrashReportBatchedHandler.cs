@@ -59,24 +59,31 @@ CallStack:
         _client = client;
     }
 
-    public async Task HandleBatchAsync(IEnumerable<CrashReportFileMetadata> requests, CancellationToken ct)
+    public async Task<int> HandleBatchAsync(IEnumerable<CrashReportFileMetadata> requests, CancellationToken ct)
     {
         await _lock.WaitAsync(ct);
 
-        _toDownloadChannel = Channel.CreateBounded<CrashReportFileMetadata>(ParallelCount * 2);
-        _httpResultChannel = Channel.CreateBounded<HttpResultEntry>(ParallelCount * 2);
-        _linkedCrashReportsChannel = Channel.CreateUnbounded<CrashReportToFileIdEntity>();
-        _ignoredCrashReportsChannel = Channel.CreateUnbounded<CrashReportIgnoredFileEntity>();
+        try
+        {
+            _toDownloadChannel = Channel.CreateBounded<CrashReportFileMetadata>(ParallelCount * 2);
+            _httpResultChannel = Channel.CreateBounded<HttpResultEntry>(ParallelCount * 2);
+            _linkedCrashReportsChannel = Channel.CreateUnbounded<CrashReportToFileIdEntity>();
+            _ignoredCrashReportsChannel = Channel.CreateUnbounded<CrashReportIgnoredFileEntity>();
 
-        var filterTask = FilterCrashReportsAsync(requests, ct);
-        var downloadTask = DownloadCrashReportsAsync(ct);
-        var writeTask = WriteCrashReportsToDatabaseAsync(ct);
-        await Task.WhenAll(filterTask, downloadTask, writeTask);
+            var filterTask = FilterCrashReportsAsync(requests, ct);
+            var downloadTask = DownloadCrashReportsAsync(ct);
+            var writeTask = WriteCrashReportsToDatabaseAsync(ct);
+            await Task.WhenAll(filterTask, downloadTask, writeTask);
 
-        if (filterTask.IsFaulted || downloadTask.IsFaulted || writeTask.IsFaulted)
-            throw new AggregateException(new[] { filterTask.Exception, downloadTask.Exception, writeTask.Exception }.OfType<Exception>());
+            if (filterTask.IsFaulted || downloadTask.IsFaulted || writeTask.IsFaulted)
+                throw new AggregateException(new[] { filterTask.Exception, downloadTask.Exception, writeTask.Exception }.OfType<Exception>());
 
-        _lock.Release();
+            return await writeTask;
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     private async Task FilterCrashReportsAsync(IEnumerable<CrashReportFileMetadata> crashReports, CancellationToken ct)
@@ -192,7 +199,7 @@ CallStack:
         }
     }
 
-    private async Task WriteCrashReportsToDatabaseAsync(CancellationToken ct)
+    private async Task<int> WriteCrashReportsToDatabaseAsync(CancellationToken ct)
     {
         var tenant = _tenantContextAccessor.Current;
 
@@ -213,7 +220,7 @@ CallStack:
             if (report is null)
             {
                 failedCrashReportFileIds.Add(fileId);
-                return;
+                continue;
             }
 
             var crashReportId = CrashReportId.From(report.Id);
@@ -284,6 +291,8 @@ CallStack:
         await dbContextWrite.CrashReportToFileIds.UpsertOnSaveAsync(linkedCrashReports);
         await dbContextWrite.CrashReportIgnoredFileIds.UpsertOnSaveAsync(ignoredCrashReports);
         // Disposing the DBContext will save the data
+
+        return crashReportsBuilder.Count;
     }
 
     public ValueTask DisposeAsync()

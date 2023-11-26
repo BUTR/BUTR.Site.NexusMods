@@ -44,10 +44,9 @@ public sealed class CrashReportProcessorJob : IJob
             var client = scope.ServiceProvider.GetRequiredService<CrashReporterClient>();
             await using var crashReportBatchedHandler = scope.ServiceProvider.GetRequiredService<CrashReportBatchedHandler>();
 
-            await foreach (var batch in client.GetNewCrashReportMetadatasAsync(DateTime.UtcNow.AddDays(-2), ct).OfType<CrashReportFileMetadata>().ChunkAsync(1000).WithCancellation(ct))
+            await foreach (var batch in client.GetNewCrashReportMetadatasAsync(DateTime.UtcNow.AddDays(-20), ct).OfType<CrashReportFileMetadata>().ChunkAsync(1000).WithCancellation(ct))
             {
-                await crashReportBatchedHandler.HandleBatchAsync(batch, ct);
-                processed += batch.Count;
+                processed += await crashReportBatchedHandler.HandleBatchAsync(batch, ct);
             }
         }
 
