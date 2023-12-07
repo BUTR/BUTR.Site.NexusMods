@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
 [ApiController, Route("api/v1/[controller]"), TenantRequired]
-public sealed class CrashReportsAnalyzerController : ControllerExtended
+public sealed class CrashReportsAnalyzerController : ApiControllerBase
 {
     public sealed record CrashReportDiagnosticsResult
     {
@@ -42,7 +42,6 @@ public sealed class CrashReportsAnalyzerController : ControllerExtended
     }
 
     [HttpPost("GetDiagnostics")]
-    [Produces("application/json")]
     public async Task<ActionResult<CrashReportDiagnosticsResult?>> GetDiagnosticsAsync([BindTenant] TenantId tenant, [FromBody] CrashReportModel crashReport, [FromServices] ITenantContextAccessor tenantContextAccessor, CancellationToken ct)
     {
         if (!TenantId.Values.Contains(tenant)) return BadRequest();

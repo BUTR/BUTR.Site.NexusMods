@@ -6,8 +6,8 @@ using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
-using BUTR.Site.NexusMods.Server.Utils.APIResponses;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
 [ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization]
-public sealed class AuthenticationController : ControllerExtended
+public sealed class AuthenticationController : ApiControllerBase
 {
     private readonly ILogger _logger;
     private readonly NexusModsAPIClient _nexusModsAPIClient;
@@ -50,13 +50,12 @@ public sealed class AuthenticationController : ControllerExtended
     }
 
     [HttpGet("Authenticate"), AllowAnonymous]
-    [Produces("application/json")]
-    [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status401Unauthorized)]
-    public async Task<APIResponseActionResult<JwtTokenResponse?>> AuthenticateAsync([Required, FromHeader] NexusModsApiKey apiKey, [BindTenant] TenantId tenant, CancellationToken ct)
+    [ProducesResponseType(typeof(ApiResult<JwtTokenResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult<JwtTokenResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ApiResult<JwtTokenResponse?>> AuthenticateAsync([Required, FromHeader] NexusModsApiKey apiKey, [BindTenant] TenantId tenant, CancellationToken ct)
     {
         if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey, ct) is not { } validateResponse)
-            return APIResponseError<JwtTokenResponse>("Invalid apiKey!", StatusCodes.Status401Unauthorized);
+            return ApiResultError("Invalid apiKey!", StatusCodes.Status401Unauthorized);
 
         var userEntity = await _dbContextRead.NexusModsUsers
             .Include(x => x.ToRoles)
@@ -86,17 +85,16 @@ public sealed class AuthenticationController : ControllerExtended
             Role = role.Value,
             Metadata = metadata
         });
-        return APIResponse(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(validateResponse, role, metadata)));
+        return ApiResult(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(validateResponse, role, metadata)));
     }
 
     [HttpGet("Validate"), AllowAnonymous]
-    [Produces("application/json")]
-    [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(APIResponse<JwtTokenResponse>), StatusCodes.Status401Unauthorized)]
-    public async Task<APIResponseActionResult<JwtTokenResponse?>> ValidateAsync([BindApiKey] NexusModsApiKey apiKey, [BindRole] ApplicationRole role, [BindTenant] TenantId tenant, CancellationToken ct)
+    [ProducesResponseType(typeof(ApiResult<JwtTokenResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResult<JwtTokenResponse>), StatusCodes.Status401Unauthorized)]
+    public async Task<ApiResult<JwtTokenResponse?>> ValidateAsync([BindApiKey] NexusModsApiKey apiKey, [BindRole] ApplicationRole role, [BindTenant] TenantId tenant, CancellationToken ct)
     {
         if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey, ct) is not { } validateResponse)
-            return APIResponseError<JwtTokenResponse>(StatusCodes.Status401Unauthorized);
+            return ApiResultError(StatusCodes.Status401Unauthorized);
 
         var userEntity = await _dbContextRead.NexusModsUsers
             .Include(x => x.ToRoles)
@@ -133,10 +131,10 @@ public sealed class AuthenticationController : ControllerExtended
                 Role = userRole.Value,
                 Metadata = metadata
             });
-            return APIResponse(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(validateResponse, userRole, metadata)));
+            return ApiResult(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(validateResponse, userRole, metadata)));
         }
 
         var token = Request.Headers["Authorization"].ToString().Replace(ButrNexusModsAuthSchemeConstants.AuthScheme, "").Trim();
-        return APIResponse(new JwtTokenResponse(token, HttpContext.GetProfile()));
+        return ApiResult(new JwtTokenResponse(token, HttpContext.GetProfile()));
     }
 }

@@ -8,18 +8,18 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
+namespace BUTR.Site.NexusMods.Server.Utils.Http.StreamingMultipartResults;
 
-public class StreamingJsonActionResult : IActionResult
+public sealed class StreamingMultipartResult : IActionResult
 {
-    public StreamingJsonActionResult(IEnumerable<Func<Stream, CancellationToken, Task>> contents, string mime)
+    public IEnumerable<Func<Stream, CancellationToken, Task>> Contents { get; }
+    public string Mime { get; }
+    
+    public StreamingMultipartResult(IEnumerable<Func<Stream, CancellationToken, Task>> contents, string mime)
     {
         Contents = contents;
         Mime = mime;
     }
-
-    public IEnumerable<Func<Stream, CancellationToken, Task>> Contents { get; }
-    public string Mime { get; }
 
     public Task ExecuteResultAsync(ActionContext context)
     {
@@ -28,11 +28,7 @@ public class StreamingJsonActionResult : IActionResult
             throw new ArgumentNullException(nameof(context));
         }
 
-        var executor = context
-            .HttpContext
-            .RequestServices
-            .GetRequiredService<IActionResultExecutor<StreamingJsonActionResult>>();
-
+        var executor = context.HttpContext.RequestServices.GetRequiredService<IActionResultExecutor<StreamingMultipartResult>>();
         return executor.ExecuteAsync(context, this);
     }
 }

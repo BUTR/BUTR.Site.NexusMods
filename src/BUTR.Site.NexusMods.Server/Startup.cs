@@ -7,23 +7,18 @@ using BUTR.Site.NexusMods.Server.Contexts.Configs;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Jobs;
 using BUTR.Site.NexusMods.Server.Models;
-using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
-using BUTR.Site.NexusMods.Server.Utils.APIResponses;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 using BUTR.Site.NexusMods.Server.Utils.Http.Logging;
-using BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
+using BUTR.Site.NexusMods.Server.Utils.Http.StreamingMultipartResults;
 
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -161,9 +156,7 @@ public sealed class Startup
             client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }).AddPolicyHandler(GetRetryPolicy());
-
-        services.AddMultipartSupport();
-
+        
         services.AddSingleton<SteamBinaryCache>();
         services.AddSingleton<SteamDepotDownloader>();
 
@@ -243,31 +236,11 @@ public sealed class Startup
             options.EncryptionKey = opts?.EncryptionKey ?? string.Empty;
         });
 
-        services.AddTransient(typeof(APIResponseActionResultExecutor<>));
+        services.AddStreamingMultipartResult();
 
-        services.AddTransient<IProblemDetailsWriter, APIResponseProblemDetailsWriter>();
-        services.AddProblemDetails();
-
-        services.AddControllers(opt => opt.ValueProviderFactories.Add(new ClaimsValueProviderFactory()))
-            .ConfigureApiBehaviorOptions(options =>
-            {
-                var oldFactory = options.InvalidModelStateResponseFactory;
-                options.InvalidModelStateResponseFactory = context2 =>
-                {
-                    if (context2.ActionDescriptor is ControllerActionDescriptor context)
-                    {
-                        if (APIResponseUtils.IsReturnTypeAPIResponse(context.MethodInfo))
-                        {
-                            var problemDetailsFactory = context2.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
-                            var problemDetails = problemDetailsFactory.CreateValidationProblemDetails(context2.HttpContext, context2.ModelState);
-                            return new ObjectResult(APIResponse.FromError<object>(problemDetails)) { StatusCode = problemDetails.Status, };
-                        }
-                    }
-
-                    return oldFactory(context2);
-                };
-            })
+        services.AddControllersWithAPIResult(opt => opt.ValueProviderFactories.Add(new ClaimsValueProviderFactory()))
             .AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
+        
         services.AddHttpContextAccessor();
         services.AddRouting();
         services.AddResponseCompression(options =>
@@ -318,7 +291,7 @@ public sealed class Startup
             opt.SupportNonNullableReferenceTypes();
             opt.OperationFilter<BindIgnoreFilter>();
             opt.OperationFilter<AuthResponsesOperationFilter>();
-            opt.OperationFilter<APIResponseOperationFilter>();
+            opt.OperationFilter<ApiResultOperationFilter>();
             opt.ValueObjectFilter();
 
             // Really .NET?

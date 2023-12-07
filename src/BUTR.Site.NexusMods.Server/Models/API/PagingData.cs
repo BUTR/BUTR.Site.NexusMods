@@ -26,12 +26,7 @@ public sealed record PagingData<T> where T : class
         Metadata = data.Metadata,
         Items = transformation(data.Items),
     };
-    public static PagingData<T> Create(Paging<T> data, Func<IAsyncEnumerable<T>, IAsyncEnumerable<T>> transformation) => new()
-    {
-        StartTime = data.StartTime,
-        Metadata = data.Metadata,
-        Items = transformation(data.Items),
-    };
+
     public static PagingData<T> Create(Paging<T> data) => new()
     {
         StartTime = data.StartTime,

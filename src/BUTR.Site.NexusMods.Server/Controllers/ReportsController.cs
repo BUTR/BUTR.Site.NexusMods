@@ -1,7 +1,7 @@
 using BUTR.Site.NexusMods.Server.Models;
-using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
 [ApiController, Route("api/v1/[controller]"), AllowAnonymous, TenantRequired]
-public sealed class ReportsController : ControllerExtended
+public sealed class ReportsController : ApiControllerBase
 {
     private readonly ILogger _logger;
     private readonly CrashReporterClient _crashReporterClient;
@@ -31,5 +31,5 @@ public sealed class ReportsController : ControllerExtended
 
     [HttpGet("BlankRequest")]
     [Produces("text/plain")]
-    public ActionResult<APIStreamingResponse> BlankRequest() => Ok(string.Empty);
+    public ApiResult BlankRequest() => Utils.Http.ApiResults.ApiResult.FromError(null);
 }

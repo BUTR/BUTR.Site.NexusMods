@@ -3,8 +3,8 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
-using BUTR.Site.NexusMods.Server.Utils.APIResponses;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
 [ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantNotRequired]
-public sealed class DiscordController : ControllerExtended
+public sealed class DiscordController : ApiControllerBase
 {
     public sealed record DiscordOAuthUrlModel(string Url, Guid State);
 
@@ -42,83 +42,79 @@ public sealed class DiscordController : ControllerExtended
 
     [HttpGet("GetOAuthUrl")]
     [Produces("application/json")]
-    public APIResponseActionResult<DiscordOAuthUrlModel?> GetOAuthUrl()
+    public ApiResult<DiscordOAuthUrlModel?> GetOAuthUrl()
     {
         var (url, state) = _discordClient.GetOAuthUrl();
-        return APIResponse(new DiscordOAuthUrlModel(url, state));
+        return ApiResult(new DiscordOAuthUrlModel(url, state));
     }
 
     [HttpGet("Link")]
-    [Produces("application/json")]
-    public async Task<APIResponseActionResult<string?>> LinkAsync([FromQuery] string code, [BindRole] ApplicationRole role, [BindUserId] NexusModsUserId userId, CancellationToken ct)
+    public async Task<ApiResult<string?>> LinkAsync([FromQuery] string code, [BindRole] ApplicationRole role, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         var tokens = await _discordClient.CreateTokensAsync(code, ct);
         if (tokens is null)
-            return APIResponseError<string>("Failed to link!");
+            return ApiResultError("Failed to link!");
 
         var userInfo = await _discordClient.GetUserInfoAsync(tokens, ct);
 
         if (userInfo is null || !await _discordStorage.UpsertAsync(userId, userInfo.User.Id, tokens))
-            return APIResponseError<string>("Failed to link!");
+            return ApiResultError("Failed to link!");
 
         await UpdateMetadataInternalAsync(role, userId, ct);
 
-        return APIResponse("Linked successful!");
+        return ApiResult("Linked successful!");
     }
 
     [HttpPost("Unlink")]
-    [Produces("application/json")]
-    public async Task<APIResponseActionResult<string?>> UnlinkAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
+    public async Task<ApiResult<string?>> UnlinkAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         var tokens = HttpContext.GetDiscordTokens();
 
         if (tokens?.Data is null)
-            return APIResponseError<string>("Unlinked successful!");
+            return ApiResultError("Unlinked successful!");
 
         var refreshed = await _discordClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
-            return APIResponseError<string>("Failed to unlink!");
+            return ApiResultError("Failed to unlink!");
 
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
 
         if (!await _discordClient.PushMetadataAsync(refreshed, new Metadata(0, 0, 0, 0), ct))
-            return APIResponseError<string>("Failed to unlink!");
+            return ApiResultError("Failed to unlink!");
 
         if (!await _discordStorage.RemoveAsync(userId, tokens.ExternalId))
-            return APIResponseError<string>("Failed to unlink!");
+            return ApiResultError("Failed to unlink!");
 
-        return APIResponse("Unlinked successful!");
+        return ApiResult("Unlinked successful!");
     }
 
     [HttpPost("UpdateMetadata")]
-    [Produces("application/json")]
-    public async Task<APIResponseActionResult<string?>> UpdateMetadataAsync([BindRole] ApplicationRole role, [BindUserId] NexusModsUserId userId, CancellationToken ct)
+    public async Task<ApiResult<string?>> UpdateMetadataAsync([BindRole] ApplicationRole role, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         if (await UpdateMetadataInternalAsync(role, userId, ct) is not { } result)
-            return APIResponseError<string>("Failed to update");
-        return result ? APIResponse("") : APIResponseError<string>("Failed to update");
+            return ApiResultError("Failed to update");
+        return result ? ApiResult("") : ApiResultError("Failed to update");
     }
 
 
     [HttpPost("GetUserInfo")]
-    [Produces("application/json")]
-    public async Task<APIResponseActionResult<DiscordUserInfo?>> GetUserInfoByAccessTokenAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
+    public async Task<ApiResult<DiscordUserInfo?>> GetUserInfoByAccessTokenAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         var tokens = HttpContext.GetDiscordTokens();
 
         if (tokens?.Data is null)
-            return APIResponseError<DiscordUserInfo>("Failed to get the token!");
+            return ApiResultError("Failed to get the token!");
 
         var refreshed = await _discordClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
-            return APIResponse<DiscordUserInfo>(null);
+            return ApiResult<DiscordUserInfo>(null);
 
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
 
         var result = await _discordClient.GetUserInfoAsync(refreshed, ct);
-        return APIResponse(result);
+        return ApiResult(result);
     }
 
     private async Task<bool?> UpdateMetadataInternalAsync(ApplicationRole role, NexusModsUserId userId, CancellationToken ct)

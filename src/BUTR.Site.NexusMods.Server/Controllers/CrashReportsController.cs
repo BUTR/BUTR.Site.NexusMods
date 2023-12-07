@@ -4,9 +4,9 @@ using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Utils;
-using BUTR.Site.NexusMods.Server.Utils.APIResponses;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
-using BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
+using BUTR.Site.NexusMods.Server.Utils.Http.StreamingMultipartResults;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +25,7 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 
 [TenantNotRequired]
 [ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantRequired]
-public sealed class CrashReportsController : ControllerExtended
+public sealed class CrashReportsController : ApiControllerBase
 {
     public sealed record CrashReportModel2
     {
@@ -153,32 +153,28 @@ public sealed class CrashReportsController : ControllerExtended
     }
 
     [HttpPost("Paginated")]
-    [Produces("application/json")]
-    public async Task<APIResponseActionResult<PagingData<CrashReportModel2>?>> PaginatedAsync([FromBody] PaginatedQuery query, [BindUserId] NexusModsUserId userId, CancellationToken ct)
+    public async Task<ApiResult<PagingData<CrashReportModel2>?>> PaginatedAsync([FromBody] PaginatedQuery query, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         var (paginated, transform) = await PaginatedBaseAsync(query, userId, ct);
-        return APIPagingResponse(paginated, transform);
+        return ApiPagingResult(paginated, transform);
     }
 
     [HttpPost("PaginatedStreaming")]
-    [Produces("application/x-ndjson-butr-paging")]
     [ApiExplorerSettings(IgnoreApi = true)]
-    public async Task<StreamingJsonActionResult> PaginatedStreamingAsync([FromBody] PaginatedQuery query, [BindUserId] NexusModsUserId userId, CancellationToken ct)
+    public async Task<StreamingMultipartResult> PaginatedStreamingAsync([FromBody] PaginatedQuery query, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         var (paginated, transform) = await PaginatedBaseAsync(query, userId, ct);
-        return APIPagingResponseStreaming(paginated, transform);
+        return ApiPagingStreamingResult(paginated, transform);
     }
 
     [HttpGet("Autocomplete")]
-    [Produces("application/json")]
-    public APIResponseActionResult<IQueryable<string>?> Autocomplete([FromQuery] ModuleId modId)
+    public ApiResult<IQueryable<string>?> Autocomplete([FromQuery] ModuleId modId)
     {
-        return APIResponse(_dbContextRead.AutocompleteStartsWith<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId, modId));
+        return ApiResult(_dbContextRead.AutocompleteStartsWith<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId, modId));
     }
 
     [HttpPost("Update")]
-    [Produces("application/json")]
-    public async Task<APIResponseActionResult<string?>> UpdateAsync([FromBody] CrashReportModel2 updatedCrashReport, [BindUserId] NexusModsUserId userId, [BindTenant] TenantId tenant)
+    public async Task<ApiResult<string?>> UpdateAsync([FromBody] CrashReportModel2 updatedCrashReport, [BindUserId] NexusModsUserId userId, [BindTenant] TenantId tenant)
     {
         var entityFactory = _dbContextWrite.GetEntityFactory();
         await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
@@ -192,6 +188,6 @@ public sealed class CrashReportsController : ControllerExtended
             Comment = updatedCrashReport.Comment
         };
         await _dbContextWrite.NexusModsUserToCrashReports.UpsertOnSaveAsync(entity);
-        return APIResponse("Updated successful!");
+        return ApiResult("Updated successful!");
     }
 }

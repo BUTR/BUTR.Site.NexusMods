@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
 [ApiController, Route("api/v1/[controller]"), Authorize(AuthenticationSchemes = ButrNexusModsAuthSchemeConstants.AuthScheme)]
-public sealed class RecreateStacktraceController : ControllerExtended
+public sealed class RecreateStacktraceController : ApiControllerBase
 {
     private readonly ILogger _logger;
     private readonly CrashReporterClient _crashReporterClient;
@@ -38,7 +38,6 @@ public sealed class RecreateStacktraceController : ControllerExtended
     }
 
     [HttpGet("Json/{id}")]
-    [Produces("application/json")]
     public async Task<APIActionResult<IEnumerable<RecreatedStacktrace>?>> JsonAsync(CrashReportFileId id, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())

@@ -6,13 +6,13 @@ using Microsoft.Net.Http.Headers;
 using System;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Utils.Http.StreamingJson;
+namespace BUTR.Site.NexusMods.Server.Utils.Http.StreamingMultipartResults;
 
-public class StreamingJsonActionResultExecutor : IActionResultExecutor<StreamingJsonActionResult>
+public sealed class StreamingMultipartResultExecutor : IActionResultExecutor<StreamingMultipartResult>
 {
     private static readonly byte[] Lf = "\n"u8.ToArray();
 
-    public async Task ExecuteAsync(ActionContext context, StreamingJsonActionResult result)
+    public async Task ExecuteAsync(ActionContext context, StreamingMultipartResult result)
     {
         var response = context.HttpContext.Response;
 

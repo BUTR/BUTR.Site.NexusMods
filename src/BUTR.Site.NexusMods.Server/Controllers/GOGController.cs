@@ -2,8 +2,8 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
-using BUTR.Site.NexusMods.Server.Utils.APIResponses;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
 [ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantNotRequired]
-public sealed class GOGController : ControllerExtended
+public sealed class GOGController : ApiControllerBase
 {
     public sealed record GOGOAuthUrlModel(string Url);
 
@@ -31,61 +31,57 @@ public sealed class GOGController : ControllerExtended
     }
 
     [HttpGet("GetOAuthUrl")]
-    [Produces("application/json")]
-    public APIResponseActionResult<GOGOAuthUrlModel?> GetOpenIdUrl()
+    public ApiResult<GOGOAuthUrlModel?> GetOpenIdUrl()
     {
-        return APIResponse(new GOGOAuthUrlModel(_gogAuthClient.GetOAuth2Url()));
+        return ApiResult(new GOGOAuthUrlModel(_gogAuthClient.GetOAuth2Url()));
     }
 
     [HttpGet("Link")]
-    [Produces("application/json")]
-    public async Task<APIResponseActionResult<string?>> LinkAsync([FromQuery] string code, [BindUserId] NexusModsUserId userId, CancellationToken ct)
+    public async Task<ApiResult<string?>> LinkAsync([FromQuery] string code, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         var tokens = await _gogAuthClient.CreateTokensAsync(code, ct);
         if (tokens is null)
-            return APIResponseError<string>("Failed to link!");
+            return ApiResultError("Failed to link!");
 
         if (!await _gogStorage.CheckOwnedGamesAsync(userId, tokens.UserId, tokens))
-            return APIResponseError<string>("Failed to link!");
+            return ApiResultError("Failed to link!");
 
         if (!await _gogStorage.UpsertAsync(userId, tokens.UserId, tokens))
-            return APIResponseError<string>("Failed to link!");
+            return ApiResultError("Failed to link!");
 
-        return APIResponse("Linked successful!");
+        return ApiResult("Linked successful!");
     }
 
     [HttpPost("Unlink")]
-    [Produces("application/json")]
-    public async Task<APIResponseActionResult<string?>> UnlinkAsync([BindUserId] NexusModsUserId userId)
+    public async Task<ApiResult<string?>> UnlinkAsync([BindUserId] NexusModsUserId userId)
     {
         var tokens = HttpContext.GetGOGTokens();
 
         if (tokens?.Data is null)
-            return APIResponseError<string>("Unlinked successful!");
+            return ApiResultError("Unlinked successful!");
 
         if (!await _gogStorage.RemoveAsync(userId, tokens.ExternalId))
-            return APIResponseError<string>("Failed to unlink!");
+            return ApiResultError("Failed to unlink!");
 
-        return APIResponse("Unlinked successful!");
+        return ApiResult("Unlinked successful!");
     }
 
     [HttpPost("GetUserInfo")]
-    [Produces("application/json")]
-    public async Task<APIResponseActionResult<GOGUserInfo?>> GetUserInfoByAccessTokenAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
+    public async Task<ApiResult<GOGUserInfo?>> GetUserInfoByAccessTokenAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         var tokens = HttpContext.GetGOGTokens();
 
         if (tokens?.Data is null)
-            return APIResponseError<GOGUserInfo>("Failed to get the token!");
+            return ApiResultError("Failed to get the token!");
 
         var refreshed = await _gogAuthClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
-            return APIResponse<GOGUserInfo>(null);
+            return ApiResult<GOGUserInfo>(null);
 
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _gogStorage.UpsertAsync(userId, refreshed.UserId, refreshed);
 
         var result = await _gogEmbedClient.GetUserInfoAsync(refreshed.AccessToken, ct);
-        return APIResponse(result);
+        return ApiResult(result);
     }
 }

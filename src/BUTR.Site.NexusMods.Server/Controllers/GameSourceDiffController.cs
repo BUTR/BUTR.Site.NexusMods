@@ -2,7 +2,7 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
-using BUTR.Site.NexusMods.Server.Utils.APIResponses;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +15,7 @@ using System.Threading;
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
 [ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantRequired]
-public sealed class GameSourceDiffController : ControllerExtended
+public sealed class GameSourceDiffController : ApiControllerBase
 {
     private const string basePath = "/source-api-diff";
 
@@ -29,42 +29,38 @@ public sealed class GameSourceDiffController : ControllerExtended
     }
 
     [HttpGet("List")]
-    [Produces("application/json")]
-    public APIResponseActionResult<IEnumerable<string>?> List()
+    public ApiResult<IEnumerable<string>?> List()
     {
         if (!HttpContext.OwnsTenantGame())
-            return APIResponseError<IEnumerable<string>?>(StatusCodes.Status401Unauthorized);
+            return ApiResultError(StatusCodes.Status401Unauthorized);
 
-        return APIResponse(_diffProvider.List(basePath));
+        return ApiResult(_diffProvider.List(basePath));
     }
 
     [HttpGet("TreeFlat")]
-    [Produces("application/json")]
-    public APIResponseActionResult<IEnumerable<string>?> TreeFlat(string entry)
+    public ApiResult<IEnumerable<string>?> TreeFlat(string entry)
     {
         if (!HttpContext.OwnsTenantGame())
-            return APIResponseError<IEnumerable<string>?>(StatusCodes.Status401Unauthorized);
+            return ApiResultError(StatusCodes.Status401Unauthorized);
 
-        return APIResponse(_diffProvider.TreeFlat(basePath, entry));
+        return ApiResult(_diffProvider.TreeFlat(basePath, entry));
     }
 
     [HttpGet("Get")]
-    [Produces("application/json")]
-    public APIResponseActionResult<IEnumerable<string>?> Get(string path, CancellationToken ct)
+    public ApiResult<IEnumerable<string>?> Get(string path, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
-            return APIResponseError<IEnumerable<string>?>(StatusCodes.Status401Unauthorized);
+            return ApiResultError(StatusCodes.Status401Unauthorized);
 
-        return APIResponse(_diffProvider.Get(basePath, path, ct));
+        return ApiResult(_diffProvider.Get(basePath, path, ct));
     }
 
     [HttpPost("Search")]
-    [Produces("application/json")]
-    public APIResponseActionResult<IEnumerable<string>?> Search(TextSearchFiltering[] filters, CancellationToken ct)
+    public ApiResult<IEnumerable<string>?> Search(TextSearchFiltering[] filters, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
-            return APIResponseError<IEnumerable<string>?>(StatusCodes.Status401Unauthorized);
+            return ApiResultError(StatusCodes.Status401Unauthorized);
 
-        return APIResponse(_diffProvider.Search(basePath, filters, ct));
+        return ApiResult(_diffProvider.Search(basePath, filters, ct));
     }
 }
