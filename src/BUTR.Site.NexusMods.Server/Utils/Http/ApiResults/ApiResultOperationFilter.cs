@@ -16,7 +16,7 @@ public sealed class ApiResultOperationFilter : IOperationFilter
 
         if (!operation.Responses.TryGetValue("200", out var successResponse))
             return;
-        
+
         var copy400 = CopyHelper.CopyPublicProperties(successResponse, new OpenApiResponse());
         copy400.Description = "Invalid API Request.";
         operation.Responses.Add("400", copy400);

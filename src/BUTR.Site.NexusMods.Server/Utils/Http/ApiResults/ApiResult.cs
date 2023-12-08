@@ -6,9 +6,9 @@ namespace BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 public record ApiResult(ProblemDetails? Error) : IApiResult, IConvertToActionResult
 {
     public static implicit operator ObjectResult(ApiResult apiResult) => new(apiResult);
-    
+
     public static ApiResult FromError(ProblemDetails? error) => new(error);
-    
+
     public IActionResult Convert() => (ObjectResult) this;
 }
 
@@ -22,6 +22,6 @@ public sealed record ApiResult<TValue>(TValue? Value, ProblemDetails? Error) : I
 
     public static ApiResult<TValue?> FromResult(TValue? data, ProblemDetails? error = null) => new(data, error);
     public static ApiResult<TValue?> FromError(ProblemDetails? error) => new(default, error);
-    
+
     public IActionResult Convert() => (ObjectResult) this;
 }
