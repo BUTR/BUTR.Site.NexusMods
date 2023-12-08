@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Extensions;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -156,7 +156,7 @@ public sealed class Startup
             client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }).AddPolicyHandler(GetRetryPolicy());
-        
+
         services.AddSingleton<SteamBinaryCache>();
         services.AddSingleton<SteamDepotDownloader>();
 
@@ -240,7 +240,7 @@ public sealed class Startup
 
         services.AddControllersWithAPIResult(opt => opt.ValueProviderFactories.Add(new ClaimsValueProviderFactory()))
             .AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
-        
+
         services.AddHttpContextAccessor();
         services.AddRouting();
         services.AddResponseCompression(options =>

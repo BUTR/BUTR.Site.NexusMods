@@ -14,7 +14,7 @@ public sealed class StreamingMultipartResult : IActionResult
 {
     public IEnumerable<Func<Stream, CancellationToken, Task>> Contents { get; }
     public string Mime { get; }
-    
+
     public StreamingMultipartResult(IEnumerable<Func<Stream, CancellationToken, Task>> contents, string mime)
     {
         Contents = contents;
