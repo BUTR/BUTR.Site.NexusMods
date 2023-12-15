@@ -17,7 +17,7 @@ public sealed class ApiResultProblemDetailsWriter : IProblemDetailsWriter
     {
         _actionResultExecutor = actionResultExecutor;
     }
-    
+
     public async ValueTask WriteAsync(ProblemDetailsContext context)
     {
         var routeData = context.HttpContext.GetRouteData();

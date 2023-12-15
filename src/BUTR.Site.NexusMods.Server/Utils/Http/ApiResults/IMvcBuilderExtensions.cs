@@ -30,7 +30,7 @@ public static class IMvcBuilderExtensions
 
         var problemDetailsFactory = actionContext.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
         var problemDetails = problemDetailsFactory.CreateValidationProblemDetails(actionContext.HttpContext, actionContext.ModelState);
-        
+
         return ApiResult.FromError(actionContext.HttpContext, problemDetails).Convert();
     }
 }

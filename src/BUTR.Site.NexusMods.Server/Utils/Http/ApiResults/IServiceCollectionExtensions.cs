@@ -17,12 +17,12 @@ public static class IServiceCollectionExtensions
         services.AddProblemDetails();
 
         var builder = services.AddControllers().HandleInvalidModelStateError().AddMvcOptions(configure);
-        
+
         services.Decorate<IActionResultTypeMapper, ApiResultActionResultTypeMapper>();
 
         return builder;
     }
-    
+
     private static void Decorate<TInterface, TDecorator>(this IServiceCollection services)
         where TInterface : notnull
         where TDecorator : TInterface

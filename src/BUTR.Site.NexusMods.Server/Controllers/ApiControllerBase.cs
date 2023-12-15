@@ -64,10 +64,10 @@ public partial class ApiControllerBase : ControllerBase
 
         return Utils.Http.ApiResults.ApiResult.FromResult(HttpContext, statusCode);
     }
-    
+
     [NonAction]
     protected ApiResult<T?> ApiResult<T>([ActionResultObjectValue] T value) => Utils.Http.ApiResults.ApiResult<T>.FromResult(HttpContext, value);
-    
+
     [NonAction]
     protected ApiResultCreated<T?> ApiResultCreated<T>(Uri locationUri, T value, int statusCode = StatusCodes.Status201Created)
     {
@@ -76,7 +76,7 @@ public partial class ApiControllerBase : ControllerBase
 
         return Utils.Http.ApiResults.ApiResultCreated<T>.FromResultLocationUri(HttpContext, locationUri, value, statusCode);
     }
-    
+
     [NonAction]
     protected ApiResultCreated<T?> ApiResultCreated<T>(string? actionName, string? controllerName, object? routeValues, T value, int statusCode = StatusCodes.Status201Created)
     {
@@ -85,7 +85,7 @@ public partial class ApiControllerBase : ControllerBase
 
         return Utils.Http.ApiResults.ApiResultCreated<T>.FromResultAction(HttpContext, actionName, controllerName, routeValues, value, statusCode);
     }
-    
+
     [NonAction]
     protected ApiResultAccepted<T?> ApiResultAccepted<T>(Uri locationUri, T value, int statusCode = StatusCodes.Status202Accepted)
     {
@@ -94,7 +94,7 @@ public partial class ApiControllerBase : ControllerBase
 
         return Utils.Http.ApiResults.ApiResultAccepted<T>.FromResultLocationUri(HttpContext, locationUri, value, statusCode);
     }
-    
+
     [NonAction]
     protected ApiResultAccepted<T?> ApiResultAccepted<T>(string? actionName, string? controllerName, object? routeValues, T value, int statusCode = StatusCodes.Status202Accepted)
     {
@@ -109,7 +109,7 @@ public partial class ApiControllerBase : ControllerBase
     {
         if (statusCode is < 400 or >= 600)
             throw new ArgumentOutOfRangeException(nameof(statusCode));
-        
+
         return Utils.Http.ApiResults.ApiResult.FromError(HttpContext, new ProblemDetails
         {
             Detail = error,

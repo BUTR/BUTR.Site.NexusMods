@@ -1,4 +1,4 @@
-﻿using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Models;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -17,7 +17,7 @@ public class RequiredMemberFilter : ISchemaFilter
         var nullabilityContext = new NullabilityInfoContext();
         var properties = context.Type.GetProperties();
 
-        foreach(var property in properties)
+        foreach (var property in properties)
         {
             if (property.HasAttribute<JsonIgnoreAttribute>() || !property.HasAttribute<RequiredMemberAttribute>()) continue;
 

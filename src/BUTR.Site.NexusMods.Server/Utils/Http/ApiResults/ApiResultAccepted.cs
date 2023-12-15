@@ -17,12 +17,12 @@ public sealed record ApiResultAccepted<TValue> : ApiResult<TValue>
     {
         return new ApiResultAccepted<TValue?>(locationUri, null, null, null, data, status, null);
     }
-    
+
     public Uri? LocationUri { get; }
     public string? ControllerName { get; }
     public string? ActionName { get; }
     public object? RouteValues { get; }
-    
+
     private ApiResultAccepted(Uri? locationUri, string? controllerName, string? actionName, object? routeValues, TValue? value, int? status, ProblemDetails? error) : base(value, status, error)
     {
         LocationUri = locationUri;
