@@ -26,8 +26,8 @@
     <PackageReference Include="Blazorise.QRCode" Version="1.3.3" />
     <PackageReference Include="Blazorise.Snackbar" Version="1.3.3" />
     <PackageReference Include="Blazorise.TreeView" Version="1.3.3" />
-    <PackageReference Include="BUTR.CrashReport.Models" Version="13.0.0.32" />
-    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.32" />
+    <PackageReference Include="BUTR.CrashReport.Models" Version="13.0.0.33" />
+    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.33" />
     <PackageReference Include="CsvHelper" Version="30.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.0" PrivateAssets="all" />
