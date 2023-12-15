@@ -13,8 +13,8 @@ public static class IMvcBuilderExtensions
     {
         builder.ConfigureApiBehaviorOptions(options =>
         {
-            var oldFactory = options.InvalidModelStateResponseFactory;
-            options.InvalidModelStateResponseFactory = context => Factory(context, oldFactory);
+            var defaultFactory = options.InvalidModelStateResponseFactory;
+            options.InvalidModelStateResponseFactory = context => Factory(context, defaultFactory);
         });
 
         return builder;
@@ -23,13 +23,14 @@ public static class IMvcBuilderExtensions
     /// <summary>
     /// If the return type of the method is APIResponse, we use our standard return model
     /// </summary>
-    private static IActionResult Factory(ActionContext actionContext, Func<ActionContext, IActionResult> oldFactory)
+    private static IActionResult Factory(ActionContext actionContext, Func<ActionContext, IActionResult> defaultFactory)
     {
-        if (actionContext.ActionDescriptor is not ControllerActionDescriptor controllerActionDescriptor) return oldFactory(actionContext);
-        if (!ApiResultUtils.IsReturnTypeApiResult(controllerActionDescriptor.MethodInfo)) return oldFactory(actionContext);
+        if (actionContext.ActionDescriptor is not ControllerActionDescriptor controllerActionDescriptor) return defaultFactory(actionContext);
+        if (!ApiResultUtils.IsReturnTypeApiResult(controllerActionDescriptor.MethodInfo)) return defaultFactory(actionContext);
 
         var problemDetailsFactory = actionContext.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
         var problemDetails = problemDetailsFactory.CreateValidationProblemDetails(actionContext.HttpContext, actionContext.ModelState);
-        return (ObjectResult) ApiResult.FromError(problemDetails);
+        
+        return ApiResult.FromError(actionContext.HttpContext, problemDetails).Convert();
     }
 }

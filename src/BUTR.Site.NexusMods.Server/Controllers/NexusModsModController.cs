@@ -50,10 +50,10 @@ public sealed class NexusModsModController : ApiControllerBase
     public async Task<ApiResult<RawNexusModsModModel?>> RawAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, [BindApiKey] NexusModsApiKey apiKey, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         if (await _nexusModsAPIClient.GetModAsync(gameDomain, modId, apiKey, ct) is not { } modInfo)
-            return ApiResultError("Mod not found!");
+            return ApiBadRequest("Mod not found!");
 
         if (userId != modInfo.User.Id)
-            return ApiResultError("User does not have access to the mod!");
+            return ApiBadRequest("User does not have access to the mod!");
 
         return ApiResult(new RawNexusModsModModel(modInfo.Id, modInfo.Name));
     }
@@ -86,7 +86,7 @@ public sealed class NexusModsModController : ApiControllerBase
             .Where(x => x.Module.ModuleId == query.ModuleId && x.NexusModsMod.NexusModsModId == query.NexusModsModId && x.LinkType == NexusModsModToModuleLinkType.ByStaff)
             .ExecuteDeleteAsync();
 
-        return ApiResultError("Failed to unlink!");
+        return ApiBadRequest("Failed to unlink!");
     }
 
     [HttpPost("ToModuleManualLinkPaginated")]
@@ -111,6 +111,7 @@ public sealed class NexusModsModController : ApiControllerBase
 
         var userToModuleIdsToModIds = _dbContextRead.NexusModsUserToModules
             .Include(x => x.Module).ThenInclude(x => x.ToNexusModsMods).ThenInclude(x => x.NexusModsMod).ThenInclude(x => x.Name)
+            .AsSplitQuery()
             .Where(x => x.NexusModsUser.NexusModsUserId == userId)
             .Select(x => x.Module)
             .SelectMany(x => x.ToNexusModsMods)

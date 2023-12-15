@@ -23,10 +23,7 @@ public sealed class StreamingMultipartResult : IActionResult
 
     public Task ExecuteResultAsync(ActionContext context)
     {
-        if (context == null)
-        {
-            throw new ArgumentNullException(nameof(context));
-        }
+        ArgumentNullException.ThrowIfNull(context);
 
         var executor = context.HttpContext.RequestServices.GetRequiredService<IActionResultExecutor<StreamingMultipartResult>>();
         return executor.ExecuteAsync(context, this);

@@ -135,8 +135,9 @@
                 var constructorArgument = customAttribute.ConstructorArguments[i];
                 if (constructorArgument.Value is string text && !string.IsNullOrEmpty(text) && !LocalizationUtils.IsTranslationString(text))
                 {
+                    var iCopy = i;
                     _dataGridRef?.Values.Add(new LocalizationString(name, text, customAttribute.AttributeType.Name, value =>
-                        customAttribute.ConstructorArguments[i] = new CustomAttributeArgument(constructorArgument.Type, value)));
+                        customAttribute.ConstructorArguments[iCopy] = new CustomAttributeArgument(constructorArgument.Type, value)));
                 }
             }
         }

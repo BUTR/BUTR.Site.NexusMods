@@ -26,9 +26,9 @@ public sealed class DatabaseSteamStorage : ISteamStorage
 {
     private Dictionary<TenantId, HashSet<uint>> TenantToGameIds { get; } = new()
     {
-        { TenantId.Bannerlord, new HashSet<uint> { 261550 } },
-        { TenantId.Rimworld, new HashSet<uint> { 294100 } },
-        { TenantId.StardewValley, new HashSet<uint> { 413150 } },
+        { TenantId.Bannerlord, [261550]},
+        { TenantId.Rimworld, [294100]},
+        { TenantId.StardewValley, [413150]},
     };
 
     private readonly IAppDbContextRead _dbContextRead;

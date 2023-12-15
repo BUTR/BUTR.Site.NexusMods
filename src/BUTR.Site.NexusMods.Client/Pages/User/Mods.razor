@@ -115,14 +115,20 @@
 
     private async Task<bool> DoUnlinkMod(NexusModsModModel model)
     {
-        return await _userClient.ToNexusModsModUnlinkAsync(model.NexusModsModId) is { Error: not null };
+        return await _userClient.ToNexusModsModUnlinkAsync(nexusModsModId: model.NexusModsModId) is { Error: not null };
     }
 
-    private async Task<DataGridPaging<NexusModsModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _userClient.ToNexusModsModPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    private async Task<DataGridPaging<NexusModsModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
+    {
+        var response = await _userClient.ToNexusModsModPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sotings: sortings), cancellationToken: ct);
+        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    }
 
-    private async Task<DataGridPaging<NexusModsModAvailableModel>.ItemsResponse?> GetAllowedMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _modClient.AvailablePaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    private async Task<DataGridPaging<NexusModsModAvailableModel>.ItemsResponse?> GetAllowedMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
+    {
+        var response = await _modClient.AvailablePaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sotings: sortings), cancellationToken: ct);
+        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    }
 
     private async Task OnClick(NexusModsModModel? mod)
     {
@@ -130,7 +136,7 @@
             await _jsRuntime.InvokeVoidAsync("open", mod.Url(TenantUtils.FromTenantToGameDomain(await _tenantProvider.GetTenantAsync())!), "_blank");
     }
 
-    private async Task OnDelete(ButtonRowContext<NexusModsModModel?> context)
+    private async Task OnDelete(ButtonRowContext<NexusModsModModel> context)
     {
         if (context.DeleteCommand.Item is not null && await DoUnlinkMod(context.DeleteCommand.Item))
         {

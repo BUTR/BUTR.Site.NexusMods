@@ -4,7 +4,6 @@ using BUTR.Site.NexusMods.Shared.Helpers;
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -15,14 +14,25 @@ namespace BUTR.Site.NexusMods.Client.Models;
 
 public static class DemoUser
 {
-    private static readonly ProfileModel _profile =
-        new(31179975, "Pickysaurus", "demo@demo.com", "https://forums.nexusmods.com/uploads/profile/photo-31179975.png", true, true, ApplicationRoles.User, null, null, null, true, new List<ProfileTenantModel> { new(1, "Bannerlord") });
+    private static readonly ProfileModel _profile = new(
+            nexusModsUserId: 31179975,
+            name: "Pickysaurus",
+            email: "demo@demo.com",
+            profileUrl: "https://forums.nexusmods.com/uploads/profile/photo-31179975.png",
+            isSupporter: true,
+            isPremium: true,
+            role: ApplicationRoles.User,
+            steamUserId: null,
+            gogUserId: null,
+            discordUserId: null,
+            hasTenantGame: true,
+            availableTenants: new List<ProfileTenantModel> { new( tenantId: 1, name: "Bannerlord") });
     private static readonly List<NexusModsModModel> _mods = new()
     {
-        new(1, "Demo Mod 1", ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-        new(2, "Demo Mod 2", ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-        new(3, "Demo Mod 3", ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-        new(4, "Demo Mod 4", ImmutableArray<int>.Empty, ImmutableArray<int>.Empty, ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
+        new(nexusModsModId: 1, name: "Demo Mod 1", allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
+        new(nexusModsModId: 2, name: "Demo Mod 2", allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
+        new(nexusModsModId: 3, name: "Demo Mod 3", allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
+        new(nexusModsModId: 4, name: "Demo Mod 4", allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
     };
     private static List<CrashReportModel2>? _crashReports;
 
@@ -59,7 +69,17 @@ CallStack:
             var contents = await Task.WhenAll(reports.Select(r => DownloadReport(client, r)));
             foreach (var (id, cr) in contents)
             {
-                var report = new CrashReportModel2(cr.Id, cr.Version, cr.GameVersion, cr.Exception.Type, GetException(cr.Exception), DateTime.UtcNow, $"{baseUrl}{id}.html", cr.Modules.Select(x => x.Id).ToArray(), CrashReportStatus.New, string.Empty);
+                var report = new CrashReportModel2(
+                    id: cr.Id,
+                    version: cr.Version,
+                    gameVersion: cr.GameVersion,
+                    exceptionType: cr.Exception.Type,
+                    exception: GetException(cr.Exception),
+                    date: DateTimeOffset.UtcNow,
+                    url: $"{baseUrl}{id}.html",
+                    involvedModules: cr.Modules.Select(x => x.Id).ToList(),
+                    status: CrashReportStatus.New,
+                    comment: string.Empty);
                 crm.Add(report);
                 yield return report;
 

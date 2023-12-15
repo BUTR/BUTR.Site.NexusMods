@@ -2,7 +2,6 @@ using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -47,7 +46,7 @@ public sealed class TenantRequiredAttribute : Attribute, IResourceFilter
             modelStateDictionary.AddModelError("Tenant", "The field tenant is invalid.");
             var validationProblemDetails = problemDetailsFactory.CreateValidationProblemDetails(context.HttpContext, modelStateDictionary);
 
-            context.Result = new ObjectResult(ApiResult.FromError(validationProblemDetails));
+            context.Result = ApiResult.FromError(context.HttpContext, validationProblemDetails).Convert();
         }
     }
 

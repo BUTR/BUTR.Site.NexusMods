@@ -29,7 +29,7 @@
         <CardTitle Size="4" Position="Position.Relative" Margin="@Margin.Is0">
             Job History
             <Button Position="@Position.Absolute.Bottom.Is0.End.Is0.Translate.MiddleX" Clicked="@Refresh" Padding="@Padding.Is0" >
-                <Icon Name="@IconName.Sync" />
+                <Icon Name="@Enum.GetName(IconName.Sync)" />
             </Button>
         </CardTitle>
     </CardHeader>
@@ -40,19 +40,19 @@
                     <DisplayTemplate>
                         @if (context.IsSuccess == true)
                         {
-                            <Icon Name="@IconName.CheckCircle" Style="@($"color: {Theme.ColorOptions.Success}")" />
+                            <Icon Name="@Enum.GetName(IconName.CheckCircle)" Style="@($"color: {Theme.ColorOptions.Success}")" />
                         }
                         else if (context.IsVetoed == true)
                         {
-                            <Icon Name="@IconName.MinusCircle" Style="@($"color: {Theme.ColorOptions.Warning}")" />
+                            <Icon Name="@Enum.GetName(IconName.MinusCircle)" Style="@($"color: {Theme.ColorOptions.Warning}")" />
                         }
                         else if (context.IsException == true)
                         {
-                            <Icon Name="@IconName.TimesCircle" Style="@($"color: {Theme.ColorOptions.Danger}")" />
+                            <Icon Name="@Enum.GetName(IconName.TimesCircle)" Style="@($"color: {Theme.ColorOptions.Danger}")" />
                         }
                         else
                         {
-                            <Icon Name="@IconName.Circle" Style="@($"color: {Theme.ColorOptions.Info}")" />
+                            <Icon Name="@Enum.GetName(IconName.Circle)" Style="@($"color: {Theme.ColorOptions.Info}")" />
                         }
                     </DisplayTemplate>
                 </DataGridColumn>
@@ -63,7 +63,7 @@
                     <DisplayTemplate>@(context.ScheduleFireTimeUtc?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)</DisplayTemplate>
                 </DataGridColumnDateTime>
                 <DataGridColumnDateTime TItem="QuartzExecutionLogEntity" ElementId="quartz-actual-fire-time" Field="@nameof(QuartzExecutionLogEntity.FireTimeUtc)" Caption="Actual Fire Time" Filterable Sortable SortField="@nameof(EntityFields.FireTimeUtc)" >
-                    <DisplayTemplate>@(context.FireTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)</DisplayTemplate>
+                    <DisplayTemplate>@(context.FireTimeUtc.ToString("yyyy-MM-dd HH:mm:ss"))</DisplayTemplate>
                 </DataGridColumnDateTime>
                 <DataGridColumnTime TItem="QuartzExecutionLogEntity" Field="@nameof(QuartzExecutionLogEntity.JobRunTime)" Caption="Run Time" Filterable="@false" Sortable SortField="@nameof(EntityFields.JobRunTime)" >
                 </DataGridColumnTime>
@@ -101,14 +101,17 @@
 
     private DataGridPaging<QuartzExecutionLogEntity>? _dataGridRef;
     
-    private async Task<DataGridPaging<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _quartzClient.HistoryPaginatedAsync(new PaginatedQuery(page, pageSize, filters, sortings), ct) is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
-    
+    private async Task<DataGridPaging<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct)
+    {
+        var response = await _quartzClient.HistoryPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sotings: sortings), cancellationToken: ct);
+        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    }
+
     private async Task OnSubmit()
     {
         if (string.IsNullOrEmpty(_jobId)) return;
 
-        await _quartzClient.TriggerJobAsync(_jobId);
+        await _quartzClient.TriggerJobAsync(jobId: _jobId);
 
         await Task.Delay(1000);
 

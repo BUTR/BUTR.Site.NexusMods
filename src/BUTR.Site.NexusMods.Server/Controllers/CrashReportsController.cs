@@ -86,24 +86,18 @@ public sealed class CrashReportsController : ApiControllerBase
             : query.Sotings;
 
         var user = await _dbContextRead.NexusModsUsers
-            .Include(x => x.ToModules)
-            .ThenInclude(x => x.Module)
-            .Include(x => x.ToNexusModsMods)
-            .ThenInclude(x => x.NexusModsMod)
+            .Include(x => x.ToModules).ThenInclude(x => x.Module)
+            .Include(x => x.ToNexusModsMods).ThenInclude(x => x.NexusModsMod)
             .AsSplitQuery()
             .FirstAsync(x => x.NexusModsUserId == userId, ct);
 
         IQueryable<UserCrashReportView> DbQueryBase(Expression<Func<CrashReportEntity, bool>> predicate)
         {
             return _dbContextRead.CrashReports
-                .Include(x => x.ToUsers)
-                .ThenInclude(x => x.NexusModsUser)
-                .Include(x => x.ModuleInfos)
-                .ThenInclude(x => x.Module)
-                .Include(x => x.ModuleInfos)
-                .ThenInclude(x => x.NexusModsMod)
-                .Include(x => x.ModuleInfos)
-                .ThenInclude(x => x.Module)
+                .Include(x => x.ToUsers).ThenInclude(x => x.NexusModsUser)
+                .Include(x => x.ModuleInfos).ThenInclude(x => x.Module)
+                .Include(x => x.ModuleInfos).ThenInclude(x => x.NexusModsMod)
+                .Include(x => x.ModuleInfos).ThenInclude(x => x.Module)
                 .Include(x => x.ExceptionType)
                 .AsSplitQuery()
                 .Where(predicate)

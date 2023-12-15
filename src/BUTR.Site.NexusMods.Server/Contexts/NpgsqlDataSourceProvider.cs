@@ -46,5 +46,5 @@ public sealed class NpgsqlDataSourceProvider
     }
 
     public NpgsqlDataSource WriteDataSource() => _main;
-    public NpgsqlDataSource ReadDataSource() => _main;
+    public NpgsqlDataSource ReadDataSource() => _replica;
 }

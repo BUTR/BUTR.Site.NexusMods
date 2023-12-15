@@ -143,9 +143,9 @@
                 {
                     if (node.Content.Count == 0)
                     {
-                        _gamePublicApiClient.GetAsync(GetPath(node)).ContinueWith(x =>
+                        _gamePublicApiClient.GetAsync(GetPath(node)).ContinueWith(async x =>
                         {
-                            node.Content = x.Result.Value?.Select(content =>
+                            node.Content = (await x).Value?.Select(content =>
                             {
                                 var title = GetDiffTitle(content);
                                 return new DiffContent(title, content);

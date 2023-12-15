@@ -12,7 +12,7 @@
         await base.OnInitializedAsync();
         
         var response = await _discordClient.GetOAuthUrlAsync();
-        if (response?.Value?.Url is null)
+        if (response.Value?.Url is null)
         {
             _navigationManager.NavigateTo("profile");
             return;

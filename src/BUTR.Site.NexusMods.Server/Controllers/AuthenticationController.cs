@@ -94,7 +94,7 @@ public sealed class AuthenticationController : ApiControllerBase
     public async Task<ApiResult<JwtTokenResponse?>> ValidateAsync([BindApiKey] NexusModsApiKey apiKey, [BindRole] ApplicationRole role, [BindTenant] TenantId tenant, CancellationToken ct)
     {
         if (await _nexusModsAPIClient.ValidateAPIKeyAsync(apiKey, ct) is not { } validateResponse)
-            return ApiResultError(StatusCodes.Status401Unauthorized);
+            return ApiResultError("API Key not valid", StatusCodes.Status401Unauthorized);
 
         var userEntity = await _dbContextRead.NexusModsUsers
             .Include(x => x.ToRoles)

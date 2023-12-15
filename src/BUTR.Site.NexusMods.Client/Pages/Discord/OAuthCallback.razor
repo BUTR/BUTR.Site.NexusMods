@@ -102,19 +102,21 @@
                 return;
             }
 
-            await _discordClient.LinkAsync(queryCode);
+            await _discordClient.LinkAsync(code: queryCode);
             _ = await _authenticationProvider.ValidateAsync();
 
-            var userInfo = await _discordClient.GetUserInfoAsync();
-            _userInfo = new DiscordUserInfo2(userInfo.Value);
-            _status = "SUCCESS";
-            _image = Success;
-        }
-        catch (ApiException)
-        {
-            _status = "FAILURE";
-            _message = "Failed to link!";
-            _image = Failure;
+            if (await _discordClient.GetUserInfoAsync() is { Value: var userInfo })
+            {
+                _userInfo = new DiscordUserInfo2(userInfo);
+                _status = "SUCCESS";
+                _image = Success;
+            }
+            else
+            {
+                _status = "FAILURE";
+                _message = "Failed to link!";
+                _image = Failure;
+            }
         }
         finally
         {

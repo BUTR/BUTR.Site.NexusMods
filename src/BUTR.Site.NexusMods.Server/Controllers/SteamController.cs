@@ -56,24 +56,22 @@ public sealed class SteamController : ApiControllerBase
     }
 
     [HttpGet("Link")]
-    public async Task<ApiResult<string?>> LinkAsync([FromQuery] Dictionary<string, string> _, [BindUserId] NexusModsUserId userId, CancellationToken ct)
+    public async Task<ApiResult<string?>> LinkAsync([FromQuery] Dictionary<string, string> queries, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
-        var queries = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value[0] ?? string.Empty);
-
         var isValid = await _steamCommunityClient.ConfirmIdentityAsync(queries, ct);
         if (!isValid)
-            return ApiResultError("Failed to link!");
+            return ApiBadRequest("Failed to link!");
 
         if (!SteamUtils.TryParse(queries["openid.claimed_id"], out var steamId))
-            return ApiResultError("Failed to link!");
+            return ApiBadRequest("Failed to link!");
 
         var userInfo = await _steamAPIClient.GetUserInfoAsync(steamId, ct);
 
         if (!await _steamStorage.CheckOwnedGamesAsync(userId, steamId))
-            return ApiResultError("Failed to link!");
+            return ApiBadRequest("Failed to link!");
 
         if (userInfo is null || !await _steamStorage.UpsertAsync(userId, userInfo.Id, queries))
-            return ApiResultError("Failed to link!");
+            return ApiBadRequest("Failed to link!");
 
         return ApiResult("Linked successful!");
     }
@@ -84,10 +82,10 @@ public sealed class SteamController : ApiControllerBase
         var tokens = HttpContext.GetSteamTokens();
 
         if (tokens?.Data is null)
-            return ApiResultError("Unlinked successful!");
+            return ApiBadRequest("Unlinked successful!");
 
         if (!await _steamStorage.RemoveAsync(userId, tokens.ExternalId))
-            return ApiResultError("Failed to unlink!");
+            return ApiBadRequest("Failed to unlink!");
 
         return ApiResult("Unlinked successful!");
     }
@@ -98,7 +96,7 @@ public sealed class SteamController : ApiControllerBase
         var tokens = HttpContext.GetSteamTokens();
 
         if (tokens?.Data is null)
-            return ApiResultError("Failed to get the token!");
+            return ApiBadRequest("Failed to get the token!");
 
         var result = await _steamAPIClient.GetUserInfoAsync(tokens.ExternalId, ct);
         return ApiResult(result);

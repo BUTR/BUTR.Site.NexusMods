@@ -34,7 +34,6 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 8.x.x
-        dotnet-quality: preview
 
     - name: Build Server
       run: dotnet build src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj --configuration Release;

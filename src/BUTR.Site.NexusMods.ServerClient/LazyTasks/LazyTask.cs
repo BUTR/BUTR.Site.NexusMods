@@ -15,7 +15,7 @@ public class LazyTask<T> : INotifyCompletion
 
     private readonly object _syncObj = new();
 
-    private T? _result;
+    private T _result = default!;
 
     private Exception? _exception;
 
@@ -25,7 +25,7 @@ public class LazyTask<T> : INotifyCompletion
 
     internal LazyTask() { }
 
-    public T? GetResult()
+    public T GetResult()
     {
         lock (_syncObj)
         {

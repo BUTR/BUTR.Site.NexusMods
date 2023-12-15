@@ -148,10 +148,13 @@
         }
     }
 
-    private async Task<DataGridPaging<NexusModsUserToModuleManualLinkModel>.ItemsResponse?> GetAllowUserMods(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct) =>
-        await _userClient.ToModuleManualLinkPaginatedAsync(new(page, pageSize, filterings, sortings), ct) is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    private async Task<DataGridPaging<NexusModsUserToModuleManualLinkModel>.ItemsResponse?> GetAllowUserMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct)
+    {
+        var response = await _userClient.ToModuleManualLinkPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sotings: sortings), cancellationToken: ct);
+        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    }
 
-    private async Task OnDisallow(ButtonRowContext<NexusModsUserToModuleManualLinkModel?> context)
+    private async Task OnDisallow(ButtonRowContext<NexusModsUserToModuleManualLinkModel> context)
     {
         if (context.DeleteCommand.Item is not null && await DoUserDisallowMod(context.DeleteCommand.Item))
         {
@@ -164,7 +167,7 @@
         if (!NexusModsUtils.TryParse(model.UserUrl, out _, out var nexusModsId) && !uint.TryParse(model.UserUrl, out nexusModsId))
             return false;
         
-        return await _userClient.ToModuleManualLinkAsync((int) nexusModsId, model.ModuleId) is { Error: not null };
+        return await _userClient.ToModuleManualLinkAsync(nexusModsUserId:(int) nexusModsId, moduleId: model.ModuleId) is { Error: not null };
     }
     private async Task<bool> DoUserDisallowMod(NexusModsUserToModuleManualLinkModel model)
     {

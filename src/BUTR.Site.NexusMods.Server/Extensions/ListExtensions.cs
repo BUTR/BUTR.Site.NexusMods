@@ -7,10 +7,8 @@ public static class ListExtensions
 {
     public static int BinarySearch<T, TKey>(this IList<T> instance, TKey itemKey, Func<T, TKey> keySelector) where TKey : IComparable<TKey>, IComparable
     {
-        if (instance == null)
-            throw new ArgumentNullException(nameof(instance));
-        if (keySelector == null)
-            throw new ArgumentNullException(nameof(keySelector));
+        ArgumentNullException.ThrowIfNull(instance);
+        ArgumentNullException.ThrowIfNull(keySelector);
 
         var start = 0;
         var end = instance.Count - 1;

@@ -30,8 +30,7 @@ public static class DynamicExpressions
 
     public static Expression<Func<TEntity, object>> GetPropertyGetter<TEntity>(string property)
     {
-        if (property == null)
-            throw new ArgumentNullException(nameof(property));
+        ArgumentNullException.ThrowIfNull(property);
 
         var param = Expression.Parameter(typeof(TEntity));
         var prop = param.GetNestedProperty(property);

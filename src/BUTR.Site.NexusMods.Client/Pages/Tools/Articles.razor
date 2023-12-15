@@ -10,7 +10,7 @@
         <CardTitle Size="4" Position="Position.Relative" Margin="@Margin.Is0">
             NexusMods Articles
             <Button Position="@Position.Absolute.Bottom.Is0.End.Is0.Translate.MiddleX" Clicked="@Refresh" Padding="@Padding.Is0" >
-                <Icon Name="@IconName.Sync" />
+                <Icon Name="@Enum.GetName(IconName.Sync)" />
             </Button>
         </CardTitle>
     </CardHeader>
@@ -38,8 +38,11 @@
 
     private DataGridPaging<NexusModsArticleModel>? _dataGridPagingRef;
 
-    private async Task<DataGridPaging<NexusModsArticleModel>.ItemsResponse?> GetArticles(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _articlesClient.PaginatedAsync(new PaginatedQuery(page, pageSize, filterings, sortings), ct) is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    private async Task<DataGridPaging<NexusModsArticleModel>.ItemsResponse?> GetArticles(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
+    {
+        var response = await _articlesClient.PaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sotings: sortings), cancellationToken: ct);
+        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    }
 
     private async Task OnClick(NexusModsArticleModel? mod)
     {

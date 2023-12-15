@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace BUTR.Site.NexusMods.Shared.Utils;
@@ -56,8 +57,8 @@ public sealed class AlphanumComparatorFast : IComparer<string?>, IComparer
             // If both chunks contain numeric characters, sort them numerically
             if (char.IsDigit(chunk1[0]) && char.IsDigit(chunk2[0]))
             {
-                var numericChunk1 = Convert.ToInt32(chunk1.ToString());
-                var numericChunk2 = Convert.ToInt32(chunk2.ToString());
+                var numericChunk1 = Convert.ToInt32(chunk1.ToString(), CultureInfo.InvariantCulture);
+                var numericChunk2 = Convert.ToInt32(chunk2.ToString(), CultureInfo.InvariantCulture);
 
                 if (numericChunk1 < numericChunk2) return -1;
                 if (numericChunk1 > numericChunk2) return 1;

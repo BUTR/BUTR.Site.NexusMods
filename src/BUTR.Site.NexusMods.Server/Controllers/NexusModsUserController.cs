@@ -127,10 +127,10 @@ public sealed class NexusModsUserController : ApiControllerBase
         var gameDomain = tenant.ToGameDomain();
 
         if (await _nexusModsAPIClient.GetModAsync(gameDomain, query.NexusModsModId, apiKey, ct) is not { } modInfo)
-            return ApiResultError("Mod not found!");
+            return ApiBadRequest("Mod not found!");
 
         if (userId != modInfo.User.Id)
-            return ApiResultError("User does not have access to the mod!");
+            return ApiBadRequest("User does not have access to the mod!");
 
         var entity = new NexusModsModToNameEntity
         {
@@ -152,15 +152,15 @@ public sealed class NexusModsUserController : ApiControllerBase
         var gameDomain = tenant.ToGameDomain();
 
         if (await _nexusModsAPIClient.GetModAsync(gameDomain, query.NexusModsModId, apiKey, ct) is not { } modInfo)
-            return ApiResultError("Mod not found!");
+            return ApiBadRequest("Mod not found!");
 
         if (userId != modInfo.User.Id)
-            return ApiResultError("User does not have access to the mod!");
+            return ApiBadRequest("User does not have access to the mod!");
 
         if (HttpContext.GetIsPremium()) // Premium is needed for API based downloading
         {
             var response = await _nexusModsAPIClient.GetModFileInfosFullAsync(gameDomain, modInfo.Id, apiKey, ct);
-            if (response is null) return ApiResultError("Error while fetching the mod!");
+            if (response is null) return ApiBadRequest("Error while fetching the mod!");
 
             var infos = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modInfo.Id, response.Files, apiKey, ct).ToImmutableArrayAsync(ct);
 
@@ -254,10 +254,10 @@ public sealed class NexusModsUserController : ApiControllerBase
         var gameDomain = tenant.ToGameDomain();
 
         if (await _nexusModsAPIClient.GetModAsync(gameDomain, query.NexusModsModId, apiKey, ct) is not { } modInfo)
-            return ApiResultError("Mod not found!");
+            return ApiBadRequest("Mod not found!");
 
         if (userId != modInfo.User.Id)
-            return ApiResultError("User does not have access to the mod!");
+            return ApiBadRequest("User does not have access to the mod!");
 
 
         var nexusModsModToName = new NexusModsModToNameEntity

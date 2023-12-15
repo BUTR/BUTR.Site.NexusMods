@@ -31,7 +31,7 @@
                             </Step>
                             <Step Name="Finalizing" Completed="@(_stepIndex > 3)">
                                 <Marker>
-                                    <Icon Name="@IconName.Flag" />
+                                    <Icon Name="@Enum.GetName(IconName.Flag)" />
                                 </Marker>
                                 <Caption>
                                     <Text Style="@TextStyle" >Finalizing</Text>

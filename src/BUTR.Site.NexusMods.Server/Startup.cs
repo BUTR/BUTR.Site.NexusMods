@@ -289,10 +289,13 @@ public sealed class Startup
 
             opt.DescribeAllParametersInCamelCase();
             opt.SupportNonNullableReferenceTypes();
+            opt.SchemaFilter<RequiredMemberFilter>();
             opt.OperationFilter<BindIgnoreFilter>();
             opt.OperationFilter<AuthResponsesOperationFilter>();
             opt.OperationFilter<ApiResultOperationFilter>();
             opt.ValueObjectFilter();
+            opt.EnableAnnotations();
+            opt.UseAllOfToExtendReferenceSchemas();
 
             // Really .NET?
             opt.MapType<TimeSpan>(() => new OpenApiSchema { Type = "string", Format = "time-span" });

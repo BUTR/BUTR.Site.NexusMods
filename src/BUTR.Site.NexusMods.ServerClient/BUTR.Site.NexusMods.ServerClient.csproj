@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -11,7 +11,7 @@
   <Target Name="RemoveGenerateSources" BeforeTargets="CoreClean">
     <Delete Files="Clients.g.cs" />
   </Target>
-  
+
   <Target Name="GenerateOpenApi" BeforeTargets="PreBuildEvent">
     <ItemGroup>
       <ExecPreprocessArgs Include="/input:../swagger.json /classname:&quot;{controller}Client&quot; /namespace:$(RootNamespace) /output:Clients.g.cs" />

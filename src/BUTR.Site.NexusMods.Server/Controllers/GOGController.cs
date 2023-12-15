@@ -41,13 +41,13 @@ public sealed class GOGController : ApiControllerBase
     {
         var tokens = await _gogAuthClient.CreateTokensAsync(code, ct);
         if (tokens is null)
-            return ApiResultError("Failed to link!");
+            return ApiBadRequest("Failed to link!");
 
         if (!await _gogStorage.CheckOwnedGamesAsync(userId, tokens.UserId, tokens))
-            return ApiResultError("Failed to link!");
+            return ApiBadRequest("Failed to link!");
 
         if (!await _gogStorage.UpsertAsync(userId, tokens.UserId, tokens))
-            return ApiResultError("Failed to link!");
+            return ApiBadRequest("Failed to link!");
 
         return ApiResult("Linked successful!");
     }
@@ -58,10 +58,10 @@ public sealed class GOGController : ApiControllerBase
         var tokens = HttpContext.GetGOGTokens();
 
         if (tokens?.Data is null)
-            return ApiResultError("Unlinked successful!");
+            return ApiBadRequest("Unlinked successful!");
 
         if (!await _gogStorage.RemoveAsync(userId, tokens.ExternalId))
-            return ApiResultError("Failed to unlink!");
+            return ApiBadRequest("Failed to unlink!");
 
         return ApiResult("Unlinked successful!");
     }
@@ -72,11 +72,11 @@ public sealed class GOGController : ApiControllerBase
         var tokens = HttpContext.GetGOGTokens();
 
         if (tokens?.Data is null)
-            return ApiResultError("Failed to get the token!");
+            return ApiBadRequest("Failed to get the token!");
 
         var refreshed = await _gogAuthClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
-            return ApiResult<GOGUserInfo>(null);
+            return ApiResult<GOGUserInfo?>(null);
 
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _gogStorage.UpsertAsync(userId, refreshed.UserId, refreshed);

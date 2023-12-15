@@ -24,11 +24,8 @@ public static class IAsyncEnumerableExtensions
 
     public static async IAsyncEnumerable<IReadOnlyCollection<TSource>> ChunkAsync<TSource>(this IAsyncEnumerable<TSource> source, int size, [EnumeratorCancellation] CancellationToken ct = default)
     {
-        if (source == null)
-            throw new ArgumentNullException(nameof(source));
-
-        if (size < 1)
-            throw new ArgumentOutOfRangeException(nameof(size));
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentOutOfRangeException.ThrowIfLessThan(size, 1);
 
         await using var e = source.GetConfiguredAsyncEnumerator(ct, false);
         var buffer = new List<TSource>(size);

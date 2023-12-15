@@ -77,7 +77,7 @@ else
             <CardBody>
                 <Row>
                     <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">NexusMods Id</Column>
-                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.NexusModsUserId</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">@user.NexusModsUserId.ToString()</Column>
                 </Row>
                 <Divider/>
                 <Row>
@@ -93,17 +93,17 @@ else
                 <Row>
                     <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Discord</Column>
                     <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">
-                        @if (_user.DiscordUserId is not null && _discordUser is null)
+                        @if (_user!.DiscordUserId is not null && _discordUser is null)
                         {
                             <Text>...loading</Text>
                         }
-                        else if (_user.DiscordUserId is not null && _discordUser.NeedsRelink)
+                        else if (_user.DiscordUserId is not null && _discordUser!.NeedsRelink)
                         {
                             <Anchor Style="text-decoration: none" To="discord-linked-role" Target="@Target.Blank">Needs Relinking</Anchor>
                         }
                         else if (_user.DiscordUserId is not null)
                         {
-                            <Anchor Style="text-decoration: none" To="@_discordUser.Url" Target="@Target.Blank">@_discordUser.Name</Anchor>
+                            <Anchor Style="text-decoration: none" To="@_discordUser!.Url" Target="@Target.Blank">@_discordUser.Name</Anchor>
                         }
                         else
                         {
@@ -115,17 +115,17 @@ else
                 <Row>
                     <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Steam</Column>
                     <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">
-                        @if (_user.SteamUserId is not null && _steamUser is null)
+                        @if (_user!.SteamUserId is not null && _steamUser is null)
                         {
                             <Text>...loading</Text>
                         }
-                        else if (_user.SteamUserId is not null && _steamUser.NeedsRelink)
+                        else if (_user.SteamUserId is not null && _steamUser!.NeedsRelink)
                         {
                             <Anchor Style="text-decoration: none" To="steam-linked-role" Target="@Target.Blank">Needs Relinking</Anchor>
                         }
                         else if (_user.SteamUserId is not null)
                         {
-                            <Anchor Style="text-decoration: none" To="@_steamUser.Url" Target="@Target.Blank">@_steamUser.Name</Anchor>
+                            <Anchor Style="text-decoration: none" To="@_steamUser!.Url" Target="@Target.Blank">@_steamUser.Name</Anchor>
                         }
                         else
                         {
@@ -137,17 +137,17 @@ else
                 <Row>
                     <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">GOG</Column>
                     <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">
-                        @if (_user.GogUserId is not null && _gogUser is null)
+                        @if (_user!.GogUserId is not null && _gogUser is null)
                         {
                             <Text>...loading</Text>
                         }
-                        else if (_user.GogUserId is not null && _gogUser.NeedsRelink)
+                        else if (_user.GogUserId is not null && _gogUser!.NeedsRelink)
                         {
                             <Anchor Style="text-decoration: none" To="gog-linked-role" Target="@Target.Blank">Needs Relinking</Anchor>
                         }
                         else if (_user.GogUserId is not null)
                         {
-                            <Anchor Style="text-decoration: none" To="@_gogUser.Url" Target="@Target.Blank">@_gogUser.Name</Anchor>
+                            <Anchor Style="text-decoration: none" To="@_gogUser!.Url" Target="@Target.Blank">@_gogUser.Name</Anchor>
                         }
                         else
                         {
@@ -177,7 +177,7 @@ else
         {
             _ = _discordClient.GetUserInfoAsync().ContinueWith(x =>
             {
-                _discordUser = new(x.Result?.Value);
+                _discordUser = new(x.Result.Value);
                 StateHasChanged();
             });
         }
@@ -186,7 +186,7 @@ else
         {
             _ = _steamClient.GetUserInfoAsync().ContinueWith(x =>
             {
-                _steamUser = new(x.Result?.Value);
+                _steamUser = new(x.Result.Value);
                 StateHasChanged();
             });
         }
@@ -195,7 +195,7 @@ else
         {
             _ = _gogClient.GetUserInfoAsync().ContinueWith(x =>
             {
-                _gogUser = new(x.Result?.Value);
+                _gogUser = new(x.Result.Value);
                 StateHasChanged();
             });
         }

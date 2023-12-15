@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -12,6 +11,6 @@ public static class ApiResultUtils
         if (returnType.IsGenericType && returnType.GetGenericTypeDefinition() is { } typeDef && (typeDef == typeof(Task<>) || typeDef == typeof(ValueTask<>)))
             returnType = returnType.GenericTypeArguments[0];
 
-        return returnType.GetInterfaces().Any(x => x == typeof(IApiResult));
+        return returnType == typeof(ApiResult) || (returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(ApiResult<>));
     }
 }

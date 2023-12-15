@@ -14,7 +14,7 @@ public static class ProgressUtils
         setProgress(0);
         var task = Task.Run(async () =>
         {
-            while (cts is not null && !cts.IsCancellationRequested)
+            while (!cts.IsCancellationRequested)
             {
                 if (getProgress() == 100) break;
                 if (getProgress() > 70)
@@ -33,7 +33,7 @@ public static class ProgressUtils
         }, cts.Token);
         return AsyncDisposable.Create(async () =>
         {
-            cts.Cancel();
+            await cts.CancelAsync();
             await Task.WhenAny(task);
             task.Dispose();
             cts.Dispose();

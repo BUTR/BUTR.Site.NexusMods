@@ -32,7 +32,7 @@ public sealed class GameSourceDiffController : ApiControllerBase
     public ApiResult<IEnumerable<string>?> List()
     {
         if (!HttpContext.OwnsTenantGame())
-            return ApiResultError(StatusCodes.Status401Unauthorized);
+            return ApiResultError("Game not owned!", StatusCodes.Status401Unauthorized);
 
         return ApiResult(_diffProvider.List(basePath));
     }
@@ -41,7 +41,7 @@ public sealed class GameSourceDiffController : ApiControllerBase
     public ApiResult<IEnumerable<string>?> TreeFlat(string entry)
     {
         if (!HttpContext.OwnsTenantGame())
-            return ApiResultError(StatusCodes.Status401Unauthorized);
+            return ApiResultError("Game not owned!", StatusCodes.Status401Unauthorized);
 
         return ApiResult(_diffProvider.TreeFlat(basePath, entry));
     }
@@ -50,7 +50,7 @@ public sealed class GameSourceDiffController : ApiControllerBase
     public ApiResult<IEnumerable<string>?> Get(string path, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
-            return ApiResultError(StatusCodes.Status401Unauthorized);
+            return ApiResultError("Game not owned!", StatusCodes.Status401Unauthorized);
 
         return ApiResult(_diffProvider.Get(basePath, path, ct));
     }
@@ -59,7 +59,7 @@ public sealed class GameSourceDiffController : ApiControllerBase
     public ApiResult<IEnumerable<string>?> Search(TextSearchFiltering[] filters, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
-            return ApiResultError(StatusCodes.Status401Unauthorized);
+            return ApiResultError("Game not owned!", StatusCodes.Status401Unauthorized);
 
         return ApiResult(_diffProvider.Search(basePath, filters, ct));
     }

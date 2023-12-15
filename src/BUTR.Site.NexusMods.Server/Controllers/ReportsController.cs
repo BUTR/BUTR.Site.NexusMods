@@ -4,6 +4,7 @@ using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -31,5 +32,5 @@ public sealed class ReportsController : ApiControllerBase
 
     [HttpGet("BlankRequest")]
     [Produces("text/plain")]
-    public ApiResult BlankRequest() => Utils.Http.ApiResults.ApiResult.FromError(null);
+    public ApiResult BlankRequest() => ApiResultError("", StatusCodes.Status400BadRequest);
 }

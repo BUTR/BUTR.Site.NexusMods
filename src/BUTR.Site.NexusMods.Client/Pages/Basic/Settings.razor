@@ -55,13 +55,13 @@
                 </Column>
             </Row>
             <Row>
-                <Column Flex="@Flex.ReverseRow" Gap="Gap.Is1">
+                <Column Flex="@Flex.ReverseRow" Gap="@Gap.Is1">
                     <Button Border="@Border.RoundedPill"
                             Color="@Color.Primary"
-                            Clicked="OnCancel">Cancel</Button>
+                            Clicked="@OnCancel">Cancel</Button>
                     <Button Border="@Border.RoundedPill"
                             Color="@Color.Primary"
-                            Clicked="OnSave">Save</Button>
+                            Clicked="@OnSave">Save</Button>
                 </Column>
             </Row>
         </CardBody>

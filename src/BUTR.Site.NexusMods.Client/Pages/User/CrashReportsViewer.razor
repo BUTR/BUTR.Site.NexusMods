@@ -60,7 +60,7 @@
         <CardTitle Size="4" Position="Position.Relative" Margin="@Margin.Is0">
             Crash Reports
             <Button Position="@Position.Absolute.Bottom.Is0.End.Is0.Translate.MiddleX" Clicked="@Refresh" Padding="@Padding.Is0" >
-                <Icon Name="@IconName.Sync" />
+                <Icon Name="@Enum.GetName(IconName.Sync)" />
             </Button>
         </CardTitle>
     </CardHeader>
@@ -129,8 +129,10 @@
             await _jsRuntime.InvokeVoidAsync("open", report.Url, "_blank");
     }
 
-    private async Task<PagingStreamingData<CrashReportModel2>?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default) =>
-        await _crashReportsClient.PaginatedStreamingAsync(new(page, pageSize, filterings, sortings), ct);
+    private async Task<PagingStreamingData<CrashReportModel2>?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
+    {
+        return await _crashReportsClient.PaginatedStreamingAsync(new(page: page, pageSize: pageSize, filters: filters, sotings: sortings), ct);
+    }
 
     private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => await _crashReportsClient.AutocompleteAsync(new(filter), ct) is { Value: { } data } ? data : Array.Empty<string>();
 

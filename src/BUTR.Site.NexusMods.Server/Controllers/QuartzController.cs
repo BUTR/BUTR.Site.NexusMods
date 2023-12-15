@@ -52,7 +52,7 @@ public sealed class QuartzController : ApiControllerBase
         if (await _dbContextWrite.QuartzExecutionLogs.Where(x => x.LogId == logId).ExecuteDeleteAsync() > 0)
             return ApiResult("Deleted successful!");
 
-        return ApiResultError("Failed to delete!");
+        return ApiBadRequest("Failed to delete!");
     }
 
     [HttpGet("TriggerJob")]

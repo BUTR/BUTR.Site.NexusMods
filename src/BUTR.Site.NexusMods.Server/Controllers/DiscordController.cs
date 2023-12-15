@@ -53,12 +53,12 @@ public sealed class DiscordController : ApiControllerBase
     {
         var tokens = await _discordClient.CreateTokensAsync(code, ct);
         if (tokens is null)
-            return ApiResultError("Failed to link!");
+            return ApiBadRequest("Failed to link!");
 
         var userInfo = await _discordClient.GetUserInfoAsync(tokens, ct);
 
         if (userInfo is null || !await _discordStorage.UpsertAsync(userId, userInfo.User.Id, tokens))
-            return ApiResultError("Failed to link!");
+            return ApiBadRequest("Failed to link!");
 
         await UpdateMetadataInternalAsync(role, userId, ct);
 
@@ -71,20 +71,20 @@ public sealed class DiscordController : ApiControllerBase
         var tokens = HttpContext.GetDiscordTokens();
 
         if (tokens?.Data is null)
-            return ApiResultError("Unlinked successful!");
+            return ApiBadRequest("Unlinked successful!");
 
         var refreshed = await _discordClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
-            return ApiResultError("Failed to unlink!");
+            return ApiBadRequest("Failed to unlink!");
 
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
 
         if (!await _discordClient.PushMetadataAsync(refreshed, new Metadata(0, 0, 0, 0), ct))
-            return ApiResultError("Failed to unlink!");
+            return ApiBadRequest("Failed to unlink!");
 
         if (!await _discordStorage.RemoveAsync(userId, tokens.ExternalId))
-            return ApiResultError("Failed to unlink!");
+            return ApiBadRequest("Failed to unlink!");
 
         return ApiResult("Unlinked successful!");
     }
@@ -93,8 +93,8 @@ public sealed class DiscordController : ApiControllerBase
     public async Task<ApiResult<string?>> UpdateMetadataAsync([BindRole] ApplicationRole role, [BindUserId] NexusModsUserId userId, CancellationToken ct)
     {
         if (await UpdateMetadataInternalAsync(role, userId, ct) is not { } result)
-            return ApiResultError("Failed to update");
-        return result ? ApiResult("") : ApiResultError("Failed to update");
+            return ApiBadRequest("Failed to update");
+        return result ? ApiResult("") : ApiBadRequest("Failed to update");
     }
 
 
@@ -104,11 +104,11 @@ public sealed class DiscordController : ApiControllerBase
         var tokens = HttpContext.GetDiscordTokens();
 
         if (tokens?.Data is null)
-            return ApiResultError("Failed to get the token!");
+            return ApiBadRequest("Failed to get the token!");
 
         var refreshed = await _discordClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)
-            return ApiResult<DiscordUserInfo>(null);
+            return ApiResult<DiscordUserInfo?>(null);
 
         if (tokens.Data.AccessToken != refreshed.AccessToken)
             await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);

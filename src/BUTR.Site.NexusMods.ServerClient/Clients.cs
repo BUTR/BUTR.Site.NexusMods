@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.ServerClient.Utils;
+﻿using BUTR.Site.NexusMods.ServerClient.Utils;
 
 using System;
 using System.Net;

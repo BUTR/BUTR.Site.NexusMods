@@ -28,13 +28,14 @@ public sealed class AuthenticationProvider
 
         try
         {
-            var response = (await _authenticationClient.AuthenticateAsync(apiKey, ct)).Value;
+            var response = await _authenticationClient.AuthenticateAsync(apiKey, ct);
+            if (response.Value is null) return null;
 
-            await _tokenContainer.SetTokenAsync(new Token(type, response.Token), ct);
+            await _tokenContainer.SetTokenAsync(new Token(type, response.Value.Token), ct);
 
-            return response.Token;
+            return response.Value.Token;
         }
-        catch (Exception)
+        catch (Exception e)
         {
             return null;
         }
@@ -54,9 +55,11 @@ public sealed class AuthenticationProvider
 
         try
         {
-            var response = (await _authenticationClient.ValidateAsync(ct)).Value;
-            await _tokenContainer.RefreshTokenAsync(token with { Value = response.Token }, ct);
-            return response.Profile;
+            var response = await _authenticationClient.ValidateAsync(ct);
+            if (response.Value is null) return null;
+
+            await _tokenContainer.RefreshTokenAsync(token with { Value = response.Value.Token }, ct);
+            return response.Value.Profile;
         }
         catch (Exception)
         {

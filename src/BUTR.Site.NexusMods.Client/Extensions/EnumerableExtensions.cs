@@ -7,8 +7,7 @@ public static class EnumerableExtensions
 {
     public static IEnumerable<ElementInfo<T>> WithMetadata<T>(this IEnumerable<T> source)
     {
-        if (source == null)
-            throw new ArgumentNullException(nameof(source));
+        ArgumentNullException.ThrowIfNull(source);
 
         using var enumerator = source.GetEnumerator();
         var isFirst = true;

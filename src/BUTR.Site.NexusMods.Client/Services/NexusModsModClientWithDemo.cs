@@ -17,27 +17,27 @@ public sealed class NexusModsModClientWithDemo : INexusModsModClient
         _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
     }
 
-    public async Task<RawNexusModsModModelApiResult> RawAsync(string gameDomain, int modId, CancellationToken ct = default)
+    public async Task<RawNexusModsModModelApiResultModel> RawAsync(string gameDomain, int modId, CancellationToken ct = default)
     {
         return await _implementation.RawAsync(gameDomain, modId, ct);
     }
 
-    public async Task<StringApiResult> ToModuleManualLinkAsync(string? moduleId = null, int? nexusModsModId = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> ToModuleManualLinkAsync(string? moduleId = null, int? nexusModsModId = null, CancellationToken ct = default)
     {
         return await _implementation.ToModuleManualLinkAsync(moduleId, nexusModsModId, ct);
     }
 
-    public async Task<StringApiResult> ToModuleManualUnlinkAsync(string? moduleId = null, int? nexusModsModId = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> ToModuleManualUnlinkAsync(string? moduleId = null, int? nexusModsModId = null, CancellationToken ct = default)
     {
         return await _implementation.ToModuleManualUnlinkAsync(moduleId, nexusModsModId, ct);
     }
 
-    public async Task<NexusModsModToModuleModelPagingDataApiResult> ToModuleManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
+    public async Task<NexusModsModToModuleModelPagingDataApiResultModel> ToModuleManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
     {
         return await _implementation.ToModuleManualLinkPaginatedAsync(body, ct);
     }
 
-    public async Task<NexusModsModAvailableModelPagingDataApiResult> AvailablePaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
+    public async Task<NexusModsModAvailableModelPagingDataApiResultModel> AvailablePaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
     {
         return await _implementation.AvailablePaginatedAsync(body, ct);
     }

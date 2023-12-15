@@ -40,7 +40,7 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     }
 
-    public async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery? body = null, CancellationToken ct = default)
+    public async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery body, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
@@ -52,36 +52,39 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
         return await _implementation.PaginatedStreamingAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);
     }
 
-    public async Task<CrashReportModel2PagingDataApiResult> PaginatedAsync(PaginatedQuery? body, CancellationToken ct)
+    public async Task<CrashReportModel2PagingDataApiResultModel> PaginatedAsync(PaginatedQuery? body, CancellationToken ct)
     {
+        if (body is null)
+            return await _implementation.PaginatedAsync(body, ct);
+        
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-            return new CrashReportModel2PagingDataApiResult(new CrashReportModel2PagingData(PagingAdditionalMetadata.Empty, crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count)), null!);
+            return new CrashReportModel2PagingDataApiResultModel(new CrashReportModel2PagingData(PagingAdditionalMetadata.Empty, crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count)), null!);
         }
 
         return await _implementation.PaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);
     }
 
-    public async Task<StringIQueryableApiResult> AutocompleteAsync(string? modId, CancellationToken ct)
+    public async Task<StringIQueryableApiResultModel> AutocompleteAsync(string? modId, CancellationToken ct)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-            return new StringIQueryableApiResult(crashReports.SelectMany(x => x.InvolvedModules).Where(x => x.StartsWith(modId)).ToArray(), null!);
+            return new StringIQueryableApiResultModel(crashReports.SelectMany(x => x.InvolvedModules).Where(x => x.StartsWith(modId ?? string.Empty)).ToArray(), null!);
         }
 
-        return new StringIQueryableApiResult((await _implementation.AutocompleteAsync(modId, ct)).Value ?? Array.Empty<string>(), null!);
+        return new StringIQueryableApiResultModel((await _implementation.AutocompleteAsync(modId, ct)).Value ?? Array.Empty<string>(), null!);
     }
 
-    public async Task<StringApiResult> UpdateAsync(CrashReportModel2? body, CancellationToken ct)
+    public async Task<StringApiResultModel> UpdateAsync(CrashReportModel2? body, CancellationToken ct)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
-            return new StringApiResult("demo", null!);
+            return new StringApiResultModel("demo", null!);
         }
 
         return await _implementation.UpdateAsync(body, ct);

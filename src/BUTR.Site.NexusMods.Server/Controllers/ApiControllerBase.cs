@@ -3,6 +3,7 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 using BUTR.Site.NexusMods.Server.Utils.Http.StreamingMultipartResults;
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
-public class ApiControllerBase : ControllerBase
+public partial class ApiControllerBase : ControllerBase
 {
     [NonAction]
     protected ApiResult<PagingData<TResult>?> ApiPagingResult<TResult, TSource>(Paging<TSource> data, Func<IAsyncEnumerable<TSource>, IAsyncEnumerable<TResult>> func)
@@ -36,7 +37,7 @@ public class ApiControllerBase : ControllerBase
         var options = HttpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value;
         IEnumerable<Func<Stream, CancellationToken, Task>> GetContent()
         {
-            yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, Utils.Http.ApiResults.ApiResult.FromError(null), options.JsonSerializerOptions, ct_);
+            yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, Utils.Http.ApiResults.ApiResult.FromError(HttpContext, null), options.JsonSerializerOptions, ct_);
             yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, data.Metadata, options.JsonSerializerOptions, ct_);
             yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, func(data.Items), options.JsonSerializerOptions, ct_);
             yield return (stream, ct_) => JsonSerializer.SerializeAsync(stream, new PagingAdditionalMetadata
@@ -56,24 +57,63 @@ public class ApiControllerBase : ControllerBase
     }
 
     [NonAction]
-    protected ApiResult<T?> ApiResult<T>([ActionResultObjectValue] T? value) => Utils.Http.ApiResults.ApiResult<T>.FromResult(value);
+    protected ApiResult ApiResult(int statusCode = StatusCodes.Status204NoContent)
+    {
+        if (statusCode is < 100 or >= 400)
+            throw new ArgumentOutOfRangeException(nameof(statusCode));
+
+        return Utils.Http.ApiResults.ApiResult.FromResult(HttpContext, statusCode);
+    }
+    
+    [NonAction]
+    protected ApiResult<T?> ApiResult<T>([ActionResultObjectValue] T value) => Utils.Http.ApiResults.ApiResult<T>.FromResult(HttpContext, value);
+    
+    [NonAction]
+    protected ApiResultCreated<T?> ApiResultCreated<T>(Uri locationUri, T value, int statusCode = StatusCodes.Status201Created)
+    {
+        if (statusCode is < 100 or >= 400)
+            throw new ArgumentOutOfRangeException(nameof(statusCode));
+
+        return Utils.Http.ApiResults.ApiResultCreated<T>.FromResultLocationUri(HttpContext, locationUri, value, statusCode);
+    }
+    
+    [NonAction]
+    protected ApiResultCreated<T?> ApiResultCreated<T>(string? actionName, string? controllerName, object? routeValues, T value, int statusCode = StatusCodes.Status201Created)
+    {
+        if (statusCode is < 100 or >= 400)
+            throw new ArgumentOutOfRangeException(nameof(statusCode));
+
+        return Utils.Http.ApiResults.ApiResultCreated<T>.FromResultAction(HttpContext, actionName, controllerName, routeValues, value, statusCode);
+    }
+    
+    [NonAction]
+    protected ApiResultAccepted<T?> ApiResultAccepted<T>(Uri locationUri, T value, int statusCode = StatusCodes.Status202Accepted)
+    {
+        if (statusCode is < 100 or >= 400)
+            throw new ArgumentOutOfRangeException(nameof(statusCode));
+
+        return Utils.Http.ApiResults.ApiResultAccepted<T>.FromResultLocationUri(HttpContext, locationUri, value, statusCode);
+    }
+    
+    [NonAction]
+    protected ApiResultAccepted<T?> ApiResultAccepted<T>(string? actionName, string? controllerName, object? routeValues, T value, int statusCode = StatusCodes.Status202Accepted)
+    {
+        if (statusCode is < 100 or >= 400)
+            throw new ArgumentOutOfRangeException(nameof(statusCode));
+
+        return Utils.Http.ApiResults.ApiResultAccepted<T>.FromResultAction(HttpContext, actionName, controllerName, routeValues, value, statusCode);
+    }
 
     [NonAction]
-    protected ApiResult ApiResultError(string error) => Utils.Http.ApiResults.ApiResult.FromError(new ProblemDetails
+    protected ApiResult ApiResultError(string error, int statusCode)
     {
-        Detail = error,
-    });
-
-    [NonAction]
-    protected ApiResult ApiResultError(int statusCode) => Utils.Http.ApiResults.ApiResult.FromError(new ProblemDetails
-    {
-        Status = statusCode,
-    });
-
-    [NonAction]
-    protected ApiResult ApiResultError(string error, int statusCode) => Utils.Http.ApiResults.ApiResult.FromError(new ProblemDetails
-    {
-        Detail = error,
-        Status = statusCode,
-    });
+        if (statusCode is < 400 or >= 600)
+            throw new ArgumentOutOfRangeException(nameof(statusCode));
+        
+        return Utils.Http.ApiResults.ApiResult.FromError(HttpContext, new ProblemDetails
+        {
+            Detail = error,
+            Status = statusCode
+        });
+    }
 }

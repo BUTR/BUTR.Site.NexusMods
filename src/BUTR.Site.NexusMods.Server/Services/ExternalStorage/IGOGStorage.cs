@@ -28,9 +28,9 @@ public sealed class DatabaseGOGStorage : IGOGStorage
 {
     private Dictionary<TenantId, HashSet<uint>> TenantToGameIds { get; } = new()
     {
-        { TenantId.Bannerlord, new HashSet<uint> { 1802539526, 1564781494 } },
-        { TenantId.Rimworld, new HashSet<uint> { 1094900565 } },
-        { TenantId.StardewValley, new HashSet<uint> { 1453375253 } },
+        { TenantId.Bannerlord, [1802539526, 1564781494]},
+        { TenantId.Rimworld, [1094900565]},
+        { TenantId.StardewValley, [1453375253]},
     };
 
     private readonly IAppDbContextRead _dbContextRead;

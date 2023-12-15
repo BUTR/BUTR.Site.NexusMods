@@ -16,7 +16,7 @@ public readonly partial record struct NexusModsModId : IVogen<TType, TValueType>
     public static bool IsInitialized(TType instance) => instance._isInitialized;
     public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);
 
-    public static bool TryParseUrl(string urlRaw, out TType modId)
+    public static bool TryParseUrl(string? urlRaw, out TType modId)
     {
         modId = DefaultValue;
 

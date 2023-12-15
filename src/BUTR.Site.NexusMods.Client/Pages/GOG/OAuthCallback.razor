@@ -61,17 +61,16 @@
         var queries = _navigationManager.QueryString();
         var queryCode = queries["code"];
 
-        try
-        {
-            await _gogClient.LinkAsync(queryCode);
-            _ = await _authenticationProvider.ValidateAsync();
+        await _gogClient.LinkAsync(code: queryCode);
+        _ = await _authenticationProvider.ValidateAsync();
 
-            var userInfo = await _gogClient.GetUserInfoAsync();
-            _userInfo = new GOGUserInfo2(userInfo.Value);
+        if (await _gogClient.GetUserInfoAsync() is { Value: var userInfo })
+        {
+            _userInfo = new GOGUserInfo2(userInfo);
             _status = "SUCCESS";
             _image = Success;
         }
-        catch (ApiException)
+        else
         {
             _status = "FAILURE";
             _message = "Failed to link!";
