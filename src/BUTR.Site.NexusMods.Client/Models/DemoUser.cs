@@ -26,7 +26,7 @@ public static class DemoUser
             gogUserId: null,
             discordUserId: null,
             hasTenantGame: true,
-            availableTenants: new List<ProfileTenantModel> { new( tenantId: 1, name: "Bannerlord") });
+            availableTenants: new List<ProfileTenantModel> { new(tenantId: 1, name: "Bannerlord") });
     private static readonly List<NexusModsModModel> _mods = new()
     {
         new(nexusModsModId: 1, name: "Demo Mod 1", allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
