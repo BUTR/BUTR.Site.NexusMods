@@ -56,7 +56,7 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
     {
         if (body is null)
             return await _implementation.PaginatedAsync(body, ct);
-        
+
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {

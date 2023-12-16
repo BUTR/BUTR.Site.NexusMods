@@ -142,7 +142,7 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
     {
         if (body is null)
             return await _implementation.ToModuleManualLinkPaginatedAsync(body, ct);
-        
+
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             return new NexusModsUserToModuleManualLinkModelPagingDataApiResultModel(new NexusModsUserToModuleManualLinkModelPagingData(PagingAdditionalMetadata.Empty, new List<NexusModsUserToModuleManualLinkModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), null!);
@@ -172,7 +172,7 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
     {
         if (body is null)
             return await _implementation.ToNexusModsModManualLinkPaginatedAsync(body, ct);
-        
+
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             return new NexusModsUserToNexusModsModManualLinkModelPagingDataApiResultModel(new NexusModsUserToNexusModsModManualLinkModelPagingData(PagingAdditionalMetadata.Empty, new List<NexusModsUserToNexusModsModManualLinkModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), null!);
