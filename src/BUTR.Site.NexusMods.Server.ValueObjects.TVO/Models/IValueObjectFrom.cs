@@ -1,4 +1,4 @@
-﻿namespace BUTR.Site.NexusMods.Server.Models;
+namespace BUTR.Site.NexusMods.Server.Models;
 
 internal interface IValueObjectFrom<TValueType, TInnerValue>
     where TValueType : IValueObjectFrom<TValueType, TInnerValue>
