@@ -11,7 +11,7 @@ public readonly partial struct TenantId : IAugmentWith<DefaultValueAugment, Json
     public static readonly TType Bannerlord = From(TenantUtils.BannerlordId);
     public static readonly TType Rimworld = From(TenantUtils.RimworldId);
     public static readonly TType StardewValley = From(TenantUtils.StardewValleyId);
-    
+
     public static TType DefaultValue => None;
 
     public static IEnumerable<TType> Values

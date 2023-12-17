@@ -1,4 +1,4 @@
-﻿namespace BUTR.Site.NexusMods.Server.ValueObjects.Utils;
+namespace BUTR.Site.NexusMods.Server.ValueObjects.Utils;
 
 internal class TransparentValueObjectTypeConverter<TValueType, TInnerValue> : TypeConverter
     where TValueType : struct, IValueObjectFrom<TValueType, TInnerValue>

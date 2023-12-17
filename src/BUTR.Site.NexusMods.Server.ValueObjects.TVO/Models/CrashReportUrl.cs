@@ -7,7 +7,7 @@ using TValueType = String;
 public readonly partial struct CrashReportUrl : IAugmentWith<DefaultValueAugment, JsonAugment, EfCoreAugment>
 {
     public static TType DefaultValue => From(string.Empty);
-    
+
     public static TType From(Uri uri) => From(uri.ToString());
 }
 

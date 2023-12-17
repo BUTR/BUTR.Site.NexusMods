@@ -7,7 +7,7 @@ using TValueType = String;
 public readonly partial struct NexusModsUserEMail : IAugmentWith<DefaultValueAugment, JsonAugment, EfCoreAugment>
 {
     public static readonly TType Empty = From(string.Empty);
-    
+
     public static TType DefaultValue => Empty;
 }
 
