@@ -8,7 +8,7 @@ using TValueType = String;
 public readonly partial struct NexusModsApiKey : IAugmentWith<DefaultValueAugment, JsonAugment, EfCoreAugment>, IValueObjectFrom<TType, TValueType>
 {
     public static readonly TType None = From(string.Empty);
-    
+
     public static TType DefaultValue => None;
 }
 

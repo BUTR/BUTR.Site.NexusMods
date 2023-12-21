@@ -7,7 +7,7 @@ using TValueType = Int32;
 public readonly partial struct NexusModsUserId : IAugmentWith<DefaultValueAugment, JsonAugment, EfCoreAugment>
 {
     public static readonly TType None = From(0);
-    
+
     public static TType DefaultValue => None;
 
     public static bool TryParse(string userIdRaw, out TType userId)
@@ -16,7 +16,7 @@ public readonly partial struct NexusModsUserId : IAugmentWith<DefaultValueAugmen
         userId = result ? From(userIdVal) : DefaultValue;
         return result;
     }
-    
+
     public static bool TryParseUrl(string? urlRaw, out TType userId)
     {
         userId = DefaultValue;

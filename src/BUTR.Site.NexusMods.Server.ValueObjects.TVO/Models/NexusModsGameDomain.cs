@@ -10,7 +10,7 @@ public readonly partial struct NexusModsGameDomain : IAugmentWith<DefaultValueAu
     public static readonly TType Bannerlord = From(TenantUtils.BannerlordGameDomain);
     public static readonly TType Rimworld = From(TenantUtils.RimworldGameDomain);
     public static readonly TType StardewValley = From(TenantUtils.StardewValleyGameDomain);
-    
+
     public static TType DefaultValue => None;
 
     public static IEnumerable<TType> Values

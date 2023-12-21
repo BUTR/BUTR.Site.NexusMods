@@ -16,7 +16,7 @@ public readonly partial struct NexusModsArticleId : IAugmentWith<DefaultValueAug
         articleId = result ? From(articleIdVal) : DefaultValue;
         return result;
     }
-    
+
     public static bool TryParseUrl(string? urlRaw, out TType articleId)
     {
         articleId = From(0);

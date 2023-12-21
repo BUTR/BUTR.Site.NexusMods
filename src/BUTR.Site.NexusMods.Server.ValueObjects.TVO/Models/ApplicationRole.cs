@@ -10,7 +10,7 @@ public readonly partial struct ApplicationRole : IAugmentWith<DefaultValueAugmen
     public static readonly TType User = From(ApplicationRoles.User);
     public static readonly TType Moderator = From(ApplicationRoles.Moderator);
     public static readonly TType Administrator = From(ApplicationRoles.Administrator);
-    
+
     public static TType DefaultValue => Anonymous;
 }
 

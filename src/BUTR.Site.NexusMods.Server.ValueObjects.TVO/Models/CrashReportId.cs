@@ -7,7 +7,7 @@ using TValueType = Guid;
 public readonly partial struct CrashReportId : IAugmentWith<DefaultValueAugment, JsonAugment, EfCoreAugment>
 {
     public static TType DefaultValue => From(Guid.Empty);
-    
+
     public static TType NewRandomValue(Random? random) => From(Guid.NewGuid());
 }
 
