@@ -103,7 +103,7 @@ public static class Program
                 services.AddTransient<IGOGClient, GOGClient>(sp => ConfigureClient(sp, (http, opt) => new GOGClient(http, opt)));
                 services.AddTransient<IStatisticsClient, StatisticsClient>(sp => ConfigureClient(sp, (http, opt) => new StatisticsClient(http, opt)));
                 services.AddTransient<IQuartzClient, QuartzClient>(sp => ConfigureClient(sp, (http, opt) => new QuartzClient(http, opt)));
-                //services.AddTransient<IRecreateStacktraceClient, RecreateStacktraceClient>(sp => ConfigureClient(sp, (http, opt) => new RecreateStacktraceClient(http, opt)));
+                services.AddTransient<IRecreateStacktraceClient, RecreateStacktraceClient>(sp => ConfigureClient(sp, (http, opt) => new RecreateStacktraceClient(http, opt)));
 
                 services.AddScoped<TenantProvider>();
 

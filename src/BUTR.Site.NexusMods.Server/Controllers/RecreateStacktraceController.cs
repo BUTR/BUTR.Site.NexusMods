@@ -1,6 +1,7 @@
 using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.CrashReport.Bannerlord.Parser;
 using BUTR.CrashReport.Models;
+using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
