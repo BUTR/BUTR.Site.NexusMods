@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -12,6 +13,8 @@ public sealed record NexusModsModToModuleInfoHistoryEntity : IEntityWithTenant
     public required DateTimeOffset UploadDate { get; init; }
 
     public required ModuleInfoModel ModuleInfo { get; init; }
+    
+    public ICollection<NexusModsModToModuleInfoHistoryGameVersionEntity> GameVersions { get; init; } = new List<NexusModsModToModuleInfoHistoryGameVersionEntity>();
 
 
     public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsMod.NexusModsModId, NexusModsFileId, Module.ModuleId, ModuleVersion);

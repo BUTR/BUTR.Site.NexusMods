@@ -1,19 +1,18 @@
-#if false
 using BUTR.Authentication.NexusMods.Authentication;
 using BUTR.CrashReport.Bannerlord.Parser;
-using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.CrashReport.Models;
 using BUTR.Site.NexusMods.Server.Models;
-using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -28,20 +27,20 @@ public sealed class RecreateStacktraceController : ApiControllerBase
 {
     private readonly ILogger _logger;
     private readonly CrashReporterClient _crashReporterClient;
-    private readonly BannerlordBinaryCache _bannerlordBinaryCache;
+    private readonly SteamBinaryCache _steamBinaryCache;
 
-    public RecreateStacktraceController(ILogger<RecreateStacktraceController> logger, CrashReporterClient crashReporterClient, BannerlordBinaryCache bannerlordBinaryCache)
+    public RecreateStacktraceController(ILogger<RecreateStacktraceController> logger, CrashReporterClient crashReporterClient, SteamBinaryCache steamBinaryCache)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _crashReporterClient = crashReporterClient ?? throw new ArgumentNullException(nameof(crashReporterClient));
-        _bannerlordBinaryCache = bannerlordBinaryCache ?? throw new ArgumentNullException(nameof(bannerlordBinaryCache));
+        _steamBinaryCache = steamBinaryCache ?? throw new ArgumentNullException(nameof(steamBinaryCache));
     }
 
     [HttpGet("Json/{id}")]
-    public async Task<APIActionResult<IEnumerable<RecreatedStacktrace>?>> JsonAsync(CrashReportFileId id, CancellationToken ct)
+    public async Task<ApiResult<IEnumerable<RecreatedStacktrace>?>> JsonAsync(CrashReportFileId id, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
-            return Unauthorized();
+            return ApiResultError("Game is not owned!", StatusCodes.Status401Unauthorized);
 
         string crashReportContent;
         try
@@ -50,24 +49,27 @@ public sealed class RecreateStacktraceController : ApiControllerBase
         }
         catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
         {
-            return APIResponse(Enumerable.Empty<RecreatedStacktrace>());
+            return ApiOk(Enumerable.Empty<RecreatedStacktrace>());
         }
+
+        if (!CrashReportParser.TryParse(crashReportContent, out var version, out var crashReport, out var json))
+            return ApiBadRequest("Invalid crash report!");
         
-        var crashReport = CrashReportParser.Parse(id.Value, crashReportContent);
         var gameVersion = crashReport.GameVersion;
 
-        var assemblyFiles = await _bannerlordBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);
-        var recreatedStacktrace = RecreateStacktraceUtils.GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct).ToImmutableArray();
+        var assemblyFiles = await _steamBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);
+        var recreatedStacktrace = RecreateStacktraceUtils.GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct).ToList();
 
-        var currentMethods = crashReport.EnhancedStacktrace.SelectMany(x => x.Methods).Select(x => x.Method).ToHashSet();
-        currentMethods.ExceptWith(recreatedStacktrace.Select(x => x.Method));
+        var originalMethods = crashReport.EnhancedStacktrace.Select(x => x.OriginalMethod).OfType<MethodSimple>().ToList();
+        var originalMethodNames = originalMethods.Select(x => x.GetFullName()).ToHashSet();
+        originalMethodNames.ExceptWith(recreatedStacktrace.Select(x => x.Method));
 
-        var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
-        var ilOffsets = crashReport.EnhancedStacktrace.Select(x => x.Methods.Select(y => (x.ILOffset, y.Method))).SelectMany(x => x).DistinctBy(x => x.Method).ToDictionary(x => x.Method, x => x.ILOffset);
-        var recreatedStacktraceWithMissing = recreatedStacktrace.Concat(currentMethods.Select(x => new RecreatedStacktrace(x, $"No Code Available. IL Offset: {ilOffsets[x]}", 1)))
-            .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
+        var originalMethodNamesArray = originalMethodNames.ToArray();
+        var originalMethodIlOffsets = crashReport.EnhancedStacktrace.Where(x => x.OriginalMethod is not null).Select(x => (x.ILOffset, FullName: x.OriginalMethod!.GetFullName())).DistinctBy(x => x.FullName).ToDictionary(x => x.FullName, x => x.ILOffset);
+        var recreatedStacktraceWithMissing = recreatedStacktrace.Concat(originalMethodNames.Select(x => new RecreatedStacktrace(x, $"No Code Available. IL Offset: {originalMethodIlOffsets[x]}", 1)))
+            .OrderBy(x => Array.FindIndex(originalMethodNamesArray, y => y == x.Method));
 
-        return APIResponse<IEnumerable<RecreatedStacktrace>>(recreatedStacktraceWithMissing);
+        return ApiOk<IEnumerable<RecreatedStacktrace>>(recreatedStacktraceWithMissing);
     }
 
     [HttpGet("Html/{id}")]
@@ -87,19 +89,21 @@ public sealed class RecreateStacktraceController : ApiControllerBase
             return Content(string.Empty, "text/html", Encoding.UTF8);
         }
         
-        var crashReport = CrashReportParser.Parse(id.Value, crashReportContent);
+        if (!CrashReportParser.TryParse(crashReportContent, out var version, out var crashReport, out var json))
+            return BadRequest();
+        
         var gameVersion = crashReport.GameVersion;
 
-        var assemblyFiles = await _bannerlordBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);
-        var recreatedStacktrace = RecreateStacktraceUtils.GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct).ToImmutableArray();
+        var assemblyFiles = await _steamBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);
+        var recreatedStacktrace = RecreateStacktraceUtils.GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct).ToList();
 
-        var currentMethods = crashReport.EnhancedStacktrace.SelectMany(x => x.Methods).Select(x => x.Method).ToHashSet();
+        var currentMethods = crashReport.EnhancedStacktrace.Select(x => x.GetFullName()).ToHashSet();
         currentMethods.ExceptWith(recreatedStacktrace.Select(x => x.Method));
 
-        var methods = crashReport.EnhancedStacktrace.SelectMany(y => y.Methods).ToArray();
-        var ilOffsets = crashReport.EnhancedStacktrace.Select(x => x.Methods.Select(y => (x.ILOffset, y.Method))).SelectMany(x => x).DistinctBy(x => x.Method).ToDictionary(x => x.Method, x => x.ILOffset);
+        var methods = crashReport.EnhancedStacktrace.Select(y => y.GetFullName()).ToArray();
+        var ilOffsets = crashReport.EnhancedStacktrace.Select(x => (x.ILOffset, FullName: x.GetFullName())).DistinctBy(x => x.FullName).ToDictionary(x => x.FullName, x => x.ILOffset);
         var recreatedStacktraceWithMissing = recreatedStacktrace.Concat(currentMethods.Select(x => new RecreatedStacktrace(x, $"No Code Available. IL Offset: {ilOffsets[x]}", 1)))
-            .OrderBy(x => Array.FindIndex(methods, y => y.Method == x.Method));
+            .OrderBy(x => Array.FindIndex(methods, y => y == x.Method));
 
         static string GetEnhancedStacktraceHtml(IEnumerable<RecreatedStacktrace> stacktrace)
         {
@@ -157,4 +161,3 @@ Prism.languages.cil={comment:/\/\/.*/,string:{pattern:/(["'])(?:\\(?:\r\n|[\s\S]
         return Content(html, "text/html", Encoding.UTF8);
     }
 }
-#endif

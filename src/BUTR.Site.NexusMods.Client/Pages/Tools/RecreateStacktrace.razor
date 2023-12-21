@@ -1,5 +1,4 @@
-﻿@*
-@attribute [Authorize(Roles = $"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")]
+﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Administrator}, {ApplicationRoles.Moderator}")]
 @page "/recreate-stacktrace/{Id}"
 
 @inject IRecreateStacktraceClient _recreateStacktraceClient
@@ -32,9 +31,8 @@
     protected override async Task OnInitializedAsync()
     {
         var response = await _recreateStacktraceClient.JsonAsync(Id, CancellationToken.None);
-        if (response.Data is null) return;
-        recreatedStacktraces = response.Data;
+        if (response.Value is null) return;
+        recreatedStacktraces = response.Value;
     }
 
 }
-*@

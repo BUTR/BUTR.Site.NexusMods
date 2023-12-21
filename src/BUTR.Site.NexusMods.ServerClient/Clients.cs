@@ -218,7 +218,6 @@ public partial class QuartzClient
     }
 }
 
-/*
 public partial class RecreateStacktraceClient
 {
     public RecreateStacktraceClient(HttpClient client, JsonSerializerOptions options) : this(client)
@@ -226,7 +225,6 @@ public partial class RecreateStacktraceClient
         _settings = new Lazy<JsonSerializerOptions>(options);
     }
 }
-*/
 
 public partial record NexusModsModModel
 {

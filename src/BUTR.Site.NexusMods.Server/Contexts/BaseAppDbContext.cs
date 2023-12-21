@@ -111,6 +111,7 @@ public class BaseAppDbContext : DbContext
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsModToModuleEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsModToNameEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsModToModuleInfoHistoryEntity>(modelBuilder);
+        _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsModToModuleInfoHistoryGameVersionEntity>(modelBuilder);
 
         _entityConfigurationFactory.ApplyConfiguration<NexusModsUserEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsUserToCrashReportEntity>(modelBuilder);

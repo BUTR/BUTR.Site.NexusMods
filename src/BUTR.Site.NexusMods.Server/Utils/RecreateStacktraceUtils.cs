@@ -3,6 +3,9 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Utils.Reflection;
 using BUTR.Site.NexusMods.Shared.Extensions;
 
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.Disassembler;
+using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
 
 using System;
@@ -17,15 +20,26 @@ using System.Threading;
 
 namespace BUTR.Site.NexusMods.Server.Utils;
 
+public static class MethodSimpleExtensions
+{
+    public static string GetFullName(this MethodSimple method) =>
+        string.IsNullOrEmpty(method.MethodDeclaredTypeName) ? method.MethodName : $"{method.MethodDeclaredTypeName}.{method.MethodName}";
+    public static string GetFullName(this  EnhancedStacktraceFrameModel frame)
+    {
+        var method = frame.OriginalMethod ?? frame.ExecutingMethod;
+        return string.IsNullOrEmpty(method.MethodDeclaredTypeName) ? method.MethodName : $"{method.MethodDeclaredTypeName}.{method.MethodName}";
+    }
+}
+
 public record RecreatedStacktrace(string Method, string CSharpWithIL, int LineNumber);
 
 public static class RecreateStacktraceUtils
 {
     public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktrace(IEnumerable<string> assemblyFiles, CrashReportModel crashReport, CancellationToken ct)
     {
-        var methods = crashReport.EnhancedStacktrace.Select(y => y.OriginalMethod).ToArray();
+        var methods = crashReport.EnhancedStacktrace.Select(y => y.GetFullName()).ToArray();
         return GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct)
-            .OrderBy(x => Array.FindIndex(methods, y => y.MethodName == x.Method)); // Was Method isntead of MethodName
+            .OrderBy(x => Array.FindIndex(methods, y => y == x.Method)); // Was Method isntead of MethodName
 
     }
     public static IEnumerable<RecreatedStacktrace> GetRecreatedStacktraceUnordered(IEnumerable<string> assemblyFiles, CrashReportModel crashReport, CancellationToken ct)
@@ -133,8 +147,10 @@ public static class RecreateStacktraceUtils
             using var _ = moduleDefinition;
             foreach (var frame in crashReport.EnhancedStacktrace)
             {
-                var methodName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(frame.OriginalMethod.MethodName);  // Was Method isntead of MethodName
-                var methodFullName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(frame.OriginalMethod.MethodFullDescription);  // Was MethodFullName isntead of MethodName
+                var method = frame.OriginalMethod ?? frame.ExecutingMethod;
+                
+                var methodName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(method.GetFullName());  // Was Method isntead of MethodName
+                var methodFullName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(method.MethodFullDescription);  // Was MethodFullName isntead of MethodName
 
                 var utf8MethodName = Encoding.UTF8.GetBytes(methodName);
                 var foundMethods = moduleDefinition.Metadata.TypeDefinitions.Select(moduleDefinition.Metadata.GetTypeDefinition).Where(x =>
@@ -207,6 +223,7 @@ public static class RecreateStacktraceUtils
 
                 if (foundMethodHandle.IsNil) continue;
 
+                
                 // The section above takes about 1ms and 2MB
                 // The section below takes about 23ms and 150MB
                 var output = new PlainTextOutput2();
@@ -216,7 +233,7 @@ public static class RecreateStacktraceUtils
                 var code = output.ToString()!;
                 var lineNumber = GetLineNumber(code, frame.ILOffset ?? 0);
 
-                yield return new RecreatedStacktrace(frame.OriginalMethod.MethodName, code, lineNumber); // Was Method isntead of MethodName
+                yield return new RecreatedStacktrace(frame.GetFullName(), code, lineNumber); // Was Method isntead of MethodName
             }
         }
 

@@ -18,7 +18,13 @@ public class NexusModsModToModuleInfoHistoryEntityConfiguration : BaseEntityConf
         builder.Property(x => x.ModuleVersion).HasColumnName("module_version").HasValueObjectConversion();
         builder.Property(x => x.ModuleInfo).HasColumnName("module_info").HasColumnType("jsonb");
         builder.Property(x => x.UploadDate).HasColumnName("date_of_upload");
-        builder.ToTable("nexusmods_mod_module_info_history", "nexusmods_mod").HasKey(nameof(NexusModsModToModuleInfoHistoryEntity.TenantId), nameof(NexusModsModToModuleInfoHistoryEntity.NexusModsFileId), nameof(NexusModsModEntity.NexusModsModId), nameof(ModuleEntity.ModuleId), nameof(NexusModsModToModuleInfoHistoryEntity.ModuleVersion));
+        builder.ToTable("nexusmods_mod_module_info_history", "nexusmods_mod").HasKey(
+            nameof(NexusModsModToModuleInfoHistoryEntity.TenantId),
+            nameof(NexusModsModToModuleInfoHistoryEntity.NexusModsFileId),
+            nameof(NexusModsModEntity.NexusModsModId),
+            nameof(ModuleEntity.ModuleId),
+            nameof(NexusModsModToModuleInfoHistoryEntity.ModuleVersion)
+        );
 
         builder.HasOne(x => x.NexusModsMod)
             .WithMany()

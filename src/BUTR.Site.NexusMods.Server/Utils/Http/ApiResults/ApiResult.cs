@@ -15,13 +15,18 @@ public sealed class ApiResult : IConvertToActionResult
 
     public static ApiResult FromError(HttpContext httpContext, ProblemDetails? error)
     {
-        return new ApiResult(error, null);
+        return new ApiResult(error);
     }
 
     public ProblemDetails? Error { get; }
 
     public int? Status { get; }
 
+    private ApiResult(ProblemDetails? error)
+    {
+        Status = error?.Status;
+        Error = error;
+    }
     private ApiResult(ProblemDetails? error, int? status)
     {
         Status = status;
@@ -36,7 +41,7 @@ public record ApiResult<TValue> : IConvertToActionResult
 {
     public static implicit operator ObjectResult(ApiResult<TValue> apiResult) => new(ApiResultModel<TValue>.From(apiResult));
 
-    public static implicit operator ApiResult<TValue?>(ApiResult apiResult) => new(default, null, apiResult.Error);
+    public static implicit operator ApiResult<TValue?>(ApiResult apiResult) => new(default, apiResult.Error?.Status, apiResult.Error);
 
     public static ApiResult<TValue?> FromResult(HttpContext httpContext, TValue data, int? status = null)
     {
