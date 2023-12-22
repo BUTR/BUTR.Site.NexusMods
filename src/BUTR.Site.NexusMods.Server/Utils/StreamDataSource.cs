@@ -1,4 +1,4 @@
-﻿using AsmResolver.IO;
+using AsmResolver.IO;
 
 using System;
 using System.IO;

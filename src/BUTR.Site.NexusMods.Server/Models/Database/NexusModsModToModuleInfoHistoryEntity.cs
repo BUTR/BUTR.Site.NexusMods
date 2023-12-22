@@ -13,7 +13,7 @@ public sealed record NexusModsModToModuleInfoHistoryEntity : IEntityWithTenant
     public required DateTimeOffset UploadDate { get; init; }
 
     public required ModuleInfoModel ModuleInfo { get; init; }
-    
+
     public ICollection<NexusModsModToModuleInfoHistoryGameVersionEntity> GameVersions { get; init; } = new List<NexusModsModToModuleInfoHistoryGameVersionEntity>();
 
 
