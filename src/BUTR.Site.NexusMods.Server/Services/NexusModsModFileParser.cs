@@ -84,7 +84,7 @@ public class NexusModsModFileParser
                 httpStream.SetBufferSize(LargeBufferSize);
                 using var reader = ReaderExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
                 if (reader is null) throw new InvalidOperationException($"Failed to get Reader for file '{fileInfo.FileName}'");
-                
+
                 var moduleInfosReader = await GetModuleInfosFromReaderAsync(reader, subModuleCount).ToListAsync(ct);
                 var dataReader = await GetGameVersionsFromReaderAsync(reader, moduleInfosReader).ToListAsync(ct);
                 foreach (var grouping in dataReader.GroupBy(x => new { x.Item1.Id, x.Item1.Version }))
@@ -163,12 +163,12 @@ public class NexusModsModFileParser
             yield return (moduleInfo, null!, string.Empty);
         }
         yield break;
-        
+
         var count = moduleInfos.SelectMany(x => x.SubModules).Select(x => x.DLLName).Count();
         while (count > 0 && reader.MoveToNextEntry())
         {
             if (reader.Entry.IsDirectory) continue;
-            
+
             if (!reader.Entry.Key.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) continue;
 
             foreach (var moduleInfo in moduleInfos)
@@ -200,7 +200,7 @@ public class NexusModsModFileParser
             yield return (moduleInfo, null!, string.Empty);
         }
         yield break;
-        
+
         var count = moduleInfos.SelectMany(x => x.SubModules).Select(x => x.DLLName).Count();
         foreach (var entry in archive.Entries)
         {

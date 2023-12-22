@@ -24,7 +24,7 @@ public static class MethodSimpleExtensions
 {
     public static string GetFullName(this MethodSimple method) =>
         string.IsNullOrEmpty(method.MethodDeclaredTypeName) ? method.MethodName : $"{method.MethodDeclaredTypeName}.{method.MethodName}";
-    public static string GetFullName(this  EnhancedStacktraceFrameModel frame)
+    public static string GetFullName(this EnhancedStacktraceFrameModel frame)
     {
         var method = frame.OriginalMethod ?? frame.ExecutingMethod;
         return string.IsNullOrEmpty(method.MethodDeclaredTypeName) ? method.MethodName : $"{method.MethodDeclaredTypeName}.{method.MethodName}";
@@ -148,7 +148,7 @@ public static class RecreateStacktraceUtils
             foreach (var frame in crashReport.EnhancedStacktrace)
             {
                 var method = frame.OriginalMethod ?? frame.ExecutingMethod;
-                
+
                 var methodName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(method.GetFullName());  // Was Method isntead of MethodName
                 var methodFullName = GetMethodNameWithoutGenericTypeParametersAndParameterNames(method.MethodFullDescription);  // Was MethodFullName isntead of MethodName
 
@@ -223,7 +223,7 @@ public static class RecreateStacktraceUtils
 
                 if (foundMethodHandle.IsNil) continue;
 
-                
+
                 // The section above takes about 1ms and 2MB
                 // The section below takes about 23ms and 150MB
                 var output = new PlainTextOutput2();

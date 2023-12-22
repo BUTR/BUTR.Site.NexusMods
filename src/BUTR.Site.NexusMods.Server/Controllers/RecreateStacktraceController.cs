@@ -55,7 +55,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
 
         if (!CrashReportParser.TryParse(crashReportContent, out var version, out var crashReport, out var json))
             return ApiBadRequest("Invalid crash report!");
-        
+
         var gameVersion = crashReport.GameVersion;
 
         var assemblyFiles = await _steamBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);
@@ -89,10 +89,10 @@ public sealed class RecreateStacktraceController : ApiControllerBase
         {
             return Content(string.Empty, "text/html", Encoding.UTF8);
         }
-        
+
         if (!CrashReportParser.TryParse(crashReportContent, out var version, out var crashReport, out var json))
             return BadRequest();
-        
+
         var gameVersion = crashReport.GameVersion;
 
         var assemblyFiles = await _steamBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);

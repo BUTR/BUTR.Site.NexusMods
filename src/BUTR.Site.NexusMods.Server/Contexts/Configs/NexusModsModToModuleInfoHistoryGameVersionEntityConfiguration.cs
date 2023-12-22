@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +12,7 @@ public class NexusModsModToModuleInfoHistoryGameVersionEntityConfiguration : Bas
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsModToModuleInfoHistoryGameVersionEntity> builder)
     {
-        var primaryKeys = new []
+        var primaryKeys = new[]
         {
             nameof(NexusModsModToModuleInfoHistoryGameVersionEntity.TenantId),
             nameof(NexusModsModToModuleInfoHistoryGameVersionEntity.NexusModsFileId),
@@ -20,7 +20,7 @@ public class NexusModsModToModuleInfoHistoryGameVersionEntityConfiguration : Bas
             nameof(ModuleEntity.ModuleId),
             nameof(NexusModsModToModuleInfoHistoryGameVersionEntity.ModuleVersion)
         };
-        
+
         builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_module_info_history_game_version_id").HasValueObjectConversion().ValueGeneratedNever();
         builder.Property(x => x.NexusModsFileId).HasColumnName("nexusmods_file_id").HasValueObjectConversion();
         builder.Property<ModuleId>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id").HasValueObjectConversion();
@@ -39,7 +39,7 @@ public class NexusModsModToModuleInfoHistoryGameVersionEntityConfiguration : Bas
             .HasForeignKey(nameof(NexusModsModToModuleInfoHistoryGameVersionEntity.TenantId), nameof(ModuleEntity.ModuleId))
             .HasPrincipalKey(x => new { x.TenantId, x.ModuleId })
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         builder.HasOne(x => x.MainEntity)
             .WithMany(x => x.GameVersions)
             .HasForeignKey(primaryKeys)
