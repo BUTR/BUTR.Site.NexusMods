@@ -19,8 +19,8 @@
     <PackageReference Include="AsmResolver.DotNet" Version="5.5.0" />
     <PackageReference Include="Bannerlord.ModuleManager" Version="5.0.221" />
     <PackageReference Include="BUTR.Authentication.NexusMods" Version="1.0.0.6" />
-    <PackageReference Include="BUTR.CrashReport.Models" Version="13.0.0.47" />
-    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.47" />
+    <PackageReference Include="BUTR.CrashReport.Models" Version="13.0.0.48" />
+    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.48" />
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="4.0.4" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="8.2.0.7535" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
