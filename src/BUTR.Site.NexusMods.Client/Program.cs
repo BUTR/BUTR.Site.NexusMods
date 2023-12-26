@@ -104,6 +104,7 @@ public static class Program
                 services.AddTransient<IStatisticsClient, StatisticsClient>(sp => ConfigureClient(sp, (http, opt) => new StatisticsClient(http, opt)));
                 services.AddTransient<IQuartzClient, QuartzClient>(sp => ConfigureClient(sp, (http, opt) => new QuartzClient(http, opt)));
                 services.AddTransient<IRecreateStacktraceClient, RecreateStacktraceClient>(sp => ConfigureClient(sp, (http, opt) => new RecreateStacktraceClient(http, opt)));
+                services.AddTransient<IGitHubClient, GitHubClient>(sp => ConfigureClient(sp, (http, opt) => new GitHubClient(http, opt)));
 
                 services.AddScoped<TenantProvider>();
 

@@ -16,6 +16,7 @@ public sealed record NexusModsUserEntity : IEntity
     public ICollection<NexusModsUserToNexusModsModEntity> ToNexusModsMods { get; init; } = new List<NexusModsUserToNexusModsModEntity>();
     public ICollection<NexusModsUserToCrashReportEntity> ToCrashReports { get; init; } = new List<NexusModsUserToCrashReportEntity>();
     public ICollection<NexusModsArticleEntity> ToArticles { get; init; } = new List<NexusModsArticleEntity>();
+    public NexusModsUserToIntegrationGitHubEntity? ToGitHub { get; init; }
     public NexusModsUserToIntegrationDiscordEntity? ToDiscord { get; init; }
     public NexusModsUserToIntegrationSteamEntity? ToSteam { get; init; }
     public NexusModsUserToIntegrationGOGEntity? ToGOG { get; init; }

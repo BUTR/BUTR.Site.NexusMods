@@ -12,6 +12,7 @@ public sealed record ProfileModel
     public required bool IsSupporter { get; init; }
     public required ApplicationRole Role { get; init; }
 
+    public required string? GitHubUserId { get; init; }
     public required string? DiscordUserId { get; init; }
     public required string? SteamUserId { get; init; }
     public required string? GOGUserId { get; init; }

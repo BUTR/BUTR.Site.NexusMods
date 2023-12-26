@@ -59,6 +59,7 @@ public sealed class AuthenticationController : ApiControllerBase
 
         var userEntity = await _dbContextRead.NexusModsUsers
             .Include(x => x.ToRoles)
+            .Include(x => x.ToGitHub!).ThenInclude(x => x.ToTokens)
             .Include(x => x.ToDiscord!).ThenInclude(x => x.ToTokens)
             .Include(x => x.ToGOG!).ThenInclude(x => x.ToTokens)
             .Include(x => x.ToGOG!).ThenInclude(x => x.ToOwnedTenants)
@@ -98,6 +99,7 @@ public sealed class AuthenticationController : ApiControllerBase
 
         var userEntity = await _dbContextRead.NexusModsUsers
             .Include(x => x.ToRoles)
+            .Include(x => x.ToGitHub!).ThenInclude(x => x.ToTokens)
             .Include(x => x.ToDiscord!).ThenInclude(x => x.ToTokens)
             .Include(x => x.ToGOG!).ThenInclude(x => x.ToTokens)
             .Include(x => x.ToGOG!).ThenInclude(x => x.ToOwnedTenants)

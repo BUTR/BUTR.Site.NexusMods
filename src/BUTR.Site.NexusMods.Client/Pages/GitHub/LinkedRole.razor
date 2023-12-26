@@ -1,0 +1,25 @@
+﻿@attribute [Authorize]
+@page "/github-linked-role"
+
+@inject IGitHubClient _gitHubClient;
+@inject ILocalStorageService _localStorage;
+@inject NavigationManager _navigationManager;
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        var response = await _gitHubClient.GetOAuthUrlAsync();
+        if (response.Value?.Url is null)
+        {
+            _navigationManager.NavigateTo("profile");
+            return;
+        }
+        
+        await _localStorage.SetItemAsync("github_state", response.Value.State);
+        _navigationManager.NavigateTo(response.Value.Url);
+    }
+
+}

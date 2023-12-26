@@ -26,10 +26,12 @@ public interface IAppDbContextRead
     DbSet<NexusModsUserToNexusModsModEntity> NexusModsUserToNexusModsMods { get; }
     DbSet<NexusModsUserToModuleEntity> NexusModsUserToModules { get; }
 
+    DbSet<NexusModsUserToIntegrationGitHubEntity> NexusModsUserToGitHub { get; }
     DbSet<NexusModsUserToIntegrationDiscordEntity> NexusModsUserToDiscord { get; }
     DbSet<NexusModsUserToIntegrationGOGEntity> NexusModsUserToGOG { get; }
     DbSet<NexusModsUserToIntegrationSteamEntity> NexusModsUserToSteam { get; }
 
+    DbSet<IntegrationGitHubTokensEntity> IntegrationGitHubTokens { get; }
     DbSet<IntegrationDiscordTokensEntity> IntegrationDiscordTokens { get; }
     DbSet<IntegrationGOGTokensEntity> IntegrationGOGTokens { get; }
     DbSet<IntegrationGOGToOwnedTenantEntity> IntegrationGOGToOwnedTenants { get; }

@@ -57,6 +57,7 @@ public sealed class Startup
     private const string CrashReporterSectionName = "CrashReporter";
     private const string NexusModsSectionName = "NexusMods";
     private const string JwtSectionName = "Jwt";
+    private const string GitHubSectionName = "GitHub";
     private const string DiscordSectionName = "Discord";
     private const string SteamAPISectionName = "SteamAPI";
     private const string DepotDownloaderSectionName = "DepotDownloader";
@@ -95,6 +96,7 @@ public sealed class Startup
         var crashReporterSection = _configuration.GetSection(CrashReporterSectionName);
         var nexusModsSection = _configuration.GetSection(NexusModsSectionName);
         var jwtSection = _configuration.GetSection(JwtSectionName);
+        var gitHubSection = _configuration.GetSection(GitHubSectionName);
         var discordSection = _configuration.GetSection(DiscordSectionName);
         var steamAPISection = _configuration.GetSection(SteamAPISectionName);
         var depotDownloaderSection = _configuration.GetSection(DepotDownloaderSectionName);
@@ -104,6 +106,7 @@ public sealed class Startup
         services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>().Bind(crashReporterSection);
         services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>().Bind(nexusModsSection);
         services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>().Bind(jwtSection);
+        services.AddValidatedOptions<GitHubOptions, GitHubOptionsValidator>().Bind(gitHubSection);
         services.AddValidatedOptions<DiscordOptions, DiscordOptionsValidator>().Bind(discordSection);
         services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>().Bind(steamAPISection);
         services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>().Bind(depotDownloaderSection);
@@ -130,6 +133,16 @@ public sealed class Startup
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Basic",
                 Convert.ToBase64String(Encoding.ASCII.GetBytes($"{opts.Username}:{opts.Password}")));
+        }).AddPolicyHandler(GetRetryPolicy());
+        services.AddHttpClient<GitHubClient>().ConfigureHttpClient((_, client) =>
+        {
+            client.BaseAddress = new Uri("https://github.com/");
+            client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+        }).AddPolicyHandler(GetRetryPolicy());
+        services.AddHttpClient<GitHubAPIClient>().ConfigureHttpClient((_, client) =>
+        {
+            client.BaseAddress = new Uri("https://api.github.com/");
+            client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }).AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<DiscordClient>().ConfigureHttpClient((_, client) =>
         {
@@ -221,6 +234,7 @@ public sealed class Startup
         services.AddNexusModsDefaultServices();
 
         services.AddHostedService<DiscordLinkedRolesService>();
+        services.AddScoped<IGitHubStorage, DatabaseGitHubStorage>();
         services.AddScoped<IDiscordStorage, DatabaseDiscordStorage>();
         services.AddScoped<ISteamStorage, DatabaseSteamStorage>();
         services.AddScoped<IGOGStorage, DatabaseGOGStorage>();

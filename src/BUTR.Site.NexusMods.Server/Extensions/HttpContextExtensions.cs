@@ -30,6 +30,7 @@ public static class HttpContextExtensions
             IsPremium = validate.IsPremium,
             IsSupporter = validate.IsSupporter,
             Role = role,
+            GitHubUserId = GetGitHubId(metadata, jsonSerializerOptions),
             DiscordUserId = GetDiscordId(metadata, jsonSerializerOptions),
             GOGUserId = GetGOGId(metadata, jsonSerializerOptions),
             SteamUserId = GetSteamId(metadata, jsonSerializerOptions),
@@ -55,6 +56,7 @@ public static class HttpContextExtensions
             IsPremium = context.GetIsPremium(),
             IsSupporter = context.GetIsSupporter(),
             Role = context.GetRole(),
+            GitHubUserId = GetGitHubId(context.GetMetadata(), jsonSerializerOptions),
             DiscordUserId = GetDiscordId(context.GetMetadata(), jsonSerializerOptions),
             GOGUserId = GetGOGId(context.GetMetadata(), jsonSerializerOptions),
             SteamUserId = GetSteamId(context.GetMetadata(), jsonSerializerOptions),
@@ -125,6 +127,8 @@ public static class HttpContextExtensions
         return OwnsTenantGame(tenant, context.GetMetadata(), jsonSerializerOptions);
     }
 
+    public static string? GetGitHubId(Dictionary<string, string> metadata, JsonSerializerOptions jsonSerializerOptions) =>
+        GetTypedMetadata(metadata, jsonSerializerOptions).GitHub?.ExternalId;
     public static string? GetDiscordId(Dictionary<string, string> metadata, JsonSerializerOptions jsonSerializerOptions) =>
         GetTypedMetadata(metadata, jsonSerializerOptions).Discord?.ExternalId;
     public static string? GetGOGId(Dictionary<string, string> metadata, JsonSerializerOptions jsonSerializerOptions) =>
@@ -134,6 +138,13 @@ public static class HttpContextExtensions
     public static bool OwnsTenantGame(TenantId tenant, Dictionary<string, string> metadata, JsonSerializerOptions jsonSerializerOptions) =>
         GetTypedMetadata(metadata, jsonSerializerOptions).OwnedTenants.Contains(tenant);
 
+    public static ExternalDataHolder<GitHubOAuthTokens>? GetGitHubTokens(this HttpContext context)
+    {
+        var options = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;
+        var typedMetadata = GetTypedMetadata(context.GetMetadata(), options);
+        return typedMetadata.GitHub;
+    }
+    
     public static ExternalDataHolder<DiscordOAuthTokens>? GetDiscordTokens(this HttpContext context)
     {
         var options = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;

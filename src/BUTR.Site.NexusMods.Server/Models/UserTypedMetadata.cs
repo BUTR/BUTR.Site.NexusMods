@@ -11,6 +11,7 @@ namespace BUTR.Site.NexusMods.Server.Models;
 public record UserTypedMetadata
 {
     public TenantId[] OwnedTenants { get; init; } = Array.Empty<TenantId>();
+    public ExternalDataHolder<GitHubOAuthTokens>? GitHub { get; init; }
     public ExternalDataHolder<DiscordOAuthTokens>? Discord { get; init; }
     public ExternalDataHolder<GOGOAuthTokens>? GOG { get; init; }
     public ExternalDataHolder<Dictionary<string, string>>? Steam { get; init; }
@@ -20,6 +21,10 @@ public record UserTypedMetadata
     private UserTypedMetadata(NexusModsUserEntity? userEntity)
     {
         var ownedTenants = new HashSet<TenantId>();
+        if (userEntity?.ToGitHub is { ToTokens: { } tokensGitHub } gitHub)
+        {
+            GitHub = new ExternalDataHolder<GitHubOAuthTokens>(gitHub.GitHubUserId, new(tokensGitHub.AccessToken));
+        }
         if (userEntity?.ToDiscord is { ToTokens: { } tokensDiscord } discord)
         {
             Discord = new ExternalDataHolder<DiscordOAuthTokens>(discord.DiscordUserId, new(tokensDiscord.AccessToken, tokensDiscord.RefreshToken, tokensDiscord.AccessTokenExpiresAt));

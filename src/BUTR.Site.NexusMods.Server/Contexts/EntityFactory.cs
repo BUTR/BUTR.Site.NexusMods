@@ -20,9 +20,11 @@ public sealed class EntityFactory
     private readonly ConcurrentDictionary<NexusModsModId, NexusModsModEntity> _nexusModsMods = new();
     private readonly ConcurrentDictionary<ModuleId, ModuleEntity> _modules = new();
     private readonly ConcurrentDictionary<ExceptionTypeId, ExceptionTypeEntity> _exceptionTypes = new();
+    private readonly ConcurrentDictionary<string, NexusModsUserToIntegrationGitHubEntity> _gitHubUsers = new();
     private readonly ConcurrentDictionary<string, NexusModsUserToIntegrationDiscordEntity> _discordUsers = new();
     private readonly ConcurrentDictionary<string, NexusModsUserToIntegrationSteamEntity> _steamUsers = new();
     private readonly ConcurrentDictionary<string, NexusModsUserToIntegrationGOGEntity> _gogUsers = new();
+    private readonly ConcurrentDictionary<string, IntegrationGitHubTokensEntity> _gitHubTokens = new();
     private readonly ConcurrentDictionary<string, IntegrationDiscordTokensEntity> _discordTokens = new();
     private readonly ConcurrentDictionary<string, IntegrationGOGTokensEntity> _gogTokens = new();
     private readonly ConcurrentDictionary<string, IntegrationSteamTokensEntity> _steamTokens = new();
@@ -63,6 +65,17 @@ public sealed class EntityFactory
         };
     }
 
+    public NexusModsUserToIntegrationGitHubEntity GetOrCreateNexusModsUserGitHub(NexusModsUserId nexusModsUserId, string gitHubUserId)
+    {
+        return _gitHubUsers.GetOrAdd(gitHubUserId, ValueFactory, (this, nexusModsUserId));
+
+        static NexusModsUserToIntegrationGitHubEntity ValueFactory(string gitHubUserId_, (EntityFactory, NexusModsUserId) tuple) => new()
+        {
+            NexusModsUser = tuple.Item1.GetOrCreateNexusModsUser(tuple.Item2),
+            GitHubUserId = gitHubUserId_,
+        };
+    }
+
     public NexusModsUserToIntegrationDiscordEntity GetOrCreateNexusModsUserDiscord(NexusModsUserId nexusModsUserId, string discordUserId)
     {
         return _discordUsers.GetOrAdd(discordUserId, ValueFactory, (this, nexusModsUserId));
@@ -82,6 +95,19 @@ public sealed class EntityFactory
         {
             NexusModsUser = tuple.Item1.GetOrCreateNexusModsUser(tuple.Item2),
             GOGUserId = gogUserId_,
+        };
+    }
+
+    public IntegrationGitHubTokensEntity GetOrCreateIntegrationGitHubTokens(NexusModsUserId nexusModsUserId, string gitHubUserId, string accessToken)
+    {
+        return _gitHubTokens.GetOrAdd(gitHubUserId, ValueFactory, (this, nexusModsUserId, accessToken));
+
+        static IntegrationGitHubTokensEntity ValueFactory(string gitHubUserId, (EntityFactory, NexusModsUserId, string) tuple) => new()
+        {
+            GitHubUserId = gitHubUserId,
+            NexusModsUser = tuple.Item1.GetOrCreateNexusModsUser(tuple.Item2),
+            AccessToken = tuple.Item3,
+            //UserToDiscord = GetOrCreateNexusModsUserDiscord(nexusModsUserId, discordUserId),
         };
     }
 
@@ -177,9 +203,11 @@ public sealed class EntityFactory
             if (!_nexusModsMods.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsMods.UpsertAsync(_nexusModsMods.Values));
             if (!_modules.IsEmpty) await DoChange(() => _dbContextWrite.Modules.UpsertAsync(_modules.Values));
             if (!_exceptionTypes.IsEmpty) await DoChange(() => _dbContextWrite.ExceptionTypes.UpsertAsync(_exceptionTypes.Values));
+            if (!_gitHubUsers.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsUserToGitHub.UpsertAsync(_gitHubUsers.Values));
             if (!_discordUsers.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsUserToDiscord.UpsertAsync(_discordUsers.Values));
             if (!_steamUsers.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsUserToSteam.UpsertAsync(_steamUsers.Values));
             if (!_gogUsers.IsEmpty) await DoChange(() => _dbContextWrite.NexusModsUserToGOG.UpsertAsync(_gogUsers.Values));
+            if (!_gitHubTokens.IsEmpty) await DoChange(() => _dbContextWrite.IntegrationGitHubTokens.UpsertAsync(_gitHubTokens.Values));
             if (!_discordTokens.IsEmpty) await DoChange(() => _dbContextWrite.IntegrationDiscordTokens.UpsertAsync(_discordTokens.Values));
             if (!_gogTokens.IsEmpty) await DoChange(() => _dbContextWrite.IntegrationGOGTokens.UpsertAsync(_gogTokens.Values));
             if (!_steamTokens.IsEmpty) await DoChange(() => _dbContextWrite.IntegrationSteamTokens.UpsertAsync(_steamTokens.Values));

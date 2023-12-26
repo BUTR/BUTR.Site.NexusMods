@@ -226,6 +226,14 @@ public partial class RecreateStacktraceClient
     }
 }
 
+public partial class GitHubClient
+{
+    public GitHubClient(HttpClient client, JsonSerializerOptions options) : this(client)
+    {
+        _settings = new Lazy<JsonSerializerOptions>(options);
+    }
+}
+
 public partial record NexusModsModModel
 {
     public string Url(string gameDomain) => $"https://nexusmods.com/{gameDomain}/mods/{NexusModsModId}";

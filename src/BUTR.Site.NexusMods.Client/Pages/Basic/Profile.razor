@@ -7,6 +7,7 @@
 @inject IDiscordClient _discordClient
 @inject ISteamClient _steamClient
 @inject IGOGClient _gogClient
+@inject IGitHubClient _gitHubClient
 
 @if (_user is null)
 {
@@ -91,6 +92,28 @@ else
                 </Row>
                 <Divider/>
                 <Row>
+                    <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">GitHub</Column>
+                    <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">
+                        @if (_user!.GitHubUserId is not null && _gitHubUserInfo is null)
+                        {
+                            <Text>...loading</Text>
+                        }
+                        else if (_user.GitHubUserId is not null && _gitHubUserInfo!.NeedsRelink)
+                        {
+                            <Anchor Style="text-decoration: none" To="github-linked-role" Target="@Target.Blank">Needs Relinking</Anchor>
+                        }
+                        else if (_user.GitHubUserId is not null)
+                        {
+                            <Anchor Style="text-decoration: none" To="@_gitHubUserInfo!.Url" Target="@Target.Blank">@_gitHubUserInfo.Name</Anchor>
+                        }
+                        else
+                        {
+                            <Anchor Style="text-decoration: none" To="github-linked-role" Target="@Target.Blank">Not Linked</Anchor>
+                        }
+                    </Column>
+                </Row>
+                <Divider/>
+                <Row>
                     <Column ColumnSize="@ColumnSize.Is3" TextWeight="@TextWeight.Bold">Discord</Column>
                     <Column ColumnSize="@ColumnSize.Is9" TextColor="@TextColor.Secondary">
                         @if (_user!.DiscordUserId is not null && _discordUser is null)
@@ -159,6 +182,7 @@ else
         </Card>;
 
     private ProfileModel? _user;
+    private GitHubUserInfo2? _gitHubUserInfo;
     private DiscordUserInfo2? _discordUser;
     private SteamUserInfo2? _steamUser;
     private GOGUserInfo2? _gogUser;
@@ -172,6 +196,15 @@ else
         
         var userResponse = await _userClient.ProfileAsync();
         _user = userResponse.Value;
+        
+        if (_user?.GitHubUserId is not null)
+        {
+            _ = _gitHubClient.GetUserInfoAsync().ContinueWith(x =>
+            {
+                _gitHubUserInfo = new(x.Result.Value);
+                StateHasChanged();
+            });
+        }
 
         if (_user?.DiscordUserId is not null)
         {

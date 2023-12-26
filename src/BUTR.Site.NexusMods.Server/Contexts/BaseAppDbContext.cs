@@ -38,10 +38,12 @@ public class BaseAppDbContext : DbContext
     public DbSet<NexusModsUserToNexusModsModEntity> NexusModsUserToNexusModsMods { get; set; } = default!;
     public DbSet<NexusModsUserToModuleEntity> NexusModsUserToModules { get; set; } = default!;
 
+    public DbSet<NexusModsUserToIntegrationGitHubEntity> NexusModsUserToGitHub { get; set; } = default!;
     public DbSet<NexusModsUserToIntegrationDiscordEntity> NexusModsUserToDiscord { get; set; } = default!;
     public DbSet<NexusModsUserToIntegrationGOGEntity> NexusModsUserToGOG { get; set; } = default!;
     public DbSet<NexusModsUserToIntegrationSteamEntity> NexusModsUserToSteam { get; set; } = default!;
 
+    public DbSet<IntegrationGitHubTokensEntity> IntegrationGitHubTokens { get; set; } = default!;
     public DbSet<IntegrationDiscordTokensEntity> IntegrationDiscordTokens { get; set; } = default!;
     public DbSet<IntegrationGOGTokensEntity> IntegrationGOGTokens { get; set; } = default!;
     public DbSet<IntegrationGOGToOwnedTenantEntity> IntegrationGOGToOwnedTenants { get; set; } = default!;
@@ -96,6 +98,7 @@ public class BaseAppDbContext : DbContext
 
         _entityConfigurationFactory.ApplyConfigurationWithTenant<ExceptionTypeEntity>(modelBuilder);
 
+        _entityConfigurationFactory.ApplyConfiguration<IntegrationGitHubTokensEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfiguration<IntegrationDiscordTokensEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfiguration<IntegrationGOGTokensEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfiguration<IntegrationGOGToOwnedTenantEntity>(modelBuilder);
@@ -115,6 +118,7 @@ public class BaseAppDbContext : DbContext
 
         _entityConfigurationFactory.ApplyConfiguration<NexusModsUserEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsUserToCrashReportEntity>(modelBuilder);
+        _entityConfigurationFactory.ApplyConfiguration<NexusModsUserToIntegrationGitHubEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfiguration<NexusModsUserToIntegrationDiscordEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfiguration<NexusModsUserToIntegrationGOGEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsUserToModuleEntity>(modelBuilder);

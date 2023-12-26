@@ -25,6 +25,7 @@ public static class DemoUser
             steamUserId: null,
             gogUserId: null,
             discordUserId: null,
+            gitHubUserId: null,
             hasTenantGame: true,
             availableTenants: new List<ProfileTenantModel> { new(tenantId: 1, name: "Bannerlord") });
     private static readonly List<NexusModsModModel> _mods = new()
