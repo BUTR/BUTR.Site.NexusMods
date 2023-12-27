@@ -144,7 +144,7 @@ public static class HttpContextExtensions
         var typedMetadata = GetTypedMetadata(context.GetMetadata(), options);
         return typedMetadata.GitHub;
     }
-    
+
     public static ExternalDataHolder<DiscordOAuthTokens>? GetDiscordTokens(this HttpContext context)
     {
         var options = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;

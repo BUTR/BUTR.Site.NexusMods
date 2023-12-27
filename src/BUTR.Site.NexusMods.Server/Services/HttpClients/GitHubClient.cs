@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Options;
+using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Options;
 
@@ -20,7 +20,7 @@ public sealed class GitHubClient
         [property: JsonPropertyName("access_token")] string AccessToken,
         [property: JsonPropertyName("scope")] string Scope,
         [property: JsonPropertyName("token_type")] string TokenType);
-    
+
     private readonly HttpClient _httpClient;
     private readonly GitHubOptions _options;
 
