@@ -50,7 +50,7 @@ public sealed class GitHubController : ApiControllerBase
             return ApiBadRequest("Failed to link!");
 
         var userInfo = await _gitHubApiClient.GetUserInfoAsync(tokens, ct);
-        
+
         if (userInfo is null || !await _gitHubStorage.UpsertAsync(userId, userInfo.Id.ToString(), tokens))
             return ApiBadRequest("Failed to link!");
 
@@ -71,7 +71,7 @@ public sealed class GitHubController : ApiControllerBase
 
         //if (tokens.Data.AccessToken != refreshed.AccessToken)
         //    await _discordStorage.UpsertAsync(userId, tokens.ExternalId, refreshed);
-        
+
         if (!await _gitHubStorage.RemoveAsync(userId, tokens.ExternalId))
             return ApiBadRequest("Failed to unlink!");
 
