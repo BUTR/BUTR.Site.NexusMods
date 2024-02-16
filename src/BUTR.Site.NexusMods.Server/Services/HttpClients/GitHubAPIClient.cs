@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -21,7 +21,7 @@ public sealed class GitHubAPIClient
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
-    
+
     public async Task<GitHubUserInfo?> GetUserInfoAsync(GitHubOAuthTokens tokens, CancellationToken ct)
     {
         using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "user")
