@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Utils.Csv.Utils;
 
-public class ExportOutputFormatter<TCsvFile> : TextOutputFormatter where TCsvFile: ICsvFile
+public class ExportOutputFormatter<TCsvFile> : TextOutputFormatter where TCsvFile : ICsvFile
 {
     private static string ContentType => "text/csv";
 
@@ -42,11 +42,11 @@ public class ExportOutputFormatter<TCsvFile> : TextOutputFormatter where TCsvFil
         };
         if (data is null || type is null)
             throw new InvalidOperationException("Invalid csv data type!");
-        
-        await WriteCsvCollection(context.HttpContext, data, selectedEncoding);
+
+        await WriteCsvCollectionAsync(context.HttpContext, data, selectedEncoding);
     }
 
-    private static async Task WriteCsvCollection(HttpContext context, IEnumerable<TCsvFile> entries, Encoding selectedEncoding)
+    private static async Task WriteCsvCollectionAsync(HttpContext context, IEnumerable<TCsvFile> entries, Encoding selectedEncoding)
     {
         var response = context.Response;
 
@@ -57,7 +57,7 @@ public class ExportOutputFormatter<TCsvFile> : TextOutputFormatter where TCsvFil
         }.ToString();
 
         await using var csv = new CsvWriter(new StreamWriter(response.Body, selectedEncoding), CultureInfo.InvariantCulture);
-        
+
         csv.WriteHeader<TCsvFile>();
         await csv.NextRecordAsync();
         await csv.WriteRecordsAsync(entries);
