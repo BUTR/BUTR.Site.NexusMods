@@ -29,11 +29,11 @@ public sealed class DiscordController : ApiControllerBase
         [property: JsonPropertyName(DiscordConstants.BUTRAdministrator)] int IsAdministrator,
         [property: JsonPropertyName(DiscordConstants.BUTRLinkedMods)] int LinkedMods);
 
-    private readonly DiscordClient _discordClient;
+    private readonly IDiscordClient _discordClient;
     private readonly IDiscordStorage _discordStorage;
     private readonly IAppDbContextRead _dbContextRead;
 
-    public DiscordController(DiscordClient discordClient, IDiscordStorage discordStorage, IAppDbContextRead dbContextRead)
+    public DiscordController(IDiscordClient discordClient, IDiscordStorage discordStorage, IAppDbContextRead dbContextRead)
     {
         _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
         _discordStorage = discordStorage ?? throw new ArgumentNullException(nameof(discordStorage));

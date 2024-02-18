@@ -24,6 +24,7 @@
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="4.0.4" />
     <PackageReference Include="CsvHelper" Version="31.0.0" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="8.2.0.7535" />
+    <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.2">
@@ -48,9 +49,9 @@
     <PackageReference Include="OpenTelemetry.ResourceDetectors.Container" Version="1.0.0-beta.6" />
     <PackageReference Include="Polly" Version="8.3.0" />
     <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-    <PackageReference Include="Quartz" Version="3.8.0" />
-    <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.8.0" />
-    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.8.0" />
+    <PackageReference Include="Quartz" Version="3.8.1" />
+    <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.8.1" />
+    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.8.1" />
     <PackageReference Include="RateLimiter" Version="2.2.0" />
     <PackageReference Include="SharpCompress" Version="0.36.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
@@ -65,12 +66,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BUTR.Site.NexusMods.DependencyInjection\BUTR.Site.NexusMods.DependencyInjection.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
     <ProjectReference Include="..\BUTR.Site.NexusMods.Server.ValueObjects.Vogen\BUTR.Site.NexusMods.Server.ValueObjects.Vogen.csproj" />
     <ProjectReference Include="..\BUTR.Site.NexusMods.Shared\BUTR.Site.NexusMods.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BUTR.Site.NexusMods.Shared\BUTR.Site.NexusMods.Shared.csproj" />
+    <InternalsVisibleTo Include="BUTR.Site.NexusMods.Server.Tests" />
   </ItemGroup>
 
   <Target Name="_ResolveCopyLocalNuGetPkgXmls" AfterTargets="ResolveReferences">

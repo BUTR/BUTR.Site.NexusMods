@@ -1,3 +1,4 @@
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
@@ -22,6 +23,7 @@ public interface ISteamStorage
     Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string steamUserId);
 }
 
+[ScopedService<ISteamStorage>]
 public sealed class DatabaseSteamStorage : ISteamStorage
 {
     private Dictionary<TenantId, HashSet<uint>> TenantToGameIds { get; } = new()
@@ -33,9 +35,9 @@ public sealed class DatabaseSteamStorage : ISteamStorage
 
     private readonly IAppDbContextRead _dbContextRead;
     private readonly IAppDbContextWrite _dbContextWrite;
-    private readonly SteamAPIClient _steamAPIClient;
+    private readonly ISteamAPIClient _steamAPIClient;
 
-    public DatabaseSteamStorage(IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite, SteamAPIClient steamAPIClient)
+    public DatabaseSteamStorage(IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite, ISteamAPIClient steamAPIClient)
     {
         _dbContextRead = dbContextRead;
         _dbContextWrite = dbContextWrite;

@@ -41,8 +41,8 @@ public sealed class CrashReportProcessorJob : IJob
             var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
             tenantContextAccessor.Current = tenant;
 
-            var client = scope.ServiceProvider.GetRequiredService<CrashReporterClient>();
-            await using var crashReportBatchedHandler = scope.ServiceProvider.GetRequiredService<CrashReportBatchedHandler>();
+            var client = scope.ServiceProvider.GetRequiredService<ICrashReporterClient>();
+            await using var crashReportBatchedHandler = scope.ServiceProvider.GetRequiredService<ICrashReportBatchedHandler>();
 
             await foreach (var batch in client.GetNewCrashReportMetadatasAsync(DateTime.UtcNow.AddDays(-2), ct).OfType<CrashReportFileMetadata>().ChunkAsync(1000).WithCancellation(ct))
             {

@@ -74,9 +74,9 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
     {
         var gameDomain = tenant.ToGameDomain();
 
-        var info = serviceProvider.GetRequiredService<NexusModsModFileParser>();
+        var info = serviceProvider.GetRequiredService<INexusModsModFileParser>();
         var options = serviceProvider.GetRequiredService<IOptions<NexusModsOptions>>().Value;
-        var client = serviceProvider.GetRequiredService<NexusModsAPIClient>();
+        var client = serviceProvider.GetRequiredService<INexusModsAPIClient>();
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
         var entityFactory = dbContextWrite.GetEntityFactory();

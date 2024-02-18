@@ -4,6 +4,7 @@ using Microsoft.OpenApi.Models;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
 
+using System;
 using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Utils.BindingSources;
@@ -13,30 +14,16 @@ public sealed class BindIgnoreFilter : IOperationFilter
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
         var parametersToHide = context.ApiDescription.ParameterDescriptions
-            .Where(ParameterHasIgnoreAttribute)
-            .ToList();
-
-        if (parametersToHide.Count == 0)
-            return;
+            .Where(ParameterHasIgnoreAttribute);
 
         foreach (var parameterToHide in parametersToHide)
         {
-            var parameter = operation.Parameters.FirstOrDefault(parameter => string.Equals(parameter.Name, parameterToHide.Name, System.StringComparison.OrdinalIgnoreCase));
-            if (parameter != null)
-            {
-                operation.Parameters.Remove(parameter);
-            }
+            var parameter = operation.Parameters.FirstOrDefault(parameter => parameter.Name.Equals(parameterToHide.Name, StringComparison.OrdinalIgnoreCase));
+            operation.Parameters.Remove(parameter);
         }
 
     }
 
-    private static bool ParameterHasIgnoreAttribute(ApiParameterDescription parameterDescription)
-    {
-        if (parameterDescription.ModelMetadata is DefaultModelMetadata metadata)
-        {
-            return metadata.Attributes.ParameterAttributes?.Any(attribute => attribute.GetType().GetInterfaces().Any(x => x == typeof(IBindIgnore))) == true;
-        }
-
-        return false;
-    }
+    private static bool ParameterHasIgnoreAttribute(ApiParameterDescription parameterDescription) =>
+        parameterDescription.ModelMetadata is DefaultModelMetadata metadata && metadata.Attributes.ParameterAttributes?.Any(attribute => attribute is IBindIgnore) == true;
 }

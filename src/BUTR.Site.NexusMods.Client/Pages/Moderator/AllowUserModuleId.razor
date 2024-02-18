@@ -150,7 +150,7 @@
 
     private async Task<DataGridPaging<NexusModsUserToModuleManualLinkModel>.ItemsResponse?> GetAllowUserMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct)
     {
-        var response = await _userClient.ToModuleManualLinkPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sotings: sortings), cancellationToken: ct);
+        var response = await _userClient.ToModuleManualLinkPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
         return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
     }
 

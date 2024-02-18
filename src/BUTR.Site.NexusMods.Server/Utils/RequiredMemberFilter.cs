@@ -21,26 +21,14 @@ public class RequiredMemberFilter : ISchemaFilter
         {
             if (property.HasAttribute<JsonIgnoreAttribute>() || !property.HasAttribute<RequiredMemberAttribute>()) continue;
 
-            var jsonName = property.Name;
-            if (property.HasAttribute<JsonPropertyNameAttribute>())
-            {
-                jsonName = property.GetCustomAttribute<JsonPropertyNameAttribute>()!.Name;
-            }
-
-            var jsonKey = schema.Properties.Keys.SingleOrDefault(key =>
-                string.Equals(key, jsonName, StringComparison.OrdinalIgnoreCase));
+            var jsonName = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? property.Name;
+            var jsonKey = schema.Properties.Keys.SingleOrDefault(key => string.Equals(key, jsonName, StringComparison.OrdinalIgnoreCase));
 
             if (string.IsNullOrWhiteSpace(jsonKey)) continue;
 
-            // Check nullability of non primitive types
-            var primitive = schema.Properties[jsonKey].Type != null;
-            if (!primitive)
-            {
-                // Do not mark nullableref types.
-                // Ref types cannot be marked as nullable, so this would lead to them being non nullable.
-                var nullabilityInfo = nullabilityContext.Create(property);
-                if (nullabilityInfo.ReadState == NullabilityState.Nullable) continue;
-            }
+            // Do not mark nullableref types.
+            // Ref types cannot be marked as nullable, so this would lead to them being non nullable.
+            if (schema.Properties[jsonKey].Type is null && nullabilityContext.Create(property).ReadState == NullabilityState.Nullable) continue;
 
             schema.Required.Add(jsonKey);
         }

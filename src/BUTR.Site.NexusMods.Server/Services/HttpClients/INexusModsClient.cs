@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.Server.Models;
+﻿using BUTR.Site.NexusMods.Server.Models;
 
 using HtmlAgilityPack;
 
@@ -9,7 +9,12 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public sealed class NexusModsClient
+public interface INexusModsClient
+{
+    Task<HtmlDocument?> GetArticleAsync(NexusModsGameDomain gameDomain, NexusModsArticleId articleId, CancellationToken ct);
+}
+
+public sealed class NexusModsClient : INexusModsClient
 {
     private readonly HttpClient _httpClient;
 

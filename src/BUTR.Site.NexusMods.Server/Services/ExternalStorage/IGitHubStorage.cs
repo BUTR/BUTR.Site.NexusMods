@@ -1,3 +1,4 @@
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
@@ -18,6 +19,7 @@ public interface IGitHubStorage
     Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string gitHubUserId);
 }
 
+[ScopedService<IGitHubStorage>]
 public sealed class DatabaseGitHubStorage : IGitHubStorage
 {
     private readonly IAppDbContextRead _dbContextRead;

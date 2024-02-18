@@ -1,3 +1,4 @@
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
@@ -24,6 +25,7 @@ public interface IGOGStorage
     Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string gogUserId);
 }
 
+[ScopedService<IGOGStorage>]
 public sealed class DatabaseGOGStorage : IGOGStorage
 {
     private Dictionary<TenantId, HashSet<uint>> TenantToGameIds { get; } = new()
@@ -35,9 +37,9 @@ public sealed class DatabaseGOGStorage : IGOGStorage
 
     private readonly IAppDbContextRead _dbContextRead;
     private readonly IAppDbContextWrite _dbContextWrite;
-    private readonly GOGEmbedClient _gogEmbedClient;
+    private readonly IGOGEmbedClient _gogEmbedClient;
 
-    public DatabaseGOGStorage(IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite, GOGEmbedClient gogEmbedClient)
+    public DatabaseGOGStorage(IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite, IGOGEmbedClient gogEmbedClient)
     {
         _dbContextRead = dbContextRead;
         _dbContextWrite = dbContextWrite;

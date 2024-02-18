@@ -63,9 +63,9 @@ public sealed class NexusModsModFileProcessorJob : IJob
     {
         const int notFoundModsTreshold = 25;
 
-        var info = serviceProvider.GetRequiredService<NexusModsModFileParser>();
+        var info = serviceProvider.GetRequiredService<INexusModsModFileParser>();
         var options = serviceProvider.GetRequiredService<IOptions<NexusModsOptions>>().Value;
-        var client = serviceProvider.GetRequiredService<NexusModsAPIClient>();
+        var client = serviceProvider.GetRequiredService<INexusModsAPIClient>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
         var entityFactory = dbContextWrite.GetEntityFactory();
 

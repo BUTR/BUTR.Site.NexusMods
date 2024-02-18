@@ -20,10 +20,10 @@ public sealed class GOGController : ApiControllerBase
 
 
     private readonly IGOGStorage _gogStorage;
-    private readonly GOGAuthClient _gogAuthClient;
-    private readonly GOGEmbedClient _gogEmbedClient;
+    private readonly IGOGAuthClient _gogAuthClient;
+    private readonly IGOGEmbedClient _gogEmbedClient;
 
-    public GOGController(IGOGStorage gogStorage, GOGAuthClient gogAuthClient, GOGEmbedClient gogEmbedClient)
+    public GOGController(IGOGStorage gogStorage, IGOGAuthClient gogAuthClient, IGOGEmbedClient gogEmbedClient)
     {
         _gogStorage = gogStorage ?? throw new ArgumentNullException(nameof(gogStorage));
         _gogAuthClient = gogAuthClient ?? throw new ArgumentNullException(nameof(gogAuthClient));

@@ -33,11 +33,11 @@ public sealed class NexusModsModController : ApiControllerBase
 
 
     private readonly ILogger _logger;
-    private readonly NexusModsAPIClient _nexusModsAPIClient;
+    private readonly INexusModsAPIClient _nexusModsAPIClient;
     private readonly IAppDbContextRead _dbContextRead;
     private readonly IAppDbContextWrite _dbContextWrite;
 
-    public NexusModsModController(ILogger<NexusModsModController> logger, NexusModsAPIClient nexusModsAPIClient, IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite)
+    public NexusModsModController(ILogger<NexusModsModController> logger, INexusModsAPIClient nexusModsAPIClient, IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _nexusModsAPIClient = nexusModsAPIClient ?? throw new ArgumentNullException(nameof(nexusModsAPIClient));

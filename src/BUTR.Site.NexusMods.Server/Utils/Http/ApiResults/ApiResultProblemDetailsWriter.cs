@@ -21,7 +21,8 @@ public sealed class ApiResultProblemDetailsWriter : IProblemDetailsWriter
     public async ValueTask WriteAsync(ProblemDetailsContext context)
     {
         var routeData = context.HttpContext.GetRouteData();
-        var action = context.HttpContext.GetEndpoint()!.Metadata.GetMetadata<ActionDescriptor>()!;
+        var action = context.HttpContext.GetEndpoint()?.Metadata.GetMetadata<ActionDescriptor>();
+        if (action is null) return;
         var actionContext = new ActionContext(context.HttpContext, routeData, action);
         var result = ApiResult.FromError(context.HttpContext, context.ProblemDetails);
         await _actionResultExecutor.ExecuteAsync(actionContext, result.Convert());

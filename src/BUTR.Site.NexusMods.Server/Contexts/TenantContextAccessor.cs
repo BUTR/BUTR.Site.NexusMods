@@ -1,3 +1,4 @@
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 
@@ -10,6 +11,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts;
 /// <summary>
 /// Provides an implementation of <see cref="ITenantContextAccessor" /> based on the current execution context.
 /// </summary>
+[ScopedService<ITenantContextAccessor>]
 public class TenantContextAccessor : ITenantContextAccessor
 {
     private static readonly AsyncLocal<TenantContextHolder> _tenantContextCurrent = new();

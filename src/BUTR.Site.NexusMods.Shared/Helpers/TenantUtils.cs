@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace BUTR.Site.NexusMods.Shared.Helpers;
@@ -26,7 +27,7 @@ public static class TenantUtils
         new(StardewValleyId, StardewValleyGameDomain, StardewValleyName),
     };
 
-    public static int? FromGameDomainToTenant(string gameDomain) => TenantMetadatas.Find(x => string.Equals(x.NexusModsId, gameDomain, System.StringComparison.Ordinal))?.Id;
+    public static int? FromGameDomainToTenant(string gameDomain) => TenantMetadatas.Find(x => string.Equals(x.NexusModsId, gameDomain, StringComparison.Ordinal))?.Id;
     public static string? FromTenantToGameDomain(int tenant) => TenantMetadatas.Find(x => x.Id == tenant)?.NexusModsId;
     public static string? FromTenantToName(int tenant) => TenantMetadatas.Find(x => x.Id == tenant)?.Name;
 }

@@ -1,13 +1,22 @@
+﻿using Microsoft.Extensions.Options;
+
 using System;
 using System.Net.Http;
-using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public sealed class GOGAuthClient
+public interface IGOGAuthClient
+{
+    string GetOAuth2Url();
+    Task<GOGOAuthTokens?> CreateTokensAsync(string code, CancellationToken ct);
+    Task<GOGOAuthTokens?> GetOrRefreshTokensAsync(GOGOAuthTokens tokens, CancellationToken ct);
+}
+
+public sealed class GOGAuthClient : IGOGAuthClient
 {
     public record TokenResponse(
         [property: JsonPropertyName("expires_in")] int? ExpiresIn,
@@ -35,10 +44,14 @@ public sealed class GOGAuthClient
 
     public async Task<GOGOAuthTokens?> CreateTokensAsync(string code, CancellationToken ct)
     {
-        var url = $"token?client_id={ClientId}&client_secret={ClientSecret}&grant_type=authorization_code&code={code}&redirect_uri={RedirectUri}";
-        var response = await _httpClient.GetFromJsonAsync<TokenResponse>(url, ct);
-        if (response is null) return null;
-        return new GOGOAuthTokens(response.UserId, response.AccessToken, response.RefreshToken, DateTimeOffset.UtcNow.AddMinutes(response.ExpiresIn ?? 0));
+        var request = new HttpRequestMessage(HttpMethod.Get, $"token?client_id={ClientId}&client_secret={ClientSecret}&grant_type=authorization_code&code={code}&redirect_uri={RedirectUri}");
+        var response = await _httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode) return null;
+
+        var data = JsonSerializer.Deserialize<TokenResponse>(await response.Content.ReadAsStreamAsync(ct));
+        if (data is null) return null;
+        
+        return new GOGOAuthTokens(data.UserId, data.AccessToken, data.RefreshToken, DateTimeOffset.UtcNow.AddMinutes(data.ExpiresIn ?? 0));
     }
 
     public async Task<GOGOAuthTokens?> GetOrRefreshTokensAsync(GOGOAuthTokens tokens, CancellationToken ct)
@@ -46,10 +59,13 @@ public sealed class GOGAuthClient
         if (DateTimeOffset.UtcNow <= tokens.ExpiresAt)
             return tokens;
 
-        var url = $"token?client_id={ClientId}&client_secret={ClientSecret}&grant_type=refresh_token&refresh_token={tokens.RefreshToken}";
-        var responseData = await _httpClient.GetFromJsonAsync<TokenResponse>(url, ct);
-        if (responseData is null) return null;
+        var request = new HttpRequestMessage(HttpMethod.Get, $"token?client_id={ClientId}&client_secret={ClientSecret}&grant_type=refresh_token&refresh_token={tokens.RefreshToken}");
+        var response = await _httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode) return null;
 
-        return new GOGOAuthTokens(responseData.UserId, responseData.AccessToken, responseData.RefreshToken, DateTimeOffset.UtcNow.AddMinutes(responseData.ExpiresIn ?? 0));
+        var data = JsonSerializer.Deserialize<TokenResponse>(await response.Content.ReadAsStreamAsync(ct));
+        if (data is null) return null;
+        
+        return new GOGOAuthTokens(data.UserId, data.AccessToken, data.RefreshToken, DateTimeOffset.UtcNow.AddMinutes(data.ExpiresIn ?? 0));
     }
 }

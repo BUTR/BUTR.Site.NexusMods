@@ -54,7 +54,7 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
     {
         const int notFoundArticlesTreshold = 50;
 
-        var client = serviceProvider.GetRequiredService<NexusModsClient>();
+        var client = serviceProvider.GetRequiredService<INexusModsClient>();
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
         var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
         var entityFactory = dbContextWrite.GetEntityFactory();

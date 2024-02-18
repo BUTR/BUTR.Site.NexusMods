@@ -6,7 +6,7 @@
 @inject ICrashReportsClient _crashReportsClient
 @inject IJSRuntime _jsRuntime;
 
-<Modal @ref="_modalRef">
+<Modal @ref="@_modalRef">
     <ModalContent Size="@ModalSize.ExtraLarge" Centered>
         <ModalHeader>
             <ModalTitle>Crash Report Entry</ModalTitle>
@@ -57,7 +57,7 @@
 
 <Card Margin="@Margin.Is4" Overflow="@Overflow.Auto">
     <CardHeader>
-        <CardTitle Size="4" Position="Position.Relative" Margin="@Margin.Is0">
+        <CardTitle Size="4" Position="@Position.Relative" Margin="@Margin.Is0">
             Crash Reports
             <Button Position="@Position.Absolute.Bottom.Is0.End.Is0.Translate.MiddleX" Clicked="@Refresh" Padding="@Padding.Is0" >
                 <Icon Name="@Enum.GetName(IconName.Sync)" />
@@ -65,7 +65,7 @@
         </CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridStreamingPaging @ref="@_datagridPagingRef" TItem="CrashReportModel2" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable DefaultPageSize="@UserSettings.DefaultCrashReportPageSize" PageSizes="@UserSettings.AvailableCrashReportPageSizes" GetPageSize="@(x => x.CrashReportPageSize)">
+        <DataGridStreamingPaging @ref="@_datagridPagingRef" TItem="CrashReportModel2" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable DefaultPageSize="@UserSettings.DefaultCrashReportPageSize" PageSizes="@UserSettings.AvailableCrashReportPageSizes" GetPageSize="@(x => x.CrashReportPageSize)" FixedHeader>
             <DataGridColumns>
                 <DataGridColumnText TItem="CrashReportModel2" ElementId="game-version" Field="@nameof(CrashReportModel2.GameVersion)" Caption="Game Version" Filterable Placeholder="v1.0.0" Sortable SortField="@nameof(EntityFields.GameVersion)"/>
                 <DataGridColumnTextAutocomplete TItem="CrashReportModel2" Field="@nameof(CrashReportModel2.InvolvedModules)" Caption="Top Involved Module" Filterable Sortable SortField="@nameof(EntityFields.TopInvolvedModuleId)" MinLength="3" GetAutocompleteValues="@GetAutocompleteValues">
@@ -114,11 +114,11 @@
             var updatedCrashReport = _datagridPagingRef.Value with { };
             if (await _crashReportsClient.UpdateAsync(updatedCrashReport) is { Error: not null })
             {
-                await _notificationService.Success($"Saved Crash Report!", "Success!");
+                await _notificationService.Success("Saved Crash Report!", "Success!");
             }
             else
             {
-                await _notificationService.Error($"Failed to save Crash Report!", "Error!");
+                await _notificationService.Error("Failed to save Crash Report!", "Error!");
             }
         }
     }
@@ -131,7 +131,7 @@
 
     private async Task<PagingStreamingData<CrashReportModel2>?> GetCrashReports(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
-        return await _crashReportsClient.PaginatedStreamingAsync(new(page: page, pageSize: pageSize, filters: filters, sotings: sortings), ct);
+        return await _crashReportsClient.PaginatedStreamingAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), ct);
     }
 
     private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => await _crashReportsClient.AutocompleteAsync(new(filter), ct) is { Value: { } data } ? data : Array.Empty<string>();

@@ -13,7 +13,6 @@ using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,10 +26,10 @@ public sealed class SteamController : ApiControllerBase
 
     private readonly ISteamStorage _steamStorage;
     private readonly SteamAPIOptions _options;
-    private readonly SteamCommunityClient _steamCommunityClient;
-    private readonly SteamAPIClient _steamAPIClient;
+    private readonly ISteamCommunityClient _steamCommunityClient;
+    private readonly ISteamAPIClient _steamAPIClient;
 
-    public SteamController(ISteamStorage steamStorage, IOptions<SteamAPIOptions> options, SteamCommunityClient steamCommunityClient, SteamAPIClient steamAPIClient)
+    public SteamController(ISteamStorage steamStorage, IOptions<SteamAPIOptions> options, ISteamCommunityClient steamCommunityClient, ISteamAPIClient steamAPIClient)
     {
         _steamStorage = steamStorage ?? throw new ArgumentNullException(nameof(steamStorage));
         _options = options.Value ?? throw new ArgumentNullException(nameof(options));

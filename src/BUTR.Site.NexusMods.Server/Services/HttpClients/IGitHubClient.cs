@@ -1,4 +1,4 @@
-using BUTR.Site.NexusMods.Server.Options;
+﻿using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Options;
 
@@ -14,7 +14,13 @@ using System.Web;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public sealed class GitHubClient
+public interface IGitHubClient
+{
+    (string Url, Guid State) GetOAuthUrl();
+    Task<GitHubOAuthTokens?> CreateTokensAsync(string code, CancellationToken ct);
+}
+
+public sealed class GitHubClient : IGitHubClient
 {
     public sealed record GitHubOAuthTokensResponse(
         [property: JsonPropertyName("access_token")] string AccessToken,
@@ -45,40 +51,23 @@ public sealed class GitHubClient
 
     public async Task<GitHubOAuthTokens?> CreateTokensAsync(string code, CancellationToken ct)
     {
-        var data = new List<KeyValuePair<string, string>>
+        using var request = new HttpRequestMessage(HttpMethod.Post, "login/oauth/access_token")
         {
-            new("client_id", _options.ClientId),
-            new("client_secret", _options.ClientSecret),
-            new("redirect_uri", _options.RedirectUri),
-            new("code", code),
+            Headers =
+            {
+                Accept = { new MediaTypeWithQualityHeaderValue("application/json") }
+            },
+            Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>
+            {
+                new("client_id", _options.ClientId),
+                new("client_secret", _options.ClientSecret),
+                new("redirect_uri", _options.RedirectUri),
+                new("code", code),
+            })
         };
-        var post = new HttpRequestMessage(HttpMethod.Post, "login/oauth/access_token");
-        post.Content = new FormUrlEncodedContent(data);
-        post.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        using var response = await _httpClient.SendAsync(post, ct);
+        using var response = await _httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode) return null;
         var tokens = await JsonSerializer.DeserializeAsync<GitHubOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
         return tokens is not null ? new GitHubOAuthTokens(tokens.AccessToken) : null;
     }
-
-    /*
-    public async Task<DiscordOAuthTokens?> GetOrRefreshTokensAsync(DiscordOAuthTokens tokens, CancellationToken ct)
-    {
-        if (DateTimeOffset.UtcNow <= tokens.ExpiresAt)
-            return tokens;
-
-        var data = new List<KeyValuePair<string, string>>
-        {
-            new("client_id", _options.ClientId),
-            new("redirect_uri", _options.RedirectUri),
-            new("grant_type", "refresh_token"),
-            new("refresh_token", tokens.RefreshToken),
-        };
-        using var response = await _httpClient.PostAsync("v10/oauth2/token", new FormUrlEncodedContent(data), ct);
-        if (!response.IsSuccessStatusCode) return null;
-        var responseData = await JsonSerializer.DeserializeAsync<DiscordClient.DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
-        if (responseData is null) return null;
-
-        return new DiscordOAuthTokens(responseData.AccessToken, responseData.RefreshToken, DateTimeOffset.UtcNow + TimeSpan.FromSeconds(responseData.ExpiresIn));
-    }
-    */
 }

@@ -9,10 +9,10 @@ public static class SteamUtils
     {
         steamId = default;
 
-        if (!url.Contains("steamcommunity.com/"))
+        if (!url.Contains("steamcommunity.com/", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        var str1 = url.Split("steamcommunity.com/");
+        var str1 = url.ToLowerInvariant().Split("steamcommunity.com/");
         if (str1.Length != 2)
             return false;
 

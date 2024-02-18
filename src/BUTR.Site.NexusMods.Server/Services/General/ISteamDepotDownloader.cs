@@ -1,3 +1,4 @@
+﻿using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Options;
@@ -9,7 +10,13 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public sealed class SteamDepotDownloader
+public interface ISteamDepotDownloader
+{
+    Task DownloadAsync(string version, string path, CancellationToken ct);
+}
+
+[SingletonService<ISteamDepotDownloader>]
+public sealed class SteamDepotDownloader : ISteamDepotDownloader
 {
     private readonly SteamDepotDownloaderOptions _options;
 

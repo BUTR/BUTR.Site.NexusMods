@@ -1,11 +1,11 @@
-using BUTR.Site.NexusMods.Server.Options;
+﻿using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +16,13 @@ public sealed record SteamUserInfo(
     [property: JsonPropertyName("id")] string Id,
     [property: JsonPropertyName("username")] string Username);
 
-public sealed class SteamAPIClient
+public interface ISteamAPIClient
+{
+    Task<SteamUserInfo?> GetUserInfoAsync(string steamId, CancellationToken ct);
+    Task<bool> IsOwningGameAsync(string steamId, uint appId, CancellationToken ct);
+}
+
+public sealed class SteamAPIClient : ISteamAPIClient
 {
     public record GetUserInfoRoot(
         [property: JsonPropertyName("response")] GetUserInfoResponse Response
@@ -74,16 +80,25 @@ public sealed class SteamAPIClient
 
     public async Task<SteamUserInfo?> GetUserInfoAsync(string steamId, CancellationToken ct)
     {
-        var json = await _httpClient.GetFromJsonAsync<GetUserInfoRoot>($"ISteamUser/GetPlayerSummaries/v0002/?key={_options.APIKey}&steamids={steamId}", ct);
-        if (json is null)
-            return null;
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"ISteamUser/GetPlayerSummaries/v0002/?key={_options.APIKey}&steamids={steamId}");
+        using var response = await _httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode) return null;
 
-        return new SteamUserInfo(json.Response.Players[0].Steamid, json.Response.Players[0].Personaname);
+        var data = JsonSerializer.Deserialize<GetUserInfoRoot>(await response.Content.ReadAsStreamAsync(ct));
+        if (data is null) return null;
+        
+        return new SteamUserInfo(data.Response.Players[0].Steamid, data.Response.Players[0].Personaname);
     }
 
     public async Task<bool> IsOwningGameAsync(string steamId, uint appId, CancellationToken ct)
     {
-        var json = await _httpClient.GetFromJsonAsync<IsOwningGameRoot>($"IPlayerService/GetOwnedGames/v1/?key={_options.APIKey}&steamid={steamId}&include_appinfo=false&include_played_free_games=false&appids_filter[0]={appId}", ct);
-        return json?.Response.GameCount == 1;
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"IPlayerService/GetOwnedGames/v1/?key={_options.APIKey}&steamid={steamId}&include_appinfo=false&include_played_free_games=false&appids_filter[0]={appId}");
+        using var response = await _httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode) return false;
+
+        var data = JsonSerializer.Deserialize<IsOwningGameRoot>(await response.Content.ReadAsStreamAsync(ct));
+        if (data is null) return false;
+        
+        return data.Response.GameCount == 1;
     }
 }

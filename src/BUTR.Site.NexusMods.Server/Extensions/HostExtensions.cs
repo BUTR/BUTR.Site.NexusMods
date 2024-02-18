@@ -7,8 +7,17 @@ using System;
 
 namespace BUTR.Site.NexusMods.Server.Extensions;
 
+/// <summary>
+/// Provides extension methods for <see cref="IHost"/> objects.
+/// </summary>
 public static class HostExtensions
 {
+    /// <summary>
+    /// Seeds the database context associated with the host.
+    /// </summary>
+    /// <typeparam name="TDbContext">The type of the database context.</typeparam>
+    /// <param name="host">The host whose database context to seed.</param>
+    /// <returns>The same host for chaining.</returns>
     public static IHost SeedDbContext<TDbContext>(this IHost host) where TDbContext : DbContext
     {
         using var scope = host.Services.CreateScope();

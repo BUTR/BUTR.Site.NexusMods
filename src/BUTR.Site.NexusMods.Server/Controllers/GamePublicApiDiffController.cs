@@ -18,9 +18,9 @@ public sealed class GamePublicApiDiffController : ApiControllerBase
     private const string basePath = "/public-api-diff";
 
     private readonly ILogger _logger;
-    private readonly DiffProvider _diffProvider;
+    private readonly IDiffProvider _diffProvider;
 
-    public GamePublicApiDiffController(ILogger<GamePublicApiDiffController> logger, DiffProvider diffProvider)
+    public GamePublicApiDiffController(ILogger<GamePublicApiDiffController> logger, IDiffProvider diffProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _diffProvider = diffProvider ?? throw new ArgumentNullException(nameof(diffProvider));

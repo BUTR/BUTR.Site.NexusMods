@@ -3,9 +3,6 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Utils.Reflection;
 using BUTR.Site.NexusMods.Shared.Extensions;
 
-using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.Disassembler;
-using ICSharpCode.Decompiler.IL;
 using ICSharpCode.Decompiler.Metadata;
 
 using System;

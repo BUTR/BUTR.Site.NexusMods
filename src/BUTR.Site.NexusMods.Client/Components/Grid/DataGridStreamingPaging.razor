@@ -7,16 +7,17 @@
           Data="@Values"
           SelectedRowChanged="@(model => { DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
           ReadData="@OnReadData"
-          TotalItems="@Metadata.TotalCount"
+          CurrentPage="@Metadata.CurrentPage"
           PageSize="@Metadata.PageSize"
+          PageSizes="@PageSizes"
+          TotalItems="@Metadata.TotalCount"
           SelectionMode="@DataGridSelectionMode.Single"
           ShowPager
           ShowPageSizes
           PagerOptions="@(new DataGridPagerOptions { PaginationPosition = PagerElementPosition.Center, ButtonRowPosition = PagerElementPosition.Start, TotalItemsPosition = PagerElementPosition.End })"
-          PageSizes="@PageSizes"
           Filterable="@Filterable"
-          CustomFilter="@OnCustomFilter"
           Sortable="@Sortable"
+          SortChanged="@(async args => await OnSortChanged(args))"
           Responsive
           Editable="@Editable"
           EditMode="@EditMode"
@@ -25,7 +26,8 @@
           DataGridColumns="@DataGridColumns"
           ButtonRowTemplate="@ButtonRowTemplate"
           DetailRowTemplate="@DetailRowTemplate"
-          DetailRowTrigger="@DetailRowTrigger">
+          DetailRowTrigger="@DetailRowTrigger"
+          FixedHeader="@FixedHeader">
     <TotalItemsTemplate>
         @if (Metadata.TotalCount == 0)
         {
@@ -66,6 +68,9 @@
 
     [Parameter]
     public bool Sortable { get; set; } = false;
+
+    [Parameter]
+    public bool FixedHeader { get; set; } = false;
 
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object>? AdditionalAttributes { get; set; }
@@ -110,6 +115,7 @@
 
     private DataGrid<TItem> _dataGridRef = default!;
     private Progress _progressRef = default!;
+    private CancellationTokenSource _loadCancellationTokenSource = new();
 
     public DataGridStreamingPaging()
     {
@@ -122,12 +128,20 @@
         Metadata = new(1, 0, await GetPageSizeInternal(), 0);
     }
 
-    public Task Reload() => _dataGridRef.Reload();
+    public async Task Reload()
+    {
+        await _dataGridRef.Reload();
+    }
 
     private async Task OnReadData(DataGridReadDataEventArgs<TItem> e)
     {
         if (e.CancellationToken.IsCancellationRequested)
             return;
+        
+        _loadCancellationTokenSource.Dispose();
+        _loadCancellationTokenSource = new();
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(e.CancellationToken, _loadCancellationTokenSource.Token);
+        cts.Token.Register(() => _loadCancellationTokenSource.Dispose());
         
         var sortings = e.Columns
             .Where(x => x.SortIndex != -1)
@@ -136,14 +150,15 @@
             .ToArray();
         var filterings = GetFilters is not null ? GetFilters(e.Columns).ToArray() : Array.Empty<Filtering>();
 
-        await LoadItems(e.Page, e.PageSize, filterings, sortings, e.CancellationToken);
+        Metadata = Metadata with { CurrentPage = e.Page, PageSize = e.PageSize };
+        await LoadItems(e.Page, e.PageSize, filterings, sortings, cts.Token);
     }
 
     private async Task LoadItems(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
         try
         {
-            await using var progress = ProgressUtils.DoProgress(x => _progressValue = x, () => _progressValue, () => InvokeAsync(StateHasChanged));
+            await using var progress = ProgressUtils.DoProgress(x => _progressValue = x, () => _progressValue, () => InvokeAsync(StateHasChanged), ct);
         
             Values.Clear();
             StateHasChanged();
@@ -179,6 +194,11 @@
         return GetPageSize?.Invoke(userSettings) ?? userSettings.PageSize;
     }
 
-    private static bool OnCustomFilter(TItem model) => true;
+    private async Task OnSortChanged(DataGridSortChangedEventArgs args)
+    {
+        await _loadCancellationTokenSource.CancelAsync();
+        await Task.Delay(300);
+        await _dataGridRef.Reload();
+    }
 
 }

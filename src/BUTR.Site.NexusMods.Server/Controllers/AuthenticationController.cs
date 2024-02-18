@@ -30,14 +30,14 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 public sealed class AuthenticationController : ApiControllerBase
 {
     private readonly ILogger _logger;
-    private readonly NexusModsAPIClient _nexusModsAPIClient;
+    private readonly INexusModsAPIClient _nexusModsAPIClient;
     private readonly IAppDbContextRead _dbContextRead;
     private readonly ITokenGenerator _tokenGenerator;
     private readonly JsonSerializerOptions _jsonSerializerOptions;
 
     public AuthenticationController(
         ILogger<AuthenticationController> logger,
-        NexusModsAPIClient nexusModsAPIClient,
+        INexusModsAPIClient nexusModsAPIClient,
         IAppDbContextRead dbContextRead,
         ITokenGenerator tokenGenerator,
         IOptions<JsonSerializerOptions> jsonSerializerOptions)

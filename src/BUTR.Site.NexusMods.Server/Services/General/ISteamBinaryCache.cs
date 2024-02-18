@@ -1,3 +1,4 @@
+﻿using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Caching.Distributed;
@@ -12,13 +13,19 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public sealed class SteamBinaryCache
+public interface ISteamBinaryCache
 {
-    private readonly SteamDepotDownloader _steamDepotDownloader;
+    Task<IEnumerable<string>> GetBranchAssemblyFilesAsync(string branch, CancellationToken ct);
+}
+
+[SingletonService<ISteamBinaryCache>]
+public sealed class SteamBinaryCache : ISteamBinaryCache
+{
+    private readonly ISteamDepotDownloader _steamDepotDownloader;
     private readonly SteamDepotDownloaderOptions _options;
     private readonly IDistributedCache _distributedCache;
 
-    public SteamBinaryCache(SteamDepotDownloader steamDepotDownloader, IOptions<SteamDepotDownloaderOptions> options, IDistributedCache distributedCache)
+    public SteamBinaryCache(ISteamDepotDownloader steamDepotDownloader, IOptions<SteamDepotDownloaderOptions> options, IDistributedCache distributedCache)
     {
         _steamDepotDownloader = steamDepotDownloader;
         _options = options.Value;

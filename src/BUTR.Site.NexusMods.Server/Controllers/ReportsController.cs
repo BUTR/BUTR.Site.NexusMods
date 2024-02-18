@@ -18,9 +18,9 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 public sealed class ReportsController : ApiControllerBase
 {
     private readonly ILogger _logger;
-    private readonly CrashReporterClient _crashReporterClient;
+    private readonly ICrashReporterClient _crashReporterClient;
 
-    public ReportsController(ILogger<ReportsController> logger, CrashReporterClient crashReporterClient)
+    public ReportsController(ILogger<ReportsController> logger, ICrashReporterClient crashReporterClient)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _crashReporterClient = crashReporterClient ?? throw new ArgumentNullException(nameof(crashReporterClient));

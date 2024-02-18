@@ -1,3 +1,4 @@
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts.Configs;
 using BUTR.Site.NexusMods.Server.Models.Database;
 
@@ -8,6 +9,7 @@ using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
+[ScopedService<IEntityConfigurationFactory>]
 public class EntityConfigurationFactory : IEntityConfigurationFactory
 {
     private readonly IEntityConfiguration[] _entityConfigurations;

@@ -1,3 +1,4 @@
+﻿using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Models.Quartz;
 
 using Quartz;
@@ -8,7 +9,17 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public class QuartzEventProviderService : IJobListener, ITriggerListener
+public interface IQuartzEventProviderService : IJobListener, ITriggerListener
+{
+    event EventHandler<QuartzEventArgs<IJobExecutionContext>>? OnJobToBeExecuted;
+    event EventHandler<QuartzEventArgs<IJobExecutionContext>>? OnJobExecutionVetoed;
+    event EventHandler<JobWasExecutedEventArgs>? OnJobWasExecuted;
+    event EventHandler<TriggerEventArgs>? OnTriggerComplete;
+    event EventHandler<TriggerEventArgs>? OnTriggerFired;
+}
+
+[SingletonService<IQuartzEventProviderService>]
+public class QuartzEventProviderService : IQuartzEventProviderService
 {
     public event EventHandler<QuartzEventArgs<IJobExecutionContext>>? OnJobToBeExecuted;
     public event EventHandler<QuartzEventArgs<IJobExecutionContext>>? OnJobExecutionVetoed;

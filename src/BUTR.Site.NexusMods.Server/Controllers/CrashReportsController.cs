@@ -81,9 +81,9 @@ public sealed class CrashReportsController : ApiControllerBase
         var page = query.Page;
         var pageSize = Math.Max(Math.Min(query.PageSize, 50), 5);
         var filters = query.Filters ?? Enumerable.Empty<Filtering>();
-        var sortings = query.Sotings is null || query.Sotings.Count == 0
+        var sortings = query.Sortings is null || query.Sortings.Count == 0
             ? new List<Sorting> { new() { Property = nameof(CrashReportEntity.CreatedAt), Type = SortingType.Descending } }
-            : query.Sotings;
+            : query.Sortings;
 
         var user = await _dbContextRead.NexusModsUsers
             .Include(x => x.ToModules).ThenInclude(x => x.Module)

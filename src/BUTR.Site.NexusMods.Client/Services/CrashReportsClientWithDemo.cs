@@ -49,7 +49,7 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
             return PagingStreamingData<CrashReportModel2>.Create(new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count), crashReports.ToAsyncEnumerable(), PagingAdditionalMetadata.Empty);
         }
 
-        return await _implementation.PaginatedStreamingAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);
+        return await _implementation.PaginatedStreamingAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sortings), ct);
     }
 
     public async Task<CrashReportModel2PagingDataApiResultModel> PaginatedAsync(PaginatedQuery? body, CancellationToken ct)
@@ -64,7 +64,7 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
             return new CrashReportModel2PagingDataApiResultModel(new CrashReportModel2PagingData(PagingAdditionalMetadata.Empty, crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count)), null!);
         }
 
-        return await _implementation.PaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sotings), ct);
+        return await _implementation.PaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sortings), ct);
     }
 
     public async Task<StringIQueryableApiResultModel> AutocompleteAsync(string? modId, CancellationToken ct)

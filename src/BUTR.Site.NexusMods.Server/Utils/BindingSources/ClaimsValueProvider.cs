@@ -15,10 +15,7 @@ public class ClaimsValueProvider : BindingSourceValueProvider
         _principal = principal;
     }
 
-    public override bool ContainsPrefix(string prefix)
-    {
-        return _principal.HasClaim(claim => claim.Type == prefix);
-    }
+    public override bool ContainsPrefix(string prefix) => _principal.HasClaim(claim => claim.Type == prefix);
 
     public override ValueProviderResult GetValue(string key)
     {

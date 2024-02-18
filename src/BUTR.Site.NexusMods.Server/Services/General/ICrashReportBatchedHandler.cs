@@ -1,5 +1,6 @@
-using BUTR.CrashReport.Bannerlord.Parser;
+﻿using BUTR.CrashReport.Bannerlord.Parser;
 using BUTR.CrashReport.Models;
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
@@ -20,7 +21,13 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public sealed class CrashReportBatchedHandler : IAsyncDisposable
+public interface ICrashReportBatchedHandler : IAsyncDisposable
+{
+    Task<int> HandleBatchAsync(IEnumerable<CrashReportFileMetadata> requests, CancellationToken ct);
+}
+
+[TransientService<ICrashReportBatchedHandler>]
+public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
 {
     private record HttpResultEntry(CrashReportFileId FileId, DateTime Date, CrashReportModel? CrashReport);
 
@@ -48,9 +55,9 @@ CallStack:
     private readonly CrashReporterOptions _options;
     private readonly ITenantContextAccessor _tenantContextAccessor;
     private readonly IAppDbContextFactory _dbContextFactory;
-    private readonly CrashReporterClient _client;
+    private readonly ICrashReporterClient _client;
 
-    public CrashReportBatchedHandler(ILogger<CrashReportBatchedHandler> logger, IOptions<CrashReporterOptions> options, ITenantContextAccessor tenantContextAccessor, IAppDbContextFactory dbContextFactory, CrashReporterClient client)
+    public CrashReportBatchedHandler(ILogger<CrashReportBatchedHandler> logger, IOptions<CrashReporterOptions> options, ITenantContextAccessor tenantContextAccessor, IAppDbContextFactory dbContextFactory, ICrashReporterClient client)
     {
         _logger = logger;
         _options = options.Value;

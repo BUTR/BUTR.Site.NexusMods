@@ -1,3 +1,4 @@
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models.Database;
@@ -20,6 +21,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
+[HostedService]
 internal sealed class QuartzListenerBackgroundService : BackgroundService
 {
     private const int RESULT_MAX_LENGTH = 8000;
@@ -27,10 +29,10 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
 
     private readonly ILogger _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly QuartzEventProviderService _quartzEventProviderService;
+    private readonly IQuartzEventProviderService _quartzEventProviderService;
     private readonly Channel<Func<IAppDbContextWrite, CancellationToken, ValueTask>> _taskQueue;
 
-    public QuartzListenerBackgroundService(ILogger<QuartzListenerBackgroundService> logger, IServiceProvider serviceProvider, QuartzEventProviderService quartzEventProviderService)
+    public QuartzListenerBackgroundService(ILogger<QuartzListenerBackgroundService> logger, IServiceProvider serviceProvider, IQuartzEventProviderService quartzEventProviderService)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;

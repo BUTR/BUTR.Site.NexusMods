@@ -1,3 +1,4 @@
+﻿using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Utils;
 
@@ -12,7 +13,16 @@ using System.Threading;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public sealed class DiffProvider
+public interface IDiffProvider
+{
+    IEnumerable<string> List(string basePath);
+    IEnumerable<string> TreeFlat(string basePath, string entry);
+    IEnumerable<string> Get(string basePath, string path, CancellationToken ct);
+    IEnumerable<string> Search(string basePath, TextSearchFiltering[] filters, CancellationToken ct);
+}
+
+[SingletonService<IDiffProvider>]
+public sealed class DiffProvider : IDiffProvider
 {
     public IEnumerable<string> List(string basePath)
     {

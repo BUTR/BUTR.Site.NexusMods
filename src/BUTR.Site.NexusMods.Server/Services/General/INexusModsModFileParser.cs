@@ -1,8 +1,9 @@
-using AsmResolver.DotNet;
+﻿using AsmResolver.DotNet;
 using AsmResolver.PE;
 
 using Bannerlord.ModuleManager;
 
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
@@ -27,6 +28,19 @@ using System.Xml;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
+public sealed record NexusModsModFileParserResult
+{
+    public required ModuleInfoExtended ModuleInfo { get; init; }
+    public required GameVersion[] GameVersions { get; init; }
+    public required NexusModsFileId FileId { get; init; }
+    public required DateTimeOffset Uploaded { get; init; }
+}
+
+public interface INexusModsModFileParser
+{
+    IAsyncEnumerable<NexusModsModFileParserResult> GetModuleInfosAsync(NexusModsGameDomain gameDomain, NexusModsModId modId, IEnumerable<NexusModsModFilesResponse.File> files, NexusModsApiKey apiKey, CancellationToken ct);
+}
+
 public sealed record ModuleInfoExtendedWithPath : ModuleInfoExtended
 {
     public string Path { get; init; }
@@ -37,20 +51,13 @@ public sealed record ModuleInfoExtendedWithPath : ModuleInfoExtended
     }
 }
 
-public sealed record NexusModsModFileParserResult
-{
-    public required ModuleInfoExtended ModuleInfo { get; init; }
-    public required GameVersion[] GameVersions { get; init; }
-    public required NexusModsFileId FileId { get; init; }
-    public required DateTimeOffset Uploaded { get; init; }
-}
-
-public class NexusModsModFileParser
+[TransientService<INexusModsModFileParser>]
+public class NexusModsModFileParser : INexusModsModFileParser
 {
     private readonly HttpClient _httpClient;
-    private readonly NexusModsAPIClient _apiClient;
+    private readonly INexusModsAPIClient _apiClient;
 
-    public NexusModsModFileParser(HttpClient httpClient, NexusModsAPIClient apiClient)
+    public NexusModsModFileParser(HttpClient httpClient, INexusModsAPIClient apiClient)
     {
         _httpClient = httpClient;
         _apiClient = apiClient;

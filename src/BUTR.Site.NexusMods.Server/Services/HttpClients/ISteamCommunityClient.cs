@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
-public sealed class SteamCommunityClient
+public interface ISteamCommunityClient
+{
+    Task<bool> ConfirmIdentityAsync(Dictionary<string, string> parameters, CancellationToken ct);
+}
+
+public sealed class SteamCommunityClient : ISteamCommunityClient
 {
     private readonly HttpClient _httpClient;
 
@@ -23,14 +28,13 @@ public sealed class SteamCommunityClient
             {"openid.mode", "check_authentication"},
         };
         foreach (var parameter in parameters)
-        {
             query.TryAdd(parameter.Key, parameter.Value);
-        }
 
-        using var response = await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, "openid/login")
+        using var request = new HttpRequestMessage(HttpMethod.Post, "openid/login")
         {
             Content = new FormUrlEncodedContent(query)
-        }, ct);
+        };
+        using var response = await _httpClient.SendAsync(request, ct);
 
         var responseString = await response.Content.ReadAsStringAsync(ct);
 

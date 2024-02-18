@@ -47,12 +47,12 @@ public sealed class NexusModsUserController : ApiControllerBase
         ImmutableArray<ModuleId> KnownModuleIds);
 
     private readonly ILogger _logger;
-    private readonly NexusModsAPIClient _nexusModsAPIClient;
-    private readonly NexusModsModFileParser _nexusModsModFileParser;
+    private readonly INexusModsAPIClient _nexusModsAPIClient;
+    private readonly INexusModsModFileParser _nexusModsModFileParser;
     private readonly IAppDbContextWrite _dbContextWrite;
     private readonly IAppDbContextRead _dbContextRead;
 
-    public NexusModsUserController(ILogger<NexusModsUserController> logger, NexusModsAPIClient nexusModsAPIClient, NexusModsModFileParser nexusModsModFileParser, IAppDbContextWrite dbContextWrite, IAppDbContextRead dbContextRead)
+    public NexusModsUserController(ILogger<NexusModsUserController> logger, INexusModsAPIClient nexusModsAPIClient, INexusModsModFileParser nexusModsModFileParser, IAppDbContextWrite dbContextWrite, IAppDbContextRead dbContextRead)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _nexusModsAPIClient = nexusModsAPIClient ?? throw new ArgumentNullException(nameof(nexusModsAPIClient));

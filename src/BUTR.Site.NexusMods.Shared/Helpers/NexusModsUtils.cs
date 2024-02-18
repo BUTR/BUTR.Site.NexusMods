@@ -13,10 +13,10 @@ public static class NexusModsUtils
         if (url is null)
             return false;
 
-        if (!url.Contains("nexusmods.com/"))
+        if (!url.Contains("nexusmods.com/", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        var str1 = url.Split("nexusmods.com/");
+        var str1 = url.ToLowerInvariant().Split("nexusmods.com/");
         if (str1.Length != 2)
             return false;
 

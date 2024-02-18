@@ -36,7 +36,7 @@ public class PlainTextOutput2 : ITextOutput
 
     public void Unindent() => _indent--;
 
-    void WriteIndent()
+    private void WriteIndent()
     {
         if (_needsIndent)
         {

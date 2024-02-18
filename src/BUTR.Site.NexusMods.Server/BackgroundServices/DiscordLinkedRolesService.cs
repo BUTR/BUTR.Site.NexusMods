@@ -1,3 +1,4 @@
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
+[HostedService]
 public sealed class DiscordLinkedRolesService : BackgroundService
 {
     private readonly ILogger _logger;
@@ -24,7 +26,7 @@ public sealed class DiscordLinkedRolesService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var client = scope.ServiceProvider.GetRequiredService<DiscordClient>();
+        var client = scope.ServiceProvider.GetRequiredService<IDiscordClient>();
 
         var result = await client.SetGlobalMetadataAsync(new DiscordGlobalMetadata[]
         {

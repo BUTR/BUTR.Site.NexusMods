@@ -23,11 +23,11 @@ public sealed class GitHubController : ApiControllerBase
 {
     public sealed record GitHubOAuthUrlModel(string Url, Guid State);
 
-    private readonly GitHubClient _gitHubClient;
-    private readonly GitHubAPIClient _gitHubApiClient;
+    private readonly IGitHubClient _gitHubClient;
+    private readonly IGitHubAPIClient _gitHubApiClient;
     private readonly IGitHubStorage _gitHubStorage;
 
-    public GitHubController(GitHubClient gitHubClient, GitHubAPIClient gitHubApiClient, IGitHubStorage gitHubStorage)
+    public GitHubController(IGitHubClient gitHubClient, IGitHubAPIClient gitHubApiClient, IGitHubStorage gitHubStorage)
     {
         _gitHubClient = gitHubClient ?? throw new ArgumentNullException(nameof(gitHubClient));
         _gitHubApiClient = gitHubApiClient ?? throw new ArgumentNullException(nameof(gitHubApiClient));

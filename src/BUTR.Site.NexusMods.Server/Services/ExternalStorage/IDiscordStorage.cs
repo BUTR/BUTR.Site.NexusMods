@@ -1,3 +1,4 @@
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
@@ -19,6 +20,7 @@ public interface IDiscordStorage
     Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string discordUserId);
 }
 
+[ScopedService<IDiscordStorage>]
 public sealed class DatabaseDiscordStorage : IDiscordStorage
 {
     private readonly IAppDbContextRead _dbContextRead;

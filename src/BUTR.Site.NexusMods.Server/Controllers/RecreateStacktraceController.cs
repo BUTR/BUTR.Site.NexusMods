@@ -27,10 +27,10 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 public sealed class RecreateStacktraceController : ApiControllerBase
 {
     private readonly ILogger _logger;
-    private readonly CrashReporterClient _crashReporterClient;
-    private readonly SteamBinaryCache _steamBinaryCache;
+    private readonly ICrashReporterClient _crashReporterClient;
+    private readonly ISteamBinaryCache _steamBinaryCache;
 
-    public RecreateStacktraceController(ILogger<RecreateStacktraceController> logger, CrashReporterClient crashReporterClient, SteamBinaryCache steamBinaryCache)
+    public RecreateStacktraceController(ILogger<RecreateStacktraceController> logger, ICrashReporterClient crashReporterClient, ISteamBinaryCache steamBinaryCache)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _crashReporterClient = crashReporterClient ?? throw new ArgumentNullException(nameof(crashReporterClient));

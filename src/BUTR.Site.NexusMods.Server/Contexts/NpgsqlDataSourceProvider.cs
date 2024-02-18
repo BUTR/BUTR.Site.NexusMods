@@ -1,3 +1,4 @@
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Options;
@@ -8,6 +9,7 @@ using System.Text.Json;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
+[SingletonService]
 public sealed class NpgsqlDataSourceProvider
 {
     private ConnectionStringsOptions _options;

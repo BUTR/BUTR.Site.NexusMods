@@ -1,3 +1,5 @@
+using BUTR.Site.NexusMods.DependencyInjection;
+
 using Microsoft.EntityFrameworkCore;
 
 using System.Threading;
@@ -5,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
+[ScopedService<IAppDbContextFactory>]
 public class AppDbContextFactory : IAppDbContextFactory
 {
     private readonly IDbContextFactory<AppDbContextWrite> _dbContextFactoryWrite;
