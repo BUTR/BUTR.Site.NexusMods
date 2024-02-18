@@ -55,9 +55,9 @@ public static class QueryableExtensions
         var page = query.Page;
         var pageSize = Math.Max(Math.Min(query.PageSize, maxPageSize), 5);
         var filters = query.Filters ?? Enumerable.Empty<Filtering>();
-        var sortings = query.Sotings is null || query.Sotings.Count == 0
+        var sortings = query.Sortings is null || query.Sortings.Count == 0
             ? defaultSorting == null ? Array.Empty<Sorting>() : new List<Sorting> { defaultSorting }
-            : query.Sotings;
+            : query.Sortings;
 
         return queryable
             .WithFilter(filters)
