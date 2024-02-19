@@ -17,10 +17,10 @@ public class ExportOutputFormatterTests
     {
         [Name("Test"), Index(0)]
         public string Test { get; init; }
-        
+
         public static string GenerateFilename() => "mock.csv";
     }
-    
+
     [Fact]
     public void CanWriteType_ReturnsTrue_ForAssignableTypes()
     {
@@ -37,7 +37,7 @@ public class ExportOutputFormatterTests
     }
 
     [Fact]
-    public async void WriteResponseBodyAsync_WritesSingleEntry_ToResponseBody()
+    public async Task WriteResponseBodyAsync_WritesSingleEntry_ToResponseBodyAsync()
     {
         var formatter = new ExportOutputFormatter<MockCsvFile>();
         var context = new OutputFormatterWriteContext(
@@ -52,7 +52,7 @@ public class ExportOutputFormatterTests
     }
 
     [Fact]
-    public async void WriteResponseBodyAsync_WritesEnumerable_ToResponseBody()
+    public async Task WriteResponseBodyAsync_WritesEnumerable_ToResponseBodyAsync()
     {
         var formatter = new ExportOutputFormatter<MockCsvFile>();
         var context = new OutputFormatterWriteContext(
@@ -67,7 +67,7 @@ public class ExportOutputFormatterTests
     }
 
     [Fact]
-    public async void WriteResponseBodyAsync_ThrowsException_ForInvalidObjectType()
+    public async Task WriteResponseBodyAsync_ThrowsException_ForInvalidObjectTypeAsync()
     {
         var formatter = new ExportOutputFormatter<MockCsvFile>();
         var context = new OutputFormatterWriteContext(

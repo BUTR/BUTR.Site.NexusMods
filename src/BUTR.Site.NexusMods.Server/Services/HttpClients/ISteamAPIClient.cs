@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Options;
+using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Options;
 
@@ -86,7 +86,7 @@ public sealed class SteamAPIClient : ISteamAPIClient
 
         var data = JsonSerializer.Deserialize<GetUserInfoRoot>(await response.Content.ReadAsStreamAsync(ct));
         if (data is null) return null;
-        
+
         return new SteamUserInfo(data.Response.Players[0].Steamid, data.Response.Players[0].Personaname);
     }
 
@@ -98,7 +98,7 @@ public sealed class SteamAPIClient : ISteamAPIClient
 
         var data = JsonSerializer.Deserialize<IsOwningGameRoot>(await response.Content.ReadAsStreamAsync(ct));
         if (data is null) return false;
-        
+
         return data.Response.GameCount == 1;
     }
 }

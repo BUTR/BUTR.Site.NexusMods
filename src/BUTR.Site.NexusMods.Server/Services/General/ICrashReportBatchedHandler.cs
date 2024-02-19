@@ -1,4 +1,4 @@
-﻿using BUTR.CrashReport.Bannerlord.Parser;
+using BUTR.CrashReport.Bannerlord.Parser;
 using BUTR.CrashReport.Models;
 using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts;

@@ -1,4 +1,4 @@
-﻿using BUTR.CrashReport.Models;
+using BUTR.CrashReport.Models;
 using BUTR.Site.NexusMods.Server.Models;
 
 using Microsoft.Extensions.Options;

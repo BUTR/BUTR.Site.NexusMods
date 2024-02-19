@@ -9,7 +9,7 @@ public static class ApiResultUtils
     public static bool IsReturnTypeApiResult(MethodInfo? methodInfo)
     {
         if (methodInfo is null) return false;
-        
+
         var returnType = GetReturnType(methodInfo);
 
         return returnType == typeof(ApiResult) || returnType.GetGenericTypeDefinition() == typeof(ApiResult<>);
