@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.DependencyInjection;
+using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Utils;
 

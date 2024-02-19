@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;

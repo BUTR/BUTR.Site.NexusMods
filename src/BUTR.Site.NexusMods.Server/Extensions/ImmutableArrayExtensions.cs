@@ -15,7 +15,7 @@ public static class ImmutableArrayExtensions
     /// <param name="immutableArray">The immutable array to convert.</param>
     /// <returns>A regular array containing the same elements as the immutable array.</returns>
     public static T[] AsArray<T>(this ImmutableArray<T> immutableArray) => Unsafe.As<ImmutableArray<T>, T[]>(ref immutableArray);
-    
+
     /// <summary>
     /// Converts a regular array to an <see cref="ImmutableArray{T}"/>.
     /// </summary>

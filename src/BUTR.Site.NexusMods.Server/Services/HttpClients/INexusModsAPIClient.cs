@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 using BUTR.Site.NexusMods.Server.Utils;
 

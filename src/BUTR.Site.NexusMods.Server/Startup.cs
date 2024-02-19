@@ -90,7 +90,7 @@ public sealed partial class Startup
     }
 
     partial void ConfigureServicesPartial(IServiceCollection services);
-    
+
     public void ConfigureServices(IServiceCollection services)
     {
         var userAgent = $"{_assemblyName.Name ?? "ERROR"} v{_assemblyName.Version?.ToString() ?? "ERROR"} (github.com/BUTR)";
@@ -172,7 +172,7 @@ public sealed partial class Startup
             client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }).AddPolicyHandler(GetRetryPolicy());
-        
+
         services.AddQuartz(opt =>
         {
             opt.AddJobListener<IQuartzEventProviderService>(sp => sp.GetRequiredService<IQuartzEventProviderService>());
@@ -217,7 +217,7 @@ public sealed partial class Startup
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfiguration<>)))
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
-        
+
         services.AddDbContext<BaseAppDbContext>(ServiceLifetime.Scoped);
         services.AddDbContextFactory<AppDbContextRead>(lifetime: ServiceLifetime.Scoped);
         services.AddDbContextFactory<AppDbContextWrite>(lifetime: ServiceLifetime.Scoped);

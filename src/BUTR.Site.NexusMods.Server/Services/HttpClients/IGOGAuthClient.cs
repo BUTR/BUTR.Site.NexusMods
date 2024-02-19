@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 
 using System;
 using System.Net.Http;
@@ -50,7 +50,7 @@ public sealed class GOGAuthClient : IGOGAuthClient
 
         var data = JsonSerializer.Deserialize<TokenResponse>(await response.Content.ReadAsStreamAsync(ct));
         if (data is null) return null;
-        
+
         return new GOGOAuthTokens(data.UserId, data.AccessToken, data.RefreshToken, DateTimeOffset.UtcNow.AddMinutes(data.ExpiresIn ?? 0));
     }
 
@@ -65,7 +65,7 @@ public sealed class GOGAuthClient : IGOGAuthClient
 
         var data = JsonSerializer.Deserialize<TokenResponse>(await response.Content.ReadAsStreamAsync(ct));
         if (data is null) return null;
-        
+
         return new GOGOAuthTokens(data.UserId, data.AccessToken, data.RefreshToken, DateTimeOffset.UtcNow.AddMinutes(data.ExpiresIn ?? 0));
     }
 }

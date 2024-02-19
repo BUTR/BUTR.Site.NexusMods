@@ -29,7 +29,7 @@ public static class ListExtensions
         {
             var mid = (start + end) / 2;
             var result = keySelector(instance[mid]).CompareTo(itemKey);
-            
+
             if (result == 0)
                 return mid;
             if (result < 0)

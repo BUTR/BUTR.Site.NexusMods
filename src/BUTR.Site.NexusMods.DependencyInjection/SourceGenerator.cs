@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 using System.Diagnostics.CodeAnalysis;
@@ -44,7 +44,7 @@ public class SourceGenerator : ISourceGenerator
         {
             var attributeData = GetAttributeData(typeSymbol);
             if (attributeData?.AttributeClass is null) continue;
-            
+
             var interfaceSymbols = attributeData.AttributeClass.TypeArguments;
 
             foreach (var interfaceSymbol in interfaceSymbols)
@@ -62,7 +62,7 @@ public class SourceGenerator : ISourceGenerator
                                       """);
             }
         }
-        
+
         stringBuilder.Append("""
 
                                 }
@@ -75,7 +75,7 @@ public class SourceGenerator : ISourceGenerator
     private IEnumerable<INamedTypeSymbol> GetTypesWithIToRegisterAttributes(Compilation compilation)
     {
         var allTypes = GetAllTypes(compilation.GlobalNamespace);
-        var types = allTypes.Where(x => 
+        var types = allTypes.Where(x =>
             x is { TypeKind: TypeKind.Class, IsAbstract: false } &&
             x.GetAttributes().Any(a => a.AttributeClass?.Interfaces.Any(i => i.Name.Equals("IToRegister", StringComparison.OrdinalIgnoreCase)) == true)).ToList();
         return types;
@@ -84,22 +84,22 @@ public class SourceGenerator : ISourceGenerator
     private IEnumerable<INamedTypeSymbol> GetAllTypes(INamespaceSymbol @namespace)
     {
         foreach (var type in @namespace.GetTypeMembers())
-        foreach (var nestedType in GetNestedTypes(type))
-            yield return nestedType;
+            foreach (var nestedType in GetNestedTypes(type))
+                yield return nestedType;
 
         foreach (var nestedNamespace in @namespace.GetNamespaceMembers())
-        foreach (var type in GetAllTypes(nestedNamespace))
-            yield return type;
+            foreach (var type in GetAllTypes(nestedNamespace))
+                yield return type;
     }
 
     private IEnumerable<INamedTypeSymbol> GetNestedTypes(INamedTypeSymbol type)
     {
         yield return type;
-        
+
         foreach (var nestedType in type.GetTypeMembers().SelectMany(GetNestedTypes))
             yield return nestedType;
     }
-    
+
     private static string GetMethodName(INamedTypeSymbol attributeClass)
     {
         return attributeClass.Name switch
@@ -111,7 +111,7 @@ public class SourceGenerator : ISourceGenerator
             _ => throw new InvalidOperationException()
         };
     }
-    
+
     private static AttributeData? GetAttributeData(INamedTypeSymbol typeSymbol)
     {
         static IEnumerable<INamedTypeSymbol> GetAllInterfaces(INamedTypeSymbol? namedTypeSymbol)
@@ -125,7 +125,7 @@ public class SourceGenerator : ISourceGenerator
                 typeSymbol = typeSymbol.BaseType;
             }
         }
-        
+
         return typeSymbol.GetAttributes().Where(a =>
         {
             return GetAllInterfaces(a.AttributeClass).Any(i => i.Name.Equals("IToRegister", StringComparison.OrdinalIgnoreCase));

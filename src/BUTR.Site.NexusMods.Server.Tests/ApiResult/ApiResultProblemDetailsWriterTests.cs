@@ -1,4 +1,4 @@
-﻿using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +14,7 @@ namespace BUTR.Site.NexusMods.Server.Tests.ApiResult;
 public class ApiResultProblemDetailsWriterTests
 {
     private ApiResult<object> ControllerMethod() => default!;
-    
+
     [Fact]
     public void CanWrite_ReturnsTrue_WhenEndpointHasControllerActionDescriptor()
     {
@@ -63,7 +63,7 @@ public class ApiResultProblemDetailsWriterTests
     }
 
     [Fact]
-    public async Task WriteAsync_ExecutesObjectResult_WhenCalled()
+    public async Task WriteAsync_ExecutesObjectResult_WhenCalledAsync()
     {
         // Arrange
         var actionResultExecutorMock = new Mock<IActionResultExecutor<ObjectResult>>();
