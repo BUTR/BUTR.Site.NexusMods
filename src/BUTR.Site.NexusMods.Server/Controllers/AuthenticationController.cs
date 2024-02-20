@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -136,7 +137,8 @@ public sealed class AuthenticationController : ApiControllerBase
             return ApiResult(new JwtTokenResponse(generatedToken.Token, HttpContext.GetProfile(validateResponse, userRole, metadata)));
         }
 
-        var token = Request.Headers["Authorization"].ToString().Replace(ButrNexusModsAuthSchemeConstants.AuthScheme, "").Trim();
+        var authenticationHeaderValue = AuthenticationHeaderValue.Parse(Request.Headers.Authorization!);
+        var token = authenticationHeaderValue.Parameter!;
         return ApiResult(new JwtTokenResponse(token, HttpContext.GetProfile()));
     }
 }

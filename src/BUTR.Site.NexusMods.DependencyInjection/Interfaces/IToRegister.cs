@@ -1,3 +1,3 @@
 namespace BUTR.Site.NexusMods.DependencyInjection;
 
-public interface IToRegister { }
+public interface IToRegister;
