@@ -70,7 +70,7 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Allowed Mods to Users</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="NexusModsUserToNexusModsModManualLinkModel" GetItems="@GetAllowUserMods" >
+        <DataGridPaging @ref="@_dataGridRef" TItem="NexusModsUserToNexusModsModManualLinkModel" GetItems="@GetAllowUserMods" FixedHeader>
             <DataGridColumns>
                 <DataGridColumnText TItem="NexusModsUserToNexusModsModManualLinkModel" Field="@nameof(NexusModsUserToNexusModsModManualLinkModel.NexusModsModId)" Caption="Mod Id"/>
                 <DataGridColumnText TItem="NexusModsUserToNexusModsModManualLinkModel" Field="@nameof(NexusModsUserToNexusModsModManualLinkModel.AllowedNexusModsUserIds)" Caption="Allowed User Ids">

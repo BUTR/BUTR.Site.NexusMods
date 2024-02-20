@@ -33,7 +33,7 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Linked Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="NexusModsModModel" GetItems="@GetMods">
+        <DataGridPaging @ref="@_dataGridRef" TItem="NexusModsModModel" GetItems="@GetMods" FixedHeader>
             <DataGridColumns>
                 <DataGridColumn TItem="NexusModsModModel" ElementId="mod-id" Field="@nameof(NexusModsModModel.NexusModsModId)" Caption="Mod Id"/>
                 <DataGridColumn TItem="NexusModsModModel" ElementId="mod-name" Field="@nameof(NexusModsModModel.Name)" Caption="Name"/>
@@ -67,7 +67,7 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Available Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef2" TItem="NexusModsModAvailableModel" GetItems="@GetAllowedMods" PageSizes="@(new[] { 5, 10, 20 })">
+        <DataGridPaging @ref="@_dataGridRef2" TItem="NexusModsModAvailableModel" GetItems="@GetAllowedMods" PageSizes="@(new[] { 5, 10, 20 })" FixedHeader>
             <DataGridColumns>
                 <DataGridColumn TItem="NexusModsModAvailableModel" ElementId="mod-id" Field="@nameof(NexusModsModAvailableModel.NexusModsModId)" Caption="Mod Id"/>
                 <DataGridColumn TItem="NexusModsModAvailableModel" ElementId="mod-name" Field="@nameof(NexusModsModAvailableModel.Name)" Caption="Name"/>

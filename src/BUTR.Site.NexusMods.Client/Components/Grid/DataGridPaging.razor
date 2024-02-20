@@ -15,7 +15,6 @@
           PagerOptions="@(new DataGridPagerOptions { PaginationPosition = PagerElementPosition.Center, ButtonRowPosition = PagerElementPosition.Start, TotalItemsPosition = PagerElementPosition.End })"
           PageSizes="@PageSizes"
           Filterable="@Filterable"
-          CustomFilter="@OnCustomFilter"
           Sortable="@Sortable"
           Responsive
           Editable="@Editable"
@@ -25,7 +24,8 @@
           DataGridColumns="@DataGridColumns"
           ButtonRowTemplate="@ButtonRowTemplate"
           DetailRowTemplate="@DetailRowTemplate"
-          DetailRowTrigger="@DetailRowTrigger">
+          DetailRowTrigger="@DetailRowTrigger"
+          FixedHeader="@FixedHeader">
     <TotalItemsTemplate>
         @if (Metadata.TotalCount == 0)
         {
@@ -63,6 +63,9 @@
     [Parameter]
     public bool Sortable { get; set; } = false;
 
+    [Parameter]
+    public bool FixedHeader { get; set; } = false;
+    
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object>? AdditionalAttributes { get; set; }
     
@@ -148,7 +151,5 @@
         var userSettings = await _localStorage.GetItemAsync<UserSettings>("settings") ?? new();
         return GetPageSize?.Invoke(userSettings) ?? userSettings.PageSize;
     }
-
-    private static bool OnCustomFilter(TItem model) => true;
 
 }

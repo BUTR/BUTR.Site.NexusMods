@@ -41,7 +41,7 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Manual Module Id Links</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="NexusModsModToModuleModel" GetItems="@GetManualLinks">
+        <DataGridPaging @ref="@_dataGridRef" TItem="NexusModsModToModuleModel" GetItems="@GetManualLinks" FixedHeader>
             <DataGridColumns>
                 <DataGridColumn TItem="NexusModsModToModuleModel" Field="@nameof(NexusModsModToModuleModel.ModuleId)" Caption="Module Id"/>
                 <DataGridColumn TItem="NexusModsModToModuleModel" Field="@nameof(NexusModsModToModuleModel.NexusModsModId)" Caption="Mod Id"/>

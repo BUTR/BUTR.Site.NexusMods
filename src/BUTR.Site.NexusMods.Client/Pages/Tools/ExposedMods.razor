@@ -10,7 +10,7 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Exposed Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging TItem="ExposedNexusModsModModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetExposedMods" Sortable Filterable>
+        <DataGridPaging TItem="ExposedNexusModsModModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetExposedMods" Sortable Filterable FixedHeader>
             <DataGridColumns>
                 <DataGridColumnText TItem="ExposedNexusModsModModel" ElementId="mod-id" Field="@nameof(ExposedNexusModsModModel.NexusModsModId)" Caption="NexusMods Mod Id" Filterable Sortable SortField="@nameof(EntityFields.NexusModsModId)"/>
                 <DataGridColumnTextAutocomplete TItem="ExposedNexusModsModModel" ElementId="module-id" Field="@nameof(ExposedNexusModsModModel.Mods)" Caption="Module Id's" Filterable Sortable SortField="@nameof(EntityFields.ModuleId)" MinLength="3" GetAutocompleteValues="GetAutocompleteValues">

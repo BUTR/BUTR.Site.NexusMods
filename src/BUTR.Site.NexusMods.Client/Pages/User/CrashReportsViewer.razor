@@ -65,7 +65,7 @@
         </CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridStreamingPaging @ref="@_datagridPagingRef" TItem="CrashReportModel2" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable DefaultPageSize="@UserSettings.DefaultCrashReportPageSize" PageSizes="@UserSettings.AvailableCrashReportPageSizes" GetPageSize="@(x => x.CrashReportPageSize)">
+        <DataGridStreamingPaging @ref="@_datagridPagingRef" TItem="CrashReportModel2" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable DefaultPageSize="@UserSettings.DefaultCrashReportPageSize" PageSizes="@UserSettings.AvailableCrashReportPageSizes" GetPageSize="@(x => x.CrashReportPageSize)" FixedHeader>
             <DataGridColumns>
                 <DataGridColumnText TItem="CrashReportModel2" ElementId="game-version" Field="@nameof(CrashReportModel2.GameVersion)" Caption="Game Version" Filterable Placeholder="v1.0.0" Sortable SortField="@nameof(EntityFields.GameVersion)"/>
                 <DataGridColumnTextAutocomplete TItem="CrashReportModel2" Field="@nameof(CrashReportModel2.InvolvedModules)" Caption="Top Involved Module" Filterable Sortable SortField="@nameof(EntityFields.TopInvolvedModuleId)" MinLength="3" GetAutocompleteValues="@GetAutocompleteValues">

@@ -15,7 +15,7 @@
         </CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging TItem="NexusModsArticleModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetArticles" Sortable Filterable>
+        <DataGridPaging TItem="NexusModsArticleModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetArticles" Sortable Filterable FixedHeader>
             <DataGridColumns>
                 <DataGridColumnText TItem="NexusModsArticleModel" Field="@nameof(NexusModsArticleModel.NexusModsArticleId)" Caption="Id" Sortable SortField="@nameof(EntityFields.NexusModsArticleId)"/>
                 <DataGridColumnText TItem="NexusModsArticleModel" ElementId="article-title" Field="@nameof(NexusModsArticleModel.Title)" Caption="Title" Filterable Sortable SortField="@nameof(EntityFields.Title)"/>

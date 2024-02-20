@@ -4,7 +4,6 @@ using Blazored.SessionStorage;
 using Blazorise;
 using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
-using Blazorise.Localization;
 
 using BUTR.Site.NexusMods.Client.Extensions;
 using BUTR.Site.NexusMods.Client.Options;
@@ -14,7 +13,6 @@ using BUTR.Site.NexusMods.ServerClient;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
 

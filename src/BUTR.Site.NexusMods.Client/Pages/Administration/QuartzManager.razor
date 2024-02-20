@@ -34,7 +34,7 @@
         </CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="QuartzExecutionLogEntity" DetailRowTrigger="@(x => x.Item.LogId == _dataGridRef?.Value?.LogId)" GetFilters="@GetFilters" GetItems="@Paging" Sortable Filterable>
+        <DataGridPaging @ref="@_dataGridRef" TItem="QuartzExecutionLogEntity" DetailRowTrigger="@(x => x.Item.LogId == _dataGridRef?.Value?.LogId)" GetFilters="@GetFilters" GetItems="@Paging" Sortable Filterable FixedHeader>
             <DataGridColumns>
                 <DataGridColumn TItem="QuartzExecutionLogEntity" ElementId="job-name" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="" Filterable="@false" Sortable="@false" >
                     <DisplayTemplate>
