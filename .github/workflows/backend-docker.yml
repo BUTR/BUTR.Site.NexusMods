@@ -51,8 +51,7 @@ jobs:
         builder: ${{ steps.buildx.outputs.name }}
         context: ./
         file: ./src/BUTR.Site.NexusMods.Server/Dockerfile
-        platforms: linux/amd64
-        #platforms: linux/amd64,linux/arm64
+        platforms: linux/amd64,linux/arm64
         push: true
         tags: ghcr.io/butr/sitenexusmods2:latest
         cache-from: type=local,src=/tmp/.buildx-cache
