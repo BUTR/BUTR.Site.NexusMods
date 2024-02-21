@@ -30,7 +30,7 @@ FROM restore AS publish
 ARG TARGETARCH
 
 WORKDIR /build
-RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" --no-restore -c Release -o /app/publish; \
+RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -c Release -o /app/publish; \
 #RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" --no-restore -c Release -r linux-x64 -o /app/publish -p:PublishReadyToRun=true;
 
 
