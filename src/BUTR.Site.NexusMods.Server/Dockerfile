@@ -2,8 +2,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy AS base
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0-jammy AS restore
-ARG TARGETARCH
-
 WORKDIR /build
 
 COPY ["src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj", "src/BUTR.Site.NexusMods.Server/"]
@@ -13,7 +11,7 @@ COPY ["src/BUTR.Site.NexusMods.Server.ValueObjects.TVO/BUTR.Site.NexusMods.Serve
 COPY ["src/BUTR.Site.NexusMods.DependencyInjection/BUTR.Site.NexusMods.DependencyInjection.csproj", "src/BUTR.Site.NexusMods.DependencyInjection/"]
 COPY ["src/nuget.config", "src/"]
 
-#RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -r linux-x64 -p:PublishReadyToRun=true;
+RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj";
 
 COPY ["src/BUTR.Site.NexusMods.Server/", "src/BUTR.Site.NexusMods.Server/"]
 COPY ["src/BUTR.Site.NexusMods.Shared/", "src/BUTR.Site.NexusMods.Shared/"]
@@ -27,10 +25,20 @@ COPY [".git/refs/heads/", ".git/refs/heads/"]
 
 
 FROM restore AS publish
-ARG TARGETARCH
-
 WORKDIR /build
-RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -c Release -o /app/publish; \
+
+RUN /bin/bash -c 'set -ex && \
+    ARCH=`uname -m` && \
+    if [[ "$ARCH" == "amd64" || "$ARCH" == "x86_64" ]]; then \
+       echo "x86_64" && \
+       dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -c Release -o ./output -r linux-x64; \
+    elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then \
+       echo "aarch64" && \
+       dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -c Release -o ./output -r linux-arm64; \
+    else \
+       echo "unknown arch" && \
+       dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -c Release -o ./output --os linux --arch $ARCH; \
+    fi'
 #RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" --no-restore -c Release -r linux-x64 -o /app/publish -p:PublishReadyToRun=true;
 
 
