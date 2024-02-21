@@ -6,10 +6,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 using Npgsql;
 
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.ResourceDetectors.Container;
 using OpenTelemetry.Resources;
@@ -164,5 +166,26 @@ public static class Program
             configuration
                 .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services);
+        }, writeToProviders: true)
+        .ConfigureLogging((ctx, builder) =>
+        {
+            var oltpSection = ctx.Configuration.GetSection("Oltp");
+            if (oltpSection == null!) return;
+
+            var loggingEndpoint = oltpSection.GetValue<string>("LoggingEndpoint");
+            if (loggingEndpoint is null) return;
+            var loggingProtocol = oltpSection.GetValue<OtlpExportProtocol>("LoggingProtocol");
+
+            builder.AddOpenTelemetry(o =>
+            {
+                o.IncludeScopes = true;
+                o.ParseStateValues = true;
+                o.IncludeFormattedMessage = true;
+                o.AddOtlpExporter((options, processorOptions) =>
+                {
+                    options.Endpoint = new Uri(loggingEndpoint);
+                    options.Protocol = loggingProtocol;
+                });
+            });
         });
 }
