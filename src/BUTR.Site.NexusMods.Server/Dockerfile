@@ -11,7 +11,7 @@ COPY ["src/BUTR.Site.NexusMods.Server.ValueObjects.TVO/BUTR.Site.NexusMods.Serve
 COPY ["src/BUTR.Site.NexusMods.DependencyInjection/BUTR.Site.NexusMods.DependencyInjection.csproj", "src/BUTR.Site.NexusMods.DependencyInjection/"]
 COPY ["src/nuget.config", "src/"]
 
-RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -c Release;
+RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj";
 
 COPY ["src/BUTR.Site.NexusMods.Server/", "src/BUTR.Site.NexusMods.Server/"]
 COPY ["src/BUTR.Site.NexusMods.Shared/", "src/BUTR.Site.NexusMods.Shared/"]
