@@ -66,4 +66,3 @@ jobs:
         token: ${{ secrets.TOKEN_GPR }}
         repository: BUTR/BUTR.Site.NexusMods 
         event-type: deploy-docker-image
-        
