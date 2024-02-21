@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy AS base
 WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0-jammy AS restore
-ARG TARGETPLATFORM
+ARG TARGETARCH
 
 WORKDIR /build
 
@@ -13,7 +13,7 @@ COPY ["src/BUTR.Site.NexusMods.Server.ValueObjects.TVO/BUTR.Site.NexusMods.Serve
 COPY ["src/BUTR.Site.NexusMods.DependencyInjection/BUTR.Site.NexusMods.DependencyInjection.csproj", "src/BUTR.Site.NexusMods.DependencyInjection/"]
 COPY ["src/nuget.config", "src/"]
 
-RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -r linux -a $TARGETPLATFORM;
+RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -r linux;
 #RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -r linux-x64 -p:PublishReadyToRun=true;
 
 COPY ["src/BUTR.Site.NexusMods.Server/", "src/BUTR.Site.NexusMods.Server/"]
@@ -28,10 +28,10 @@ COPY [".git/refs/heads/", ".git/refs/heads/"]
 
 
 FROM restore AS publish
-ARG TARGETPLATFORM
+ARG TARGETARCH
 
 WORKDIR /build
-RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" --no-restore -c Release -r linux -a $TARGETPLATFORM -o /app/publish;
+RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" --no-restore -c Release -r linux -o /app/publish;
 #RUN dotnet publish "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" --no-restore -c Release -r linux-x64 -o /app/publish -p:PublishReadyToRun=true;
 
 
