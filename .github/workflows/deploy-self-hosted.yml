@@ -12,19 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: 'self-hosted-backend'
-      url: 'https://vps-sitenexusmods.aragas.org'
+      url: 'https://vps2-sitenexusmods.aragas.org'
     steps:
     - name: multiple command
       uses: appleboy/ssh-action@master
       with:
         #host: ${{ secrets.HOST }}
-        host: ${{ secrets.HOST_2 }}
+        host: ${{ secrets.HOST_3 }}
         #username: ${{ secrets.USERNAME }}
-        username: ${{ secrets.USERNAME_2 }}
+        username: ${{ secrets.USERNAME_3 }}
         #password: ${{ secrets.PASSWORD }}
-        password: ${{ secrets.PASSWORD_2 }}
+        password: ${{ secrets.PASSWORD_3 }}
         #port: ${{ secrets.PORT }}
-        port: ${{ secrets.PORT_2 }}
+        port: ${{ secrets.PORT_3 }}
         script: |
           docker image pull ghcr.io/butr/sitenexusmods2;
           docker stack deploy --prune --resolve-image always -c /deploy/sitenexusmods2/docker-compose.yml sitenexusmods2;

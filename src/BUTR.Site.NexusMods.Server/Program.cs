@@ -6,18 +6,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 using Npgsql;
 
 using OpenTelemetry.Exporter;
-using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.ResourceDetectors.Container;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Quartz;
+
+using Serilog;
+using Serilog.Events;
 
 using System;
 using System.Threading.Tasks;
@@ -35,22 +36,41 @@ public static class Program
 
     public static async Task Main(string[] args)
     {
-        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkInsert = PreBulkOperation;
-        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkDelete = PreBulkOperation;
-        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkMerge = PreBulkOperation;
-        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkUpdate = PreBulkOperation;
-        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkSynchronize = PreBulkOperation;
-        Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkSaveChanges = PreBulkSaveChanges;
-        Z.EntityFramework.Extensions.EntityFrameworkManager.ContextFactory = context => context switch
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .CreateBootstrapLogger();
+        
+        try
         {
-            AppDbContextRead appDbContextRead => appDbContextRead.New(),
-            AppDbContextWrite appDbContextWrite => appDbContextWrite.New(),
-            _ => null
-        };
+            Log.Information("Starting web application");
+            
+            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkInsert = PreBulkOperation;
+            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkDelete = PreBulkOperation;
+            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkMerge = PreBulkOperation;
+            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkUpdate = PreBulkOperation;
+            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkSynchronize = PreBulkOperation;
+            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkSaveChanges = PreBulkSaveChanges;
+            Z.EntityFramework.Extensions.EntityFrameworkManager.ContextFactory = context => context switch
+            {
+                AppDbContextRead appDbContextRead => appDbContextRead.New(),
+                AppDbContextWrite appDbContextWrite => appDbContextWrite.New(),
+                _ => null
+            };
 
-        var host = CreateHostBuilder(args).Build();
+            var host = CreateHostBuilder(args).Build();
 
-        await host.SeedDbContext<BaseAppDbContext>().RunAsync();
+            await host.SeedDbContext<BaseAppDbContext>().RunAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Application terminated unexpectedly");
+        }
+        finally
+        {
+            await Log.CloseAndFlushAsync();
+        }
     }
 
     public static IHostBuilder CreateHostBuilder(string[] args) => Host
@@ -139,25 +159,10 @@ public static class Program
         {
             webBuilder.UseStartup<Startup>();
         })
-        .ConfigureLogging((ctx, builder) =>
+        .UseSerilog((context, services, configuration) =>
         {
-            var oltpSection = ctx.Configuration.GetSection("Oltp");
-            if (oltpSection == null!) return;
-
-            var loggingEndpoint = oltpSection.GetValue<string>("LoggingEndpoint");
-            if (loggingEndpoint is null) return;
-            var loggingProtocol = oltpSection.GetValue<OtlpExportProtocol>("LoggingProtocol");
-
-            builder.AddOpenTelemetry(o =>
-            {
-                o.IncludeScopes = true;
-                o.ParseStateValues = true;
-                o.IncludeFormattedMessage = true;
-                o.AddOtlpExporter((options, processorOptions) =>
-                {
-                    options.Endpoint = new Uri(loggingEndpoint);
-                    options.Protocol = loggingProtocol;
-                });
-            });
+            configuration
+                .ReadFrom.Configuration(context.Configuration)
+                .ReadFrom.Services(services);
         });
 }
