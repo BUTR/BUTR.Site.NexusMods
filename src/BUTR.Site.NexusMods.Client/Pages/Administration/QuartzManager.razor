@@ -29,7 +29,7 @@
         <CardTitle Size="4" Position="Position.Relative" Margin="@Margin.Is0">
             Job History
             <Button Position="@Position.Absolute.Bottom.Is0.End.Is0.Translate.MiddleX" Clicked="@Refresh" Padding="@Padding.Is0" >
-                <Icon Name="@Enum.GetName(IconName.Sync)" />
+                <Icon Name="@IconName.Sync" />
             </Button>
         </CardTitle>
     </CardHeader>
@@ -40,19 +40,19 @@
                     <DisplayTemplate>
                         @if (context.IsSuccess == true)
                         {
-                            <Icon Name="@Enum.GetName(IconName.CheckCircle)" Style="@($"color: {Theme.ColorOptions.Success}")" />
+                            <Icon Name="@IconName.CheckCircle" Style="@($"color: {Theme.ColorOptions.Success}")" />
                         }
                         else if (context.IsVetoed == true)
                         {
-                            <Icon Name="@Enum.GetName(IconName.MinusCircle)" Style="@($"color: {Theme.ColorOptions.Warning}")" />
+                            <Icon Name="@IconName.MinusCircle" Style="@($"color: {Theme.ColorOptions.Warning}")" />
                         }
                         else if (context.IsException == true)
                         {
-                            <Icon Name="@Enum.GetName(IconName.TimesCircle)" Style="@($"color: {Theme.ColorOptions.Danger}")" />
+                            <Icon Name="@IconName.TimesCircle" Style="@($"color: {Theme.ColorOptions.Danger}")" />
                         }
                         else
                         {
-                            <Icon Name="@Enum.GetName(IconName.Circle)" Style="@($"color: {Theme.ColorOptions.Info}")" />
+                            <Icon Name="@IconName.Circle" Style="@($"color: {Theme.ColorOptions.Info}")" />
                         }
                     </DisplayTemplate>
                 </DataGridColumn>
