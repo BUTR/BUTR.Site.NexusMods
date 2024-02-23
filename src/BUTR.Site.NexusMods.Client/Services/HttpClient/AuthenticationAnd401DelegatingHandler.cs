@@ -1,5 +1,7 @@
 using Blazorise;
 
+using BUTR.Site.NexusMods.ServerClient;
+
 using System;
 using System.Net;
 using System.Net.Http;
@@ -18,21 +20,40 @@ public sealed class AuthenticationAnd401DelegatingHandler : AuthenticationInject
         if (await _tokenContainer.GetTokenAsync(ct) is { Type: "demo" })
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{}", Encoding.UTF8, "application/json") };
 
-        var response = await base.SendAsync(request, ct);
-
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        try
         {
-            await _tokenContainer.SetTokenAsync(null, ct);
-            await _notificationService.Error("Authentication failure! Please log in again!", "Error!");
-        }
+            var response = await base.SendAsync(request, ct);
+            
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                await _tokenContainer.SetTokenAsync(null, ct);
+                await _notificationService.Error("Authentication failure! Please log in again!", "Error!");
+            }
 
-        // Cloudflare timeout
-        if ((int) response.StatusCode == 522)
+            // Cloudflare timeout
+            if ((int) response.StatusCode == 522)
+            {
+                await _notificationService.Error("Backend is down! Notify about the issue on GitHub https://github.com/BUTR/BUTR.Site.NexusMods", "Error!");
+            }
+            
+            return response;
+        }
+        catch (ApiException e)
         {
-            Console.WriteLine(522);
-            await _notificationService.Error("Backend is down! Notify about the issue on GitHub https://github.com/BUTR/BUTR.Site.NexusMods", "Error!");
+            // Cloudflare timeout
+            if ( e.StatusCode == (int)HttpStatusCode.Unauthorized)
+            {
+                await _tokenContainer.SetTokenAsync(null, ct);
+                await _notificationService.Error("Authentication failure! Please log in again!", "Error!");
+            }
+            
+            // Cloudflare timeout
+            if (e.StatusCode == 522)
+            {
+                await _notificationService.Error("Backend is down! Notify about the issue on GitHub https://github.com/BUTR/BUTR.Site.NexusMods", "Error!");
+            }
+            
+            throw;
         }
-
-        return response;
     }
 }
