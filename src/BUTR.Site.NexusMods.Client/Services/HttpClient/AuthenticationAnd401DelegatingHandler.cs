@@ -23,7 +23,7 @@ public sealed class AuthenticationAnd401DelegatingHandler : AuthenticationInject
         try
         {
             var response = await base.SendAsync(request, ct);
-            
+
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
                 await _tokenContainer.SetTokenAsync(null, ct);
@@ -35,24 +35,24 @@ public sealed class AuthenticationAnd401DelegatingHandler : AuthenticationInject
             {
                 await _notificationService.Error("Backend is down! Notify about the issue on GitHub https://github.com/BUTR/BUTR.Site.NexusMods", "Error!");
             }
-            
+
             return response;
         }
         catch (ApiException e)
         {
             // Cloudflare timeout
-            if ( e.StatusCode == (int)HttpStatusCode.Unauthorized)
+            if (e.StatusCode == (int) HttpStatusCode.Unauthorized)
             {
                 await _tokenContainer.SetTokenAsync(null, ct);
                 await _notificationService.Error("Authentication failure! Please log in again!", "Error!");
             }
-            
+
             // Cloudflare timeout
             if (e.StatusCode == 522)
             {
                 await _notificationService.Error("Backend is down! Notify about the issue on GitHub https://github.com/BUTR/BUTR.Site.NexusMods", "Error!");
             }
-            
+
             throw;
         }
     }

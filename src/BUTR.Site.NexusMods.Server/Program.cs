@@ -43,11 +43,11 @@ public static class Program
             .Enrich.FromLogContext()
             .WriteTo.Console()
             .CreateBootstrapLogger();
-        
+
         try
         {
             Log.Information("Starting web application");
-            
+
             Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkInsert = PreBulkOperation;
             Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkDelete = PreBulkOperation;
             Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkMerge = PreBulkOperation;
