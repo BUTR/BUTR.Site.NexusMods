@@ -73,7 +73,7 @@ CallStack:
                 var report = new CrashReportModel2(
                     id: cr.Id,
                     version: cr.Version,
-                    gameVersion: cr.GameVersion,
+                    gameVersion: cr.Metadata.GameVersion,
                     exceptionType: cr.Exception.Type,
                     exception: GetException(cr.Exception),
                     date: DateTimeOffset.UtcNow,

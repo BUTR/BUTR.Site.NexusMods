@@ -16,7 +16,7 @@ public static class ListExtensions
     /// <param name="instance">The list to search.</param>
     /// <param name="itemKey">The key to search for.</param>
     /// <param name="keySelector">A function to extract a key from an element.</param>
-    /// <returns>The zero-based index of item in the sorted List<T>, if item is found; otherwise, a negative number that is the bitwise complement of the index of the next element that is larger than item or, if there is no larger element, the bitwise complement of Count.</returns>
+    /// <returns>The zero-based index of item in the sorted List{T}, if item is found; otherwise, a negative number that is the bitwise complement of the index of the next element that is larger than item or, if there is no larger element, the bitwise complement of Count.</returns>
 
     public static int BinarySearch<T, TKey>(this IList<T> instance, TKey itemKey, Func<T, TKey> keySelector) where TKey : IComparable<TKey>, IComparable
     {

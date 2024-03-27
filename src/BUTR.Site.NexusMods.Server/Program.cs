@@ -85,8 +85,7 @@ public static class Program
                 options.WaitForJobsToComplete = true;
             });
 
-            var oltpSection = ctx.Configuration.GetSection("Oltp");
-            if (oltpSection != null!)
+            if (ctx.Configuration.GetSection("Oltp") is { } oltpSection)
             {
                 var openTelemetry = services.AddOpenTelemetry()
                     .ConfigureResource(builder =>
@@ -101,8 +100,7 @@ public static class Program
                         builder.AddTelemetrySdk();
                     });
 
-                var metricsEndpoint = oltpSection.GetValue<string?>("MetricsEndpoint");
-                if (metricsEndpoint is not null)
+                if (oltpSection.GetValue<string?>("MetricsEndpoint") is { } metricsEndpoint)
                 {
                     var metricsProtocol = oltpSection.GetValue<OtlpExportProtocol>("MetricsProtocol");
                     openTelemetry.WithMetrics(builder => builder
@@ -120,8 +118,7 @@ public static class Program
                         }));
                 }
 
-                var tracingEndpoint = oltpSection.GetValue<string?>("TracingEndpoint");
-                if (tracingEndpoint is not null)
+                if (oltpSection.GetValue<string?>("TracingEndpoint") is { } tracingEndpoint)
                 {
                     var tracingProtocol = oltpSection.GetValue<OtlpExportProtocol>("TracingProtocol");
                     openTelemetry.WithTracing(builder => builder

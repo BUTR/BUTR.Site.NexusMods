@@ -18,8 +18,8 @@ public interface ICrashReporterClient
 {
     Task<string> GetCrashReportAsync(CrashReportFileId id, CancellationToken ct);
     Task<CrashReportModel?> GetCrashReportModelAsync(CrashReportFileId id, CancellationToken ct);
-    IAsyncEnumerable<CrashReportFileMetadata?> GetNewCrashReportMetadatasAsync(DateTime dateTime, [EnumeratorCancellation] CancellationToken ct);
-    IAsyncEnumerable<CrashReportFileMetadata?> GetCrashReportMetadatasAsync(IEnumerable<CrashReportFileId> filenames, [EnumeratorCancellation] CancellationToken ct);
+    IAsyncEnumerable<CrashReportFileMetadata?> GetNewCrashReportMetadatasAsync(DateTime dateTime, CancellationToken ct);
+    IAsyncEnumerable<CrashReportFileMetadata?> GetCrashReportMetadatasAsync(IEnumerable<CrashReportFileId> filenames, CancellationToken ct);
 }
 
 public sealed class CrashReporterClient : ICrashReporterClient

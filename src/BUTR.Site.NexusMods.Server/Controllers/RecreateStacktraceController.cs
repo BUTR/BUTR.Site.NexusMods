@@ -56,7 +56,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
         if (!CrashReportParser.TryParse(crashReportContent, out var version, out var crashReport, out var json))
             return ApiBadRequest("Invalid crash report!");
 
-        var gameVersion = crashReport.GameVersion;
+        var gameVersion = crashReport.Metadata.GameVersion;
 
         var assemblyFiles = await _steamBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);
         var recreatedStacktrace = RecreateStacktraceUtils.GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct).ToList();
@@ -93,7 +93,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
         if (!CrashReportParser.TryParse(crashReportContent, out var version, out var crashReport, out var json))
             return BadRequest();
 
-        var gameVersion = crashReport.GameVersion;
+        var gameVersion = crashReport.Metadata.GameVersion;
 
         var assemblyFiles = await _steamBinaryCache.GetBranchAssemblyFilesAsync(gameVersion, ct);
         var recreatedStacktrace = RecreateStacktraceUtils.GetRecreatedStacktraceUnordered(assemblyFiles, crashReport, ct).ToList();

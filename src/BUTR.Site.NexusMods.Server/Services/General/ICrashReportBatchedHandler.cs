@@ -254,7 +254,7 @@ CallStack:
                 CrashReportId = crashReportId,
                 Url = CrashReportUrl.From(new Uri(new Uri(_options.Endpoint), fileId.ToString())),
                 Version = CrashReportVersion.From(report.Version),
-                GameVersion = GameVersion.From(report.GameVersion),
+                GameVersion = GameVersion.From(report.Metadata.GameVersion),
                 ExceptionType = entityFactory.GetOrCreateExceptionType(ExceptionTypeId.From(report.Exception.Type)),
                 Exception = GetException(report.Exception),
                 CreatedAt = fileId.Value.Length == 8 ? DateTimeOffset.UnixEpoch.ToUniversalTime() : date.ToUniversalTime(),
@@ -277,7 +277,7 @@ CallStack:
                 Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
                 Version = ModuleVersion.From(x.Version),
                 NexusModsMod = NexusModsModId.TryParseUrl(x.Url, out var modId) ? entityFactory.GetOrCreateNexusModsMod(modId) : null,
-                IsInvolved = report.InvolvedModules.Any(y => y.ModuleId == x.Id),
+                IsInvolved = report.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == x.Id),
             }));
         }
 

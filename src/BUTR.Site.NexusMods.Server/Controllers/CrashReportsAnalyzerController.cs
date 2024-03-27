@@ -91,7 +91,7 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
             var involvedModule = crashReport.InvolvedModules[level];
             yield return new ModuleSuggestedFix
             {
-                ModuleId = involvedModule.ModuleId,
+                ModuleId = involvedModule.ModuleOrLoaderPluginId,
                 Type = ModuleSuggestedFixType.Update,
             };
         }
@@ -106,9 +106,9 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
     {
         await Task.Yield();
 
-        if (!ApplicationVersion.TryParse(crashReport.GameVersion, out var gVersion)) yield break;
+        if (!ApplicationVersion.TryParse(crashReport.Metadata.GameVersion, out var gVersion)) yield break;
 
-        var moduleIds = crashReport.Modules.Where(x => !x.IsOfficial && string.IsNullOrEmpty(x.Url) && string.IsNullOrEmpty(x.UpdateInfo))
+        var moduleIds = crashReport.Modules.Where(x => !x.IsOfficial && string.IsNullOrEmpty(x.Url) && x.UpdateInfo is null)
             .Select(x => ModuleId.From(x.Id)).ToArray();
         var nexusModsIds = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.Url))
             .Select(x => NexusModsModId.TryParseUrl(x.Url, out var modId) ? modId : NexusModsModId.None)
@@ -116,7 +116,7 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
         var nexusModsIds2 = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.Url))
             .Select(x => new { ModuelId = ModuleId.From(x.Id), NexusModsId = NexusModsModId.From(NexusModsUtils.TryParse(x.Url, out _, out var id) ? (int) id : -1) })
             .Where(x => x.NexusModsId != NexusModsModId.None).ToArray();
-        var updateInfos = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.UpdateInfo))
+        var updateInfos = crashReport.Modules.Where(x => !x.IsOfficial && x.UpdateInfo is not null)
             .Select(x => new { ModuleId = ModuleId.From(x.Id), x.UpdateInfo }).ToArray();
         var moduleIdVersions = crashReport.Modules
             .Where(x => !x.IsOfficial).Select(x => new { ModuleId = ModuleId.From(x.Id), Version = ModuleVersion.From(x.Version) }).ToArray();
@@ -166,7 +166,7 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
             {
                 ModuleId = x.ModuleId.Value,
                 ModuleVersion = x.ModuleVersion.ToString(),
-                IsModuleInvolved = crashReport.InvolvedModules.Any(y => y.ModuleId == x.ModuleId)
+                IsModuleInvolved = crashReport.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == x.ModuleId)
             };
         }
     }
