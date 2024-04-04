@@ -22,7 +22,7 @@
     <PackageReference Include="BUTR.CrashReport.Models" Version="13.0.0.49" />
     <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.49" />
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="4.0.4" />
-    <PackageReference Include="CsvHelper" Version="31.0.2" />
+    <PackageReference Include="CsvHelper" Version="31.0.3" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="8.2.0.7535" />
     <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
