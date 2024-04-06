@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v1
+        uses: dependabot/fetch-metadata@v2
 
       - name: Approve PR
         if: ${{ contains(steps.metadata.outputs.dependency-names, 'Z.EntityFramework.Plus.EFCore') && steps.metadata.outputs.update-type != 'version-update:semver-major' }}
