@@ -42,7 +42,7 @@ internal static class CSharpILMixedLanguage
         };
     }
 
-    private static CSharpDecompiler CreateDecompiler(PEFile module, DecompilerSettings settings, CancellationToken ct)
+    private static CSharpDecompiler CreateDecompiler(MetadataFile module, DecompilerSettings settings, CancellationToken ct)
     {
         var resolver = new UniversalAssemblyResolver(module.Name, false, module.DetectTargetFrameworkId(), module.DetectRuntimePack(), PEStreamOptions.Default, MetadataReaderOptions.None);
         return new CSharpDecompiler(module, resolver, settings) { CancellationToken = ct };
@@ -75,7 +75,7 @@ internal static class CSharpILMixedLanguage
             _cancellationToken = ct;
         }
 
-        public override void Disassemble(PEFile module, MethodDefinitionHandle handle)
+        public override void Disassemble(MetadataFile module, MethodDefinitionHandle handle)
         {
             try
             {
@@ -117,7 +117,7 @@ internal static class CSharpILMixedLanguage
         }
 
         // Is called within base.Disassemble
-        protected override void WriteInstruction(ITextOutput output, MetadataReader metadata, MethodDefinitionHandle methodHandle, ref BlobReader blob, int methodRva)
+        protected override void WriteInstruction(ITextOutput output, MetadataFile metadata, MethodDefinitionHandle methodHandle, ref BlobReader blob, int methodRva)
         {
             if (output is not PlainTextOutput2 plainTextOutput2) return;
             if (_stringBuilder is null || _stringBuilderLinesIndices is null) return;

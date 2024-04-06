@@ -109,7 +109,7 @@ public class PlainTextOutput2 : ITextOutput
         }
     }
 
-    public void WriteReference(PEFile module, Handle handle, string text, string protocol = "decompile", bool isDefinition = false)
+    public void WriteReference(MetadataFile module, Handle handle, string text, string protocol = "decompile", bool isDefinition = false)
     {
         Write(text);
     }
