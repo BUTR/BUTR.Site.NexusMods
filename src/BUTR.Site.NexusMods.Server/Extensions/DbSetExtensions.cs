@@ -47,27 +47,27 @@ public static class DbSetExtensions
 
     public static async Task UpsertAsync<TEntity>(this DbSet<TEntity> dbSet, IEnumerable<TEntity> entities, bool @unsafe = false) where TEntity : class, IEntity
     {
-        await dbSet.BulkMergeAsync(entities, o => o.UnsafeMode = @unsafe);
+        await dbSet.BulkMergeAsync(entities, o => { o.UnsafeMode = @unsafe; o.UseInternalTransaction = true; });
     }
     public static async Task UpsertAsync<TEntity>(this DbSet<TEntity> dbSet, IAsyncEnumerable<TEntity> entities, bool @unsafe = false) where TEntity : class, IEntity
     {
-        await dbSet.BulkMergeAsync(await entities.ToArrayAsync(), o => o.UnsafeMode = @unsafe);
+        await dbSet.BulkMergeAsync(await entities.ToArrayAsync(), o => { o.UnsafeMode = @unsafe; o.UseInternalTransaction = true; });
     }
     public static async Task UpsertAsync<TEntity>(this DbSet<TEntity> dbSet, bool @unsafe = false, params TEntity[] entities) where TEntity : class, IEntity
     {
-        await dbSet.BulkMergeAsync(entities, o => o.UnsafeMode = @unsafe);
+        await dbSet.BulkMergeAsync(entities, o => { o.UnsafeMode = @unsafe; o.UseInternalTransaction = true; });
     }
 
     public static async Task SynchronizeAsync<TEntity>(this DbSet<TEntity> dbSet, IEnumerable<TEntity> entities) where TEntity : class, IEntity
     {
-        await dbSet.BulkSynchronizeAsync(entities);
+        await dbSet.BulkSynchronizeAsync(entities, o => { o.UseInternalTransaction = true; });
     }
     public static async Task SynchronizeAsync<TEntity>(this DbSet<TEntity> dbSet, IAsyncEnumerable<TEntity> entities) where TEntity : class, IEntity
     {
-        await dbSet.BulkSynchronizeAsync(await entities.ToArrayAsync());
+        await dbSet.BulkSynchronizeAsync(await entities.ToArrayAsync(), o => { o.UseInternalTransaction = true; });
     }
     public static async Task SynchronizeAsync<TEntity>(this DbSet<TEntity> dbSet, params TEntity[] entities) where TEntity : class, IEntity
     {
-        await dbSet.BulkSynchronizeAsync(entities);
+        await dbSet.BulkSynchronizeAsync(entities, o => { o.UseInternalTransaction = true; });
     }
 }

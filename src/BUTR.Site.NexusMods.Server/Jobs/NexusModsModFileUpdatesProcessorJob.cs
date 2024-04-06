@@ -78,9 +78,6 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
         var options = serviceProvider.GetRequiredService<IOptions<NexusModsOptions>>().Value;
         var client = serviceProvider.GetRequiredService<INexusModsAPIClient>();
         var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
-        var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
-        var entityFactory = dbContextWrite.GetEntityFactory();
-        await using var _ = await dbContextWrite.CreateSaveScopeAsync();
 
         var dateOneWeekAgo = DateTime.UtcNow.AddDays(-7);
         var updatesStoredWithinWeek = await dbContextRead.NexusModsModToFileUpdates.Where(x => x.LastCheckedDate > dateOneWeekAgo).ToListAsync(ct);
@@ -98,6 +95,9 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
         var exceptions = new List<Exception>();
         foreach (var modUpdate in newUpdates)
         {
+            var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
+            var entityFactory = dbContextWrite.GetEntityFactory();
+            await using var _ = await dbContextWrite.CreateSaveScopeAsync();
             try
             {
                 if (ct.IsCancellationRequested) break;

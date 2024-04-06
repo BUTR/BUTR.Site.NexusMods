@@ -80,7 +80,13 @@ public sealed class AppDbContextWrite : BaseAppDbContext, IAppDbContextWrite
     public Task<IAppDbContextSaveScope> CreateSaveScopeAsync()
     {
         _onSave = new();
-        return Task.FromResult<IAppDbContextSaveScope>(AppDbContextSaveScope.Create(this, () => _onSave = null));
+        return Task.FromResult<IAppDbContextSaveScope>(AppDbContextSaveScope.Create(this, () =>
+        {
+            _entityFactory = null;
+            _onSave = null;
+            if (ChangeTracker.HasChanges())
+                ChangeTracker.Clear();
+        }));
     }
 
     public async Task SaveAsync(CancellationToken ct)
@@ -102,6 +108,7 @@ public sealed class AppDbContextWrite : BaseAppDbContext, IAppDbContextWrite
 
                 await dbContext.BulkSaveChangesAsync(o =>
                 {
+                    o.UseInternalTransaction = true;
                     o.IncludeGraph = false;
                     o.LegacyIncludeGraph = false;
                 }, CancellationToken.None);
