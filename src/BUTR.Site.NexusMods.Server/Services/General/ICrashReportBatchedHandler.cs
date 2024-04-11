@@ -270,13 +270,14 @@ CallStack:
                 BLSEVersion = blseVersion,
                 LauncherExVersion = launcherExVersion,
             });
-            crashReportModulesBuilder.AddRange(report.Modules.Select(x => new CrashReportToModuleMetadataEntity
+            crashReportModulesBuilder.AddRange(report.Modules.Select((x, i) => new CrashReportToModuleMetadataEntity
             {
                 TenantId = tenant,
                 CrashReportId = crashReportId,
                 Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
                 Version = ModuleVersion.From(x.Version),
                 NexusModsMod = NexusModsModId.TryParseUrl(x.Url, out var modId) ? entityFactory.GetOrCreateNexusModsMod(modId) : null,
+                Index = (byte) i,
                 IsInvolved = report.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == x.Id),
             }));
         }

@@ -15,7 +15,9 @@ public sealed record CrashReportToModuleMetadataEntity : IEntityWithTenant
 
     public required NexusModsModEntity? NexusModsMod { get; init; }
 
+    public required byte Index { get; init; }
+    
     public required bool IsInvolved { get; init; }
 
-    public override int GetHashCode() => HashCode.Combine(CrashReportId, Module.ModuleId, Version, NexusModsMod?.NexusModsModId, IsInvolved);
+    public override int GetHashCode() => HashCode.Combine(CrashReportId, Module.ModuleId, Version, NexusModsMod?.NexusModsModId, Index, IsInvolved);
 }

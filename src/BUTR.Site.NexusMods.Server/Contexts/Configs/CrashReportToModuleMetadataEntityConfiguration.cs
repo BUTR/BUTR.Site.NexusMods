@@ -16,6 +16,7 @@ public class CrashReportToModuleMetadataEntityConfiguration : BaseEntityConfigur
         builder.Property<ModuleId>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id").HasValueObjectConversion();
         builder.Property(x => x.Version).HasValueObjectConversion().HasColumnName("version");
         builder.Property<NexusModsModId?>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_id").HasValueObjectConversion().IsRequired(false);
+        builder.Property(x => x.Index).HasColumnName("index");
         builder.Property(x => x.IsInvolved).HasColumnName("is_involved");
         builder.ToTable("crash_report_module_info", "crashreport").HasKey(nameof(CrashReportToModuleMetadataEntity.TenantId), nameof(CrashReportToModuleMetadataEntity.CrashReportId), nameof(ModuleEntity.ModuleId));
 
