@@ -14,6 +14,23 @@ namespace BUTR.Site.NexusMods.Server.Extensions;
 /// </summary>
 public static class IAsyncEnumerableExtensions
 {
+    public static int IndexOf<T>(this IEnumerable<T> source, Predicate<T> predicate)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(predicate);
+
+        var index = 0;
+        foreach (var item in source)
+        {
+            if (predicate(item))
+                return index;
+
+            index += 1;
+        }
+
+        return -1;
+    }
+    
     /// <summary>
     /// Configures an async enumerator with a cancellation token and a flag indicating whether to continue on a captured context.
     /// </summary>

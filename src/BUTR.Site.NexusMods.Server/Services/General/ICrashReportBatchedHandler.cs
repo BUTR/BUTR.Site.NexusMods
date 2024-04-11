@@ -277,7 +277,7 @@ CallStack:
                 Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
                 Version = ModuleVersion.From(x.Version),
                 NexusModsMod = NexusModsModId.TryParseUrl(x.Url, out var modId) ? entityFactory.GetOrCreateNexusModsMod(modId) : null,
-                Index = (byte) i,
+                InvolvedPosition = (byte) (report.InvolvedModules.IndexOf(y => y.ModuleOrLoaderPluginId == x.Id) + 1),
                 IsInvolved = report.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == x.Id),
             }));
         }
