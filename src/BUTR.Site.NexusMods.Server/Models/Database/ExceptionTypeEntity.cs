@@ -25,24 +25,4 @@ public sealed record ExceptionTypeEntity : IEntityWithTenant
     private ExceptionTypeEntity(TenantId tenant, ExceptionTypeId exceptionTypeId) : this() => (TenantId, ExceptionTypeId) = (tenant, exceptionTypeId);
 
     public static ExceptionTypeEntity Create(TenantId tenant, ExceptionTypeId exceptionTypeId) => new(tenant, exceptionTypeId);
-    public static ExceptionTypeEntity FromException(TenantId tenant, string exception)
-    {
-        var exceptionType = "NO_EXCEPTION";
-        Span<Range> dest = stackalloc Range[32];
-        var idx = 0;
-        foreach (ReadOnlySpan<char> line in exception.SplitLines())
-        {
-            if (idx < 3)
-            {
-                idx++;
-                continue;
-            }
-
-            var count = line.Split(dest, ':');
-            if (count < 2) break;
-            exceptionType = line[dest[1]].Trim().ToString();
-            break;
-        }
-        return new() { TenantId = tenant, ExceptionTypeId = ExceptionTypeId.From(exceptionType) };
-    }
 }

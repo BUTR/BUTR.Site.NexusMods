@@ -1,3 +1,5 @@
+using BUTR.CrashReport.Models;
+
 namespace BUTR.Site.NexusMods.Server.Models;
 
 using TType = ExceptionTypeId;
@@ -11,6 +13,15 @@ public readonly partial record struct ExceptionTypeId : IVogen<TType, TValueType
     public static TType Copy(TType instance) => instance with { };
     public static bool IsInitialized(TType instance) => instance._isInitialized;
     public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);
+
+    public static TType FromException(ExceptionModel exception)
+    {
+        var exc = exception;
+        while (exc.InnerException is not null)
+            exc = exc.InnerException;
+
+        return From(exc.Type);
+    }
 
     public static int GetHashCode(TType instance) => VogenDefaults<TType, TValueType>.GetHashCode(instance);
 

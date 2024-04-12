@@ -7,7 +7,6 @@ using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
-using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -67,7 +66,7 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
 
     private async IAsyncEnumerable<ModuleSuggestedFix> GetModuleSuggestionsAsync(CrashReportModel crashReport, [EnumeratorCancellation] CancellationToken ct)
     {
-        static bool GetTypeLoadExceptionLevel(ExceptionModel? exceptionModel, ref int level, CancellationToken ct)
+        static bool GetABIException(ref ExceptionModel? exceptionModel, CancellationToken ct)
         {
             if (ct.IsCancellationRequested)
                 return false;
@@ -78,28 +77,30 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
             if (exceptionModel.Type == "System.TypeLoadException")
                 return true;
 
-            level++;
-            return GetTypeLoadExceptionLevel(exceptionModel.InnerException, ref level, ct);
+            if (exceptionModel.Type == "System.MissingFieldException")
+                return true;
+
+            if (exceptionModel.Type == "System.MissingMemberException")
+                return true;
+
+            if (exceptionModel.Type == "System.MissingMethodException")
+                return true;
+
+            exceptionModel = exceptionModel.InnerException;
+            return GetABIException(ref exceptionModel, ct);
         }
 
         await Task.Yield();
 
-        //
-        var level = 1;
-        if (GetTypeLoadExceptionLevel(crashReport.Exception, ref level, ct))
+        var exception = crashReport.Exception;
+        if (GetABIException(ref exception, ct) && exception?.SourceModuleId is { } moduleId)
         {
-            var involvedModule = crashReport.InvolvedModules[level];
             yield return new ModuleSuggestedFix
             {
-                ModuleId = involvedModule.ModuleOrLoaderPluginId,
+                ModuleId = moduleId,
                 Type = ModuleSuggestedFixType.Update,
             };
         }
-        //
-
-        //var callStackLines = ex.CallStack.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-        //var firstCallStackLine = callStackLines[0].Trim();
-        //var stacktrace = crashReport.EnhancedStacktrace.FirstOrDefault(x => firstCallStackLine == $"at {x.Name}");
     }
 
     private async IAsyncEnumerable<ModuleUpdate> GetModuleUpdatesForBannerlordAsync(CrashReportModel crashReport, [EnumeratorCancellation] CancellationToken ct)
@@ -108,27 +109,28 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
 
         if (!ApplicationVersion.TryParse(crashReport.Metadata.GameVersion, out var gVersion)) yield break;
 
-        var moduleIds = crashReport.Modules.Where(x => !x.IsOfficial && string.IsNullOrEmpty(x.Url) && x.UpdateInfo is null)
+        var currentModuleIdsWithoutAnyData = crashReport.Modules.Where(x => !x.IsOfficial && string.IsNullOrEmpty(x.Url) && x.UpdateInfo is null)
             .Select(x => ModuleId.From(x.Id)).ToArray();
-        var nexusModsIds = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.Url))
+        var currentMexusModsUpdateInfos = crashReport.Modules.Where(x => !x.IsOfficial && x.UpdateInfo is { Value: "NexusMods" })
+            .Select(x => NexusModsModId.TryParse(x.UpdateInfo!.Value, out var modId) ? modId : NexusModsModId.None)
+            .Where(x => x != NexusModsModId.None).ToArray();
+        var currentNexusModsIds = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.Url))
             .Select(x => NexusModsModId.TryParseUrl(x.Url, out var modId) ? modId : NexusModsModId.None)
             .Where(x => x != NexusModsModId.None).ToArray();
-        var nexusModsIds2 = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.Url))
-            .Select(x => new { ModuelId = ModuleId.From(x.Id), NexusModsId = NexusModsModId.From(NexusModsUtils.TryParse(x.Url, out _, out var id) ? (int) id : -1) })
-            .Where(x => x.NexusModsId != NexusModsModId.None).ToArray();
-        var updateInfos = crashReport.Modules.Where(x => !x.IsOfficial && x.UpdateInfo is not null)
-            .Select(x => new { ModuleId = ModuleId.From(x.Id), x.UpdateInfo }).ToArray();
-        var moduleIdVersions = crashReport.Modules
+
+        var currentModules = crashReport.Modules
             .Where(x => !x.IsOfficial).Select(x => new { ModuleId = ModuleId.From(x.Id), Version = ModuleVersion.From(x.Version) }).ToArray();
 
         // SMAPI uses different update providers - Chucklefish, NexusMods, GitHub
         // We curectly will only use NexusMods
-        var moduleIdEntries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => nexusModsIds.Contains(x.NexusModsMod.NexusModsModId));
-        var nexusModsIdEntries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.Module.ModuleId));
         //var updateInfoEntries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.Module.ModuleId));
         //var entries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.Module.ModuleId));
-        var entries = moduleIdEntries.Concat(nexusModsIdEntries);
-        var compatibleWithGameVersion = entries.AsEnumerable().Select(x => new
+        var historicEntriesBasedOnModuleId = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => currentModuleIdsWithoutAnyData.Contains(x.Module.ModuleId));
+        var historicEntriesBasedOnNexusModsId = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => currentNexusModsIds.Contains(x.NexusModsMod.NexusModsModId));
+        var historicEntriesBasedOnUpdateInfo = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => currentMexusModsUpdateInfos.Contains(x.NexusModsMod.NexusModsModId));
+        var allHistoricEntries = historicEntriesBasedOnModuleId.Concat(historicEntriesBasedOnNexusModsId).Concat(historicEntriesBasedOnUpdateInfo);
+
+        var historicEntriesCompatibleWithGameVersion = allHistoricEntries.AsEnumerable().Select(x => new
         {
             ModuleId = x.Module.ModuleId,
             ModuleVersion = ApplicationVersion.TryParse(x.ModuleVersion.Value, out var v) ? v : ApplicationVersion.Empty,
@@ -147,11 +149,15 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
             if (y.Version == ApplicationVersion.Empty && y.VersionRange == ApplicationVersionRange.Empty) return false;
             return (y.Version != ApplicationVersion.Empty && y.Version <= gVersion) ||
                    (y.VersionRange != ApplicationVersionRange.Empty && y.VersionRange.Min <= gVersion && y.VersionRange.Max > gVersion);
-        })).GroupBy(x => x.ModuleId).Select(x => x.MaxBy(y => y.ModuleVersion, new ApplicationVersionComparer())!).ToArray();
+        })).ToArray();
+        var latestModulesCompatibleWithGameVersions = historicEntriesCompatibleWithGameVersion
+            .GroupBy(x => x.ModuleId)
+            .Select(x => x.MaxBy(y => y.ModuleVersion, new ApplicationVersionComparer())!)
+            .ToArray();
 
-        var latestUpdates = compatibleWithGameVersion.Where(x =>
+        var latestUpdates = latestModulesCompatibleWithGameVersions.Where(x =>
         {
-            var tuple = moduleIdVersions.FirstOrDefault(y => y.ModuleId == x.ModuleId);
+            var tuple = currentModules.FirstOrDefault(y => y.ModuleId == x.ModuleId);
             if (tuple is null)
                 return false;
 
@@ -160,13 +166,13 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
             return false;
         }).ToArray();
 
-        foreach (var x in latestUpdates)
+        foreach (var update in latestUpdates)
         {
             yield return new ModuleUpdate
             {
-                ModuleId = x.ModuleId.Value,
-                ModuleVersion = x.ModuleVersion.ToString(),
-                IsModuleInvolved = crashReport.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == x.ModuleId)
+                ModuleId = update.ModuleId.Value,
+                ModuleVersion = update.ModuleVersion.ToString(),
+                IsModuleInvolved = crashReport.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == update.ModuleId)
             };
         }
     }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -20,8 +21,11 @@ public sealed class ApiResultProblemDetailsWriter : IProblemDetailsWriter
 
     public async ValueTask WriteAsync(ProblemDetailsContext context)
     {
+        var endpoint = context.HttpContext.GetEndpoint() ??
+                       context.HttpContext.Features.Get<IExceptionHandlerFeature>()?.Endpoint;
+
         var routeData = context.HttpContext.GetRouteData();
-        var action = context.HttpContext.GetEndpoint()?.Metadata.GetMetadata<ActionDescriptor>();
+        var action = endpoint!.Metadata.GetMetadata<ActionDescriptor>();
         if (action is null) return;
         var actionContext = new ActionContext(context.HttpContext, routeData, action);
         var result = ApiResult.FromError(context.HttpContext, context.ProblemDetails);
@@ -30,7 +34,9 @@ public sealed class ApiResultProblemDetailsWriter : IProblemDetailsWriter
 
     public bool CanWrite(ProblemDetailsContext problemDetailsContext)
     {
-        var endpoint = problemDetailsContext.HttpContext.GetEndpoint();
+        var endpoint = problemDetailsContext.HttpContext.GetEndpoint() ??
+                       problemDetailsContext.HttpContext.Features.Get<IExceptionHandlerFeature>()?.Endpoint;
+
         if (endpoint?.Metadata.GetMetadata<ControllerActionDescriptor>() is { } context)
             return ApiResultUtils.IsReturnTypeApiResult(context.MethodInfo);
 

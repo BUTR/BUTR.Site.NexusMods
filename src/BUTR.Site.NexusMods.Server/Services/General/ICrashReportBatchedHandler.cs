@@ -255,7 +255,7 @@ CallStack:
                 Url = CrashReportUrl.From(new Uri(new Uri(_options.Endpoint), fileId.ToString())),
                 Version = CrashReportVersion.From(report.Version),
                 GameVersion = GameVersion.From(report.Metadata.GameVersion),
-                ExceptionType = entityFactory.GetOrCreateExceptionType(ExceptionTypeId.From(report.Exception.Type)),
+                ExceptionType = entityFactory.GetOrCreateExceptionType(ExceptionTypeId.FromException(report.Exception)),
                 Exception = GetException(report.Exception),
                 CreatedAt = fileId.Value.Length == 8 ? DateTimeOffset.UnixEpoch.ToUniversalTime() : date.ToUniversalTime(),
             });

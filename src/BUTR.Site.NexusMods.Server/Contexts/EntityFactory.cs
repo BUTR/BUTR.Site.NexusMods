@@ -177,13 +177,6 @@ public sealed class EntityFactory
 
         static ExceptionTypeEntity ValueFactory(ExceptionTypeId id, TenantId tenant) => ExceptionTypeEntity.Create(tenant, id);
     }
-    public ExceptionTypeEntity GetOrCreateExceptionTypeFromException(string exception)
-    {
-        var tenant = _tenantContextAccessor.Current;
-        return _exceptionTypes.GetOrAdd(ExceptionTypeEntity.FromException(tenant, exception).ExceptionTypeId, ValueFactory, tenant);
-
-        static ExceptionTypeEntity ValueFactory(ExceptionTypeId id, TenantId tenant) => ExceptionTypeEntity.Create(tenant, id);
-    }
 
     public async Task<bool> SaveCreatedAsync(CancellationToken ct)
     {
