@@ -30,7 +30,7 @@ public static class IAsyncEnumerableExtensions
 
         return -1;
     }
-    
+
     /// <summary>
     /// Configures an async enumerator with a cancellation token and a flag indicating whether to continue on a captured context.
     /// </summary>
