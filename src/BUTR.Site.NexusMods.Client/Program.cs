@@ -68,13 +68,24 @@ public static class Program
             .ConfigureServices((builder, services) =>
             {
                 services.Configure<BackendOptions>(builder.Configuration.GetSection("Backend"));
+                services.Configure<CrashReporterOptions>(builder.Configuration.GetSection("CrashReporter"));
 
-                services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress), DefaultRequestHeaders = { { "User-Agent", userAgent } } });
+                services.AddScoped(_ => new HttpClient
+                {
+                    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress),
+                    DefaultRequestHeaders = { { "User-Agent", userAgent } }
+                });
                 services.AddHttpClient("InternalReports").ConfigureHttpClient((_, client) =>
                 {
                     client.BaseAddress = new Uri($"{builder.HostEnvironment.BaseAddress}reports/");
                     client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 }).AddHttpMessageHandler<AssetsDelegatingHandler>();
+                services.AddHttpClient<ICrashReporterClient, CrashReporterClient>().ConfigureHttpClient((sp, client) =>
+                {
+                    var opts = sp.GetRequiredService<IOptions<CrashReporterOptions>>().Value;
+                    client.BaseAddress = new Uri(opts.Endpoint);
+                    client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+                }).AddHttpMessageHandler<AuthenticationAnd401DelegatingHandler>();
                 services.AddHttpClient("BackendAuthentication").ConfigureBackend(userAgent)
                     .AddHttpMessageHandler<AuthenticationInjectionDelegatingHandler>().AddHttpMessageHandler<TenantDelegatingHandler>();
                 services.AddHttpClient("Backend").ConfigureBackend(userAgent)
@@ -103,6 +114,8 @@ public static class Program
                 services.AddTransient<IQuartzClient, QuartzClient>(sp => ConfigureClient(sp, (http, opt) => new QuartzClient(http, opt)));
                 services.AddTransient<IRecreateStacktraceClient, RecreateStacktraceClient>(sp => ConfigureClient(sp, (http, opt) => new RecreateStacktraceClient(http, opt)));
                 services.AddTransient<IGitHubClient, GitHubClient>(sp => ConfigureClient(sp, (http, opt) => new GitHubClient(http, opt)));
+                services.AddTransient<ICrashReportsAnalyzerClient, CrashReportsAnalyzerClient>(sp => ConfigureClient(sp, (http, opt) => new CrashReportsAnalyzerClient(http, opt)));
+                services.AddTransient<IModsAnalyzerClient, ModsAnalyzerClient>(sp => ConfigureClient(sp, (http, opt) => new ModsAnalyzerClient(http, opt)));
 
                 services.AddScoped<TenantProvider>();
 

@@ -1,4 +1,5 @@
 using BUTR.Authentication.NexusMods.Authentication;
+using BUTR.Site.NexusMods.Server.Models;
 
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -13,5 +14,5 @@ public class BindRoleAttribute : ValidationAttribute, IBindingSourceMetadata, IM
     public BindingSource BindingSource => ClaimsBindingSource.BindingSource;
     public string Name => ButrNexusModsClaimTypes.Role;
 
-    public override bool IsValid(object? value) => value is not null;
+    public override bool IsValid(object? value) => value is ApplicationRole;
 }

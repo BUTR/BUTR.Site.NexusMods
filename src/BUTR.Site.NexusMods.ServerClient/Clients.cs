@@ -234,6 +234,22 @@ public partial class GitHubClient
     }
 }
 
+public partial class CrashReportsAnalyzerClient
+{
+    public CrashReportsAnalyzerClient(HttpClient client, JsonSerializerOptions options) : this(client)
+    {
+        _settings = new Lazy<JsonSerializerOptions>(options);
+    }
+}
+
+public partial class ModsAnalyzerClient 
+{
+    public ModsAnalyzerClient(HttpClient client, JsonSerializerOptions options) : this(client)
+    {
+        _settings = new Lazy<JsonSerializerOptions>(options);
+    }
+}
+
 public partial record NexusModsModModel
 {
     public string Url(string gameDomain) => $"https://nexusmods.com/{gameDomain}/mods/{NexusModsModId}";

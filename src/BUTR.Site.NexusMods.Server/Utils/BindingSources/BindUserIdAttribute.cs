@@ -1,4 +1,5 @@
 using BUTR.Authentication.NexusMods.Authentication;
+using BUTR.Site.NexusMods.Server.Models;
 
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -13,5 +14,5 @@ public class BindUserIdAttribute : ValidationAttribute, IBindingSourceMetadata, 
     public BindingSource BindingSource => ClaimsBindingSource.BindingSource;
     public string Name => ButrNexusModsClaimTypes.UserId;
 
-    public override bool IsValid(object? value) => value is not null;
+    public override bool IsValid(object? value) => value is NexusModsUserId;
 }

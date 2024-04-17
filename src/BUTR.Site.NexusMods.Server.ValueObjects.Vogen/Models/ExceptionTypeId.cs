@@ -22,6 +22,29 @@ public readonly partial record struct ExceptionTypeId : IVogen<TType, TValueType
 
         return From(exc.Type);
     }
+    public static bool TryParseFromException(TValueType exception, out TType value)
+    {
+        Span<Range> dest = stackalloc Range[32];
+        ReadOnlySpan<char> lastTypeLine = default;
+        foreach (ReadOnlySpan<char> line in exception.SplitLines())
+        {
+            var count = line.Split(dest, ':');
+            if (count != 2) continue;
+            var firstPart = line[dest[0]].Trim();
+            var secondPart = line[dest[1]].Trim();
+            if (firstPart is "Type")
+                lastTypeLine = secondPart;
+        }
+
+        if (lastTypeLine.Length > 0)
+        {
+            value = From(lastTypeLine.ToString());
+            return true;
+        }
+
+        value = From("");
+        return false;
+    }
 
     public static int GetHashCode(TType instance) => VogenDefaults<TType, TValueType>.GetHashCode(instance);
 

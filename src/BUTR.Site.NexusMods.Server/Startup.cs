@@ -360,7 +360,6 @@ public sealed partial class Startup
         });
         app.UseSwaggerUI(opt =>
         {
-            opt.RoutePrefix = "api";
             opt.SwaggerEndpoint("/api/v1/swagger.json", "BUTR's NexusMods API");
         });
 

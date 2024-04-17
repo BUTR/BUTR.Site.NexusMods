@@ -1,8 +1,11 @@
+using BUTR.Site.NexusMods.Server.Models;
+
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Utils.BindingSources;
 
@@ -12,5 +15,5 @@ public sealed class BindTenantAttribute : ValidationAttribute, IBindingSourceMet
     public BindingSource BindingSource => BindingSource.Header;
     public string Name => "Tenant";
 
-    public override bool IsValid(object? value) => value is not null;
+    public override bool IsValid(object? value) => value is TenantId tenant && TenantId.Values.Contains(tenant);
 }

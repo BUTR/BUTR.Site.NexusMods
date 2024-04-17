@@ -7,6 +7,7 @@ using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
+using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -43,7 +44,6 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
     [HttpPost("GetDiagnostics")]
     public async Task<ActionResult<CrashReportDiagnosticsResult?>> GetDiagnosticsAsync([BindTenant] TenantId tenant, [FromBody] CrashReportModel crashReport, [FromServices] ITenantContextAccessor tenantContextAccessor, CancellationToken ct)
     {
-        if (!TenantId.Values.Contains(tenant)) return BadRequest();
         tenantContextAccessor.Current = tenant;
 
         if (tenant == TenantId.Bannerlord)
@@ -111,12 +111,13 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
 
         var currentModuleIdsWithoutAnyData = crashReport.Modules.Where(x => !x.IsOfficial && string.IsNullOrEmpty(x.Url) && x.UpdateInfo is null)
             .Select(x => ModuleId.From(x.Id)).ToArray();
-        var currentMexusModsUpdateInfos = crashReport.Modules.Where(x => !x.IsOfficial && x.UpdateInfo is { Value: "NexusMods" })
+        var currentMexusModsUpdateInfos = crashReport.Modules.Where(x => !x.IsOfficial && x.UpdateInfo is { Provider: "NexusMods" })
             .Select(x => NexusModsModId.TryParse(x.UpdateInfo!.Value, out var modId) ? modId : NexusModsModId.None)
             .Where(x => x != NexusModsModId.None).ToArray();
         var currentNexusModsIds = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.Url))
             .Select(x => NexusModsModId.TryParseUrl(x.Url, out var modId) ? modId : NexusModsModId.None)
-            .Where(x => x != NexusModsModId.None).ToArray();
+            .Where(x => x != NexusModsModId.None)
+            .Except(currentMexusModsUpdateInfos).ToArray();
 
         var currentModules = crashReport.Modules
             .Where(x => !x.IsOfficial).Select(x => new { ModuleId = ModuleId.From(x.Id), Version = ModuleVersion.From(x.Version) }).ToArray();
