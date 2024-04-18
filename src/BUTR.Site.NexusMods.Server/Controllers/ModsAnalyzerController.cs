@@ -61,7 +61,7 @@ public sealed class ModsAnalyzerController : ApiControllerBase
     {
         tenantContextAccessor.Current = tenant;
 
-        if (tenant == TenantId.Bannerlord) 
+        if (tenant == TenantId.Bannerlord)
         {
             var toExclude = new HashSet<ModuleId>()
             {
