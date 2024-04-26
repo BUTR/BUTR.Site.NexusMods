@@ -242,7 +242,7 @@ public partial class CrashReportsAnalyzerClient
     }
 }
 
-public partial class ModsAnalyzerClient 
+public partial class ModsAnalyzerClient
 {
     public ModsAnalyzerClient(HttpClient client, JsonSerializerOptions options) : this(client)
     {
