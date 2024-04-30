@@ -39,6 +39,7 @@ public sealed class ModsAnalyzerController : ApiControllerBase
         public required ModuleId ModuleId { get; init; }
         public required double Compatibility { get; init; }
 
+        public required double? RecommendedCompatibility { get; init; }
         public required ModuleVersion? RecommendedModuleVersion { get; init; }
     }
     public sealed record CompatibilityScoreResult
@@ -168,6 +169,7 @@ public sealed class ModsAnalyzerController : ApiControllerBase
                 {
                     ModuleId = module.ModuleId,
                     Compatibility = Math.Round(currentVersionScore * 100, 2, MidpointRounding.ToNegativeInfinity),
+                    RecommendedCompatibility = null,
                     RecommendedModuleVersion = null,
                 };
             }
@@ -177,7 +179,8 @@ public sealed class ModsAnalyzerController : ApiControllerBase
                 yield return new CompatibilityScoreResultModuleEntry
                 {
                     ModuleId = module.ModuleId,
-                    Compatibility = Math.Round(recommendedVersionScore * 100, 2),
+                    Compatibility = Math.Round(currentVersionScore * 100, 2, MidpointRounding.ToNegativeInfinity),
+                    RecommendedCompatibility = Math.Round(recommendedVersionScore * 100, 2, MidpointRounding.ToNegativeInfinity),
                     RecommendedModuleVersion = recommendedVersion,
                 };
             }
