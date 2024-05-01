@@ -316,6 +316,8 @@ public sealed partial class Startup
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
         });
 
+        services.AddResponseCaching();
+
         services.AddCors(options =>
         {
             options.AddPolicy("Development", builder => builder

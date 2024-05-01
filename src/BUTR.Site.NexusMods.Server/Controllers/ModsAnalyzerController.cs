@@ -58,6 +58,7 @@ public sealed class ModsAnalyzerController : ApiControllerBase
     }
 
     [HttpPost("GetCompatibilityScore")]
+    [ResponseCache(Duration = 60 * 60 * 2)]
     public async Task<ActionResult<CompatibilityScoreResult?>> GetCompatibilityScoreAsync([BindTenant] TenantId tenant, [FromBody] CompatibilityScoreRequest crashReport, [FromServices] ITenantContextAccessor tenantContextAccessor, CancellationToken ct)
     {
         tenantContextAccessor.Current = tenant;
