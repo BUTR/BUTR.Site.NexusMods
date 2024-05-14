@@ -12,8 +12,9 @@ public class CrashReportIgnoredFileIdEntityConfiguration : BaseEntityConfigurati
 
     protected override void ConfigureModel(EntityTypeBuilder<CrashReportIgnoredFileEntity> builder)
     {
-        builder.Property(x => x.Value).HasColumnName("crash_report_file_ignored_id").HasValueObjectConversion().ValueGeneratedNever();
-        builder.ToTable("crash_report_file_ignored", "crashreport").HasKey(x => new { x.TenantId, x.Value });
+        builder.Property(x => x.CrashReportIgnoredFileId).HasColumnName("crash_report_file_ignored_id").ValueGeneratedOnAdd();
+        builder.Property(x => x.Value).HasColumnName("value").HasVogenConversion();
+        builder.ToTable("crash_report_file_ignored", "crashreport").HasKey(x => x.CrashReportIgnoredFileId);
 
         base.ConfigureModel(builder);
     }

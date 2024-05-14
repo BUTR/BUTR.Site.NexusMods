@@ -1,9 +1,8 @@
-using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Repositories;
 
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -24,8 +23,8 @@ public sealed class TopExceptionsTypesAnalyzerProcessorJob : IJob
 
     public TopExceptionsTypesAnalyzerProcessorJob(ILogger<TopExceptionsTypesAnalyzerProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
+        _logger = logger;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -36,33 +35,32 @@ public sealed class TopExceptionsTypesAnalyzerProcessorJob : IJob
 
         foreach (var tenant in TenantId.Values)
         {
-            await using var scope = _serviceScopeFactory.CreateAsyncScope();
-
-            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
-            tenantContextAccessor.Current = tenant;
-
-            await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
+            await using var scope = _serviceScopeFactory.CreateAsyncScope().WithTenant(tenant);
+            await HandleTenantAsync(scope, tenant, ct);
         }
 
         context.Result = "Updated Top Exception Types";
         context.SetIsSuccess(true);
     }
 
-    private static async Task HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    private async Task HandleTenantAsync(AsyncServiceScope scope, TenantId tenant, CancellationToken ct)
     {
-        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
-        var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
-        var entityFactory = dbContextWrite.GetEntityFactory();
-        await using var _ = await dbContextWrite.CreateSaveScopeAsync();
+        var unitOfWorkFactory = scope.ServiceProvider.GetRequiredService<IUnitOfWorkFactory>();
+        await using var unitOfRead = unitOfWorkFactory.CreateUnitOfRead();
+        await using var unitOfWrite = unitOfWorkFactory.CreateUnitOfWrite();
 
-        var statisticsQuery = await dbContextRead.ExceptionTypes.Include(x => x.ToCrashReports).AsSplitQuery().Select(x => new StatisticsTopExceptionsTypeEntity
+        var exceptionTypes = await unitOfRead.ExceptionTypes.GetAllAsync(null, null, ct);
+        var statistics = exceptionTypes.Select(x => new StatisticsTopExceptionsTypeEntity
         {
             TenantId = tenant,
-            ExceptionType = entityFactory.GetOrCreateExceptionType(x.ExceptionTypeId),
+            ExceptionTypeId = x.ExceptionTypeId,
+            ExceptionType = unitOfWrite.UpsertEntityFactory.GetOrCreateExceptionType(x.ExceptionTypeId),
             ExceptionCount = x.ToCrashReports.Count
-        }).ToArrayAsync(ct);
+        }).ToList();
 
-        await dbContextWrite.StatisticsTopExceptionsTypes.SynchronizeOnSaveAsync(statisticsQuery);
-        // Disposing the DBContext will save the data
+        unitOfWrite.StatisticsTopExceptionsTypes.Remove(x => true);
+        unitOfWrite.StatisticsTopExceptionsTypes.UpsertRange(statistics);
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
     }
 }

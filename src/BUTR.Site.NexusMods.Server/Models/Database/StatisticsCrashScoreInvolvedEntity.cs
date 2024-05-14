@@ -8,6 +8,7 @@ public sealed record StatisticsCrashScoreInvolvedEntity : IEntityWithTenant
 
     public required Guid StatisticsCrashScoreInvolvedId { get; init; }
     public required GameVersion GameVersion { get; init; }
+    public required ModuleId ModuleId { get; init; }
     public required ModuleEntity Module { get; init; }
     public required ModuleVersion ModuleVersion { get; init; }
     public required int InvolvedCount { get; init; }
@@ -16,5 +17,5 @@ public sealed record StatisticsCrashScoreInvolvedEntity : IEntityWithTenant
     public required int RawValue { get; init; }
     public required double Score { get; init; }
 
-    public override int GetHashCode() => HashCode.Combine(StatisticsCrashScoreInvolvedId, GameVersion, Module.ModuleId, ModuleVersion, InvolvedCount, NotInvolvedCount, TotalCount, HashCode.Combine(RawValue, Score));
+    public override int GetHashCode() => HashCode.Combine(TenantId, StatisticsCrashScoreInvolvedId, GameVersion, ModuleId, ModuleVersion, InvolvedCount, NotInvolvedCount, HashCode.Combine(TotalCount, RawValue, Score));
 }

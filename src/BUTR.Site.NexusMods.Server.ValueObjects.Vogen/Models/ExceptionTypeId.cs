@@ -5,14 +5,11 @@ namespace BUTR.Site.NexusMods.Server.Models;
 using TType = ExceptionTypeId;
 using TValueType = String;
 
-[TypeConverter(typeof(VogenTypeConverter<TType, TValueType>))]
-[JsonConverter(typeof(VogenJsonConverter<TType, TValueType>))]
-[ValueObject<TValueType>(conversions: Conversions.None)]
-public readonly partial record struct ExceptionTypeId : IVogen<TType, TValueType>
+[ValueObject<TValueType>(conversions: Conversions.EfCoreValueConverter | Conversions.SystemTextJson | Conversions.TypeConverter)]
+public readonly partial struct ExceptionTypeId : IVogen<TType, TValueType>
 {
     public static TType Copy(TType instance) => instance with { };
-    public static bool IsInitialized(TType instance) => instance._isInitialized;
-    public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);
+    public static TType DeserializeDangerous(TValueType instance) => __Deserialize(instance);
 
     public static TType FromException(ExceptionModel exception)
     {

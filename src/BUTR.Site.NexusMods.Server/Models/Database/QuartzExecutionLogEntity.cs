@@ -17,17 +17,17 @@ public sealed record QuartzExecutionLogEntity : IEntity
 
     public required int RetryCount { get; init; }
 
-    public required bool? IsSuccess { get; set; }
-    public required bool? IsException { get; set; }
-    public required bool? IsVetoed { get; set; }
+    public required bool? IsSuccess { get; init; }
+    public required bool? IsException { get; init; }
+    public required bool? IsVetoed { get; init; }
 
-    public required string? ErrorMessage { get; set; }
-    public QuartzExecutionLogDetailEntity? ExecutionLogDetail { get; set; }
-    public required string? Result { get; set; }
-    public required string? ReturnCode { get; set; }
+    public required string? ErrorMessage { get; init; }
+    public QuartzExecutionLogDetailEntity? ExecutionLogDetail { get; init; }
+    public required string? Result { get; init; }
+    public required string? ReturnCode { get; init; }
 
     public DateTimeOffset DateAddedUtc { get; init; } = DateTimeOffset.UtcNow;
-    public string? MachineName { get; set; } = Environment.MachineName;
+    public string? MachineName { get; init; } = Environment.MachineName;
 
     public DateTimeOffset? GetFinishTimeUtc() => FireTimeUtc.Add(JobRunTime);
 }

@@ -1,5 +1,3 @@
-using System.Diagnostics.Contracts;
-
 namespace BUTR.Site.NexusMods.Server.Models;
 
 internal static class StringExtensions

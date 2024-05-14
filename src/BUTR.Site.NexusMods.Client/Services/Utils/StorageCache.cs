@@ -36,8 +36,8 @@ public sealed class StorageCache : IAsyncDisposable
 
     public StorageCache(ISessionStorageService storage, IOptions<JsonSerializerOptions> jsonSerializerOptions)
     {
-        _storage = storage ?? throw new ArgumentNullException(nameof(storage));
-        _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
+        _storage = storage;
+        _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
     public async Task<T?> GetAsync<T>(string key_, Func<Task<(T Value, CacheOptions Options)?>> factory, CancellationToken ct) where T : class

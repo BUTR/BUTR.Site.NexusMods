@@ -10,16 +10,19 @@ public class IntegrationDiscordTokensEntityConfiguration : BaseEntityConfigurati
 {
     protected override void ConfigureModel(EntityTypeBuilder<IntegrationDiscordTokensEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("integration_discord_tokens_id").HasValueObjectConversion().ValueGeneratedNever();
+        builder.Property(x => x.NexusModsUserId).HasColumnName("integration_discord_tokens_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.DiscordUserId).HasColumnName("discord_user_id");
         builder.Property(x => x.RefreshToken).HasColumnName("refresh_token");
         builder.Property(x => x.AccessToken).HasColumnName("access_token");
         builder.Property(x => x.AccessTokenExpiresAt).HasColumnName("access_token_expires_at");
-        builder.ToTable("integration_discord_tokens", "integration").HasKey(nameof(NexusModsUserEntity.NexusModsUserId));
+        builder.ToTable("integration_discord_tokens", "integration").HasKey(x => new
+        {
+            x.NexusModsUserId,
+        });
 
         builder.HasOne(x => x.NexusModsUser)
             .WithOne()
-            .HasForeignKey<IntegrationDiscordTokensEntity>(nameof(NexusModsUserEntity.NexusModsUserId))
+            .HasForeignKey<IntegrationDiscordTokensEntity>(x => x.NexusModsUserId)
             .HasPrincipalKey<NexusModsUserEntity>(x => x.NexusModsUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -28,8 +31,6 @@ public class IntegrationDiscordTokensEntityConfiguration : BaseEntityConfigurati
             .HasForeignKey<IntegrationDiscordTokensEntity>(x => x.DiscordUserId)
             .HasPrincipalKey<NexusModsUserToIntegrationDiscordEntity>(x => x.DiscordUserId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(x => x.NexusModsUser).AutoInclude();
 
         base.ConfigureModel(builder);
     }

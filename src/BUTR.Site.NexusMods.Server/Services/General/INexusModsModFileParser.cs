@@ -93,8 +93,8 @@ public class NexusModsModFileParser : INexusModsModFileParser
                 if (reader is null) throw new InvalidOperationException($"Failed to get Reader for file '{fileInfo.FileName}'");
 
                 var moduleInfosReader = await GetModuleInfosFromReaderAsync(reader, subModuleCount).ToListAsync(ct);
-                var dataReader = await GetGameVersionsFromReaderAsync(reader, moduleInfosReader).ToListAsync(ct);
-                foreach (var grouping in dataReader.GroupBy(x => new { x.Item1.Id, x.Item1.Version }))
+                var gameVersions = await GetGameVersionsFromReaderAsync(reader, moduleInfosReader).ToListAsync(ct);
+                foreach (var grouping in gameVersions.GroupBy(x => new { x.Item1.Id, x.Item1.Version }))
                 {
                     yield return new()
                     {
@@ -132,7 +132,7 @@ public class NexusModsModFileParser : INexusModsModFileParser
     {
         while (subModuleCount > 0 && reader.MoveToNextEntry())
         {
-            if (reader.Entry.IsDirectory) continue;
+            if (reader.Entry.IsDirectory || reader.Entry.Key is null) continue;
 
             if (!reader.Entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
 
@@ -150,7 +150,7 @@ public class NexusModsModFileParser : INexusModsModFileParser
         {
             if (subModuleCount <= 0) break;
 
-            if (entry.IsDirectory) continue;
+            if (entry.IsDirectory || entry.Key is null) continue;
 
             if (!entry.Key.Contains("SubModule.xml", StringComparison.OrdinalIgnoreCase)) continue;
 
@@ -171,10 +171,10 @@ public class NexusModsModFileParser : INexusModsModFileParser
         }
         yield break;
 
-        var count = moduleInfos.SelectMany(x => x.SubModules).Select(x => x.DLLName).Count();
-        while (count > 0 && reader.MoveToNextEntry())
+        var subModuleCount = moduleInfos.SelectMany(x => x.SubModules).Select(x => x.DLLName).Count();
+        while (subModuleCount > 0 && reader.MoveToNextEntry())
         {
-            if (reader.Entry.IsDirectory) continue;
+            if (reader.Entry.IsDirectory || reader.Entry.Key is null) continue;
 
             if (!reader.Entry.Key.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) continue;
 
@@ -193,7 +193,7 @@ public class NexusModsModFileParser : INexusModsModFileParser
                     var assembly = AssemblyDefinition.FromImage(PEImage.FromDataSource(new StreamDataSource(ms)));
                     foreach (var gameVersion in GetGameVersions(assembly))
                         yield return (moduleInfo, subModule, gameVersion);
-                    count--;
+                    subModuleCount--;
                 }
             }
         }

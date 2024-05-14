@@ -17,7 +17,7 @@ public sealed class SteamCommunityClient : ISteamCommunityClient
 
     public SteamCommunityClient(HttpClient httpClient)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _httpClient = httpClient;
     }
 
     public async Task<bool> ConfirmIdentityAsync(Dictionary<string, string> parameters, CancellationToken ct)
@@ -30,10 +30,8 @@ public sealed class SteamCommunityClient : ISteamCommunityClient
         foreach (var parameter in parameters)
             query.TryAdd(parameter.Key, parameter.Value);
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "openid/login")
-        {
-            Content = new FormUrlEncodedContent(query)
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Post, "openid/login");
+        request.Content = new FormUrlEncodedContent(query);
         using var response = await _httpClient.SendAsync(request, ct);
 
         var responseString = await response.Content.ReadAsStringAsync(ct);

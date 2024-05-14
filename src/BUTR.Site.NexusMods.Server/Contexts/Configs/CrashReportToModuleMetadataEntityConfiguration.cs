@@ -1,5 +1,6 @@
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.ValueObjects.Utils;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -12,13 +13,18 @@ public class CrashReportToModuleMetadataEntityConfiguration : BaseEntityConfigur
 
     protected override void ConfigureModel(EntityTypeBuilder<CrashReportToModuleMetadataEntity> builder)
     {
-        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_module_info_id").HasValueObjectConversion().ValueGeneratedNever();
-        builder.Property<ModuleId>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id").HasValueObjectConversion();
-        builder.Property(x => x.Version).HasValueObjectConversion().HasColumnName("version");
-        builder.Property<NexusModsModId?>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_id").HasValueObjectConversion().IsRequired(false);
+        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_module_info_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property(x => x.ModuleId).HasColumnName("module_id").HasVogenConversion();
+        builder.Property(x => x.Version).HasVogenConversion().HasColumnName("version");
+        builder.Property(x => x.NexusModsModId).HasColumnName("nexusmods_mod_id").HasConversion<NexusModsModId.EfCoreValueConverter, NexusModsModId.EfCoreValueComparer>().IsRequired(false);
         builder.Property(x => x.InvolvedPosition).HasColumnName("involved_position");
         builder.Property(x => x.IsInvolved).HasColumnName("is_involved");
-        builder.ToTable("crash_report_module_info", "crashreport").HasKey(nameof(CrashReportToModuleMetadataEntity.TenantId), nameof(CrashReportToModuleMetadataEntity.CrashReportId), nameof(ModuleEntity.ModuleId));
+        builder.ToTable("crash_report_module_info", "crashreport").HasKey(x => new
+        {
+            x.TenantId,
+            x.CrashReportId,
+            x.ModuleId
+        });
 
         builder.HasOne(x => x.ToCrashReport)
             .WithMany(x => x.ModuleInfos)
@@ -28,16 +34,13 @@ public class CrashReportToModuleMetadataEntityConfiguration : BaseEntityConfigur
 
         builder.HasOne(x => x.NexusModsMod)
             .WithMany()
-            .HasForeignKey(nameof(NexusModsModEntity.TenantId), nameof(NexusModsModEntity.NexusModsModId))
+            .HasForeignKey(x => new { x.TenantId, x.NexusModsModId })
             .HasPrincipalKey(x => new { x.TenantId, x.NexusModsModId })
             .OnDelete(DeleteBehavior.SetNull);
 
         //builder.HasIndex(x => x.CrashReportId);
         //builder.HasIndex(nameof(ModuleEntity.ModuleId));
         //builder.HasIndex(nameof(NexusModsModEntity.ModId));
-
-        builder.Navigation(x => x.Module).AutoInclude();
-        builder.Navigation(x => x.NexusModsMod).AutoInclude();
 
         base.ConfigureModel(builder);
     }

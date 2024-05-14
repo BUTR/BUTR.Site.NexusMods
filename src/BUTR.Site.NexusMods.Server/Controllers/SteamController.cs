@@ -1,9 +1,7 @@
 using BUTR.Site.NexusMods.Server.Extensions;
-using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Options;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
-using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
@@ -13,6 +11,7 @@ using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,32 +30,17 @@ public sealed class SteamController : ApiControllerBase
 
     public SteamController(ISteamStorage steamStorage, IOptions<SteamAPIOptions> options, ISteamCommunityClient steamCommunityClient, ISteamAPIClient steamAPIClient)
     {
-        _steamStorage = steamStorage ?? throw new ArgumentNullException(nameof(steamStorage));
-        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
-        _steamCommunityClient = steamCommunityClient ?? throw new ArgumentNullException(nameof(steamCommunityClient));
-        _steamAPIClient = steamAPIClient ?? throw new ArgumentNullException(nameof(steamAPIClient));
+        _steamStorage = steamStorage;
+        _options = options.Value;
+        _steamCommunityClient = steamCommunityClient;
+        _steamAPIClient = steamAPIClient;
     }
 
-    [HttpGet("GetOpenIdUrl")]
-    public ApiResult<SteamOpenIdUrlModel?> GetOpenIdUrl()
+    [HttpPost]
+    public async Task<ApiResult<string?>> AddLinkAsync([FromQuery, Required] Dictionary<string, string> queries, CancellationToken ct)
     {
-        var query = QueryString.Create(new Dictionary<string, string?>
-        {
-            ["openid.ns"] = "http://specs.openid.net/auth/2.0",
-            ["openid.mode"] = "checkid_setup",
-            ["openid.return_to"] = _options.RedirectUri,
-            ["openid.realm"] = _options.Realm,
-            ["openid.identity"] = "http://specs.openid.net/auth/2.0/identifier_select",
-            ["openid.claimed_id"] = "http://specs.openid.net/auth/2.0/identifier_select",
-        });
-        var steamLoginUrl = new UriBuilder("https://steamcommunity.com/openid/login") { Query = query.ToUriComponent() };
+        var userId = HttpContext.GetUserId();
 
-        return ApiResult(new SteamOpenIdUrlModel(steamLoginUrl.ToString()));
-    }
-
-    [HttpGet("Link")]
-    public async Task<ApiResult<string?>> LinkAsync([FromQuery] Dictionary<string, string> queries, [BindUserId] NexusModsUserId userId, CancellationToken ct)
-    {
         var isValid = await _steamCommunityClient.ConfirmIdentityAsync(queries, ct);
         if (!isValid)
             return ApiBadRequest("Failed to link!");
@@ -75,9 +59,11 @@ public sealed class SteamController : ApiControllerBase
         return ApiResult("Linked successful!");
     }
 
-    [HttpPost("Unlink")]
-    public async Task<ApiResult<string?>> UnlinkAsync([BindUserId] NexusModsUserId userId)
+    [HttpDelete]
+    public async Task<ApiResult<string?>> RemoveLinkAsync()
     {
+        var userId = HttpContext.GetUserId();
+
         var tokens = HttpContext.GetSteamTokens();
 
         if (tokens?.Data is null)
@@ -89,8 +75,25 @@ public sealed class SteamController : ApiControllerBase
         return ApiResult("Unlinked successful!");
     }
 
-    [HttpPost("GetUserInfo")]
-    public async Task<ApiResult<SteamUserInfo?>> GetUserInfoByAccessTokenAsync(CancellationToken ct)
+    [HttpGet("OpenIdUrl")]
+    public ApiResult<SteamOpenIdUrlModel?> GetOpenIdUrl()
+    {
+        var query = QueryString.Create(new Dictionary<string, string?>
+        {
+            ["openid.ns"] = "http://specs.openid.net/auth/2.0",
+            ["openid.mode"] = "checkid_setup",
+            ["openid.return_to"] = _options.RedirectUri,
+            ["openid.realm"] = _options.Realm,
+            ["openid.identity"] = "http://specs.openid.net/auth/2.0/identifier_select",
+            ["openid.claimed_id"] = "http://specs.openid.net/auth/2.0/identifier_select",
+        });
+        var steamLoginUrl = new UriBuilder("https://steamcommunity.com/openid/login") { Query = query.ToUriComponent() };
+
+        return ApiResult(new SteamOpenIdUrlModel(steamLoginUrl.ToString()));
+    }
+
+    [HttpGet("UserInfo")]
+    public async Task<ApiResult<SteamUserInfo?>> GetUserInfoAsync(CancellationToken ct)
     {
         var tokens = HttpContext.GetSteamTokens();
 

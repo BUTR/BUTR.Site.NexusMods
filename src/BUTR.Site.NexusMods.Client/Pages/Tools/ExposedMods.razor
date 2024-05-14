@@ -10,11 +10,11 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Exposed Mods</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging TItem="ExposedNexusModsModModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetExposedMods" Sortable Filterable FixedHeader>
+        <DataGridPaging TItem="LinkedByExposureNexusModsModModelsModel" @ref="@_dataGridPagingRef" GetFilters="@GetFilters" GetItems="@GetExposedMods" Sortable Filterable FixedHeader>
             <DataGridColumns>
-                <DataGridColumnText TItem="ExposedNexusModsModModel" ElementId="mod-id" Field="@nameof(ExposedNexusModsModModel.NexusModsModId)" Caption="NexusMods Mod Id" Filterable Sortable SortField="@nameof(EntityFields.NexusModsModId)"/>
-                <DataGridColumnTextAutocomplete TItem="ExposedNexusModsModModel" ElementId="module-id" Field="@nameof(ExposedNexusModsModModel.Mods)" Caption="Module Id's" Filterable Sortable SortField="@nameof(EntityFields.ModuleId)" MinLength="3" GetAutocompleteValues="GetAutocompleteValues">
-                    <DisplayTemplate>@(string.Join(", ", context.Mods.Select(x => x.ModuleId)))</DisplayTemplate>
+                <DataGridColumnText TItem="LinkedByExposureNexusModsModModelsModel" ElementId="mod-id" Field="@nameof(LinkedByExposureNexusModsModModelsModel.NexusModsModId)" Caption="NexusMods Mod Id" Filterable Sortable SortField="@nameof(EntityFields.NexusModsModId)"/>
+                <DataGridColumnTextAutocomplete TItem="LinkedByExposureNexusModsModModelsModel" ElementId="module-id" Field="@nameof(LinkedByExposureNexusModsModModelsModel.Modules)" Caption="Module Id's" Filterable Sortable SortField="@nameof(EntityFields.ModuleId)" MinLength="3" GetAutocompleteValues="GetAutocompleteValues">
+                    <DisplayTemplate>@(string.Join(", ", context.Modules.Select(x => x.ModuleId)))</DisplayTemplate>
                 </DataGridColumnTextAutocomplete>
             </DataGridColumns>
 
@@ -29,21 +29,21 @@
 
     private enum EntityFields { NexusModsModId, ModuleId, LastUpdateDate }
 
-    private DataGridPaging<ExposedNexusModsModModel>? _dataGridPagingRef;
+    private DataGridPaging<LinkedByExposureNexusModsModModelsModel>? _dataGridPagingRef;
 
-    private async Task<DataGridPaging<ExposedNexusModsModModel>.ItemsResponse?> GetExposedMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
+    private async Task<DataGridPaging<LinkedByExposureNexusModsModModelsModel>.ItemsResponse?> GetExposedMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
-        var response = await _exposedModsClient.PaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
+        var response = await _exposedModsClient.GetPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
         return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
     }
 
-    private async Task OnClick(ExposedNexusModsModModel? mod)
+    private async Task OnClick(LinkedByExposureNexusModsModModelsModel? mod)
     {
         if (mod is not null)
             await _jsRuntime.InvokeVoidAsync("open", mod.Url(TenantUtils.FromTenantToGameDomain(await _tenantProvider.GetTenantAsync())!), "_blank");
     }
 
-    private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => (await _exposedModsClient.AutocompleteAsync(new(filter), ct)).Value ?? Array.Empty<string>();
+    private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => (await _exposedModsClient.GetAutocompleteModuleIdsAsync(new(filter), ct)).Value ?? Array.Empty<string>();
 
     private static IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
     {

@@ -1,0 +1,66 @@
+﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Anonymous}")]
+@page "/login-nexusmods-oauth2-manual"
+
+@inject IAuthenticationClient _authenticationClient;
+@inject ILocalStorageService _localStorage;
+@inject NavigationManager _navigationManager;
+
+<Container>
+    @if (!string.IsNullOrEmpty(Url))
+    {
+    <br/>
+    <Card>
+        <CardBody>
+            <Text>NexusMods OAuth2 auth is partially supported.</Text>
+            <br/>
+            <Text>Please login to NexusMods by clicking the Login button and paste the url after redirect to here</Text>
+            <br/>
+            <Button TextWeight="@TextWeight.Bold"
+                    Color="@Color.Primary"
+                    Type="@ButtonType.Link"
+                    To="@Url"
+                    Target="@Target.Blank">
+                Login
+            </Button>
+            <Divider/>
+            <Field>
+                <FieldLabel>Callback Url</FieldLabel>
+                <TextEdit @bind-Text="@CallbackUrl" Placeholder="http://???.??/?..."></TextEdit>
+            </Field>
+            <Button TextWeight="@TextWeight.Bold"
+                    Color="@Color.Primary"
+                    Clicked="Callback">
+                Confirm
+            </Button>
+        </CardBody>
+    </Card>
+    }
+</Container>
+
+@code {
+
+    private string Url = string.Empty;
+    private string CallbackUrl = string.Empty;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        var response = await _authenticationClient.GetOAuthUrlAsync();
+        if (response.Value?.Url is null)
+        {
+            _navigationManager.NavigateTo("login");
+            return;
+        }
+        
+        Url = response.Value.Url;
+        await _localStorage.SetItemAsync("nexusmods_state", response.Value.State);
+    }
+
+    private void Callback()
+    {
+        var url = new Uri(CallbackUrl);
+        _navigationManager.NavigateTo($"oauth-callback{url.Query}");
+    }
+
+}

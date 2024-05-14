@@ -4,6 +4,7 @@ namespace BUTR.Site.NexusMods.Server.Models.Database;
 
 public sealed record IntegrationDiscordTokensEntity : IEntity
 {
+    public required NexusModsUserId NexusModsUserId { get; init; }
     public required NexusModsUserEntity NexusModsUser { get; init; }
 
     public required string DiscordUserId { get; init; }
@@ -19,5 +20,5 @@ public sealed record IntegrationDiscordTokensEntity : IEntity
     public required string AccessToken { get; init; }
     public required DateTimeOffset AccessTokenExpiresAt { get; init; }
 
-    public override int GetHashCode() => HashCode.Combine(NexusModsUser.NexusModsUserId, DiscordUserId, RefreshToken, AccessToken, AccessTokenExpiresAt);
+    public override int GetHashCode() => HashCode.Combine(NexusModsUserId, DiscordUserId, RefreshToken, AccessToken, AccessTokenExpiresAt);
 }

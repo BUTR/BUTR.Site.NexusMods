@@ -102,7 +102,7 @@
                 return;
             }
 
-            await _gitHubClient.LinkAsync(code: queryCode);
+            await _gitHubClient.AddLinkAsync(code: queryCode);
             _ = await _authenticationProvider.ValidateAsync();
 
             if (await _gitHubClient.GetUserInfoAsync() is { Value: var userInfo })

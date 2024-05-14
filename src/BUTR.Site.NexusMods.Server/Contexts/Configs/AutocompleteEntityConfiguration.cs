@@ -11,10 +11,14 @@ public class AutocompleteEntityConfiguration : BaseEntityConfigurationWithTenant
 
     protected override void ConfigureModel(EntityTypeBuilder<AutocompleteEntity> builder)
     {
-        builder.Property<int>("AutocompleteId").HasColumnName("autocomplete_id").ValueGeneratedOnAdd();
+        builder.Property(x => x.AutocompleteId).HasColumnName("autocomplete_id").ValueGeneratedOnAdd();
         builder.Property(x => x.Type).HasColumnName("type");
         builder.Property(x => x.Value).HasColumnName("value");
-        builder.ToTable("autocomplete", "autocomplete").HasKey(nameof(AutocompleteEntity.TenantId), "AutocompleteId");
+        builder.ToTable("autocomplete", "autocomplete").HasKey(x => new
+        {
+            x.TenantId,
+            x.AutocompleteId,
+        });
 
         builder.HasIndex(x => x.Type);
 

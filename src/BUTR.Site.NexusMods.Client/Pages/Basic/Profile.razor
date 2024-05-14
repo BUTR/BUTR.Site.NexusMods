@@ -194,7 +194,7 @@ else
         //var base64Token = Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(token));
         //_tokenUrl = $"{_navigationManager.BaseUri}/{base64Token}";
         
-        var userResponse = await _userClient.ProfileAsync();
+        var userResponse = await _userClient.GetProfileAsync();
         _user = userResponse.Value;
         
         if (_user?.GitHubUserId is not null)

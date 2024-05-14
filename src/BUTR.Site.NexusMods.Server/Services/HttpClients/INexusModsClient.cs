@@ -20,7 +20,7 @@ public sealed class NexusModsClient : INexusModsClient
 
     public NexusModsClient(HttpClient httpClient)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _httpClient = httpClient;
     }
 
     public async Task<HtmlDocument?> GetArticleAsync(NexusModsGameDomain gameDomain, NexusModsArticleId articleId, CancellationToken ct)

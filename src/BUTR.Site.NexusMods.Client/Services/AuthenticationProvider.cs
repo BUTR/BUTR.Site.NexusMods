@@ -14,11 +14,11 @@ public sealed class AuthenticationProvider
 
     public AuthenticationProvider(IAuthenticationClient client, ITokenContainer tokenContainer)
     {
-        _authenticationClient = client ?? throw new ArgumentNullException(nameof(client));
-        _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
+        _authenticationClient = client;
+        _tokenContainer = tokenContainer;
     }
 
-    public async Task<string?> AuthenticateAsync(string apiKey, string type, CancellationToken ct = default)
+    public async Task<string?> AuthenticateWithApiKeyAsync(string apiKey, string type, CancellationToken ct = default)
     {
         if (type.Equals("demo", StringComparison.OrdinalIgnoreCase))
         {
@@ -28,7 +28,29 @@ public sealed class AuthenticationProvider
 
         try
         {
-            var response = await _authenticationClient.AuthenticateAsync(apiKey, ct);
+            var response = await _authenticationClient.AuthenticateWithApiKeyAsync(apiKey, ct);
+            if (response.Value is null) return null;
+
+            await _tokenContainer.SetTokenAsync(new Token(type, response.Value.Token), ct);
+
+            return response.Value.Token;
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+    public async Task<string?> AuthenticateWithOAuth2Async(string code, Guid state, string type, CancellationToken ct = default)
+    {
+        if (type.Equals("demo", StringComparison.OrdinalIgnoreCase))
+        {
+            await _tokenContainer.SetTokenAsync(new Token(type, string.Empty), ct);
+            return string.Empty;
+        }
+
+        try
+        {
+            var response = await _authenticationClient.AuthenticateWithOAuth2Async(code, state, ct);
             if (response.Value is null) return null;
 
             await _tokenContainer.SetTokenAsync(new Token(type, response.Value.Token), ct);

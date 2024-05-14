@@ -12,25 +12,28 @@ public class NexusModsUserToModuleEntityConfiguration : BaseEntityConfigurationW
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToModuleEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_module_id").HasValueObjectConversion().ValueGeneratedNever();
-        builder.Property<ModuleId>(nameof(ModuleEntity.ModuleId)).HasColumnName("module_id").HasValueObjectConversion();
+        builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_module_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property(x => x.ModuleId).HasColumnName("module_id").HasVogenConversion();
         builder.Property(x => x.LinkType).HasColumnName("nexusmods_user_module_link_type_id");
-        builder.ToTable("nexusmods_user_module", "nexusmods_user").HasKey(nameof(NexusModsUserToModuleEntity.TenantId), nameof(NexusModsUserEntity.NexusModsUserId), nameof(ModuleEntity.ModuleId), nameof(NexusModsUserToModuleEntity.LinkType));
+        builder.ToTable("nexusmods_user_module", "nexusmods_user").HasKey(x => new
+        {
+            x.TenantId,
+            x.NexusModsUserId,
+            x.ModuleId,
+            x.LinkType,
+        });
 
         builder.HasOne(x => x.NexusModsUser)
             .WithMany(x => x.ToModules)
-            .HasForeignKey(nameof(NexusModsUserEntity.NexusModsUserId))
+            .HasForeignKey(x => x.NexusModsUserId)
             .HasPrincipalKey(x => x.NexusModsUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.Module)
             .WithMany(x => x.ToNexusModsUsers)
-            .HasForeignKey(nameof(NexusModsUserToModuleEntity.TenantId), nameof(ModuleEntity.ModuleId))
+            .HasForeignKey(x => new { x.TenantId, x.ModuleId })
             .HasPrincipalKey(x => new { x.TenantId, x.ModuleId })
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(x => x.NexusModsUser).AutoInclude();
-        builder.Navigation(x => x.Module).AutoInclude();
 
         base.ConfigureModel(builder);
     }

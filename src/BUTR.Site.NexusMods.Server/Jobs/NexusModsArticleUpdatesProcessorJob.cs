@@ -1,7 +1,7 @@
-using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Repositories;
 using BUTR.Site.NexusMods.Server.Services;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -21,12 +21,14 @@ namespace BUTR.Site.NexusMods.Server.Jobs;
 public sealed class NexusModsArticleUpdatesProcessorJob : IJob
 {
     private readonly ILogger _logger;
+    private readonly INexusModsClient _nexusModsClient;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public NexusModsArticleUpdatesProcessorJob(ILogger<NexusModsArticleUpdatesProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
+    public NexusModsArticleUpdatesProcessorJob(ILogger<NexusModsArticleUpdatesProcessorJob> logger, INexusModsClient nexusModsClient, IServiceScopeFactory serviceScopeFactory)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
+        _logger = logger;
+        _nexusModsClient = nexusModsClient;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -38,40 +40,35 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
         var processed = 0;
         foreach (var tenant in TenantId.Values)
         {
-            await using var scope = _serviceScopeFactory.CreateAsyncScope();
-
-            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
-            tenantContextAccessor.Current = tenant;
-
-            processed += await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
+            await using var scope = _serviceScopeFactory.CreateAsyncScope().WithTenant(tenant);
+            processed += await HandleTenantAsync(scope, tenant, ct);
         }
 
         context.Result = $"Processed {processed} article updates";
         context.SetIsSuccess(true);
     }
 
-    private static async Task<int> HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    private async Task<int> HandleTenantAsync(AsyncServiceScope scope, TenantId tenant, CancellationToken ct)
     {
         const int notFoundArticlesTreshold = 50;
 
-        var client = serviceProvider.GetRequiredService<INexusModsClient>();
-        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
-        var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
-        var entityFactory = dbContextWrite.GetEntityFactory();
-        await using var _ = await dbContextWrite.CreateSaveScopeAsync();
+        var unitOfWorkFactory = scope.ServiceProvider.GetRequiredService<IUnitOfWorkFactory>();
+        await using var unitOfRead = unitOfWorkFactory.CreateUnitOfRead();
+        await using var unitOfWrite = unitOfWorkFactory.CreateUnitOfWrite();
 
         var gameDomain = tenant.ToGameDomain();
 
         var articles = ImmutableArray.CreateBuilder<NexusModsArticleEntity>();
 
-        var articleIdRaw = dbContextRead.NexusModsArticles.OrderBy(x => x.NexusModsArticleId).LastOrDefault()?.NexusModsArticleId.Value ?? 0;
+        var lastArticle = await unitOfRead.NexusModsArticles.LastOrDefaultAsync(null, x => x.OrderBy(y => y.NexusModsArticleId), ct);
+        var articleIdRaw = lastArticle?.NexusModsArticleId.Value ?? 0;
         var notFoundArticles = 0;
         var processed = 0;
         while (!ct.IsCancellationRequested)
         {
             var articleId = NexusModsArticleId.From(articleIdRaw);
 
-            if (await client.GetArticleAsync(gameDomain, articleId, ct) is not { } articleDocument)
+            if (await _nexusModsClient.GetArticleAsync(gameDomain, articleId, ct) is not { } articleDocument)
             {
                 articleIdRaw++;
                 continue;
@@ -111,16 +108,17 @@ public sealed class NexusModsArticleUpdatesProcessorJob : IJob
                 TenantId = tenant,
                 Title = title,
                 NexusModsArticleId = articleId,
-                NexusModsUser = entityFactory.GetOrCreateNexusModsUserWithName(authorId, NexusModsUserName.From(authorText)),
+                NexusModsUserId = authorId,
+                NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUserWithName(authorId, NexusModsUserName.From(authorText)),
                 CreateDate = dateTime
             });
             articleIdRaw++;
             processed++;
         }
 
-        await dbContextWrite.NexusModsArticles.UpsertOnSaveAsync(articles.ToArray());
-        // Disposing the DBContext will save the data
+        unitOfWrite.NexusModsArticles.UpsertRange(articles);
 
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return processed;
     }
 }

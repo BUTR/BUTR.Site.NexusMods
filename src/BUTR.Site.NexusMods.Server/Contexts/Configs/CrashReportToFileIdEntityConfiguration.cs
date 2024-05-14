@@ -12,9 +12,13 @@ public class CrashReportToFileIdEntityConfiguration : BaseEntityConfigurationWit
 
     protected override void ConfigureModel(EntityTypeBuilder<CrashReportToFileIdEntity> builder)
     {
-        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_file_id").HasValueObjectConversion().ValueGeneratedNever();
-        builder.Property(x => x.FileId).HasColumnName("file_id").HasValueObjectConversion();
-        builder.ToTable("crash_report_file", "crashreport").HasKey(x => new { x.TenantId, x.CrashReportId });
+        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_file_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property(x => x.FileId).HasColumnName("file_id").HasVogenConversion();
+        builder.ToTable("crash_report_file", "crashreport").HasKey(x => new
+        {
+            x.TenantId,
+            x.CrashReportId
+        });
 
         builder.HasOne(x => x.ToCrashReport)
             .WithOne(x => x.FileId)

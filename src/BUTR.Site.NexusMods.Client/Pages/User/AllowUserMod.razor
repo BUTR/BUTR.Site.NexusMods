@@ -19,10 +19,10 @@
                         <FieldBody>
                             <Select ElementId="user-id" TValue="int?" @bind-SelectedValue="@_userIdToDelete">
                                 @{
-                                    _userIdToDelete = _dataGridRef.Value.AllowedNexusModsUserIds.First();
-                                    foreach (var allowedModId in _dataGridRef.Value.AllowedNexusModsUserIds)
+                                    _userIdToDelete = _dataGridRef.Value.NexusModsUsers.Select(x => x.NexusModsUserId).First();
+                                    foreach (var allowedUserId in _dataGridRef.Value.NexusModsUsers.Select(x => x.NexusModsUserId))
                                     {
-                                        <SelectItem Value="@allowedModId">@allowedModId.ToString()</SelectItem>
+                                        <SelectItem Value="@allowedUserId">@allowedUserId.ToString()</SelectItem>
                                     }
                                 }
                             </Select>
@@ -47,7 +47,7 @@
             <Field>
                 <FieldLabel>NexusMods User Url</FieldLabel>
                 <FieldBody>
-                    <TextEdit ElementId="user-url" Role="@TextRole.Url" @bind-Text="@_model.UserUrl" Placeholder="https://nexusmods.com/users/1" />
+                    <TextEdit ElementId="user-url" Role="@TextRole.Url" @bind-Text="@_model.UserUrl" Placeholder="https://nexusmods.com/users/1 or https://next.nexusmods.com/profile/Dark0ne" />
                 </FieldBody>
             </Field>
             <Field>
@@ -70,11 +70,11 @@
         <CardTitle Size="4" Margin="@Margin.Is0">Allowed Mods to Users</CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="NexusModsUserToNexusModsModManualLinkModel" GetItems="@GetAllowUserMods" FixedHeader>
+        <DataGridPaging @ref="@_dataGridRef" TItem="UserManuallyLinkedModModel" GetItems="@GetAllowUserMods" FixedHeader>
             <DataGridColumns>
-                <DataGridColumnText TItem="NexusModsUserToNexusModsModManualLinkModel" Field="@nameof(NexusModsUserToNexusModsModManualLinkModel.NexusModsModId)" Caption="Mod Id"/>
-                <DataGridColumnText TItem="NexusModsUserToNexusModsModManualLinkModel" Field="@nameof(NexusModsUserToNexusModsModManualLinkModel.AllowedNexusModsUserIds)" Caption="Allowed User Ids">
-                    <DisplayTemplate>@(string.Join(", ", context.AllowedNexusModsUserIds))</DisplayTemplate>
+                <DataGridColumnText TItem="UserManuallyLinkedModModel" Field="@nameof(UserManuallyLinkedModModel.NexusModsModId)" Caption="Mod Id"/>
+                <DataGridColumnText TItem="UserManuallyLinkedModModel" Field="@nameof(UserManuallyLinkedModModel.NexusModsUsers)" Caption="Allowed User Ids">
+                    <DisplayTemplate>@(string.Join(", ", context.NexusModsUsers.Select(x => $"{x.NexusModsUserId} ({x.NexusModsUsername})")))</DisplayTemplate>
                 </DataGridColumnText>
             </DataGridColumns>
             <ButtonRowTemplate>
@@ -101,7 +101,7 @@
     private int? _userIdToDelete;
 
     private Modal _modalRef = default!;
-    private DataGridPaging<NexusModsUserToNexusModsModManualLinkModel>? _dataGridRef;
+    private DataGridPaging<UserManuallyLinkedModModel>? _dataGridRef;
 
     private async Task ShowModal() => await _modalRef.Show();
 
@@ -110,7 +110,7 @@
         await _modalRef.Hide();
         if (save && _dataGridRef?.Value is not null && _userIdToDelete is not null)
         {
-            if (await _userClient.ToNexusModsModManualUnlinkAsync(nexusModsUserId: _userIdToDelete, nexusModsModId: _dataGridRef.Value.NexusModsModId, CancellationToken.None) is { Error: not null })
+            if (await _userClient.RemoveNexusModsModManualLinkAsync(userId: (int) _userIdToDelete, modId: _dataGridRef.Value.NexusModsModId, cancellationToken: CancellationToken.None) is { Error: not null })
             {
                 await _notificationService.Success($"Disallowed succesfully!", "Success!");
                 await _dataGridRef.Reload();
@@ -148,13 +148,13 @@
         }
     }
 
-    private async Task<DataGridPaging<NexusModsUserToNexusModsModManualLinkModel>.ItemsResponse?> GetAllowUserMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct)
+    private async Task<DataGridPaging<UserManuallyLinkedModModel>.ItemsResponse?> GetAllowUserMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct)
     {
-        var response = await _userClient.ToNexusModsModManualLinkPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
+        var response = await _userClient.GetNexusModsModManualLinkPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
         return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
     }
 
-    private async Task OnDisallow(ButtonRowContext<NexusModsUserToNexusModsModManualLinkModel> context)
+    private async Task OnDisallow(ButtonRowContext<UserManuallyLinkedModModel> context)
     {
         if (context.DeleteCommand.Item is not null && await DoUserDisallowMod(context.DeleteCommand.Item))
         {
@@ -164,15 +164,23 @@
     
     private async Task<bool> DoUserAllowMod(AllowUserModel model)
     {
-        if (!NexusModsUtils.TryParse(model.UserUrl, out _, out var nexusModsUserId) && !uint.TryParse(model.UserUrl, out nexusModsUserId))
+        var hasUsername = NexusModsUtils.TryParseUsername(model.UserUrl, out var username);
+        var hasUserId = NexusModsUtils.TryParseUserId(model.UserUrl, out _, out var userId);
+        if (!hasUsername && !hasUserId)
+        {
+            await _notificationService.Error("Failed to parse the user url!", "Error!");
             return false;
-        
-        if (!NexusModsUtils.TryParse(model.ModUrl, out _, out var nexusModsModId) && !uint.TryParse(model.ModUrl, out nexusModsModId))
+        }
+
+        if (!NexusModsUtils.TryParseModUrl(model.ModUrl, out _, out var modId))
+        {
+            await _notificationService.Error("Failed to parse the mod url!", "Error!");
             return false;
+        }
         
-        return await _userClient.ToNexusModsModManualLinkAsync((int) nexusModsUserId, (int) nexusModsModId) is { Error: not null };
+        return await _userClient.AddNexusModsModManualLinkAsync(modId: (int) modId, userId: hasUserId ? (int) userId : null, username: hasUsername ? username : null) is { Error: not null };
     }
-    private async Task<bool> DoUserDisallowMod(NexusModsUserToNexusModsModManualLinkModel model)
+    private async Task<bool> DoUserDisallowMod(UserManuallyLinkedModModel model)
     {
         await ShowModal();
         return true;

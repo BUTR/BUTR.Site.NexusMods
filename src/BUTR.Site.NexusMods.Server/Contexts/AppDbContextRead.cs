@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 
 using System;
 using System.Threading;
@@ -7,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
-public sealed class AppDbContextRead : BaseAppDbContext, IAppDbContextRead
+public sealed class AppDbContextRead : BaseAppDbContext
 {
     public override bool IsReadOnly => true;
 
@@ -27,8 +26,6 @@ public sealed class AppDbContextRead : BaseAppDbContext, IAppDbContextRead
 
         base.OnConfiguring(optionsBuilder);
     }
-
-    public AppDbContextRead New() => this.GetService<IDbContextFactory<AppDbContextRead>>().CreateDbContext();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess) => throw WriteNotSupported();
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken ct = default) => throw WriteNotSupported();

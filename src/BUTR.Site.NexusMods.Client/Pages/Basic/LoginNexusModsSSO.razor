@@ -114,7 +114,7 @@
 
             try
             {
-                var result = await _authenticationProvider.AuthenticateAsync(response.Data.ApiKey, "nexusmods");
+                var result = await _authenticationProvider.AuthenticateWithApiKeyAsync(response.Data.ApiKey, "nexusmods");
                 if (result is null)
                 {
                     await _notificationService.Error("Failed to authorize!");

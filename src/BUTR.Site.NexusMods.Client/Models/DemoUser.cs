@@ -22,23 +22,23 @@ public static class DemoUser
             isSupporter: true,
             isPremium: true,
             role: ApplicationRoles.User,
-            steamUserId: null,
-            gogUserId: null,
-            discordUserId: null,
-            gitHubUserId: null,
+            steamUserId: null!,
+            gogUserId: null!,
+            discordUserId: null!,
+            gitHubUserId: null!,
             hasTenantGame: true,
             availableTenants: new List<ProfileTenantModel> { new(tenantId: 1, name: "Bannerlord") });
-    private static readonly List<NexusModsModModel> _mods = new()
+    private static readonly List<UserLinkedModModel> _mods = new()
     {
-        new(nexusModsModId: 1, name: "Demo Mod 1", allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
-        new(nexusModsModId: 2, name: "Demo Mod 2", allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
-        new(nexusModsModId: 3, name: "Demo Mod 3", allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
-        new(nexusModsModId: 4, name: "Demo Mod 4", allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
+        new(nexusModsModId: 1, name: "Demo Mod 1", ownerNexusModsUserIds: Array.Empty<int>(), allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
+        new(nexusModsModId: 2, name: "Demo Mod 2", ownerNexusModsUserIds: Array.Empty<int>(), allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
+        new(nexusModsModId: 3, name: "Demo Mod 3", ownerNexusModsUserIds: Array.Empty<int>(), allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
+        new(nexusModsModId: 4, name: "Demo Mod 4", ownerNexusModsUserIds: Array.Empty<int>(), allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
     };
     private static List<CrashReportModel2>? _crashReports;
 
     public static Task<ProfileModel> GetProfile() => Task.FromResult(_profile);
-    public static IAsyncEnumerable<NexusModsModModel> GetMods() => _mods.ToAsyncEnumerable();
+    public static IAsyncEnumerable<UserLinkedModModel> GetMods() => _mods.ToAsyncEnumerable();
     public static async IAsyncEnumerable<CrashReportModel2> GetCrashReports(IHttpClientFactory factory)
     {
         static string GetException(ExceptionModel? exception, bool inner = false) => exception is null ? string.Empty : $"""

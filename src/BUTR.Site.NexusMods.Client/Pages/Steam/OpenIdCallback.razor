@@ -82,7 +82,7 @@
 
         var queries = _navigationManager.QueryString();
         
-        await _steamClient.LinkAsync(queries: queries.AllKeys.Select(x => new { Key = x, Value = queries[x] }).ToDictionary(x => x.Key!, x => x.Value!));
+        await _steamClient.AddLinkAsync(queries: queries.AllKeys.Select(x => new { Key = x, Value = queries[x] }).ToDictionary(x => x.Key!, x => x.Value!));
         _ = await _authenticationProvider.ValidateAsync();
 
         if (await _steamClient.GetUserInfoAsync() is { Value: var userInfo })

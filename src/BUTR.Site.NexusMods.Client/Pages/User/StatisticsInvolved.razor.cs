@@ -74,7 +74,7 @@ public partial class StatisticsInvolved
         await _lineChart.Clear();
         if (_modIds.Count == 0) return;
 
-        var data = (await StatisticsClient.InvolvedAsync(_gameVersions, _modIds, Array.Empty<string>())).Value ?? Array.Empty<GameStorage>();
+        var data = (await StatisticsClient.GetInvolvedModulesAsync(_gameVersions, _modIds, Array.Empty<string>())).Value ?? Array.Empty<StatisticsInvolvedModuleScoresForGameVersionModel>();
 
         var allGameVersions = data.Select(x => x.GameVersion).ToArray();
         var allModIdsWithVersions = data
@@ -124,14 +124,14 @@ public partial class StatisticsInvolved
     {
         if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested)
         {
-            _gameVersionsAutocompleteValues = (await StatisticsClient.AutocompleteGameVersionAsync(autocompleteReadDataEventArgs.SearchValue)).Value ?? Array.Empty<string>();
+            _gameVersionsAutocompleteValues = (await StatisticsClient.GetAutocompleteGameVersionsAsync(autocompleteReadDataEventArgs.SearchValue)).Value ?? Array.Empty<string>();
         }
     }
     private async Task OnHandleModIdReadData(AutocompleteReadDataEventArgs autocompleteReadDataEventArgs)
     {
         if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested && autocompleteReadDataEventArgs.SearchValue.Length >= 3)
         {
-            _modIdsAutocompleteValues = (await StatisticsClient.AutocompleteModuleIdAsync(autocompleteReadDataEventArgs.SearchValue)).Value ?? Array.Empty<string>();
+            _modIdsAutocompleteValues = (await StatisticsClient.GetAutocompleteModuleIdsAsync(autocompleteReadDataEventArgs.SearchValue)).Value ?? Array.Empty<string>();
         }
     }
 

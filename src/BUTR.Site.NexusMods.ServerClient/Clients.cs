@@ -42,7 +42,7 @@ public partial class CrashReportsClient
     public virtual async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery body, CancellationToken ct = default)
     {
         var urlBuilder_ = new StringBuilder();
-        urlBuilder_.Append("api/v1/CrashReports/PaginatedStreaming");
+        urlBuilder_.Append("api/v1/crash-reports/paginated-streaming");
 
         var client_ = _httpClient;
         var disposeClient_ = false;
@@ -250,7 +250,7 @@ public partial class ModsAnalyzerClient
     }
 }
 
-public partial record NexusModsModModel
+public partial record UserLinkedModModel
 {
     public string Url(string gameDomain) => $"https://nexusmods.com/{gameDomain}/mods/{NexusModsModId}";
 }
@@ -267,7 +267,7 @@ public partial record NexusModsArticleModel
     public string AuthorUrl() => $"https://nexusmods.com/users/{NexusModsUserId}";
 }
 
-public partial record ExposedNexusModsModModel
+public partial record LinkedByExposureNexusModsModModelsModel
 {
     public string Url(string gameDomain) => $"https://nexusmods.com/{gameDomain}/mods/{NexusModsModId}";
 }

@@ -45,7 +45,7 @@
                                 TextColor="@TextColor.White"
                                 Type="@ButtonType.Link"
                                 To="@NexusModsTokenUrl">
-                            Log In via NexusMods Token
+                            Log In via NexusMods API Key
                         </Button>
                     </Row>
                 </CardBody>
@@ -67,11 +67,11 @@
 
 
     private string NexusModsSSOUrl => $"login-nexusmods-sso{new Uri(_navigationManager.Uri).Query}";
-    private string NexusModsTokenUrl => $"login-nexusmods-token{new Uri(_navigationManager.Uri).Query}";
+    private string NexusModsTokenUrl => $"login-nexusmods-apikey{new Uri(_navigationManager.Uri).Query}";
 
     private async void OnDemoLogin()
     {
-        if (await _authenticationProvider.AuthenticateAsync("", "demo") is not null)
+        if (await _authenticationProvider.AuthenticateWithApiKeyAsync("", "demo") is not null)
         {
             _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "");
         }

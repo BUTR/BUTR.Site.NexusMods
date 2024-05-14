@@ -68,20 +68,15 @@ public sealed class DiscordClient : IDiscordClient
 
     public DiscordClient(HttpClient httpClient, IOptions<DiscordOptions> options)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+        _httpClient = httpClient;
+        _options = options.Value;
     }
 
     public async Task<bool> SetGlobalMetadataAsync(IReadOnlyList<DiscordGlobalMetadata> metadata, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Put, $"v10/applications/{_options.ClientId}/role-connections/metadata")
-        {
-            Headers =
-            {
-                Authorization = new AuthenticationHeaderValue("Bot", _options.BotToken),
-            },
-            Content = new StringContent(JsonSerializer.Serialize(metadata), Encoding.UTF8, "application/json"),
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"v10/applications/{_options.ClientId}/role-connections/metadata");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bot", _options.BotToken);
+        request.Content = new StringContent(JsonSerializer.Serialize(metadata), Encoding.UTF8, "application/json");
         using var response = await _httpClient.SendAsync(request, ct);
         return response.IsSuccessStatusCode;
     }
@@ -104,17 +99,15 @@ public sealed class DiscordClient : IDiscordClient
 
     public async Task<DiscordOAuthTokens?> CreateTokensAsync(string code, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "v10/oauth2/token")
+        using var request = new HttpRequestMessage(HttpMethod.Post, "v10/oauth2/token");
+        request.Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>
         {
-            Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>
-            {
-                new("client_id", _options.ClientId),
-                new("client_secret", _options.ClientSecret),
-                new("redirect_uri", _options.RedirectUri),
-                new("grant_type", "authorization_code"),
-                new("code", code),
-            })
-        };
+            new("client_id", _options.ClientId),
+            new("client_secret", _options.ClientSecret),
+            new("redirect_uri", _options.RedirectUri),
+            new("grant_type", "authorization_code"),
+            new("code", code),
+        });
         using var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return null;
         var tokens = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
@@ -146,13 +139,8 @@ public sealed class DiscordClient : IDiscordClient
 
     public async Task<DiscordUserInfo?> GetUserInfoAsync(DiscordOAuthTokens tokens, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, "v10/oauth2/@me")
-        {
-            Headers =
-            {
-                Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken)
-            }
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Get, "v10/oauth2/@me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
         using var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return null;
         return await JsonSerializer.DeserializeAsync<DiscordUserInfo>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
@@ -160,14 +148,9 @@ public sealed class DiscordClient : IDiscordClient
 
     public async Task<bool> PushMetadataAsync<T>(DiscordOAuthTokens tokens, T metadata, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Put, $"v10/users/@me/applications/{_options.ClientId}/role-connection")
-        {
-            Headers =
-            {
-                Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken)
-            },
-            Content = JsonContent.Create(new PutMetadata<T>("BUTR", metadata)),
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"v10/users/@me/applications/{_options.ClientId}/role-connection");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        request.Content = JsonContent.Create(new PutMetadata<T>("BUTR", metadata));
         using var response = await _httpClient.SendAsync(request, ct);
         return response.IsSuccessStatusCode;
     }

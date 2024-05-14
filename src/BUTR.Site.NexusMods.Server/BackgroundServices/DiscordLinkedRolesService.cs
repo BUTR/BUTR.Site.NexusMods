@@ -1,15 +1,15 @@
 using BUTR.Site.NexusMods.DependencyInjection;
+using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Services;
+namespace BUTR.Site.NexusMods.Server.BackgroundServices;
 
 [HostedService]
 public sealed class DiscordLinkedRolesService : BackgroundService
@@ -19,8 +19,8 @@ public sealed class DiscordLinkedRolesService : BackgroundService
 
     public DiscordLinkedRolesService(ILogger<DiscordLinkedRolesService> logger, IServiceScopeFactory scopeFactory)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+        _logger = logger;
+        _scopeFactory = scopeFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

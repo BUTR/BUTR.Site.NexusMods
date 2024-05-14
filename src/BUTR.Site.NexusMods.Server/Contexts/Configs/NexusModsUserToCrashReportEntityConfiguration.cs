@@ -12,15 +12,20 @@ public class NexusModsUserToCrashReportEntityConfiguration : BaseEntityConfigura
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToCrashReportEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_crash_report_id").HasValueObjectConversion().ValueGeneratedNever();
-        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_id").HasValueObjectConversion();
+        builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_crash_report_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_id").HasVogenConversion();
         builder.Property(x => x.Status).HasColumnName("status");
         builder.Property(x => x.Comment).HasColumnName("comment");
-        builder.ToTable("nexusmods_user_crash_report", "nexusmods_user").HasKey(nameof(NexusModsUserToCrashReportEntity.TenantId), nameof(NexusModsUserEntity.NexusModsUserId), nameof(NexusModsUserToCrashReportEntity.CrashReportId));
+        builder.ToTable("nexusmods_user_crash_report", "nexusmods_user").HasKey(x => new
+        {
+            x.TenantId,
+            x.NexusModsUserId,
+            x.CrashReportId,
+        });
 
         builder.HasOne(x => x.NexusModsUser)
             .WithMany(x => x.ToCrashReports)
-            .HasForeignKey(nameof(NexusModsUserEntity.NexusModsUserId))
+            .HasForeignKey(x => x.NexusModsUserId)
             .HasPrincipalKey(x => x.NexusModsUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -29,8 +34,6 @@ public class NexusModsUserToCrashReportEntityConfiguration : BaseEntityConfigura
             .HasForeignKey(x => new { x.TenantId, x.CrashReportId })
             .HasPrincipalKey(x => new { x.TenantId, x.CrashReportId })
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(x => x.NexusModsUser).AutoInclude();
 
         base.ConfigureModel(builder);
     }

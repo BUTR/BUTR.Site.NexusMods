@@ -31,6 +31,7 @@ public sealed record NexusModsUserEntity : IEntity
         NexusModsUserId = userId;
         Name = name is { } nameVal ? new()
         {
+            NexusModsUserId = userId,
             NexusModsUser = this,
             Name = nameVal,
         } : null;
@@ -38,6 +39,7 @@ public sealed record NexusModsUserEntity : IEntity
         {
             ToRoles.Add(new()
             {
+                NexusModsUserId = userId,
                 NexusModsUser = this,
                 TenantId = tenantVal,
                 Role = roleVal,

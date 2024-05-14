@@ -4,8 +4,6 @@ using BUTR.Site.NexusMods.Server.Models.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-using System;
-
 namespace BUTR.Site.NexusMods.Server.Contexts.Configs;
 
 public abstract class BaseEntityConfigurationWithTenant<TEntity> : BaseEntityConfiguration<TEntity> where TEntity : class, IEntityWithTenant
@@ -14,12 +12,12 @@ public abstract class BaseEntityConfigurationWithTenant<TEntity> : BaseEntityCon
 
     protected BaseEntityConfigurationWithTenant(ITenantContextAccessor tenantContextAccessor)
     {
-        _tenantContextAccessor = tenantContextAccessor ?? throw new ArgumentNullException(nameof(tenantContextAccessor));
+        _tenantContextAccessor = tenantContextAccessor;
     }
 
     protected override void ConfigureModel(EntityTypeBuilder<TEntity> builder)
     {
-        builder.Property(x => x.TenantId).HasColumnName("tenant").HasValueObjectConversion();
+        builder.Property(x => x.TenantId).HasColumnName("tenant").HasVogenConversion();
         builder.HasQueryFilter(x => x.TenantId.Equals(_tenantContextAccessor.Current));
 
         builder.HasOne<TenantEntity>()

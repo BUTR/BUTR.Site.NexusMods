@@ -37,20 +37,15 @@ public sealed class GOGEmbedClient : IGOGEmbedClient
 
     public GOGEmbedClient(HttpClient httpClient, IOptions<JsonSerializerOptions> jsonSerializerOptions)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(httpClient));
+        _httpClient = httpClient;
+        _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
     public async Task<GOGUserInfo?> GetUserInfoAsync(string token, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/userData.json")
-        {
-            Headers =
-            {
-                Authorization = new AuthenticationHeaderValue("Bearer", token),
-                Accept = { new MediaTypeWithQualityHeaderValue("application/json") }
-            }
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/userData.json");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         using var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return null;
 
@@ -61,14 +56,9 @@ public sealed class GOGEmbedClient : IGOGEmbedClient
 
     public async Task<GamesOwned?> GetGamesAsync(string token, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/user/data/games")
-        {
-            Headers =
-            {
-                Authorization = new AuthenticationHeaderValue("Bearer", token),
-                Accept = { new MediaTypeWithQualityHeaderValue("application/json") }
-            }
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/user/data/games");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         using var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return null;
 

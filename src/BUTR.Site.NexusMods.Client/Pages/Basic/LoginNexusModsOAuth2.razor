@@ -1,0 +1,25 @@
+﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Anonymous}")]
+@page "/login-nexusmods-oauth2"
+
+@inject IAuthenticationClient _authenticationClient;
+@inject ILocalStorageService _localStorage;
+@inject NavigationManager _navigationManager;
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        var response = await _authenticationClient.GetOAuthUrlAsync();
+        if (response.Value?.Url is null)
+        {
+            _navigationManager.NavigateTo("login");
+            return;
+        }
+        
+        await _localStorage.SetItemAsync("nexusmods_state", response.Value.State);
+        _navigationManager.NavigateTo(response.Value.Url);
+    }
+
+}

@@ -1,0 +1,56 @@
+﻿@attribute [Authorize(Roles = $"{ApplicationRoles.Anonymous}")]
+@page "/oauth-callback"
+
+@inject NavigationManager _navigationManager;
+@inject AuthenticationProvider _authenticationProvider;
+@inject ILocalStorageService _localStorage;
+@inject INotificationService _notificationService
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (!await _localStorage.ContainKeyAsync("nexusmods_state"))
+        {
+            await _notificationService.Error("Failed to authenticate! State verification failed", "Error!");
+            return;
+        }
+
+        var queries = _navigationManager.QueryString();
+        var queryStatRaw = queries["state"];
+        var queryCode = queries["code"];
+
+        try
+        {
+            var state = await _localStorage.GetItemAsync<Guid>("nexusmods_state");
+            if (!Guid.TryParse(queryStatRaw, out var queryState) || state != queryState)
+            {
+                await _notificationService.Error("Failed to authenticate! State verification failed", "Error!");
+                return;
+            }
+
+            try
+            {
+                if (await _authenticationProvider.AuthenticateWithOAuth2Async(queryCode, queryState, "nexusmods") is null)
+                {
+                    await _notificationService.Error("Failed to authenticate!", "Error!");
+                }
+                else
+                {
+                    _navigationManager.NavigateTo(_navigationManager.QueryString("returnUrl") ?? "");
+                }
+            }
+            catch
+            {
+                await _notificationService.Error("Failed to authenticate!", "Error!");
+            }
+        }
+        finally
+        {
+            await _localStorage.RemoveItemAsync("nexusmods_state");
+        }
+    }
+
+}

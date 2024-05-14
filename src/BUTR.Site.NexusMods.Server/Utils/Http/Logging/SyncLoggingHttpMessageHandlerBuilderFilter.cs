@@ -13,8 +13,8 @@ internal sealed class SyncLoggingHttpMessageHandlerBuilderFilter : IHttpMessageH
 
     public SyncLoggingHttpMessageHandlerBuilderFilter(ILoggerFactory loggerFactory, IOptionsMonitor<HttpClientFactoryOptions> optionsMonitor)
     {
-        _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-        _optionsMonitor = optionsMonitor ?? throw new ArgumentNullException(nameof(optionsMonitor));
+        _loggerFactory = loggerFactory;
+        _optionsMonitor = optionsMonitor;
     }
 
     public Action<HttpMessageHandlerBuilder> Configure(Action<HttpMessageHandlerBuilder> next)

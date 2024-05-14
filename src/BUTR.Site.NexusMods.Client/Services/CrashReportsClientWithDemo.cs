@@ -36,8 +36,8 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
     public CrashReportsClientWithDemo(IServiceProvider serviceProvider, ITokenContainer tokenContainer, IHttpClientFactory httpClientFactory)
     {
         _implementation = Program.ConfigureClient(serviceProvider, (http, opt) => new CrashReportsClientWithStreaming(http, opt));
-        _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
-        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+        _tokenContainer = tokenContainer;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<PagingStreamingData<CrashReportModel2>> PaginatedStreamingAsync(PaginatedQuery body, CancellationToken ct = default)
@@ -49,14 +49,11 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
             return PagingStreamingData<CrashReportModel2>.Create(new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count), crashReports.ToAsyncEnumerable(), PagingAdditionalMetadata.Empty);
         }
 
-        return await _implementation.PaginatedStreamingAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sortings), ct);
+        return await _implementation.PaginatedStreamingAsync(body, ct);
     }
 
-    public async Task<CrashReportModel2PagingDataApiResultModel> PaginatedAsync(PaginatedQuery? body, CancellationToken ct)
+    public async Task<CrashReportModel2PagingDataApiResultModel> GetPaginatedAsync(PaginatedQuery body, CancellationToken ct)
     {
-        if (body is null)
-            return await _implementation.PaginatedAsync(body, ct);
-
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
@@ -64,22 +61,22 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
             return new CrashReportModel2PagingDataApiResultModel(new CrashReportModel2PagingData(PagingAdditionalMetadata.Empty, crashReports, new PagingMetadata(1, (int) Math.Ceiling((double) crashReports.Count / body.PageSize), body.PageSize, crashReports.Count)), null!);
         }
 
-        return await _implementation.PaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, body.Filters, body.Sortings), ct);
+        return await _implementation.GetPaginatedAsync(body, ct);
     }
 
-    public async Task<StringIQueryableApiResultModel> AutocompleteAsync(string? modId, CancellationToken ct)
+    public async Task<StringIListApiResultModel> GetAutocompleteModuleIdsAsync(string modId, CancellationToken ct)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var crashReports = await DemoUser.GetCrashReports(_httpClientFactory).ToListAsync(ct);
-            return new StringIQueryableApiResultModel(crashReports.SelectMany(x => x.InvolvedModules).Where(x => x.StartsWith(modId ?? string.Empty)).ToArray(), null!);
+            return new StringIListApiResultModel(crashReports.SelectMany(x => x.InvolvedModules).Where(x => x.StartsWith(modId ?? string.Empty)).ToArray(), null!);
         }
 
-        return new StringIQueryableApiResultModel((await _implementation.AutocompleteAsync(modId, ct)).Value ?? Array.Empty<string>(), null!);
+        return new StringIListApiResultModel((await _implementation.GetAutocompleteModuleIdsAsync(modId, ct)).Value ?? Array.Empty<string>(), null!);
     }
 
-    public async Task<StringApiResultModel> UpdateAsync(CrashReportModel2? body, CancellationToken ct)
+    public async Task<StringApiResultModel> UpdateAsync(Guid crash_report_id, CrashReportStatus? status = null, string? comment = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
@@ -87,6 +84,6 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
             return new StringApiResultModel("demo", null!);
         }
 
-        return await _implementation.UpdateAsync(body, ct);
+        return await _implementation.UpdateAsync(crash_report_id, status, comment, ct);
     }
 }

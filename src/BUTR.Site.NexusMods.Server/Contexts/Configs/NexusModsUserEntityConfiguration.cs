@@ -10,8 +10,11 @@ public class NexusModsUserEntityConfiguration : BaseEntityConfiguration<NexusMod
 {
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserEntity> builder)
     {
-        builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_id").HasValueObjectConversion().ValueGeneratedNever();
-        builder.ToTable("nexusmods_user", "nexusmods_user").HasKey(x => x.NexusModsUserId);
+        builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_id").HasVogenConversion().ValueGeneratedNever();
+        builder.ToTable("nexusmods_user", "nexusmods_user").HasKey(x => new
+        {
+            x.NexusModsUserId
+        });
 
         base.ConfigureModel(builder);
     }

@@ -17,6 +17,9 @@ public static class TenantUtils
     public const int StardewValleyId = 3;
     public const string StardewValleyName = "Stardew Valley";
     public const string StardewValleyGameDomain = "stardewvalley";
+    public const int ValheimId = 3;
+    public const string ValheimName = "Valheim";
+    public const string ValheimGameDomain = "valheim";
 
     private sealed record TenantMetadata(int Id, string NexusModsId, string Name);
 
@@ -25,6 +28,7 @@ public static class TenantUtils
         new(BannerlordId, BannerlordGameDomain, BannerlordName),
         new(RimworldId, RimworldGameDomain, RimworldName),
         new(StardewValleyId, StardewValleyGameDomain, StardewValleyName),
+        new(ValheimId, ValheimGameDomain, ValheimName),
     };
 
     public static int? FromGameDomainToTenant(string gameDomain) => TenantMetadatas.Find(x => string.Equals(x.NexusModsId, gameDomain, StringComparison.Ordinal))?.Id;

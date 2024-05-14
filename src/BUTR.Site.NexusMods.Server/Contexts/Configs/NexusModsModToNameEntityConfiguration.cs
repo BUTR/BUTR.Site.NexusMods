@@ -12,17 +12,19 @@ public class NexusModsModToNameEntityConfiguration : BaseEntityConfigurationWith
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsModToNameEntity> builder)
     {
-        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_name_id").HasValueObjectConversion().ValueGeneratedNever();
+        builder.Property(x => x.NexusModsModId).HasColumnName("nexusmods_mod_name_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.Name).HasColumnName("name");
-        builder.ToTable("nexusmods_mod_name", "nexusmods_mod").HasKey(nameof(NexusModsModToNameEntity.TenantId), nameof(NexusModsModEntity.NexusModsModId));
+        builder.ToTable("nexusmods_mod_name", "nexusmods_mod").HasKey(x => new
+        {
+            x.TenantId,
+            x.NexusModsModId,
+        });
 
         builder.HasOne(x => x.NexusModsMod)
             .WithOne(x => x.Name)
-            .HasForeignKey<NexusModsModToNameEntity>(nameof(NexusModsModToNameEntity.TenantId), nameof(NexusModsModEntity.NexusModsModId))
+            .HasForeignKey<NexusModsModToNameEntity>(x => new { x.TenantId, x.NexusModsModId })
             .HasPrincipalKey<NexusModsModEntity>(x => new { x.TenantId, x.NexusModsModId })
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(x => x.NexusModsMod).AutoInclude();
 
         base.ConfigureModel(builder);
     }

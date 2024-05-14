@@ -3,15 +3,14 @@ namespace BUTR.Site.NexusMods.Server.Models;
 using TType = NexusModsGameDomain;
 using TValueType = String;
 
-[TypeConverter(typeof(VogenTypeConverter<TType, TValueType>))]
-[JsonConverter(typeof(VogenJsonConverter<TType, TValueType>))]
-[ValueObject<TValueType>(conversions: Conversions.None, deserializationStrictness: DeserializationStrictness.AllowKnownInstances)]
-public readonly partial record struct NexusModsGameDomain : IVogen<TType, TValueType>, IHasDefaultValue<TType>
+[ValueObject<TValueType>(conversions: Conversions.SystemTextJson | Conversions.TypeConverter, deserializationStrictness: DeserializationStrictness.AllowKnownInstances)]
+public readonly partial struct NexusModsGameDomain : IVogen<TType, TValueType>, IHasDefaultValue<TType>
 {
     public static readonly TType None = From(string.Empty);
     public static readonly TType Bannerlord = From(TenantUtils.BannerlordGameDomain);
     public static readonly TType Rimworld = From(TenantUtils.RimworldGameDomain);
     public static readonly TType StardewValley = From(TenantUtils.StardewValleyGameDomain);
+    public static readonly TType Valheim = From(TenantUtils.ValheimGameDomain);
 
     public static TType DefaultValue => None;
 
@@ -22,12 +21,11 @@ public readonly partial record struct NexusModsGameDomain : IVogen<TType, TValue
             yield return Bannerlord;
             yield return Rimworld;
             yield return StardewValley;
+            yield return Valheim;
         }
     }
 
     public static TType Copy(TType instance) => instance with { };
-    public static bool IsInitialized(TType instance) => instance._isInitialized;
-    public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);
 
     public static bool TryParse(string urlRaw, out TType gameDomain)
     {

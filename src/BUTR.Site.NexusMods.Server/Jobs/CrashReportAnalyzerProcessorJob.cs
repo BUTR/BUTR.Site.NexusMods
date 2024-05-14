@@ -1,9 +1,8 @@
-using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Repositories;
 
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -24,8 +23,8 @@ public sealed class CrashReportAnalyzerProcessorJob : IJob
 
     public CrashReportAnalyzerProcessorJob(ILogger<CrashReportAnalyzerProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
+        _logger = logger;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -36,91 +35,38 @@ public sealed class CrashReportAnalyzerProcessorJob : IJob
 
         foreach (var tenant in TenantId.Values)
         {
-            await using var scope = _serviceScopeFactory.CreateAsyncScope();
-
-            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
-            tenantContextAccessor.Current = tenant;
-
-            try
-            {
-                await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            await using var scope = _serviceScopeFactory.CreateAsyncScope().WithTenant(tenant);
+            await HandleTenantAsync(scope, tenant, ct);
         }
 
         context.Result = "Updated Crash Report Statistics Data";
         context.SetIsSuccess(true);
     }
 
-    private static async Task HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    private async Task HandleTenantAsync(AsyncServiceScope scope, TenantId tenant, CancellationToken ct)
     {
-        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
-        var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
-        var entityFactory = dbContextWrite.GetEntityFactory();
-        await using var _ = await dbContextWrite.CreateSaveScopeAsync();
+        var unitOfWorkFactory = scope.ServiceProvider.GetRequiredService<IUnitOfWorkFactory>();
+        await using var unitOfRead = unitOfWorkFactory.CreateUnitOfRead();
+        await using var unitOfWrite = unitOfWorkFactory.CreateUnitOfWrite();
 
-        var allModVersionsQuery = dbContextRead.CrashReportModuleInfos
-            .GroupBy(x => new { x.Module.ModuleId, x.Version })
-            .Select(x => new { x.Key.ModuleId, x.Key.Version })
-            .Distinct();
+        var statisticsData = await unitOfRead.CrashReportModuleInfos.GetAllStatisticsAsync(ct);
 
-        var modCountsQuery = dbContextRead.CrashReportModuleInfos
-            .Include(x => x.ToCrashReport!)
-            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.Module.ModuleId, x.Version })
-            .Select(x => new { x.Key.GameVersion, x.Key.ModuleId, x.Key.Version, Count = x.Count() })
-            .Distinct();
-
-        var involvedModCountsQuery = dbContextRead.CrashReportModuleInfos
-            .Include(x => x.ToCrashReport!)
-            .Where(x => x.IsInvolved)
-            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.Module.ModuleId, x.Version })
-            .Select(x => new { x.Key.GameVersion, x.Key.ModuleId, x.Key.Version, Count = x.Count() })
-            .Distinct();
-
-        var notInvolvedModCountsQuery = dbContextRead.CrashReportModuleInfos
-            .Include(x => x.ToCrashReport!)
-            .Where(x => !x.IsInvolved)
-            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.Module.ModuleId, x.Version })
-            .Select(x => new { x.Key.GameVersion, x.Key.ModuleId, x.Key.Version, Count = x.Count() })
-            .Distinct();
-
-        var query =
-            from allModVersios in allModVersionsQuery
-            join modCounts in modCountsQuery on new { allModVersios.ModuleId, allModVersios.Version } equals new { modCounts.ModuleId, modCounts.Version }
-            join involvedModCounts in involvedModCountsQuery on new { allModVersios.ModuleId, allModVersios.Version, modCounts.GameVersion } equals new { involvedModCounts.ModuleId, involvedModCounts.Version, involvedModCounts.GameVersion }
-            join notInvolvedModCounts in notInvolvedModCountsQuery on new { allModVersios.ModuleId, allModVersios.Version, modCounts.GameVersion } equals new { notInvolvedModCounts.ModuleId, notInvolvedModCounts.Version, notInvolvedModCounts.GameVersion }
-            select new
-            {
-                GameVersion = modCounts.GameVersion,
-                ModuleId = allModVersios.ModuleId,
-                ModuleVersion = allModVersios.Version,
-                InvolvedCount = involvedModCounts.Count,
-                NotInvolvedCount = notInvolvedModCounts.Count,
-                TotalCount = modCounts.Count,
-                Value = involvedModCounts.Count,
-                CrashScore = (double) involvedModCounts.Count / (double) modCounts.Count
-            };
-
-        var statisticsCrashScoreInvolved = await query.AsAsyncEnumerable().Select(x => new StatisticsCrashScoreInvolvedEntity
+        unitOfWrite.StatisticsCrashScoreInvolveds.Remove(x => true);
+        unitOfWrite.StatisticsCrashScoreInvolveds.UpsertRange(statisticsData.Select(x => new StatisticsCrashScoreInvolvedEntity
         {
             TenantId = tenant,
             StatisticsCrashScoreInvolvedId = Guid.NewGuid(),
             GameVersion = x.GameVersion,
-            Module = entityFactory.GetOrCreateModule(x.ModuleId),
+            ModuleId = x.ModuleId,
+            Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(x.ModuleId),
             ModuleVersion = x.ModuleVersion,
             InvolvedCount = x.InvolvedCount,
             NotInvolvedCount = x.NotInvolvedCount,
             TotalCount = x.TotalCount,
             RawValue = x.Value,
             Score = x.CrashScore,
-        }).ToArrayAsync(ct);
+        }).ToList());
 
-        await dbContextWrite.StatisticsCrashScoreInvolveds.SynchronizeOnSaveAsync(statisticsCrashScoreInvolved);
-        // Disposing the DBContext will save the data
+        await unitOfWrite.SaveChangesAsync(ct);
     }
 }

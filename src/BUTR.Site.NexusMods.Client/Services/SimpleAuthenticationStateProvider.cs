@@ -21,8 +21,8 @@ public sealed class SimpleAuthenticationStateProvider : AuthenticationStateProvi
 
     public SimpleAuthenticationStateProvider(ITokenContainer tokenContainer, AuthenticationProvider authenticationProvider)
     {
-        _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
-        _authenticationProvider = authenticationProvider ?? throw new ArgumentNullException(nameof(authenticationProvider));
+        _tokenContainer = tokenContainer;
+        _authenticationProvider = authenticationProvider;
         _tokenContainer.OnTokenChanged += ResetAuthenticationState;
         _task = GetAuthenticationStateInternalAsync();
     }

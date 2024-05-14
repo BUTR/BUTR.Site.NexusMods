@@ -30,7 +30,7 @@
     
     protected override async Task OnInitializedAsync()
     {
-        var response = await _recreateStacktraceClient.JsonAsync(Id, CancellationToken.None);
+        var response = await _recreateStacktraceClient.GetJsonAsync(Id, CancellationToken.None);
         if (response.Value is null) return;
         recreatedStacktraces = response.Value;
     }

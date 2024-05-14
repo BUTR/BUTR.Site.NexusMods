@@ -22,8 +22,8 @@ public sealed class GamePublicApiDiffController : ApiControllerBase
 
     public GamePublicApiDiffController(ILogger<GamePublicApiDiffController> logger, IDiffProvider diffProvider)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _diffProvider = diffProvider ?? throw new ArgumentNullException(nameof(diffProvider));
+        _logger = logger;
+        _diffProvider = diffProvider;
     }
 
     [HttpGet("List")]

@@ -23,7 +23,7 @@ public sealed class AssetsDelegatingHandler : DelegatingHandler
 
     public AssetsDelegatingHandler(BrotliDecompressorService brotliDecompressorService)
     {
-        _brotliDecompressorService = brotliDecompressorService ?? throw new ArgumentNullException(nameof(brotliDecompressorService));
+        _brotliDecompressorService = brotliDecompressorService;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)

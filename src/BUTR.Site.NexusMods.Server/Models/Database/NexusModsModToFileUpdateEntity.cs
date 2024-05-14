@@ -6,9 +6,10 @@ public sealed record NexusModsModToFileUpdateEntity : IEntityWithTenant
 {
     public required TenantId TenantId { get; init; }
 
+    public required NexusModsModId NexusModsModId { get; init; }
     public required NexusModsModEntity NexusModsMod { get; init; }
 
     public required DateTimeOffset LastCheckedDate { get; init; }
 
-    public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsMod.NexusModsModId, LastCheckedDate);
+    public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsModId, LastCheckedDate);
 }

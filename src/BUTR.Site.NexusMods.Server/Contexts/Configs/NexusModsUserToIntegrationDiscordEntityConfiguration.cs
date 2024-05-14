@@ -10,17 +10,18 @@ public class NexusModsUserToIntegrationDiscordEntityConfiguration : BaseEntityCo
 {
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToIntegrationDiscordEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_to_discord_id").HasValueObjectConversion().ValueGeneratedNever();
+        builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_to_discord_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.DiscordUserId).HasColumnName("discord_user_id");
-        builder.ToTable("nexusmods_user_to_integration_discord", "nexusmods_user").HasKey(nameof(NexusModsUserEntity.NexusModsUserId));
+        builder.ToTable("nexusmods_user_to_integration_discord", "nexusmods_user").HasKey(new[]
+        {
+            nameof(NexusModsUserEntity.NexusModsUserId)
+        });
 
         builder.HasOne(x => x.NexusModsUser)
             .WithOne(x => x.ToDiscord)
-            .HasForeignKey<NexusModsUserToIntegrationDiscordEntity>(nameof(NexusModsUserEntity.NexusModsUserId))
+            .HasForeignKey<NexusModsUserToIntegrationDiscordEntity>(x => x.NexusModsUserId)
             .HasPrincipalKey<NexusModsUserEntity>(x => x.NexusModsUserId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(x => x.NexusModsUser).AutoInclude();
 
         base.ConfigureModel(builder);
     }
