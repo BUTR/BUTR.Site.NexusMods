@@ -86,9 +86,8 @@ public sealed class NexusModsModFileProcessorJob : IJob
 
             try
             {
-                var apiKey = NexusModsApiKey.From(_nexusModsOptions.ApiKey);
                 var response = await _nexusModsAPIClient
-                    .GetModFileInfosFullAsync(gameDomain, modId, apiKey, ct);
+                    .GetModFileInfosFullAsync(gameDomain, modId, _nexusModsOptions.ApiKey, ct);
                 if (response is null)
                 {
                     notFoundMods++;
@@ -98,7 +97,7 @@ public sealed class NexusModsModFileProcessorJob : IJob
                     continue;
                 }
 
-                var infos = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modId, response.Files, apiKey, ct).ToArrayAsync(ct);
+                var infos = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modId, response.Files, _nexusModsOptions.ApiKey, ct).ToArrayAsync(ct);
                 var latestFileUpdate = DateTimeOffset.FromUnixTimeSeconds(response.Files.Select(x => x.UploadedTimestamp).Where(x => x is not null).Max() ?? 0).ToUniversalTime();
 
                 nexusModsModModuleEntities.AddRange(infos.Select(x => x.ModuleInfo).DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity

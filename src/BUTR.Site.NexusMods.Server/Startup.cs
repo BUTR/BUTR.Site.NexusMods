@@ -49,6 +49,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
+using BUTR.Site.NexusMods.Server.ValueObjects.Utils;
 
 namespace BUTR.Site.NexusMods.Server;
 

@@ -78,11 +78,10 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
         await using var unitOfWrite = unitOfWorkFactory.CreateUnitOfWrite();
 
         var gameDomain = tenant.ToGameDomain();
-        var apiKey = NexusModsApiKey.From(_nexusModsOptions.ApiKey);
-        
+
         var dateOneWeekAgo = DateTime.UtcNow.AddDays(-30);
         var updatesStoredWithinWeek = await unitOfRead.NexusModsModToFileUpdates.GetAllAsync(x => x.LastCheckedDate > dateOneWeekAgo, null, ct);
-        var updatedWithinWeek = await _nexusModsAPIClient.GetAllModUpdatesWeekAsync(gameDomain, apiKey, ct) ?? Array.Empty<NexusModsUpdatedModsResponse>();
+        var updatedWithinWeek = await _nexusModsAPIClient.GetAllModUpdatesWeekAsync(gameDomain, _nexusModsOptions.ApiKey, ct) ?? Array.Empty<NexusModsUpdatedModsResponse>();
         var newUpdates = updatedWithinWeek.Where(x =>
         {
             var latestFileUpdateDate = DateTimeOffset.FromUnixTimeSeconds(x.LatestFileUpdateTimestamp).ToUniversalTime();
@@ -100,12 +99,12 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
             {
                 if (ct.IsCancellationRequested) break;
 
-                if (await _nexusModsAPIClient.GetModFileInfosFullAsync(gameDomain, modUpdate.Id, apiKey, ct) is not { } response) continue;
+                if (await _nexusModsAPIClient.GetModFileInfosFullAsync(gameDomain, modUpdate.Id, _nexusModsOptions.ApiKey, ct) is not { } response) continue;
 
                 var updates = response.FileUpdates.Where(x => DateTimeOffset.FromUnixTimeSeconds(x.UploadedTimestamp) > dateOneWeekAgo).ToArray();
                 if (updates.Length == 0) continue;
 
-                var infos = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modUpdate.Id, response.Files.Where(x => updates.Any(y => y.NewId == x.FileId)), apiKey, ct).ToArrayAsync(ct);
+                var infos = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modUpdate.Id, response.Files.Where(x => updates.Any(y => y.NewId == x.FileId)), _nexusModsOptions.ApiKey, ct).ToArrayAsync(ct);
                 var lastUpdateTime = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).ToUniversalTime();
 
                 unitOfWrite.NexusModsModModules.UpsertRange(infos.Select(x => x.ModuleInfo).DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
