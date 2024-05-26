@@ -45,7 +45,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -95,6 +94,7 @@ public sealed partial class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        Console.WriteLine("Test1");
         var assemblyName = typeof(Startup).Assembly.GetName();
         var userAgent = $"{assemblyName.Name ?? "ERROR"} v{assemblyName.Version?.ToString() ?? "ERROR"} (github.com/BUTR)";
 
@@ -108,6 +108,7 @@ public sealed partial class Startup
         var steamAPISection = _configuration.GetSection(SteamAPISectionName);
         var depotDownloaderSection = _configuration.GetSection(DepotDownloaderSectionName);
 
+        Console.WriteLine("Test2");
         services.AddOptions<JsonSerializerOptions>().Configure(opt => Configure(opt));
         services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>().Bind(connectionStringSection);
         services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>().Bind(crashReporterSection);
@@ -119,6 +120,7 @@ public sealed partial class Startup
         services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>().Bind(steamAPISection);
         services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>().Bind(depotDownloaderSection);
 
+        Console.WriteLine("Test3");
         services.AddHttpClient(string.Empty).ConfigureHttpClient((_, client) =>
         {
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
@@ -188,6 +190,7 @@ public sealed partial class Startup
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }).AddPolicyHandler(GetRetryPolicy());
 
+        Console.WriteLine("Test4");
         services.AddQuartz(opt =>
         {
             opt.AddJobListener<IQuartzEventProviderService>(sp => sp.GetRequiredService<IQuartzEventProviderService>());
@@ -230,20 +233,23 @@ public sealed partial class Startup
 
         services.AddMemoryCache();
 
-
-
+        
+        Console.WriteLine("Test5");
         var types = typeof(Startup).Assembly.GetTypes().Where(x => x is { IsAbstract: false, BaseType: { IsGenericType: true } }).ToList();
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfigurationWithTenant<>)))
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfiguration<>)))
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
 
+        Console.WriteLine("Tes6");
         services.AddDbContext<BaseAppDbContext>(ServiceLifetime.Scoped);
         services.AddDbContextFactory<AppDbContextRead>(lifetime: ServiceLifetime.Scoped);
         services.AddDbContextFactory<AppDbContextWrite>(lifetime: ServiceLifetime.Scoped);
 
+        Console.WriteLine("Test7");
         services.AddNexusModsDefaultServices();
 
+        Console.WriteLine("Test8");
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHttpMessageHandlerBuilderFilter, SyncLoggingHttpMessageHandlerBuilderFilter>());
 
         services.AddAuthentication(ButrNexusModsAuthSchemeConstants.AuthScheme).AddNexusMods(options =>
@@ -252,13 +258,16 @@ public sealed partial class Startup
             options.EncryptionKey = opts?.EncryptionKey ?? string.Empty;
         });
 
+        Console.WriteLine("Test9");
         services.AddStreamingMultipartResult();
 
         services.AddHttpContextAccessor();
+        Console.WriteLine("Test10");
         services.AddRouting(opt =>
         {
             opt.ConstraintMap["slugify"] = typeof(SlugifyParameterTransformer);
         });
+        Console.WriteLine("Test11");
         services.AddControllersWithAPIResult(opt =>
         {
             opt.Conventions.Add(new SlugifyActionConvention());
@@ -268,6 +277,7 @@ public sealed partial class Startup
 
             opt.ValueProviderFactories.Add(new ClaimsValueProviderFactory());
         }).AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
+        Console.WriteLine("Test12");
         services.AddResponseCompression(opt =>
         {
             opt.Providers.Add<BrotliCompressionProvider>();
@@ -282,6 +292,7 @@ public sealed partial class Startup
             options.Level = CompressionLevel.SmallestSize;
         });
 
+        Console.WriteLine("Test13");
         services.AddSwaggerGen(opt =>
         {
             opt.SwaggerDoc("v1", new OpenApiInfo
@@ -337,6 +348,7 @@ public sealed partial class Startup
                 opt.IncludeXmlComments(xmlFilePath, true);
         });
 
+        Console.WriteLine("Test14");
         services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -344,6 +356,7 @@ public sealed partial class Startup
 
         services.AddResponseCaching();
 
+        Console.WriteLine("Test15");
         services.AddCors(options =>
         {
             options.AddPolicy("Development", builder => builder
@@ -353,6 +366,7 @@ public sealed partial class Startup
             );
         });
 
+        Console.WriteLine("Test16");
         services.AddDistributedPostgreSqlCache(options =>
         {
             var opts = connectionStringSection.Get<ConnectionStringsOptions>();
