@@ -64,6 +64,7 @@ public static class Program
                 options.WaitForJobsToComplete = true;
             });
 
+            /*
             if (ctx.Configuration.GetSection("Oltp") is { } oltpSection)
             {
                 var openTelemetry = services.AddOpenTelemetry()
@@ -132,6 +133,7 @@ public static class Program
                         }));
                 }
             }
+            */
         })
         .ConfigureWebHostDefaults(webBuilder =>
         {
@@ -145,13 +147,14 @@ public static class Program
         }, writeToProviders: true)
         .ConfigureLogging((ctx, builder) =>
         {
+            /*
             var oltpSection = ctx.Configuration.GetSection("Oltp");
             if (oltpSection == null!) return;
 
             var loggingEndpoint = oltpSection.GetValue<string>("LoggingEndpoint");
             if (loggingEndpoint is null) return;
             var loggingProtocol = oltpSection.GetValue<OtlpExportProtocol>("LoggingProtocol");
-
+            
             builder.AddOpenTelemetry(o =>
             {
                 o.IncludeScopes = true;
@@ -163,5 +166,6 @@ public static class Program
                     options.Protocol = loggingProtocol;
                 });
             });
+            */
         });
 }
