@@ -134,9 +134,8 @@ CallStack:
                 await _ignoredCrashReportsChannel.Writer.WaitToWriteAsync(ct);
                 await _ignoredCrashReportsChannel.Writer.WriteAsync(new CrashReportIgnoredFileEntity
                 {
-                    CrashReportIgnoredFileId = default,
                     TenantId = tenant,
-                    Value = duplicateLink.FileId
+                    CrashReportFileId = duplicateLink.FileId
                 }, ct);
             }
 
@@ -238,9 +237,8 @@ CallStack:
             {
                 ignoredCrashReportFileEntities.Add(new CrashReportIgnoredFileEntity
                 {
-                    CrashReportIgnoredFileId = default,
                     TenantId = tenant,
-                    Value = fileId
+                    CrashReportFileId = fileId
                 });
                 continue;
             }
@@ -295,9 +293,8 @@ CallStack:
             .Concat(ignoredCrashReportFileEntities.ToAsyncEnumerable())
             .Concat(failedCrashReportFileIds.Select(x => new CrashReportIgnoredFileEntity
             {
-                CrashReportIgnoredFileId = default,
                 TenantId = tenant,
-                Value = x,
+                CrashReportFileId = x,
             }).ToAsyncEnumerable());
 
         unitOfWrite.CrashReports.UpsertRange(crashReportsBuilder);
