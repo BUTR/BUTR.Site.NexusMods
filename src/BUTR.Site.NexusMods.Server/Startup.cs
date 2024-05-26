@@ -107,7 +107,7 @@ public sealed partial class Startup
         var steamAPISection = _configuration.GetSection(SteamAPISectionName);
         var depotDownloaderSection = _configuration.GetSection(DepotDownloaderSectionName);
 
-        services.AddOptions<JsonSerializerOptions>().Configure(opt => Configure(opt));
+        //services.AddOptions<JsonSerializerOptions>().Configure(opt => Configure(opt));
         services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>().Bind(connectionStringSection);
         services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>().Bind(crashReporterSection);
         services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>().Bind(nexusModsSection);
