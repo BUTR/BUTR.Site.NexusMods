@@ -2,7 +2,6 @@ using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,13 +28,6 @@ namespace BUTR.Site.NexusMods.Server;
 
 public static class Program
 {
-    private static void PreBulkSaveChanges(DbContext context)
-    {
-        if (context is AppDbContextRead)
-            AppDbContextRead.WriteNotSupported();
-    }
-    private static void PreBulkOperation(DbContext context, object o) => PreBulkSaveChanges(context);
-
     public static async Task Main(string[] args)
     {
         Log.Logger = new LoggerConfiguration()
@@ -47,19 +39,6 @@ public static class Program
         try
         {
             Log.Information("Starting web application");
-
-            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkInsert = PreBulkOperation;
-            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkDelete = PreBulkOperation;
-            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkMerge = PreBulkOperation;
-            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkUpdate = PreBulkOperation;
-            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkSynchronize = PreBulkOperation;
-            Z.EntityFramework.Extensions.EntityFrameworkManager.PreBulkSaveChanges = PreBulkSaveChanges;
-            Z.EntityFramework.Extensions.EntityFrameworkManager.ContextFactory = context => context switch
-            {
-                AppDbContextRead appDbContextRead => appDbContextRead.New(),
-                AppDbContextWrite appDbContextWrite => appDbContextWrite.New(),
-                _ => null
-            };
 
             var host = CreateHostBuilder(args).Build();
 
