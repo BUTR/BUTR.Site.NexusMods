@@ -2,11 +2,13 @@ using Aragas.Extensions.Options.FluentValidation.Extensions;
 
 using FluentValidation;
 
+using System.Net.Http;
+
 namespace BUTR.Site.NexusMods.Server.Options;
 
 public sealed class NexusModsUsersOptionsValidator : AbstractValidator<NexusModsUsersOptions>
 {
-    public NexusModsUsersOptionsValidator()
+    public NexusModsUsersOptionsValidator(HttpClient client)
     {
         RuleFor(x => x.ClientId).NotEmpty();
         RuleFor(x => x.RedirectUri).NotEmpty().IsUri();

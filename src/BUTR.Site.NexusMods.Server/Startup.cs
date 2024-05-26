@@ -49,7 +49,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
-using Serilog;
 
 namespace BUTR.Site.NexusMods.Server;
 
@@ -109,13 +108,14 @@ public sealed partial class Startup
 
         services.AddOptions<JsonSerializerOptions>().Configure(opt => Configure(opt));
         services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>().Bind(connectionStringSection);
+        services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>().Bind(crashReporterSection);
+        services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>().Bind(nexusModsSection);
+        services.AddValidatedOptionsWithHttp<NexusModsUsersOptions, NexusModsUsersOptionsValidator>().Bind(nexusModsUsersSection);
         services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>().Bind(jwtSection);
         services.AddValidatedOptions<GitHubOptions, GitHubOptionsValidator>().Bind(gitHubSection);
         services.AddValidatedOptions<DiscordOptions, DiscordOptionsValidator>().Bind(discordSection);
         services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>().Bind(steamAPISection);
         services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>().Bind(depotDownloaderSection);
-        //services.AddValidatedOptions<NexusModsOptions, NexusModsOptionsValidator>().Bind(nexusModsSection);
-        services.AddValidatedOptions<NexusModsUsersOptions, NexusModsUsersOptionsValidator>().Bind(nexusModsUsersSection);
 
         services.AddHttpClient(string.Empty).ConfigureHttpClient((_, client) =>
         {
@@ -185,9 +185,7 @@ public sealed partial class Startup
             client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }).AddPolicyHandler(GetRetryPolicy());
-        return;
 
-        Log.Warning("Test4");
         services.AddQuartzHostedService(options =>
         {
             options.AwaitApplicationStarted = true;
@@ -236,22 +234,18 @@ public sealed partial class Startup
         services.AddMemoryCache();
 
         
-        Log.Warning("Test5");
         var types = typeof(Startup).Assembly.GetTypes().Where(x => x is { IsAbstract: false, BaseType: { IsGenericType: true } }).ToList();
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfigurationWithTenant<>)))
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfiguration<>)))
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
 
-        Log.Warning("Tes6");
         services.AddDbContext<BaseAppDbContext>(ServiceLifetime.Scoped);
         services.AddDbContextFactory<AppDbContextRead>(lifetime: ServiceLifetime.Scoped);
         services.AddDbContextFactory<AppDbContextWrite>(lifetime: ServiceLifetime.Scoped);
 
-        Log.Warning("Test7");
         services.AddNexusModsDefaultServices();
 
-        Log.Warning("Test8");
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHttpMessageHandlerBuilderFilter, SyncLoggingHttpMessageHandlerBuilderFilter>());
 
         services.AddAuthentication(ButrNexusModsAuthSchemeConstants.AuthScheme).AddNexusMods(options =>
@@ -260,16 +254,13 @@ public sealed partial class Startup
             options.EncryptionKey = opts?.EncryptionKey ?? string.Empty;
         });
 
-        Log.Warning("Test9");
         services.AddStreamingMultipartResult();
 
         services.AddHttpContextAccessor();
-        Log.Warning("Test10");
         services.AddRouting(opt =>
         {
             opt.ConstraintMap["slugify"] = typeof(SlugifyParameterTransformer);
         });
-        Log.Warning("Test11");
         services.AddControllersWithAPIResult(opt =>
         {
             opt.Conventions.Add(new SlugifyActionConvention());
@@ -279,7 +270,6 @@ public sealed partial class Startup
 
             opt.ValueProviderFactories.Add(new ClaimsValueProviderFactory());
         }).AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
-        Log.Warning("Test12");
         services.AddResponseCompression(opt =>
         {
             opt.Providers.Add<BrotliCompressionProvider>();
@@ -294,7 +284,6 @@ public sealed partial class Startup
             options.Level = CompressionLevel.SmallestSize;
         });
 
-        Log.Warning("Test13");
         services.AddSwaggerGen(opt =>
         {
             opt.SwaggerDoc("v1", new OpenApiInfo
@@ -350,7 +339,6 @@ public sealed partial class Startup
                 opt.IncludeXmlComments(xmlFilePath);
         });
 
-        Log.Warning("Test14");
         services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -358,7 +346,6 @@ public sealed partial class Startup
 
         services.AddResponseCaching();
 
-        Log.Warning("Test15");
         services.AddCors(options =>
         {
             options.AddPolicy("Development", builder => builder
@@ -368,7 +355,6 @@ public sealed partial class Startup
             );
         });
 
-        Log.Warning("Test16");
         services.AddDistributedPostgreSqlCache(options =>
         {
             var opts = connectionStringSection.Get<ConnectionStringsOptions>();
@@ -384,7 +370,6 @@ public sealed partial class Startup
 
     public void Configure(IApplicationBuilder app, IHostEnvironment env)
     {
-        return;
         app.UseForwardedHeaders();
 
         if (env.IsDevelopment())

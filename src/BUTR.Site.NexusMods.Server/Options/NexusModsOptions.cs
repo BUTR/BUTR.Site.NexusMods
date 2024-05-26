@@ -2,11 +2,13 @@ using BUTR.Site.NexusMods.Server.Models;
 
 using FluentValidation;
 
+using System.Net.Http;
+
 namespace BUTR.Site.NexusMods.Server.Options;
 
 public sealed class NexusModsOptionsValidator : AbstractValidator<NexusModsOptions>
 {
-    public NexusModsOptionsValidator()
+    public NexusModsOptionsValidator(HttpClient client)
     {
         RuleFor(x => x.ApiKey).NotEmpty();
     }
@@ -14,5 +16,6 @@ public sealed class NexusModsOptionsValidator : AbstractValidator<NexusModsOptio
 
 public sealed record NexusModsOptions
 {
-    public required NexusModsApiKey ApiKey { get; init; } = NexusModsApiKey.None;
+    // TODO:
+    public required string ApiKey { get; init; }
 }

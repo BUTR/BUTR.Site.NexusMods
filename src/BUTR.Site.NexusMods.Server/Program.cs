@@ -43,7 +43,7 @@ public static class Program
             var host = CreateHostBuilder(args).Build();
 
             await host
-                //.SeedDbContext<BaseAppDbContext>()
+                .SeedDbContext<BaseAppDbContext>()
                 .RunAsync();
         }
         catch (Exception ex)
