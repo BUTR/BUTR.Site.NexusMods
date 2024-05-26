@@ -114,10 +114,8 @@ public sealed partial class Startup
         services.AddValidatedOptions<DiscordOptions, DiscordOptionsValidator>().Bind(discordSection);
         services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>().Bind(steamAPISection);
         services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>().Bind(depotDownloaderSection);
-        /*
-        services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>().Bind(nexusModsSection);
-        services.AddValidatedOptionsWithHttp<NexusModsUsersOptions, NexusModsUsersOptionsValidator>().Bind(nexusModsUsersSection);
-        */
+        services.AddValidatedOptions<NexusModsOptions, NexusModsOptionsValidator>().Bind(nexusModsSection);
+        services.AddValidatedOptions<NexusModsUsersOptions, NexusModsUsersOptionsValidator>().Bind(nexusModsUsersSection);
 
         services.AddHttpClient(string.Empty).ConfigureHttpClient((_, client) =>
         {
