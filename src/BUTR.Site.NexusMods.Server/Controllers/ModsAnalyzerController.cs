@@ -1,17 +1,16 @@
 using Bannerlord.ModuleManager;
 
-using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Repositories;
 using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
-using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -33,7 +32,6 @@ public sealed class ModsAnalyzerController : ApiControllerBase
         public required ICollection<CompatibilityScoreRequestModuleEntry> Modules { get; init; }
     }
 
-
     public sealed record CompatibilityScoreResultModuleEntry
     {
         public required ModuleId ModuleId { get; init; }
@@ -49,23 +47,21 @@ public sealed class ModsAnalyzerController : ApiControllerBase
 
 
     private readonly ILogger _logger;
-    private readonly IAppDbContextRead _dbContextRead;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
-    public ModsAnalyzerController(ILogger<ModsAnalyzerController> logger, IAppDbContextRead dbContextRead)
+    public ModsAnalyzerController(ILogger<ModsAnalyzerController> logger, IUnitOfWorkFactory unitOfWorkFactory)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContextRead = dbContextRead ?? throw new ArgumentNullException(nameof(dbContextRead));
+        _logger = logger;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
-    [HttpPost("GetCompatibilityScore")]
+    [HttpPost("CompatibilityScores")]
     [ResponseCache(Duration = 60 * 60 * 2)]
-    public async Task<ActionResult<CompatibilityScoreResult?>> GetCompatibilityScoreAsync([BindTenant] TenantId tenant, [FromBody] CompatibilityScoreRequest crashReport, [FromServices] ITenantContextAccessor tenantContextAccessor, CancellationToken ct)
+    public async Task<ActionResult<CompatibilityScoreResult?>> GetCompatibilityScoreAsync([FromBody, Required] CompatibilityScoreRequest crashReport, [BindTenant] TenantId tenant, CancellationToken ct)
     {
-        tenantContextAccessor.Current = tenant;
-
         if (tenant == TenantId.Bannerlord)
         {
-            var toExclude = new HashSet<ModuleId>()
+            var toExclude = new HashSet<ModuleId>
             {
                 ModuleId.From("Native"),
                 ModuleId.From("SandBoxCore"),
@@ -114,21 +110,10 @@ public sealed class ModsAnalyzerController : ApiControllerBase
         var gameVersion = data.GameVersion;
         var currentModules = data.Modules;
 
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
         var moduleIds = currentModules.Select(x => x.ModuleId).ToArray();
-        var allRawScoresForAllModules = await _dbContextRead.StatisticsCrashScoreInvolveds
-            .Where(x => x.GameVersion == gameVersion && moduleIds.Contains(x.Module.ModuleId))
-            .GroupBy(x => x.Module.ModuleId)
-            .Select(x => new
-            {
-                ModuleId = x.Key,
-                // We order by score so that we can take the top 10
-                RawScores = x.OrderBy(y => y.Score).Select(y => new
-                {
-                    ModuleVersion = y.ModuleVersion,
-                    RawScore = y.Score,
-                    TotalCount = y.TotalCount,
-                }).Take(10).ToArray(),
-            }).ToArrayAsync(ct);
+        var allRawScoresForAllModules = await unitOfRead.StatisticsCrashScoreInvolveds.GetAllRawScoresForAllModulesAsync(gameVersion, moduleIds, ct);
 
         var allScoresForAllModules = allRawScoresForAllModules.Select(x =>
         {

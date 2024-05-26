@@ -12,8 +12,12 @@ public class ModuleEntityConfiguration : BaseEntityConfigurationWithTenant<Modul
 
     protected override void ConfigureModel(EntityTypeBuilder<ModuleEntity> builder)
     {
-        builder.Property(x => x.ModuleId).HasColumnName("module_id").HasValueObjectConversion().ValueGeneratedNever();
-        builder.ToTable("module", "module").HasKey(x => new { x.TenantId, x.ModuleId });
+        builder.Property(x => x.ModuleId).HasColumnName("module_id").HasVogenConversion().ValueGeneratedNever();
+        builder.ToTable("module", "module").HasKey(x => new
+        {
+            x.TenantId,
+            x.ModuleId
+        });
 
         base.ConfigureModel(builder);
     }

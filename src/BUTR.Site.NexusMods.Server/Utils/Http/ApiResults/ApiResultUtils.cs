@@ -18,7 +18,7 @@ public static class ApiResultUtils
     private static Type GetReturnType(MethodInfo methodInfo)
     {
         var returnType = methodInfo.ReturnType;
-        if (returnType.IsGenericType && IsTaskType(returnType.GetGenericTypeDefinition()))
+        if (returnType.IsGenericTypeDefinition && IsTaskType(returnType.GetGenericTypeDefinition()))
             returnType = returnType.GenericTypeArguments[0];
 
         return returnType;

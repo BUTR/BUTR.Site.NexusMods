@@ -1,18 +1,12 @@
-using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
-using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
-using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
-using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 using System;
-using System.Linq;
-using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,22 +23,16 @@ public sealed class GitHubController : ApiControllerBase
 
     public GitHubController(IGitHubClient gitHubClient, IGitHubAPIClient gitHubApiClient, IGitHubStorage gitHubStorage)
     {
-        _gitHubClient = gitHubClient ?? throw new ArgumentNullException(nameof(gitHubClient));
-        _gitHubApiClient = gitHubApiClient ?? throw new ArgumentNullException(nameof(gitHubApiClient));
-        _gitHubStorage = gitHubStorage ?? throw new ArgumentNullException(nameof(gitHubStorage));
+        _gitHubClient = gitHubClient;
+        _gitHubApiClient = gitHubApiClient;
+        _gitHubStorage = gitHubStorage;
     }
 
-    [HttpGet("GetOAuthUrl")]
-    [Produces("application/json")]
-    public ApiResult<GitHubOAuthUrlModel?> GetOAuthUrl()
+    [HttpPost]
+    public async Task<ApiResult<string?>> AddLinkAsync([FromQuery, Required] string code, CancellationToken ct)
     {
-        var (url, state) = _gitHubClient.GetOAuthUrl();
-        return ApiResult(new GitHubOAuthUrlModel(url, state));
-    }
+        var userId = HttpContext.GetUserId();
 
-    [HttpGet("Link")]
-    public async Task<ApiResult<string?>> LinkAsync([FromQuery] string code, [BindRole] ApplicationRole role, [BindUserId] NexusModsUserId userId, CancellationToken ct)
-    {
         var tokens = await _gitHubClient.CreateTokensAsync(code, ct);
         if (tokens is null)
             return ApiBadRequest("Failed to link!");
@@ -57,9 +45,11 @@ public sealed class GitHubController : ApiControllerBase
         return ApiResult("Linked successful!");
     }
 
-    [HttpPost("Unlink")]
-    public async Task<ApiResult<string?>> UnlinkAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
+    [HttpDelete]
+    public async Task<ApiResult<string?>> RemoveLinkAsync(CancellationToken ct)
     {
+        var userId = HttpContext.GetUserId();
+
         var tokens = HttpContext.GetDiscordTokens();
 
         if (tokens?.Data is null)
@@ -78,8 +68,15 @@ public sealed class GitHubController : ApiControllerBase
         return ApiResult("Unlinked successful!");
     }
 
-    [HttpPost("GetUserInfo")]
-    public async Task<ApiResult<GitHubUserInfo?>> GetUserInfoByAccessTokenAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
+    [HttpGet("OAuthUrl")]
+    public ApiResult<GitHubOAuthUrlModel?> GetOAuthUrl()
+    {
+        var (url, state) = _gitHubClient.GetOAuthUrl();
+        return ApiResult(new GitHubOAuthUrlModel(url, state));
+    }
+
+    [HttpGet("UserInfo")]
+    public async Task<ApiResult<GitHubUserInfo?>> GetUserInfoAsync(CancellationToken ct)
     {
         var tokens = HttpContext.GetGitHubTokens();
 

@@ -3,15 +3,12 @@ namespace BUTR.Site.NexusMods.Server.Models;
 using TType = CrashReportId;
 using TValueType = Guid;
 
-[TypeConverter(typeof(VogenTypeConverter<TType, TValueType>))]
-[JsonConverter(typeof(VogenJsonConverter<TType, TValueType>))]
-[ValueObject<TValueType>(conversions: Conversions.None)]
-public readonly partial record struct CrashReportId : IVogen<TType, TValueType>, IVogenSpanParsable<TType, TValueType>, IHasRandomValueGenerator<TType, TValueType, Random>
+[ValueObject<TValueType>(conversions: Conversions.EfCoreValueConverter | Conversions.SystemTextJson | Conversions.TypeConverter)]
+public readonly partial struct CrashReportId : IVogen<TType, TValueType>, IHasRandomValueGenerator<TType, TValueType, Random>
 {
     public static TType Copy(TType instance) => instance with { };
-    public static bool IsInitialized(TType instance) => instance._isInitialized;
-    public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);
-    public static TType NewRandomValue(Random? random) => From(Guid.NewGuid());
+    public static TType DeserializeDangerous(TValueType instance) => __Deserialize(instance);
+    public static TType NewRandomValue(Random? random) => From(TValueType.NewGuid());
 
     public static int GetHashCode(TType instance) => VogenDefaults<TType, TValueType>.GetHashCode(instance);
 

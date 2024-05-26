@@ -15,8 +15,8 @@ public class AuthenticationInjectionDelegatingHandler : DelegatingHandler
 
     public AuthenticationInjectionDelegatingHandler(ITokenContainer tokenContainer, INotificationService notificationService)
     {
-        _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
-        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+        _tokenContainer = tokenContainer;
+        _notificationService = notificationService;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)

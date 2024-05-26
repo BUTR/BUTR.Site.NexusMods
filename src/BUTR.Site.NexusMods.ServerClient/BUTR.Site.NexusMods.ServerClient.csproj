@@ -14,11 +14,14 @@
 
   <Target Name="GenerateOpenApi" BeforeTargets="PreBuildEvent">
     <ItemGroup>
-      <ExecPreprocessArgs Include="/input:../swagger.json /classname:&quot;{controller}Client&quot; /namespace:$(RootNamespace) /output:Clients.g.cs" />
+      <ExecPreprocessArgs Include="/input:../BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.json /classname:&quot;{controller}Client&quot; /namespace:$(RootNamespace) /output:Clients.g.cs" />
       <ExecPreprocessArgs Include="/InjectHttpClient:true /UseBaseUrl:false /GenerateClientInterfaces:true" />
       <ExecPreprocessArgs Include="/RequiredPropertiesMustBeDefined:true /GenerateNullableReferenceTypes:true /GenerateImmutableArrayProperties:true /GenerateImmutableDictionaryProperties:true" />
       <ExecPreprocessArgs Include="/ClassStyle:Record /TemplateDirectory:Templates /GenerateOptionalParameters:true" />
+      <ExecPreprocessArgs Include="/OperationGenerationMode:MultipleClientsFromFirstTagAndOperationName /JsonLibrary:SystemTextJson" />
+      <!--
       <ExecPreprocessArgs Include="/OperationGenerationMode:MultipleClientsFromFirstTagAndPathSegments /JsonLibrary:SystemTextJson" />
+      -->
     </ItemGroup>
 
     <ItemGroup>

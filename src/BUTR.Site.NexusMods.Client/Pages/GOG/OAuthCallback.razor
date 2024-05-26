@@ -61,7 +61,7 @@
         var queries = _navigationManager.QueryString();
         var queryCode = queries["code"];
 
-        await _gogClient.LinkAsync(code: queryCode);
+        await _gogClient.AddLinkAsync(code: queryCode);
         _ = await _authenticationProvider.ValidateAsync();
 
         if (await _gogClient.GetUserInfoAsync() is { Value: var userInfo })

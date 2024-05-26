@@ -26,7 +26,7 @@ public class TenantContextAccessor : ITenantContextAccessor
             if (_httpContextAccessor?.HttpContext?.GetTenant() is { } httpContextTenant)
                 return httpContextTenant;
 
-            return TenantId.None;
+            return TenantId.Error;
         }
         set
         {

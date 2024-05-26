@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
-using System;
+using System.Reflection;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
@@ -87,6 +87,12 @@ public class BaseAppDbContext : DbContext
 
         modelBuilder.HasPostgresExtension("hstore");
 
+        modelBuilder
+            .HasDbFunction(typeof(Postgres.Functions).GetRuntimeMethod(nameof(Postgres.Functions.Log), [typeof(decimal)])!)
+            .HasName("log");
+        modelBuilder.HasDbFunction(typeof(Postgres.Functions).GetRuntimeMethod(nameof(Postgres.Functions.Log), [typeof(decimal), typeof(decimal)])!)
+            .HasName("log");
+
         _entityConfigurationFactory.ApplyConfigurationWithTenant<AutocompleteEntity>(modelBuilder);
 
         _entityConfigurationFactory.ApplyConfigurationWithTenant<CrashReportEntity>(modelBuilder);
@@ -145,10 +151,8 @@ public class BaseAppDbContext : DbContext
             .ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>()
             .UseNpgsql(dataSource, opt =>
             {
-                opt.EnableRetryOnFailure(50, TimeSpan.FromSeconds(5), null);
                 opt.MigrationsHistoryTable("ef_migrations_history", "ef");
             })
-            //.AddPrepareInterceptor()
             .EnableSensitiveDataLogging()
             /*.UseLoggerFactory(LoggerFactory.Create(b => b.AddFilter(level => level >= LogLevel.Information)))*/;
     }

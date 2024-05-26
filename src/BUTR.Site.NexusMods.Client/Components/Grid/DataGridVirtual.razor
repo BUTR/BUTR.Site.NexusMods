@@ -1,0 +1,136 @@
+﻿@typeparam TItem where TItem : class
+
+@inject ILocalStorageService _localStorage
+
+<DataGrid @ref="@_dataGridRef" @attributes="@AdditionalAttributes"
+          TItem="TItem"
+          SelectedRowChanged="@(model => { DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
+          SelectionMode="@DataGridSelectionMode.Single"
+          Data="@Values"
+          ReadData="@OnReadData"
+          TotalItems="@Metadata.TotalCount"
+          Virtualize
+          VirtualizeOptions="@virtualizeOptions"
+          ShowPager
+          ShowPageSizes
+          Filterable="@Filterable"
+          Sortable="@Sortable"
+          Responsive
+          Editable="@Editable"
+          EditMode="@EditMode"
+          Resizable="@Resizable"
+          ResizeMode="@ResizeMode"
+          DataGridColumns="@DataGridColumns"
+          ButtonRowTemplate="@ButtonRowTemplate"
+          DetailRowTemplate="@DetailRowTemplate"
+          DetailRowTrigger="@DetailRowTrigger"
+          FixedHeader="@FixedHeader">
+</DataGrid> 
+
+@code {
+
+    public sealed record ItemsResponse(PagingMetadata Metadata, ICollection<TItem> Items, PagingAdditionalMetadata AdditionalMetadata);
+
+    [Parameter]
+    public bool Resizable { get; set; } = false;
+    [Parameter]
+    public TableResizeMode ResizeMode { get; set; }
+
+    [Parameter]
+    public bool Editable { get; set; } = false;
+    [Parameter]
+    public DataGridEditMode EditMode { get; set; }
+
+    [Parameter]
+    public bool Filterable { get; set; } = false;
+
+    [Parameter]
+    public bool Sortable { get; set; } = false;
+
+    [Parameter]
+    public bool FixedHeader { get; set; } = false;
+    
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+    
+    [Parameter]
+    public RenderFragment? DataGridColumns { get; set; }
+
+    [Parameter]
+    public RenderFragment<ButtonRowContext<TItem>>? ButtonRowTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? DetailRowTemplate { get; set; }
+    
+    [Parameter]
+    public Func<DetailRowTriggerEventArgs<TItem>, bool>? DetailRowTrigger { get; set; }
+
+    [Parameter]
+    public Func<IEnumerable<DataGridColumnInfo>, IEnumerable<Filtering>>? GetFilters { get; set; }
+
+    [Parameter]
+    public Func<int, int, ICollection<Filtering>, ICollection<Sorting>, CancellationToken, Task<ItemsResponse>>? GetItems { get; set; }
+
+    [Parameter]
+    public int DefaultPageSize { get; set; } = UserSettings.DefaultPageSize;
+    
+    [Parameter]
+    public IEnumerable<int> PageSizes { get; set; } = UserSettings.AvailablePageSizes;
+
+    [Parameter]
+    public Func<UserSettings, int>? GetPageSize { get; set; } = (settings => settings.PageSize); 
+    
+    [Parameter]
+    public PagingMetadata Metadata { get; set; }
+
+    [Parameter]
+    public PagingAdditionalMetadata AdditionalMetadata { get; set; }
+
+    public TItem? Value;
+    public ICollection<TItem> Values = default!;
+
+    private int _progressValue = default!;
+
+    private DataGrid<TItem> _dataGridRef = default!;
+    private VirtualizeOptions virtualizeOptions;
+
+    public DataGridVirtual()
+    {
+        Metadata = new PagingMetadata(1, 0, DefaultPageSize, 0);
+        AdditionalMetadata = PagingAdditionalMetadata.Empty;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        virtualizeOptions = new() { DataGridHeight = "500px" };
+        Metadata = new(1, 0, 0, 0);
+    }
+
+    public Task Reload() => _dataGridRef.Reload();
+
+    private async Task OnReadData(DataGridReadDataEventArgs<TItem> e)
+    {
+        if (!e.CancellationToken.IsCancellationRequested)
+        {
+            var sortings = e.Columns
+                .Where(x => x.SortIndex != -1)
+                .OrderBy(x => x.SortIndex)
+                .Select(x => new Sorting(x.SortField, x.SortDirection.ToSortingType()))
+                .ToArray();
+            var filterings = GetFilters is not null ? GetFilters(e.Columns).ToArray() : Array.Empty<Filtering>();
+
+            var page = e.VirtualizeOffset / e.VirtualizeCount + 1;
+            var pageSize = e.VirtualizeCount;
+            await LoadItems(page, pageSize, filterings, sortings, CancellationToken.None);
+        }
+    }
+
+    private async Task LoadItems(int page, int pageSize, ICollection<Filtering> filterings, ICollection<Sorting> sortings, CancellationToken ct = default)
+    {
+        var response = (GetItems is not null ? await GetItems(page, pageSize, filterings, sortings, ct) : null) ?? new(PagingMetadata.Empty, Array.Empty<TItem>(), PagingAdditionalMetadata.Empty);
+        Metadata = response.Metadata;
+        Values = response.Items;
+        AdditionalMetadata = response.AdditionalMetadata;
+    }
+
+}

@@ -19,5 +19,5 @@ public sealed record CrashReportToMetadataEntity : IEntityWithTenant
     public required string? BLSEVersion { get; init; }
     public required string? LauncherExVersion { get; init; }
 
-    public override int GetHashCode() => HashCode.Combine(CrashReportId, LauncherType, LauncherVersion, Runtime, BUTRLoaderVersion, BLSEVersion, LauncherExVersion);
+    public override int GetHashCode() => HashCode.Combine(TenantId, CrashReportId, LauncherType, LauncherVersion, Runtime, BUTRLoaderVersion, BLSEVersion, LauncherExVersion);
 }

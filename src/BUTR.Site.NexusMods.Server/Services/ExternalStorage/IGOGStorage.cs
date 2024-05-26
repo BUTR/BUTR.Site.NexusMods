@@ -1,10 +1,7 @@
 using BUTR.Site.NexusMods.DependencyInjection;
-using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
-
-using Microsoft.EntityFrameworkCore;
+using BUTR.Site.NexusMods.Server.Repositories;
 
 using System;
 using System.Collections.Generic;
@@ -30,32 +27,34 @@ public sealed class DatabaseGOGStorage : IGOGStorage
 {
     private Dictionary<TenantId, HashSet<uint>> TenantToGameIds { get; } = new()
     {
-        { TenantId.Bannerlord, [1802539526, 1564781494]},
-        { TenantId.Rimworld, [1094900565]},
-        { TenantId.StardewValley, [1453375253]},
+        { TenantId.Bannerlord, [1802539526, 1564781494] },
+        { TenantId.Rimworld, [1094900565] },
+        { TenantId.StardewValley, [1453375253] },
     };
 
-    private readonly IAppDbContextRead _dbContextRead;
-    private readonly IAppDbContextWrite _dbContextWrite;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IGOGEmbedClient _gogEmbedClient;
 
-    public DatabaseGOGStorage(IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite, IGOGEmbedClient gogEmbedClient)
+    public DatabaseGOGStorage(IUnitOfWorkFactory unitOfWorkFactory, IGOGEmbedClient gogEmbedClient)
     {
-        _dbContextRead = dbContextRead;
-        _dbContextWrite = dbContextWrite;
+        _unitOfWorkFactory = unitOfWorkFactory;
         _gogEmbedClient = gogEmbedClient;
     }
 
     public async Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
     {
-        var entityFactory = _dbContextWrite.GetEntityFactory();
-        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
         var games = await _gogEmbedClient.GetGamesAsync(tokens.AccessToken, CancellationToken.None);
         if (games is null)
             return false;
 
-        var nexusModsUserToIntegrationGOG = entityFactory.GetOrCreateNexusModsUserGOG(nexusModsUserId, gogUserId);
+        var nexusModsUserToIntegrationGOG = new NexusModsUserToIntegrationGOGEntity
+        {
+            NexusModsUserId = nexusModsUserId,
+            NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(nexusModsUserId),
+            GOGUserId = gogUserId,
+        };
 
         var ownedTenants = TenantToGameIds.Where(x => x.Value.Intersect(games.Owned.Where(y => y.HasValue).Select(y => y!.Value)).Any());
         var list = ownedTenants.Select(x => x.Key).Select(x => new IntegrationGOGToOwnedTenantEntity
@@ -64,37 +63,58 @@ public sealed class DatabaseGOGStorage : IGOGStorage
             OwnedTenant = x,
         }).ToArray();
 
-        await _dbContextWrite.NexusModsUserToGOG.UpsertOnSaveAsync(nexusModsUserToIntegrationGOG);
-        await _dbContextWrite.IntegrationGOGToOwnedTenants.UpsertOnSaveAsync(list);
-        await _dbContextWrite.IntegrationGOGToOwnedTenants.Where(x => x.GOGUserId == gogUserId).ExecuteDeleteAsync(CancellationToken.None);
+        unitOfWrite.NexusModsUserToGOG.Upsert(nexusModsUserToIntegrationGOG);
+        unitOfWrite.IntegrationGOGToOwnedTenants.UpsertRange(list);
+        unitOfWrite.IntegrationGOGToOwnedTenants.Remove(x => x.GOGUserId == gogUserId);
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return true;
     }
 
     public async Task<GOGOAuthTokens?> GetAsync(string gogUserId)
     {
-        var entity = await _dbContextRead.IntegrationGOGTokens.FirstOrDefaultAsync(x => x.GOGUserId.Equals(gogUserId));
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead(TenantId.None);
+
+        var entity = await unitOfRead.IntegrationGOGTokens.FirstOrDefaultAsync(x => x.GOGUserId.Equals(gogUserId), null, CancellationToken.None);
         if (entity is null) return null;
         return new(gogUserId, entity.AccessToken, entity.RefreshToken, entity.AccessTokenExpiresAt);
     }
 
     public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string gogUserId, GOGOAuthTokens tokens)
     {
-        var entityFactory = _dbContextWrite.GetEntityFactory();
-        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
-        var nexusModsUserToIntegrationGOG = entityFactory.GetOrCreateNexusModsUserGOG(nexusModsUserId, gogUserId);
-        var tokensGOG = entityFactory.GetOrCreateIntegrationGOGTokens(nexusModsUserId, gogUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt);
+        var nexusModsUserToIntegrationGOG = new NexusModsUserToIntegrationGOGEntity
+        {
+            NexusModsUserId = nexusModsUserId,
+            NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(nexusModsUserId),
+            GOGUserId = gogUserId,
+        };
+        var tokensGOG = new IntegrationGOGTokensEntity
+        {
+            GOGUserId = gogUserId,
+            NexusModsUserId = nexusModsUserId,
+            NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(nexusModsUserId),
+            AccessToken = tokens.AccessToken,
+            RefreshToken = tokens.RefreshToken,
+            AccessTokenExpiresAt = tokens.ExpiresAt,
+        };
 
-        await _dbContextWrite.NexusModsUserToGOG.UpsertOnSaveAsync(nexusModsUserToIntegrationGOG);
-        await _dbContextWrite.IntegrationGOGTokens.UpsertOnSaveAsync(tokensGOG);
+        unitOfWrite.NexusModsUserToGOG.Upsert(nexusModsUserToIntegrationGOG);
+        unitOfWrite.IntegrationGOGTokens.Upsert(tokensGOG);
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return true;
     }
 
     public async Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string gogUserId)
     {
-        await _dbContextWrite.NexusModsUserToGOG.Where(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.GOGUserId == gogUserId).ExecuteDeleteAsync();
-        await _dbContextWrite.IntegrationGOGTokens.Where(x => x.GOGUserId == gogUserId).ExecuteDeleteAsync();
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
+        unitOfWrite.NexusModsUserToGOG.Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.GOGUserId == gogUserId);
+        unitOfWrite.IntegrationGOGTokens.Remove(x => x.GOGUserId == gogUserId);
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return true;
     }
 }

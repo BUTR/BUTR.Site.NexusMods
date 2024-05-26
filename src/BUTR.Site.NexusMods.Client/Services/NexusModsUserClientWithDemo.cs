@@ -18,11 +18,11 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
     public NexusModsUserClientWithDemo(IServiceProvider serviceProvider, ITokenContainer tokenContainer, StorageCache cache)
     {
         _implementation = Program.ConfigureClient(serviceProvider, (http, opt) => new NexusModsUserClient(http, opt));
-        _tokenContainer = tokenContainer ?? throw new ArgumentNullException(nameof(tokenContainer));
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _tokenContainer = tokenContainer;
+        _cache = cache;
     }
 
-    public async Task<ProfileModelApiResultModel> ProfileAsync(CancellationToken ct)
+    public async Task<ProfileModelApiResultModel> GetProfileAsync(CancellationToken ct)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
@@ -32,7 +32,7 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
         {
             try
             {
-                var profile = (await _implementation.ProfileAsync(ct)).Value;
+                var profile = (await _implementation.GetProfileAsync(ct)).Value;
                 return new(new(profile, null!), new CacheOptions
                 {
                     AbsoluteExpiration = DateTimeOffset.UtcNow.AddSeconds(5),
@@ -48,67 +48,64 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
         return await _cache.GetAsync("profile", Factory, ct) ?? new ProfileModelApiResultModel(await DemoUser.GetProfile(), null!);
     }
 
-    public async Task<StringApiResultModel> SetRoleAsync(int? userId, string? role, CancellationToken ct)
+    public async Task<StringApiResultModel> SetRoleAsync(string role, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             return new StringApiResultModel("demo", null!);
 
-        return await _implementation.SetRoleAsync(userId, role, ct);
+        return await _implementation.SetRoleAsync(role, userId, username, ct);
     }
 
-    public async Task<StringApiResultModel> RemoveRoleAsync(int? userId, CancellationToken ct)
+    public async Task<StringApiResultModel> RemoveRoleAsync(int? userId = null, string? username = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             return new StringApiResultModel("demo", null!);
 
-        return await _implementation.RemoveRoleAsync(userId, ct);
+        return await _implementation.RemoveRoleAsync(userId, username, ct);
     }
 
-    public async Task<NexusModsModModelPagingDataApiResultModel> ToNexusModsModPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
+    public async Task<UserLinkedModModelPagingDataApiResultModel> GetNexusModsModsPaginatedAsync(PaginatedQuery body, CancellationToken ct = default)
     {
-        if (body is null)
-            return await _implementation.ToNexusModsModPaginatedAsync(body, ct);
-
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var mods = await DemoUser.GetMods().ToListAsync(ct);
-            return new NexusModsModModelPagingDataApiResultModel(new NexusModsModModelPagingData(PagingAdditionalMetadata.Empty, mods, new PagingMetadata(1, (int) Math.Ceiling((double) mods.Count / (double) body.PageSize), body.PageSize, mods.Count)), null!);
+            return new UserLinkedModModelPagingDataApiResultModel(new UserLinkedModModelPagingData(PagingAdditionalMetadata.Empty, mods, new PagingMetadata(1, (int) Math.Ceiling((double) mods.Count / (double) body.PageSize), body.PageSize, mods.Count)), null!);
         }
 
-        return await _implementation.ToNexusModsModPaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>()), ct);
+        return await _implementation.GetNexusModsModsPaginatedAsync(body, ct);
     }
 
-    public async Task<StringApiResultModel> ToNexusModsModUpdateAsync(NexusModsUserToNexusModsModQuery? body = null, CancellationToken ct = default) =>
-        await _implementation.ToNexusModsModUpdateAsync(body, ct);
+    public async Task<StringApiResultModel> UpdateNexusModsModLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default) =>
+        await _implementation.UpdateNexusModsModLinkAsync(modId, userId, username, ct);
 
-    public async Task<StringApiResultModel> ToNexusModsModLinkAsync(int? nexusModsModId = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> AddNexusModsModLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var mods = await DemoUser.GetMods().ToListAsync(ct);
-            if (mods.Find(m => m.NexusModsModId == nexusModsModId) is null)
+            if (mods.Find(m => m.NexusModsModId == modId) is null)
             {
-                mods.Add(new(nexusModsModId ?? 0, $"Demo Mod {nexusModsModId}", Array.Empty<int>(), Array.Empty<int>(), Array.Empty<string>(), Array.Empty<string>()));
+                mods.Add(new(modId, $"Demo Mod {modId}", Array.Empty<int>(), Array.Empty<int>(), Array.Empty<int>(), Array.Empty<string>(), Array.Empty<string>()));
                 return new StringApiResultModel("demo", null!);
             }
 
             return new StringApiResultModel(null, null!);
         }
 
-        return await _implementation.ToNexusModsModLinkAsync(nexusModsModId, ct);
+        return await _implementation.AddNexusModsModLinkAsync(modId, userId, username, ct);
     }
 
-    public async Task<StringApiResultModel> ToNexusModsModUnlinkAsync(int? nexusModsModId = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> RemoveNexusModsModLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var mods = await DemoUser.GetMods().ToListAsync(ct);
-            if (mods.Find(m => m.NexusModsModId == nexusModsModId) is { } mod)
+            if (mods.Find(m => m.NexusModsModId == modId) is { } mod)
             {
                 mods.Remove(mod);
                 return new StringApiResultModel("demo", null!);
@@ -117,66 +114,68 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
             return new StringApiResultModel(null!, null);
         }
 
-        return await _implementation.ToNexusModsModUnlinkAsync(nexusModsModId, ct);
+        return await _implementation.RemoveNexusModsModLinkAsync(modId, userId, username, ct);
     }
 
-    public async Task<StringApiResultModel> ToModuleManualLinkAsync(int? nexusModsUserId = null, string? moduleId = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> AddModuleManualLinkAsync(string moduleId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             return new StringApiResultModel("demo", null!);
 
-        return await _implementation.ToModuleManualLinkAsync(nexusModsUserId, moduleId, ct);
+        return await _implementation.AddModuleManualLinkAsync(moduleId, userId, username, ct);
     }
 
-    public async Task<StringApiResultModel> ToModuleManualUnlinkAsync(int? nexusModsUserId = null, string? moduleId = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> RemoveModuleManualLinkAsync(string moduleId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
             return new StringApiResultModel("demo", null!);
 
-        return await _implementation.ToModuleManualUnlinkAsync(nexusModsUserId, moduleId, ct);
+        return await _implementation.RemoveModuleManualLinkAsync(moduleId, userId, username, ct);
     }
 
-    public async Task<NexusModsUserToModuleManualLinkModelPagingDataApiResultModel> ToModuleManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
+    public async Task<UserManuallyLinkedModuleModelPagingDataApiResultModel> GetModuleManualLinkPaginatedAsync(PaginatedQuery body, CancellationToken ct = default)
+    {
+        var token = await _tokenContainer.GetTokenAsync(ct);
+        if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
+            return new UserManuallyLinkedModuleModelPagingDataApiResultModel(new UserManuallyLinkedModuleModelPagingData(PagingAdditionalMetadata.Empty, new List<UserManuallyLinkedModuleModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), null!);
+
+        return await _implementation.GetModuleManualLinkPaginatedAsync(body, ct);
+    }
+
+    public async Task<StringApiResultModel> AddNexusModsModManualLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default)
+    {
+        var token = await _tokenContainer.GetTokenAsync(ct);
+        if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
+            return new StringApiResultModel("demo", null!);
+
+        return await _implementation.AddNexusModsModManualLinkAsync(modId, userId, username, ct);
+    }
+
+    public async Task<StringApiResultModel> RemoveNexusModsModManualLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default)
+    {
+        var token = await _tokenContainer.GetTokenAsync(ct);
+        if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
+            return new StringApiResultModel("demo", null!);
+
+        return await _implementation.RemoveNexusModsModManualLinkAsync(modId, userId, username, ct);
+    }
+
+    public async Task<UserManuallyLinkedModModelPagingDataApiResultModel> GetNexusModsModManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
     {
         if (body is null)
-            return await _implementation.ToModuleManualLinkPaginatedAsync(body, ct);
+            return await _implementation.GetNexusModsModManualLinkPaginatedAsync(body, ct);
 
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
-            return new NexusModsUserToModuleManualLinkModelPagingDataApiResultModel(new NexusModsUserToModuleManualLinkModelPagingData(PagingAdditionalMetadata.Empty, new List<NexusModsUserToModuleManualLinkModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), null!);
+            return new UserManuallyLinkedModModelPagingDataApiResultModel(new UserManuallyLinkedModModelPagingData(PagingAdditionalMetadata.Empty, new List<UserManuallyLinkedModModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), null!);
 
-        return await _implementation.ToModuleManualLinkPaginatedAsync(new PaginatedQuery(body.Page, body.PageSize, Array.Empty<Filtering>(), Array.Empty<Sorting>()), ct);
+        return await _implementation.GetNexusModsModManualLinkPaginatedAsync(body, ct);
     }
 
-    public async Task<StringApiResultModel> ToNexusModsModManualLinkAsync(int? userId = null, int? nexusModsModId = null, CancellationToken ct = default)
+    public async Task<UserAvailableModModelPagingDataApiResultModel> GetNexusModsModsPaginateAvailabledAsync(PaginatedQuery body, CancellationToken ct = default)
     {
-        var token = await _tokenContainer.GetTokenAsync(ct);
-        if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
-            return new StringApiResultModel("demo", null!);
-
-        return await _implementation.ToNexusModsModManualLinkAsync(userId, nexusModsModId, ct);
-    }
-
-    public async Task<StringApiResultModel> ToNexusModsModManualUnlinkAsync(int? userId = null, int? nexusModsModId = null, CancellationToken ct = default)
-    {
-        var token = await _tokenContainer.GetTokenAsync(ct);
-        if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
-            return new StringApiResultModel("demo", null!);
-
-        return await _implementation.ToNexusModsModManualUnlinkAsync(userId, nexusModsModId, ct);
-    }
-
-    public async Task<NexusModsUserToNexusModsModManualLinkModelPagingDataApiResultModel> ToNexusModsModManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
-    {
-        if (body is null)
-            return await _implementation.ToNexusModsModManualLinkPaginatedAsync(body, ct);
-
-        var token = await _tokenContainer.GetTokenAsync(ct);
-        if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
-            return new NexusModsUserToNexusModsModManualLinkModelPagingDataApiResultModel(new NexusModsUserToNexusModsModManualLinkModelPagingData(PagingAdditionalMetadata.Empty, new List<NexusModsUserToNexusModsModManualLinkModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), null!);
-
-        return await _implementation.ToNexusModsModManualLinkPaginatedAsync(body, ct);
+        return await _implementation.GetNexusModsModsPaginateAvailabledAsync(body, ct);
     }
 }

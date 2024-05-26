@@ -3,7 +3,7 @@ using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Utils;
-using BUTR.Site.NexusMods.Server.Utils.Npgsql;
+using BUTR.Site.NexusMods.Server.ValueObjects.Utils;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -29,12 +29,15 @@ public static class QueryableExtensions
     public static IQueryable<TSource> WhereIf<TSource>(this IQueryable<TSource> source, bool condition, Expression<Func<TSource, bool>> predicate) =>
         condition ? source.Where(predicate) : source;
 
+    public static IQueryable<TSource> OrderByIf<TSource>(this IQueryable<TSource> source, bool condition, Func<IQueryable<TSource>, IOrderedQueryable<TSource>> orderBy) =>
+        condition ? orderBy(source) : source;
+
     public static async IAsyncEnumerable<ImmutableArray<T>> BatchedAsync<T>(this IQueryable<T> query, int batchSize = 3000)
     {
         var processed = 0;
 
-        Task<ImmutableArray<T>> FetchNext() => query.Skip(processed).Take(batchSize).ToImmutableArrayAsync();
-        var fetch = FetchNext();
+        Task<ImmutableArray<T>> FetchNextAsync() => query.Skip(processed).Take(batchSize).ToImmutableArrayAsync();
+        var fetch = FetchNextAsync();
 
         while (true)
         {
@@ -44,13 +47,14 @@ public static class QueryableExtensions
             processed += toProcess.Length;
 
             // Start pre-fetching the next batch if there's still available
-            fetch = toProcess.Length == batchSize ? FetchNext() : Task.FromResult(ImmutableArray<T>.Empty);
+            fetch = toProcess.Length == batchSize ? FetchNextAsync() : Task.FromResult(ImmutableArray<T>.Empty);
 
             yield return toProcess;
         }
     }
 
-    public static Task<Paging<TEntity>> PaginatedAsync<TEntity>(this IQueryable<TEntity> queryable, PaginatedQuery query, uint maxPageSize = 20, Sorting? defaultSorting = default, CancellationToken ct = default) where TEntity : class
+    public static Task<Paging<TEntity>> PaginatedAsync<TEntity>(this IQueryable<TEntity> queryable, PaginatedQuery query, uint maxPageSize = 20, Sorting? defaultSorting = default, CancellationToken ct = default)
+        where TEntity : class
     {
         var page = query.Page;
         var pageSize = Math.Max(Math.Min(query.PageSize, maxPageSize), 5);
@@ -66,7 +70,8 @@ public static class QueryableExtensions
     }
 
     // This implementation will introduce a little desync of count because items are lazily evaluated
-    public static async Task<Paging<TEntity>> PaginatedAsync<TEntity>(this IQueryable<TEntity> queryable, uint page, uint pageSize, CancellationToken ct = default) where TEntity : class
+    public static async Task<Paging<TEntity>> PaginatedAsync<TEntity>(this IQueryable<TEntity> queryable, uint page, uint pageSize, CancellationToken ct = default)
+        where TEntity : class
     {
         var startTime = Stopwatch.GetTimestamp();
         var count = await queryable.CountAsync(ct);
@@ -108,7 +113,7 @@ public static class QueryableExtensions
 
     private static bool TryConvertValue(Type type, string rawValue, [NotNullWhen((true))] out object? value)
     {
-        type = QueryableHelper.ConvertValueObject(type);
+        type = VogenUtils.ConvertValueObject(type);
 
         if (type.IsEnum)
             return Enum.TryParse(type, rawValue, out value);
@@ -293,10 +298,5 @@ public static class QueryableExtensions
         }
 
         return ordered ?? queryable;
-    }
-
-    public static IQueryable<T> Prepare<T>(this IQueryable<T> query)
-    {
-        return query.TagWith(PrepareCommandInterceptor.Tag);
     }
 }

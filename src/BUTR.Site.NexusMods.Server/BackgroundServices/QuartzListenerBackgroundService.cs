@@ -1,10 +1,11 @@
 using BUTR.Site.NexusMods.DependencyInjection;
-using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Models.Quartz;
+using BUTR.Site.NexusMods.Server.Repositories;
+using BUTR.Site.NexusMods.Server.Services;
 
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,12 +15,11 @@ using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace BUTR.Site.NexusMods.Server.Services;
+namespace BUTR.Site.NexusMods.Server.BackgroundServices;
 
 [HostedService]
 internal sealed class QuartzListenerBackgroundService : BackgroundService
@@ -28,16 +28,16 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
     private const int MAX_BATCH_SIZE = 50;
 
     private readonly ILogger _logger;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IQuartzEventProviderService _quartzEventProviderService;
-    private readonly Channel<Func<IAppDbContextWrite, CancellationToken, ValueTask>> _taskQueue;
+    private readonly Channel<Func<IUnitOfWrite, CancellationToken, ValueTask>> _taskQueue;
 
-    public QuartzListenerBackgroundService(ILogger<QuartzListenerBackgroundService> logger, IServiceProvider serviceProvider, IQuartzEventProviderService quartzEventProviderService)
+    public QuartzListenerBackgroundService(ILogger<QuartzListenerBackgroundService> logger, IServiceScopeFactory serviceScopeFactory, IQuartzEventProviderService quartzEventProviderService)
     {
         _logger = logger;
-        _serviceProvider = serviceProvider;
+        _serviceScopeFactory = serviceScopeFactory;
         _quartzEventProviderService = quartzEventProviderService;
-        _taskQueue = Channel.CreateUnbounded<Func<IAppDbContextWrite, CancellationToken, ValueTask>>(new UnboundedChannelOptions { SingleReader = true });
+        _taskQueue = Channel.CreateUnbounded<Func<IUnitOfWrite, CancellationToken, ValueTask>>(new UnboundedChannelOptions { SingleReader = true });
 
         _quartzEventProviderService.OnJobToBeExecuted += OnJobToBeExecuted;
         _quartzEventProviderService.OnJobWasExecuted += OnJobWasExecuted;
@@ -56,8 +56,10 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
     private void OnJobToBeExecuted(object? sender, QuartzEventArgs<IJobExecutionContext> e) =>
         QueueInsertTask(CreateScheduleJobLogEntry(e.Args));
 
-    private void OnJobWasExecuted(object? sender, JobWasExecutedEventArgs e) =>
+    private void OnJobWasExecuted(object? sender, JobWasExecutedEventArgs e)
+    {
         QueueUpdateTask(CreateScheduleJobLogEntry(e.JobExecutionContext, e.JobException, true));
+    }
 
     private void OnJobExecutionVetoed(object? sender, QuartzEventArgs<IJobExecutionContext> e) =>
         QueueUpdateTask(CreateScheduleJobLogEntry(e.Args, defaultIsSuccess: false) with
@@ -68,27 +70,23 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        await MarkIncompleteExecutionAsync(ct);
+        await using var scope = _serviceScopeFactory.CreateAsyncScope();
+        var unitOfWorkFactory = scope.ServiceProvider.GetRequiredService<IUnitOfWorkFactory>();
+
+        await MarkIncompleteExecutionAsync(unitOfWorkFactory, ct);
 
         while (!ct.IsCancellationRequested)
-        {
-            await ProcessTaskAsync(ct);
-        }
+            await ProcessTaskAsync(unitOfWorkFactory, ct);
     }
 
-    private async Task MarkIncompleteExecutionAsync(CancellationToken ct)
+    private async Task MarkIncompleteExecutionAsync(IUnitOfWorkFactory unitOfWorkFactory, CancellationToken ct)
     {
         try
         {
-            await using var scope = _serviceProvider.CreateAsyncScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContextWrite>();
+            await using var unitOfWrite = unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
-            await dbContext.QuartzExecutionLogs
-                .Where(x => !x.IsSuccess.HasValue)
-                .ExecuteUpdateAsync(calls => calls
-                    .SetProperty(x => x.IsSuccess, false)
-                    .SetProperty(x => x.ErrorMessage, "Incomplete execution.")
-                    .SetProperty(x => x.JobRunTime, TimeSpan.Zero), CancellationToken.None);
+            await unitOfWrite.QuartzExecutionLogs.MarkIncompleteAsync(ct);
+            await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         }
         catch (OperationCanceledException)
         {
@@ -100,22 +98,18 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         }
     }
 
-    private async Task ProcessTaskAsync(CancellationToken ct = default)
+    private async Task ProcessTaskAsync(IUnitOfWorkFactory unitOfWorkFactory, CancellationToken ct = default)
     {
         var batch = await GetBatchAsync(ct);
 
         _logger.LogInformation("Got a batch with {TaskCount} task(s). Saving to data store", batch.Count);
 
-        await using var scope = _serviceProvider.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContextWrite>();
+        await using var unitOfWrite = unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
         try
         {
-            await using var _ = await dbContext.CreateSaveScopeAsync();
-
             foreach (var workItem in batch)
-            {
-                await workItem(dbContext, ct);
-            }
+                await workItem(unitOfWrite, ct);
+            await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         }
         catch (OperationCanceledException)
         {
@@ -127,7 +121,7 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         }
     }
 
-    private void QueueTask(Func<IAppDbContextWrite, CancellationToken, ValueTask> task)
+    private void QueueTask(Func<IUnitOfWrite, CancellationToken, ValueTask> task)
     {
         if (!_taskQueue.Writer.TryWrite(task))
         {
@@ -136,11 +130,11 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         }
     }
 
-    private async Task<List<Func<IAppDbContextWrite, CancellationToken, ValueTask>>> GetBatchAsync(CancellationToken ct)
+    private async Task<List<Func<IUnitOfWrite, CancellationToken, ValueTask>>> GetBatchAsync(CancellationToken ct)
     {
         await _taskQueue.Reader.WaitToReadAsync(ct);
 
-        var batch = new List<Func<IAppDbContextWrite, CancellationToken, ValueTask>>();
+        var batch = new List<Func<IUnitOfWrite, CancellationToken, ValueTask>>();
 
         while (batch.Count < MAX_BATCH_SIZE && _taskQueue.Reader.TryRead(out var dbTask))
         {
@@ -155,7 +149,14 @@ internal sealed class QuartzListenerBackgroundService : BackgroundService
         try
         {
             await Task.Yield();
-            dbContext.QuartzExecutionLogs.Update(log);
+            var existingJob = await dbContext.QuartzExecutionLogs.FirstOrDefaultAsync(x =>
+                x.RunInstanceId == log.RunInstanceId &&
+                x.JobName == log.JobName &&
+                x.JobGroup == log.JobGroup &&
+                x.TriggerName == log.TriggerName &&
+                x.TriggerGroup == log.TriggerGroup &&
+                x.FireTimeUtc == log.FireTimeUtc, null, ct);
+            dbContext.QuartzExecutionLogs.Update(existingJob!, log with { LogId = existingJob!.LogId });
         }
         catch (Exception ex)
         {

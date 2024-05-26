@@ -32,13 +32,14 @@ public sealed class RecreateStacktraceController : ApiControllerBase
 
     public RecreateStacktraceController(ILogger<RecreateStacktraceController> logger, ICrashReporterClient crashReporterClient, ISteamBinaryCache steamBinaryCache)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _crashReporterClient = crashReporterClient ?? throw new ArgumentNullException(nameof(crashReporterClient));
-        _steamBinaryCache = steamBinaryCache ?? throw new ArgumentNullException(nameof(steamBinaryCache));
+        _logger = logger;
+        _crashReporterClient = crashReporterClient;
+        _steamBinaryCache = steamBinaryCache;
     }
 
-    [HttpGet("Json/{id}")]
-    public async Task<ApiResult<IEnumerable<RecreatedStacktrace>?>> JsonAsync(CrashReportFileId id, CancellationToken ct)
+    [HttpGet("Json")]
+    [Produces("application/json")]
+    public async Task<ApiResult<IEnumerable<RecreatedStacktrace>?>> GetJsonAsync([FromQuery] CrashReportFileId id, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
             return ApiResultError("Game is not owned!", StatusCodes.Status401Unauthorized);
@@ -73,9 +74,9 @@ public sealed class RecreateStacktraceController : ApiControllerBase
         return ApiOk<IEnumerable<RecreatedStacktrace>>(recreatedStacktraceWithMissing);
     }
 
-    [HttpGet("Html/{id}")]
+    [HttpGet("Html")]
     [Produces("text/plain")]
-    public async Task<ActionResult<string>> HtmlAsync(CrashReportFileId id, CancellationToken ct)
+    public async Task<ActionResult<string>> GetHtmlAsync([FromQuery] CrashReportFileId id, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
             return Unauthorized();

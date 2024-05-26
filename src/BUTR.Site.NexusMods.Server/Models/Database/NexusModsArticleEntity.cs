@@ -10,9 +10,10 @@ public sealed record NexusModsArticleEntity : IEntityWithTenant
 
     public required string Title { get; init; }
 
+    public required NexusModsUserId NexusModsUserId { get; init; }
     public required NexusModsUserEntity NexusModsUser { get; init; }
 
     public required DateTimeOffset CreateDate { get; init; }
 
-    public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsArticleId, Title, NexusModsUser.NexusModsUserId, CreateDate);
+    public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsArticleId, Title, NexusModsUserId, CreateDate);
 }

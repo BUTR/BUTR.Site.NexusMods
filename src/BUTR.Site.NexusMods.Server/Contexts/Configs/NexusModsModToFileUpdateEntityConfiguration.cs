@@ -12,17 +12,19 @@ public class NexusModsModToFileUpdateEntityConfiguration : BaseEntityConfigurati
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsModToFileUpdateEntity> builder)
     {
-        builder.Property<NexusModsModId>(nameof(NexusModsModEntity.NexusModsModId)).HasColumnName("nexusmods_mod_file_update_id").HasValueObjectConversion().ValueGeneratedNever();
+        builder.Property(x => x.NexusModsModId).HasColumnName("nexusmods_mod_file_update_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.LastCheckedDate).HasColumnName("date_of_last_check");
-        builder.ToTable("nexusmods_mod_file_update", "nexusmods_mod").HasKey(nameof(NexusModsModToFileUpdateEntity.TenantId), nameof(NexusModsModEntity.NexusModsModId));
+        builder.ToTable("nexusmods_mod_file_update", "nexusmods_mod").HasKey(x => new
+        {
+            x.TenantId,
+            x.NexusModsModId,
+        });
 
         builder.HasOne(x => x.NexusModsMod)
             .WithOne(x => x.FileUpdate)
-            .HasForeignKey<NexusModsModToFileUpdateEntity>(nameof(NexusModsModToFileUpdateEntity.TenantId), nameof(NexusModsModEntity.NexusModsModId))
+            .HasForeignKey<NexusModsModToFileUpdateEntity>(x => new { x.TenantId, x.NexusModsModId })
             .HasPrincipalKey<NexusModsModEntity>(x => new { x.TenantId, x.NexusModsModId })
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(x => x.NexusModsMod).AutoInclude();
 
         base.ConfigureModel(builder);
     }

@@ -35,9 +35,10 @@ public partial class StatisticsExceptionTypes
 
         await loadingIndicator.Show();
 
-        var data = (await StatisticsClient.TopExceptionsTypesAsync()).Value ?? Array.Empty<TopExceptionsEntry>();
+        var data = (await StatisticsClient.GetTopExceptionsTypesAsync()).Value ?? Array.Empty<TopExceptionsEntry>();
 
         _dataGridRef.Values = data;
+        await _dataGridRef.Reload();
 
         var labels = data.OrderByDescending(x => x.Percentage).Select(x => x.Type).ToList();
         var values = data.OrderByDescending(x => x.Percentage).Select(x => x.Percentage).ToList();

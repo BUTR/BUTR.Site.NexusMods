@@ -1,12 +1,10 @@
 using BUTR.Site.NexusMods.DependencyInjection;
-using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
-
-using Microsoft.EntityFrameworkCore;
+using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Repositories;
 
 using System;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
@@ -23,40 +21,57 @@ public interface IDiscordStorage
 [ScopedService<IDiscordStorage>]
 public sealed class DatabaseDiscordStorage : IDiscordStorage
 {
-    private readonly IAppDbContextRead _dbContextRead;
-    private readonly IAppDbContextWrite _dbContextWrite;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
-    public DatabaseDiscordStorage(IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite)
+    public DatabaseDiscordStorage(IUnitOfWorkFactory unitOfWorkFactory)
     {
-        _dbContextRead = dbContextRead;
-        _dbContextWrite = dbContextWrite;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
     public async Task<DiscordOAuthTokens?> GetAsync(string discordUserId)
     {
-        var entity = await _dbContextRead.IntegrationDiscordTokens.FirstOrDefaultAsync(x => x.DiscordUserId.Equals(discordUserId));
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead(TenantId.None);
+
+        var entity = await unitOfRead.IntegrationDiscordTokens.FirstOrDefaultAsync(x => x.DiscordUserId.Equals(discordUserId), null, CancellationToken.None);
         if (entity is null) return null;
         return new(entity.AccessToken, entity.RefreshToken, entity.AccessTokenExpiresAt);
     }
 
     public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string discordUserId, DiscordOAuthTokens tokens)
     {
-        var entityFactory = _dbContextWrite.GetEntityFactory();
-        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
-        var nexusModsUserToIntegrationDiscord = entityFactory.GetOrCreateNexusModsUserDiscord(nexusModsUserId, discordUserId);
-        var tokensDiscord = entityFactory.GetOrCreateIntegrationDiscordTokens(nexusModsUserId, discordUserId, tokens.AccessToken, tokens.RefreshToken, tokens.ExpiresAt);
+        var nexusModsUserToIntegrationDiscord = new NexusModsUserToIntegrationDiscordEntity
+        {
+            NexusModsUserId = nexusModsUserId,
+            NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(nexusModsUserId),
+            DiscordUserId = discordUserId,
+        };
+        var tokensDiscord = new IntegrationDiscordTokensEntity
+        {
+            DiscordUserId = discordUserId,
+            NexusModsUserId = nexusModsUserId,
+            NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(nexusModsUserId),
+            AccessToken = tokens.AccessToken,
+            RefreshToken = tokens.RefreshToken,
+            AccessTokenExpiresAt = tokens.ExpiresAt,
+        };
 
-        await _dbContextWrite.NexusModsUserToDiscord.UpsertOnSaveAsync(nexusModsUserToIntegrationDiscord);
-        await _dbContextWrite.IntegrationDiscordTokens.UpsertOnSaveAsync(tokensDiscord);
+        unitOfWrite.NexusModsUserToDiscord.Upsert(nexusModsUserToIntegrationDiscord);
+        unitOfWrite.IntegrationDiscordTokens.Upsert(tokensDiscord);
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return true;
     }
 
     public async Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string discordUserId)
     {
-        await _dbContextWrite.NexusModsUserToDiscord.Where(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.DiscordUserId == discordUserId).ExecuteDeleteAsync();
-        await _dbContextWrite.IntegrationDiscordTokens.Where(x => x.DiscordUserId == discordUserId).ExecuteDeleteAsync();
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
+        unitOfWrite.NexusModsUserToDiscord.Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.DiscordUserId == discordUserId);
+        unitOfWrite.IntegrationDiscordTokens.Remove(x => x.DiscordUserId == discordUserId);
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return true;
     }
 }

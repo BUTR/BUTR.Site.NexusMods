@@ -10,8 +10,11 @@ public class TenantEntityConfiguration : BaseEntityConfiguration<TenantEntity>
 {
     protected override void ConfigureModel(EntityTypeBuilder<TenantEntity> builder)
     {
-        builder.Property(x => x.TenantId).HasColumnName("tenant_id").HasValueObjectConversion();
-        builder.ToTable("tenant", "tenant").HasKey(x => x.TenantId);
+        builder.Property(x => x.TenantId).HasColumnName("tenant_id").HasVogenConversion();
+        builder.ToTable("tenant", "tenant").HasKey(x => new
+        {
+            x.TenantId,
+        });
 
         base.ConfigureModel(builder);
     }

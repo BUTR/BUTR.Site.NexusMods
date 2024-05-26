@@ -27,19 +27,14 @@ public sealed class GitHubAPIClient : IGitHubAPIClient
 
     public GitHubAPIClient(HttpClient httpClient, IOptions<JsonSerializerOptions> jsonSerializerOptions)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(httpClient));
+        _httpClient = httpClient;
+        _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
     public async Task<GitHubUserInfo?> GetUserInfoAsync(GitHubOAuthTokens tokens, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, "user")
-        {
-            Headers =
-            {
-                Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken)
-            }
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Get, "user");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
         using var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return null;
         return await JsonSerializer.DeserializeAsync<GitHubUserInfo>(await response.Content.ReadAsStreamAsync(ct), _jsonSerializerOptions, cancellationToken: ct);

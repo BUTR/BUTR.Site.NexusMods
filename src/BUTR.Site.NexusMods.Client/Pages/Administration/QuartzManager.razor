@@ -34,7 +34,7 @@
         </CardTitle>
     </CardHeader>
     <CardBody>
-        <DataGridPaging @ref="@_dataGridRef" TItem="QuartzExecutionLogEntity" DetailRowTrigger="@(x => x.Item.LogId == _dataGridRef?.Value?.LogId)" GetFilters="@GetFilters" GetItems="@Paging" Sortable Filterable FixedHeader>
+        <DataGridVirtual @ref="@_dataGridRef" TItem="QuartzExecutionLogEntity" DetailRowTrigger="@(x => x.Item.LogId == _dataGridRef?.Value?.LogId)" GetFilters="@GetFilters" GetItems="@Paging" Sortable Filterable FixedHeader>
             <DataGridColumns>
                 <DataGridColumn TItem="QuartzExecutionLogEntity" ElementId="job-name" Field="@nameof(QuartzExecutionLogEntity.JobName)" Caption="" Filterable="@false" Sortable="@false" >
                     <DisplayTemplate>
@@ -86,7 +86,7 @@
                     <MemoEdit Text="@(context.ExecutionLogDetail?.ErrorStackTrace ?? string.Empty)" AutoSize Disabled />
                 </Field>
             </DetailRowTemplate>
-        </DataGridPaging>
+        </DataGridVirtual>
     </CardBody>
 </Card>
 
@@ -99,11 +99,11 @@
 
     private string _jobId = string.Empty;
 
-    private DataGridPaging<QuartzExecutionLogEntity>? _dataGridRef;
+    private DataGridVirtual<QuartzExecutionLogEntity>? _dataGridRef;
     
-    private async Task<DataGridPaging<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct)
+    private async Task<DataGridVirtual<QuartzExecutionLogEntity>.ItemsResponse?> Paging(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct)
     {
-        var response = await _quartzClient.HistoryPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
+        var response = await _quartzClient.JobsPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
         return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
     }
 
@@ -111,7 +111,7 @@
     {
         if (string.IsNullOrEmpty(_jobId)) return;
 
-        await _quartzClient.TriggerJobAsync(jobId: _jobId);
+        await _quartzClient.AddTriggerAsync(_jobId);
 
         await Task.Delay(1000);
 

@@ -1,17 +1,16 @@
-using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
-using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Repositories;
 using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,46 +19,51 @@ namespace BUTR.Site.NexusMods.Server.Controllers;
 [ApiController, Route("api/v1/[controller]"), ButrNexusModsAuthorization, TenantRequired]
 public class NexusModsArticleController : ApiControllerBase
 {
-    public record NexusModsArticleModel(NexusModsArticleId NexusModsArticleId, string Title, NexusModsUserId NexusModsUserId, NexusModsUserName Author, DateTimeOffset CreateDate);
+    public sealed record NexusModsArticleModel
+    {
+        public NexusModsArticleId NexusModsArticleId { get; init; }
+        public string Title { get; init; }
+        public NexusModsUserId NexusModsUserId { get; init; }
+        public NexusModsUserName Author { get; init; }
+        public DateTimeOffset CreateDate { get; init; }
+    }
 
 
     private readonly ILogger _logger;
-    private readonly IAppDbContextRead _dbContextRead;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
-    public NexusModsArticleController(ILogger<NexusModsArticleController> logger, IAppDbContextRead dbContextRead)
+    public NexusModsArticleController(ILogger<NexusModsArticleController> logger, IUnitOfWorkFactory unitOfWorkFactory)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContextRead = dbContextRead ?? throw new ArgumentNullException(nameof(dbContextRead));
+        _logger = logger;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
     [HttpPost("Paginated")]
-    public async Task<ApiResult<PagingData<NexusModsArticleModel>?>> PaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ApiResult<PagingData<NexusModsArticleModel>?>> GetPaginatedAsync([FromBody, Required] PaginatedQuery query, CancellationToken ct)
     {
-        var paginated = await _dbContextRead.NexusModsArticles
-            .Include(x => x.NexusModsUser).ThenInclude(x => x.Name)
-            .Select(x => new
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
+        var paginated = await unitOfRead.NexusModsArticles.PaginatedAsync(x =>
+            new NexusModsArticleModel
             {
                 NexusModsArticleId = x.NexusModsArticleId,
                 Title = x.Title,
                 NexusModsUserId = x.NexusModsUser.NexusModsUserId,
                 Author = x.NexusModsUser.Name != null ? x.NexusModsUser.Name.Name : NexusModsUserName.Empty,
-                CreateDate = x.CreateDate,
-            })
-            .PaginatedAsync(query, 100, new() { Property = nameof(NexusModsArticleEntity.NexusModsArticleId), Type = SortingType.Ascending }, ct);
+                CreateDate = x.CreateDate
+            },
+            query, 100, new() { Property = nameof(NexusModsArticleModel.NexusModsArticleId), Type = SortingType.Ascending }, ct);
 
-        return ApiPagingResult(paginated, items => items.Select(x => new NexusModsArticleModel(x.NexusModsArticleId, x.Title, x.NexusModsUserId, x.Author, x.CreateDate)));
+        return ApiPagingResult(paginated);
     }
 
-    [HttpGet("Autocomplete")]
-    public ApiResult<IQueryable<string>?> Autocomplete([FromQuery] string authorName)
+    [HttpGet("Autocompletes/AuthorNames")]
+    public async Task<ApiResult<IList<string>?>> GetAutocompleteAuthorNamesAsync([FromQuery, Required] string authorName, [BindTenant] TenantId tenant, CancellationToken ct)
     {
-        var moduleIds = _dbContextRead.NexusModsArticles
-            .Include(x => x.NexusModsUser).ThenInclude(x => x.Name)
-            .Select(x => x.NexusModsUser)
-            .Select(x => x.Name!)
-            .Where(x => EF.Functions.ILike(x.Name.Value, $"{authorName}%"))
-            .Select(x => x.Name.Value)
-            .Distinct();
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead(tenant);
+
+        var moduleIds = await unitOfRead.NexusModsArticles.GetAllModuleIdsAsync(authorName, ct);
+        // TODO:
 
         return ApiResult(moduleIds);
 

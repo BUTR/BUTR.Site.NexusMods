@@ -16,7 +16,7 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IProblemDetailsWriter, ApiResultProblemDetailsWriter>();
         services.AddProblemDetails();
 
-        var builder = services.AddControllers().HandleInvalidModelStateError().AddMvcOptions(configure);
+        var builder = services.AddControllers(configure).HandleInvalidModelStateError();
 
         services.Decorate<IActionResultTypeMapper, ApiResultActionResultTypeMapper>();
 
@@ -35,7 +35,7 @@ public static class IServiceCollectionExtensions
 
         services.Replace(ServiceDescriptor.Describe(
             typeof(TInterface),
-            serviceProvider => (TInterface) decoratorFactory(serviceProvider, new[] { serviceProvider.CreateInstance(interfaceDescriptor) }),
+            serviceProvider => (TInterface) decoratorFactory(serviceProvider, [serviceProvider.CreateInstance(interfaceDescriptor)]),
             interfaceDescriptor.Lifetime));
     }
 

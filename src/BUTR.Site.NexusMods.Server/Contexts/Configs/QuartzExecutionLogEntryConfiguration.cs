@@ -43,7 +43,15 @@ public class QuartzExecutionLogEntityConfiguration : BaseEntityConfiguration<Qua
         builder.Property(x => x.DateAddedUtc).HasColumnName("date_added_utc");
         builder.Property(x => x.MachineName).HasColumnName("machie_name");
 
-        builder.ToTable("quartz_log", "quartz").HasKey(x => new { x.RunInstanceId, x.JobName, x.JobGroup, x.TriggerName, x.TriggerGroup, x.FireTimeUtc });
+        builder.ToTable("quartz_log", "quartz").HasKey(x => new
+        {
+            x.RunInstanceId,
+            x.JobName,
+            x.JobGroup,
+            x.TriggerName,
+            x.TriggerGroup,
+            x.FireTimeUtc
+        });
 
         base.ConfigureModel(builder);
     }

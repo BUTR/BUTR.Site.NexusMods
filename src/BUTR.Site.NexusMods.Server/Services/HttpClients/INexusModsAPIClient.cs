@@ -44,9 +44,9 @@ public sealed class NexusModsAPIClient : INexusModsAPIClient
 
     public NexusModsAPIClient(HttpClient httpClient, IDistributedCache cache, IOptions<JsonSerializerOptions> jsonSerializerOptions)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-        _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
+        _httpClient = httpClient;
+        _cache = cache;
+        _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
     private static string HashString(string value)

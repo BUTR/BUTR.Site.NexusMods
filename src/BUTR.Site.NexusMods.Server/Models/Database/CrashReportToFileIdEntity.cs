@@ -11,5 +11,5 @@ public sealed record CrashReportToFileIdEntity : IEntityWithTenant
 
     public required CrashReportFileId FileId { get; init; }
 
-    public override int GetHashCode() => HashCode.Combine(CrashReportId, FileId);
+    public override int GetHashCode() => HashCode.Combine(TenantId, CrashReportId, FileId);
 }

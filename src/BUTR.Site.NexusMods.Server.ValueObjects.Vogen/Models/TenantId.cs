@@ -3,15 +3,15 @@ namespace BUTR.Site.NexusMods.Server.Models;
 using TType = TenantId;
 using TValueType = Byte;
 
-[TypeConverter(typeof(VogenTypeConverter<TType, TValueType>))]
-[JsonConverter(typeof(VogenJsonConverter<TType, TValueType>))]
-[ValueObject<TValueType>(conversions: Conversions.None, deserializationStrictness: DeserializationStrictness.AllowKnownInstances)]
-public readonly partial record struct TenantId : IVogen<TType, TValueType>, IVogenParsable<TType, TValueType>, IVogenSpanParsable<TType, TValueType>, IVogenUtf8SpanParsable<TType, TValueType>, IHasDefaultValue<TType>
+[ValueObject<TValueType>(conversions: Conversions.EfCoreValueConverter | Conversions.SystemTextJson | Conversions.TypeConverter, deserializationStrictness: DeserializationStrictness.AllowKnownInstances)]
+public readonly partial struct TenantId : IVogen<TType, TValueType>, IHasDefaultValue<TType>
 {
     public static readonly TType None = From(0);
     public static readonly TType Bannerlord = From(TenantUtils.BannerlordId);
     public static readonly TType Rimworld = From(TenantUtils.RimworldId);
     public static readonly TType StardewValley = From(TenantUtils.StardewValleyId);
+    public static readonly TType Valheim = From(TenantUtils.ValheimId);
+    public static readonly TType Error = From(255);
 
     public static TType DefaultValue => None;
 
@@ -22,13 +22,12 @@ public readonly partial record struct TenantId : IVogen<TType, TValueType>, IVog
             yield return Bannerlord;
             //yield return Rimworld;
             //yield return StardewValley;
+            //yield return Valheim;
             //yield return DarkestDungeon;
         }
     }
 
     public static TType Copy(TType instance) => instance with { };
-    public static bool IsInitialized(TType instance) => instance._isInitialized;
-    public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);
 
     public static TType FromTenant(int tenant)
     {

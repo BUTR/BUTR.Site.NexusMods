@@ -27,6 +27,7 @@ public record NexusModsModEntity : IEntityWithTenant
     private NexusModsModEntity(TenantId tenant, NexusModsModId modId, DateTimeOffset lastCheckedDate) : this(tenant, modId) => FileUpdate = new()
     {
         TenantId = tenant,
+        NexusModsModId = modId,
         NexusModsMod = this,
         LastCheckedDate = lastCheckedDate
     };

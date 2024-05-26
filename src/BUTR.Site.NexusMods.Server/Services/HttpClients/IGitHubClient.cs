@@ -32,8 +32,8 @@ public sealed class GitHubClient : IGitHubClient
 
     public GitHubClient(HttpClient httpClient, IOptions<GitHubOptions> options)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+        _httpClient = httpClient;
+        _options = options.Value;
     }
 
     public (string Url, Guid State) GetOAuthUrl()
@@ -51,20 +51,15 @@ public sealed class GitHubClient : IGitHubClient
 
     public async Task<GitHubOAuthTokens?> CreateTokensAsync(string code, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "login/oauth/access_token")
+        using var request = new HttpRequestMessage(HttpMethod.Post, "login/oauth/access_token");
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>
         {
-            Headers =
-            {
-                Accept = { new MediaTypeWithQualityHeaderValue("application/json") }
-            },
-            Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>
-            {
-                new("client_id", _options.ClientId),
-                new("client_secret", _options.ClientSecret),
-                new("redirect_uri", _options.RedirectUri),
-                new("code", code),
-            })
-        };
+            new("client_id", _options.ClientId),
+            new("client_secret", _options.ClientSecret),
+            new("redirect_uri", _options.RedirectUri),
+            new("code", code),
+        });
         using var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return null;
         var tokens = await JsonSerializer.DeserializeAsync<GitHubOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);

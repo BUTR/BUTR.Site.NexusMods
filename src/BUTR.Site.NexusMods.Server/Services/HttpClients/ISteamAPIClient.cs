@@ -74,8 +74,8 @@ public sealed class SteamAPIClient : ISteamAPIClient
 
     public SteamAPIClient(HttpClient httpClient, IOptions<SteamAPIOptions> options)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+        _httpClient = httpClient;
+        _options = options.Value;
     }
 
     public async Task<SteamUserInfo?> GetUserInfoAsync(string steamId, CancellationToken ct)

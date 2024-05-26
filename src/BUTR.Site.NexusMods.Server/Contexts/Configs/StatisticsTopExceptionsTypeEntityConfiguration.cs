@@ -12,13 +12,17 @@ public class StatisticsTopExceptionsTypeEntityConfiguration : BaseEntityConfigur
 
     protected override void ConfigureModel(EntityTypeBuilder<StatisticsTopExceptionsTypeEntity> builder)
     {
-        builder.Property<ExceptionTypeId>(nameof(ExceptionTypeEntity.ExceptionTypeId)).HasColumnName("top_exceptions_type_id").HasValueObjectConversion().ValueGeneratedNever();
+        builder.Property(x => x.ExceptionTypeId).HasColumnName("top_exceptions_type_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.ExceptionCount).HasColumnName("count");
-        builder.ToTable("top_exceptions_type", "statistics").HasKey(nameof(StatisticsTopExceptionsTypeEntity.TenantId), nameof(ExceptionTypeEntity.ExceptionTypeId));
+        builder.ToTable("top_exceptions_type", "statistics").HasKey(x => new
+        {
+            x.TenantId,
+            x.ExceptionTypeId,
+        });
 
         builder.HasOne(x => x.ExceptionType)
             .WithMany(x => x.ToTopExceptionsTypes)
-            .HasForeignKey(nameof(StatisticsTopExceptionsTypeEntity.TenantId), nameof(ExceptionTypeEntity.ExceptionTypeId))
+            .HasForeignKey(x => new { x.TenantId, x.ExceptionTypeId })
             .HasPrincipalKey(x => new { x.TenantId, x.ExceptionTypeId })
             .OnDelete(DeleteBehavior.Cascade);
 

@@ -17,6 +17,7 @@ public sealed record CrashReportEntity : IEntityWithTenant
 
     public required GameVersion GameVersion { get; init; }
 
+    public required ExceptionTypeId ExceptionTypeId { get; init; }
     public required ExceptionTypeEntity ExceptionType { get; init; }
 
     public required string Exception { get; init; }
@@ -25,5 +26,5 @@ public sealed record CrashReportEntity : IEntityWithTenant
 
     public required CrashReportUrl Url { get; init; }
 
-    public override int GetHashCode() => HashCode.Combine(CrashReportId, Version, GameVersion, ExceptionType, Exception, CreatedAt, Url);
+    public override int GetHashCode() => HashCode.Combine(TenantId, CrashReportId, Version, GameVersion, ExceptionTypeId, Exception, CreatedAt, Url);
 }

@@ -22,7 +22,7 @@ public sealed class SteamDepotDownloader : ISteamDepotDownloader
 
     public SteamDepotDownloader(IOptions<SteamDepotDownloaderOptions> options)
     {
-        _options = options.Value ?? throw new ArgumentNullException(nameof(options));
+        _options = options.Value;
     }
 
     public async Task DownloadAsync(string version, string path, CancellationToken ct)

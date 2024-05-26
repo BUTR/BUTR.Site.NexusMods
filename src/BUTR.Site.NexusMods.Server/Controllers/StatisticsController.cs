@@ -1,16 +1,14 @@
-using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Repositories;
 using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,99 +20,58 @@ public sealed class StatisticsController : ApiControllerBase
 {
     public record TopExceptionsEntry(ExceptionTypeId Type, decimal Percentage);
 
-    public record VersionScore
-    {
-        public required ModuleVersion Version { get; init; }
-        public required double Score { get; init; }
-        public required double Value { get; init; }
-        public required int CountStable { get; init; }
-        public required int CountUnstable { get; init; }
-        public double Count => CountStable + CountUnstable;
-    }
-    public record VersionStorage
-    {
-        public required ModuleVersion Version { get; init; }
-        public required VersionScore[] Scores { get; init; }
-        public double MeanScore => Scores.Length == 0 ? 0 : 1 - (Scores.Sum(x => x.Value) / (double) Scores.Sum(x => x.Count));
-    };
-    public record ModuleStorage
-    {
-        public required ModuleId ModuleId { get; init; }
-        public required VersionStorage[] Versions { get; init; }
-    };
-
-    public record GameStorage
-    {
-        public required GameVersion GameVersion { get; init; }
-        public required ModuleStorage[] Modules { get; init; }
-    }
-
     private readonly ILogger _logger;
-    private readonly IAppDbContextRead _dbContextRead;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
-    public StatisticsController(ILogger<StatisticsController> logger, IAppDbContextRead dbContextRead)
+    public StatisticsController(ILogger<StatisticsController> logger, IUnitOfWorkFactory unitOfWorkFactory)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContextRead = dbContextRead ?? throw new ArgumentNullException(nameof(dbContextRead));
-    }
-
-    [HttpGet("AutocompleteGameVersion")]
-    public ApiResult<IQueryable<string>?> AutocompleteGameVersion([FromQuery] GameVersion gameVersion)
-    {
-        return ApiResult(_dbContextRead.AutocompleteStartsWith<CrashReportEntity, GameVersion>(x => x.GameVersion, gameVersion));
-    }
-
-    [HttpGet("AutocompleteModuleId")]
-    public ApiResult<IQueryable<string>?> AutocompleteModuleId([FromQuery] ModuleId moduleId)
-    {
-        return ApiResult(_dbContextRead.AutocompleteStartsWith<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId, moduleId));
+        _logger = logger;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
     [HttpGet("TopExceptionsTypes")]
-    public async Task<ApiResult<IEnumerable<TopExceptionsEntry>?>> TopExceptionsTypesAsync(CancellationToken ct)
+    public async Task<ApiResult<IEnumerable<TopExceptionsEntry>?>> GetTopExceptionsTypesAsync(CancellationToken ct)
     {
-        var types = await _dbContextRead.StatisticsTopExceptionsTypes
-            .Include(x => x.ExceptionType)
-            .ToArrayAsync(ct);
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
+        var types = await unitOfRead.StatisticsTopExceptionsTypes.GetAllAsync(null, null, ct);
 
         var total = (decimal) types.Sum(x => x.ExceptionCount);
 
         return ApiResult(types.Select(x => new TopExceptionsEntry(x.ExceptionType.ExceptionTypeId, ((decimal) x.ExceptionCount / total) * 100M)));
     }
 
-    [HttpGet("Involved")]
-    public ApiResult<IQueryable<GameStorage>?> Involved([FromQuery] GameVersion[]? gameVersions, [FromQuery] ModuleId[]? moduleIds, [FromQuery] ModuleVersion[]? moduleVersions)
+    [HttpGet("InvolvedModules")]
+    public async Task<ApiResult<IList<StatisticsInvolvedModuleScoresForGameVersionModel>?>> GetInvolvedModulesAsync([FromQuery] GameVersion[]? gameVersions, [FromQuery] ModuleId[]? moduleIds, [FromQuery] ModuleVersion[]? moduleVersions)
     {
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
         //if (gameVersions?.Length == 0 && modIds?.Length == 0 && modVersions?.Length == 0)
         //    return StatusCode(StatusCodes.Status403Forbidden, Array.Empty<GameStorage>());
 
-        var data = _dbContextRead.StatisticsCrashScoreInvolveds
-            .Include(x => x.Module)
-            .WhereIf(gameVersions != null && gameVersions.Length != 0, x => gameVersions!.Contains(x.GameVersion))
-            .WhereIf(moduleIds != null && moduleIds.Length != 0, x => moduleIds!.Contains(x.Module.ModuleId))
-            .WhereIf(moduleVersions != null && moduleVersions.Length != 0, x => moduleVersions!.Contains(x.ModuleVersion))
-            .GroupBy(x => new { x.GameVersion })
-            .Select(x => new GameStorage
-            {
-                GameVersion = x.Key.GameVersion,
-                Modules = x.GroupBy(y => new { y.Module.ModuleId }).Select(y => new ModuleStorage
-                {
-                    ModuleId = y.Key.ModuleId,
-                    Versions = y.GroupBy(z => new { z.ModuleVersion }).Select(z => new VersionStorage
-                    {
-                        Version = z.Key.ModuleVersion,
-                        Scores = z.Select(q => new VersionScore
-                        {
-                            Version = z.Key.ModuleVersion,
-                            Score = 1 - q.Score,
-                            Value = q.RawValue,
-                            CountStable = q.NotInvolvedCount,
-                            CountUnstable = q.InvolvedCount,
-                        }).ToArray(),
-                    }).ToArray(),
-                }).ToArray(),
-            });
+        var data = await unitOfRead.StatisticsCrashScoreInvolveds.GetAllInvolvedModuleScoresForGameVersionAsync(gameVersions, moduleIds, moduleVersions, CancellationToken.None);
 
         return ApiResult(data);
+    }
+
+
+    [HttpGet("Autocomplete/GameVersions")]
+    public async Task<ApiResult<IList<string>?>> GetAutocompleteGameVersionsAsync([FromQuery, Required] GameVersion gameVersion)
+    {
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
+        var gameVersions = await unitOfRead.Autocompletes.AutocompleteStartsWithAsync<CrashReportEntity, GameVersion>(x => x.GameVersion, gameVersion, CancellationToken.None);
+
+        return ApiResult(gameVersions);
+    }
+
+    [HttpGet("Autocomplete/ModuleIds")]
+    public async Task<ApiResult<IList<string>?>> GetAutocompleteModuleIdsAsync([FromQuery, Required] ModuleId moduleId)
+    {
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
+        var moduleIds = await unitOfRead.Autocompletes.AutocompleteStartsWithAsync<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId, moduleId, CancellationToken.None);
+
+        return ApiResult(moduleIds);
     }
 }

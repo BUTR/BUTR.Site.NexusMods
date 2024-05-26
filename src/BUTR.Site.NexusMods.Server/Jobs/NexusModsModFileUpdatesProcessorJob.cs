@@ -1,12 +1,11 @@
-using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Models.NexusModsAPI;
 using BUTR.Site.NexusMods.Server.Options;
+using BUTR.Site.NexusMods.Server.Repositories;
 using BUTR.Site.NexusMods.Server.Services;
 
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -28,12 +27,18 @@ namespace BUTR.Site.NexusMods.Server.Jobs;
 public sealed class NexusModsModFileUpdatesProcessorJob : IJob
 {
     private readonly ILogger _logger;
+    private readonly NexusModsOptions _nexusModsOptions;
+    private readonly INexusModsAPIClient _nexusModsAPIClient;
+    private readonly INexusModsModFileParser _nexusModsModFileParser;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public NexusModsModFileUpdatesProcessorJob(ILogger<NexusModsModFileUpdatesProcessorJob> logger, IServiceScopeFactory serviceScopeFactory)
+    public NexusModsModFileUpdatesProcessorJob(ILogger<NexusModsModFileUpdatesProcessorJob> logger, IOptions<NexusModsOptions> nexusModsOptions, INexusModsAPIClient nexusModsAPIClient, INexusModsModFileParser nexusModsModFileParser, IServiceScopeFactory serviceScopeFactory)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
+        _logger = logger;
+        _nexusModsOptions = nexusModsOptions.Value;
+        _nexusModsAPIClient = nexusModsAPIClient;
+        _nexusModsModFileParser = nexusModsModFileParser;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -49,12 +54,8 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
         var newUpdates = 0;
         foreach (var tenant in TenantId.Values)
         {
-            await using var scope = _serviceScopeFactory.CreateAsyncScope();
-
-            var tenantContextAccessor = scope.ServiceProvider.GetRequiredService<ITenantContextAccessor>();
-            tenantContextAccessor.Current = tenant;
-
-            var (processed_, exceptions_, updatesStoredWithinDay_, updatedWithinDay_, newUpdates_) = await HandleTenantAsync(tenant, scope.ServiceProvider, ct);
+            await using var scope = _serviceScopeFactory.CreateAsyncScope().WithTenant(tenant);
+            var (processed_, exceptions_, updatesStoredWithinDay_, updatedWithinDay_, newUpdates_) = await HandleTenantAsync(scope, tenant, ct);
             processed += processed_;
             exceptions.AddRange(exceptions_);
             updatesStoredWithinDay += updatesStoredWithinDay_;
@@ -70,18 +71,17 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
         context.SetIsSuccess(exceptions.Count == 0);
     }
 
-    private static async Task<(int Processed, List<Exception> Exceptions, int UpdatesStoredWithinDay, int UpdatedWithinDay, int NewUpdates)> HandleTenantAsync(TenantId tenant, IServiceProvider serviceProvider, CancellationToken ct)
+    private async Task<(int Processed, List<Exception> Exceptions, int UpdatesStoredWithinDay, int UpdatedWithinDay, int NewUpdates)> HandleTenantAsync(AsyncServiceScope scope, TenantId tenant, CancellationToken ct)
     {
+        var unitOfWorkFactory = scope.ServiceProvider.GetRequiredService<IUnitOfWorkFactory>();
+        await using var unitOfRead = unitOfWorkFactory.CreateUnitOfRead();
+        await using var unitOfWrite = unitOfWorkFactory.CreateUnitOfWrite();
+
         var gameDomain = tenant.ToGameDomain();
 
-        var info = serviceProvider.GetRequiredService<INexusModsModFileParser>();
-        var options = serviceProvider.GetRequiredService<IOptions<NexusModsOptions>>().Value;
-        var client = serviceProvider.GetRequiredService<INexusModsAPIClient>();
-        var dbContextRead = serviceProvider.GetRequiredService<IAppDbContextRead>();
-
-        var dateOneWeekAgo = DateTime.UtcNow.AddDays(-7);
-        var updatesStoredWithinWeek = await dbContextRead.NexusModsModToFileUpdates.Where(x => x.LastCheckedDate > dateOneWeekAgo).ToListAsync(ct);
-        var updatedWithinWeek = await client.GetAllModUpdatesWeekAsync(gameDomain, options.ApiKey, ct) ?? Array.Empty<NexusModsUpdatedModsResponse>();
+        var dateOneWeekAgo = DateTime.UtcNow.AddDays(-30);
+        var updatesStoredWithinWeek = await unitOfRead.NexusModsModToFileUpdates.GetAllAsync(x => x.LastCheckedDate > dateOneWeekAgo, null, ct);
+        var updatedWithinWeek = await _nexusModsAPIClient.GetAllModUpdatesWeekAsync(gameDomain, _nexusModsOptions.ApiKey, ct) ?? Array.Empty<NexusModsUpdatedModsResponse>();
         var newUpdates = updatedWithinWeek.Where(x =>
         {
             var latestFileUpdateDate = DateTimeOffset.FromUnixTimeSeconds(x.LatestFileUpdateTimestamp).ToUniversalTime();
@@ -95,45 +95,49 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
         var exceptions = new List<Exception>();
         foreach (var modUpdate in newUpdates)
         {
-            var dbContextWrite = serviceProvider.GetRequiredService<IAppDbContextWrite>();
-            var entityFactory = dbContextWrite.GetEntityFactory();
-            await using var _ = await dbContextWrite.CreateSaveScopeAsync();
             try
             {
                 if (ct.IsCancellationRequested) break;
 
-                if (await client.GetModFileInfosFullAsync(gameDomain, modUpdate.Id, options.ApiKey, ct) is not { } response) continue;
+                if (await _nexusModsAPIClient.GetModFileInfosFullAsync(gameDomain, modUpdate.Id, _nexusModsOptions.ApiKey, ct) is not { } response) continue;
 
                 var updates = response.FileUpdates.Where(x => DateTimeOffset.FromUnixTimeSeconds(x.UploadedTimestamp) > dateOneWeekAgo).ToArray();
                 if (updates.Length == 0) continue;
 
-                var infos = await info.GetModuleInfosAsync(gameDomain, modUpdate.Id, response.Files.Where(x => updates.Any(y => y.NewId == x.FileId)), options.ApiKey, ct).ToArrayAsync(ct);
+                var infos = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modUpdate.Id, response.Files.Where(x => updates.Any(y => y.NewId == x.FileId)), _nexusModsOptions.ApiKey, ct).ToArrayAsync(ct);
                 var lastUpdateTime = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).ToUniversalTime();
 
-                await dbContextWrite.NexusModsModModules.UpsertOnSaveAsync(infos.Select(x => x.ModuleInfo).DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
+                unitOfWrite.NexusModsModModules.UpsertRange(infos.Select(x => x.ModuleInfo).DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
                 {
                     TenantId = tenant,
-                    NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
-                    Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
+                    NexusModsModId = modUpdate.Id,
+                    NexusModsMod = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
+                    ModuleId = ModuleId.From(x.Id),
+                    Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
                     LastUpdateDate = lastUpdateTime,
                     LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure
-                }));
-                await dbContextWrite.NexusModsModToFileUpdates.UpsertOnSaveAsync(new NexusModsModToFileUpdateEntity
+                }).ToList());
+                unitOfWrite.NexusModsModToFileUpdates.Upsert(new NexusModsModToFileUpdateEntity
                 {
                     TenantId = tenant,
-                    NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
+                    NexusModsModId = modUpdate.Id,
+                    NexusModsMod = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
                     LastCheckedDate = lastUpdateTime
                 });
-                await dbContextWrite.NexusModsModToModuleInfoHistory.UpsertOnSaveAsync(infos.DistinctBy(x => new { x.ModuleInfo.Id, x.ModuleInfo.Version, x.FileId }).Select(x => new NexusModsModToModuleInfoHistoryEntity
+                unitOfWrite.NexusModsModToModuleInfoHistory.UpsertRange(infos.DistinctBy(x => new { x.ModuleInfo.Id, x.ModuleInfo.Version, x.FileId }).Select(x => new NexusModsModToModuleInfoHistoryEntity
                 {
                     TenantId = tenant,
                     NexusModsFileId = x.FileId,
-                    NexusModsMod = entityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
-                    Module = entityFactory.GetOrCreateModule(ModuleId.From(x.ModuleInfo.Id)),
+                    NexusModsModId = modUpdate.Id,
+                    NexusModsMod = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
+                    ModuleId = ModuleId.From(x.ModuleInfo.Id),
+                    Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(ModuleId.From(x.ModuleInfo.Id)),
                     ModuleVersion = ModuleVersion.From(x.ModuleInfo.Version.ToString()),
                     ModuleInfo = ModuleInfoModel.Create(x.ModuleInfo),
                     UploadDate = x.Uploaded,
-                }));
+                }).ToList());
+
+                await unitOfWrite.SaveChangesAsync(CancellationToken.None);
                 processed++;
             }
             catch (Exception e)

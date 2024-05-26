@@ -1,12 +1,12 @@
-using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
+using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Repositories;
 
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 using Quartz;
 
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,20 +14,24 @@ namespace BUTR.Site.NexusMods.Server.Jobs;
 
 public sealed class QuartzLogHistoryManagerExecutionLogsJob : IJob
 {
-    private readonly IAppDbContextWrite _dbContextWrite;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public QuartzLogHistoryManagerExecutionLogsJob(IAppDbContextWrite dbContextWrite)
+    public QuartzLogHistoryManagerExecutionLogsJob(IServiceScopeFactory serviceScopeFactory)
     {
-        _dbContextWrite = dbContextWrite ?? throw new ArgumentNullException(nameof(dbContextWrite));
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var ct = CancellationToken.None;
+        await using var scope = _serviceScopeFactory.CreateAsyncScope().WithTenant(TenantId.None);
 
-        var count = await _dbContextWrite.QuartzExecutionLogs
-            .Where(x => DateTimeOffset.UtcNow - x.DateAddedUtc > TimeSpan.FromDays(30))
-            .ExecuteDeleteAsync(ct);
+        var unitOfWorkFactory = scope.ServiceProvider.GetRequiredService<IUnitOfWorkFactory>();
+        await using var unitOfWrite = unitOfWorkFactory.CreateUnitOfWrite();
+
+        var count = unitOfWrite.QuartzExecutionLogs
+            .Remove(x => DateTimeOffset.UtcNow - x.DateAddedUtc > TimeSpan.FromDays(30));
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
 
         context.Result = $"Deleted {count} execution logs";
         context.SetIsSuccess(true);

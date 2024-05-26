@@ -12,18 +12,22 @@ public class CrashReportEntityConfiguration : BaseEntityConfigurationWithTenant<
 
     protected override void ConfigureModel(EntityTypeBuilder<CrashReportEntity> builder)
     {
-        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_id").HasValueObjectConversion().ValueGeneratedNever();
-        builder.Property(x => x.Version).HasColumnName("version").HasValueObjectConversion();
-        builder.Property(x => x.GameVersion).HasColumnName("game_version").HasValueObjectConversion();
-        builder.Property<ExceptionTypeId>(nameof(ExceptionTypeEntity.ExceptionTypeId)).HasColumnName("exception_type_id").HasValueObjectConversion();
+        builder.Property(x => x.CrashReportId).HasColumnName("crash_report_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property(x => x.Version).HasColumnName("version").HasVogenConversion();
+        builder.Property(x => x.GameVersion).HasColumnName("game_version").HasVogenConversion();
+        builder.Property(x => x.ExceptionTypeId).HasColumnName("exception_type_id").HasVogenConversion();
         builder.Property(x => x.Exception).HasColumnName("exception");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
-        builder.Property(x => x.Url).HasColumnName("url").HasValueObjectConversion();
-        builder.ToTable("crash_report", "crashreport").HasKey(x => new { x.TenantId, x.CrashReportId });
+        builder.Property(x => x.Url).HasColumnName("url").HasVogenConversion();
+        builder.ToTable("crash_report", "crashreport").HasKey(x => new
+        {
+            x.TenantId,
+            x.CrashReportId
+        });
 
         builder.HasOne(x => x.ExceptionType)
             .WithMany(x => x.ToCrashReports)
-            .HasForeignKey(nameof(CrashReportEntity.TenantId), nameof(ExceptionTypeEntity.ExceptionTypeId))
+            .HasForeignKey(x => new { x.TenantId, x.ExceptionTypeId })
             .HasPrincipalKey(x => new { x.TenantId, x.ExceptionTypeId })
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -31,8 +35,6 @@ public class CrashReportEntityConfiguration : BaseEntityConfigurationWithTenant<
         //builder.HasIndex(x => x.Version);
         //builder.HasIndex(x => x.GameVersion);
         //builder.HasIndex(x => x.CreatedAt);
-
-        builder.Navigation(x => x.ExceptionType).AutoInclude();
 
         base.ConfigureModel(builder);
     }

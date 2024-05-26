@@ -10,14 +10,17 @@ public sealed class IntegrationSteamTokensEntityConfiguration : BaseEntityConfig
 {
     protected override void ConfigureModel(EntityTypeBuilder<IntegrationSteamTokensEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("integration_steam_tokens_id").HasValueObjectConversion().ValueGeneratedNever();
+        builder.Property(x => x.NexusModsUserId).HasColumnName("integration_steam_tokens_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.SteamUserId).HasColumnName("steam_user_id");
         builder.Property(x => x.Data).HasColumnName("data").HasColumnType("hstore");
-        builder.ToTable("integration_steam_tokens", "integration").HasKey(nameof(NexusModsUserEntity.NexusModsUserId));
+        builder.ToTable("integration_steam_tokens", "integration").HasKey(x => new
+        {
+            x.NexusModsUserId,
+        });
 
         builder.HasOne(x => x.NexusModsUser)
             .WithOne()
-            .HasForeignKey<IntegrationSteamTokensEntity>(nameof(NexusModsUserEntity.NexusModsUserId))
+            .HasForeignKey<IntegrationSteamTokensEntity>(x => x.NexusModsUserId)
             .HasPrincipalKey<NexusModsUserEntity>(x => x.NexusModsUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -26,8 +29,6 @@ public sealed class IntegrationSteamTokensEntityConfiguration : BaseEntityConfig
             .HasForeignKey<IntegrationSteamTokensEntity>(x => x.SteamUserId)
             .HasPrincipalKey<NexusModsUserToIntegrationSteamEntity>(x => x.SteamUserId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(x => x.NexusModsUser).AutoInclude();
 
         base.ConfigureModel(builder);
     }

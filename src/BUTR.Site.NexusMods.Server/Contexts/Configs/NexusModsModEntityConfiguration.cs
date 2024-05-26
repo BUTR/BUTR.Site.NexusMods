@@ -12,8 +12,12 @@ public class NexusModsModEntityConfiguration : BaseEntityConfigurationWithTenant
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsModEntity> builder)
     {
-        builder.Property(x => x.NexusModsModId).HasColumnName("nexusmods_mod_id").HasValueObjectConversion();
-        builder.ToTable("nexusmods_mod", "nexusmods_mod").HasKey(x => new { x.TenantId, x.NexusModsModId });
+        builder.Property(x => x.NexusModsModId).HasColumnName("nexusmods_mod_id").HasVogenConversion();
+        builder.ToTable("nexusmods_mod", "nexusmods_mod").HasKey(x => new
+        {
+            x.TenantId,
+            x.NexusModsModId
+        });
 
         base.ConfigureModel(builder);
     }

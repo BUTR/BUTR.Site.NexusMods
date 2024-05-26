@@ -42,6 +42,31 @@ public static class HttpContextExtensions
             }).ToImmutableArray(),
         };
     }
+    public static ProfileModel GetProfile(this HttpContext context, Services.NexusModsUserInfo userInfo, ApplicationRole role, Dictionary<string, string> metadata)
+    {
+        var jsonSerializerOptions = context.RequestServices.GetRequiredService<IOptions<JsonSerializerOptions>>().Value;
+
+        return new ProfileModel
+        {
+            NexusModsUserId = NexusModsUserId.From(int.Parse(userInfo.UserId)),
+            Name = userInfo.Name,
+            Email = NexusModsUserEMail.Empty,
+            ProfileUrl = "validate.ProfileUrl",
+            IsPremium = userInfo.MembershipRoles.Contains("supporter"),
+            IsSupporter = userInfo.MembershipRoles.Contains("premium"),
+            Role = role,
+            GitHubUserId = GetGitHubId(metadata, jsonSerializerOptions),
+            DiscordUserId = GetDiscordId(metadata, jsonSerializerOptions),
+            GOGUserId = GetGOGId(metadata, jsonSerializerOptions),
+            SteamUserId = GetSteamId(metadata, jsonSerializerOptions),
+            HasTenantGame = context.OwnsTenantGame(context.GetTenant()),
+            AvailableTenants = TenantId.Values.Select(x => new ProfileTenantModel
+            {
+                TenantId = x,
+                Name = x.ToName(),
+            }).ToImmutableArray(),
+        };
+    }
 
     public static ProfileModel GetProfile(this HttpContext context)
     {
@@ -111,6 +136,12 @@ public static class HttpContextExtensions
         if (context.User.FindFirst(ButrNexusModsClaimTypes.APIKey)?.Value is { } apiKey)
             return NexusModsApiKey.From(apiKey);
         return NexusModsApiKey.None;
+    }
+    public static NexusModsOAuthTokens? GetTokens(this HttpContext context)
+    {
+        if (context.User.FindFirst(ButrNexusModsClaimTypes.AccessToken)?.Value is { } accessToken && context.User.FindFirst(ButrNexusModsClaimTypes.RefreshToken)?.Value is { } refreshToken)
+            return new NexusModsOAuthTokens(accessToken, refreshToken);
+        return null;
     }
 
     public static ApplicationRole GetRole(this HttpContext context)

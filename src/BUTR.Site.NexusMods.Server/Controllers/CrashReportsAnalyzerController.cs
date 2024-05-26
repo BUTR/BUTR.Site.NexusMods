@@ -5,15 +5,15 @@ using BUTR.CrashReport.Models.Analyzer;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Repositories;
 using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
-using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -33,16 +33,16 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
 
 
     private readonly ILogger _logger;
-    private readonly IAppDbContextRead _dbContextRead;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
-    public CrashReportsAnalyzerController(ILogger<CrashReportsAnalyzerController> logger, IAppDbContextRead dbContextRead)
+    public CrashReportsAnalyzerController(ILogger<CrashReportsAnalyzerController> logger, IUnitOfWorkFactory unitOfWorkFactory)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dbContextRead = dbContextRead ?? throw new ArgumentNullException(nameof(dbContextRead));
+        _logger = logger;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
-    [HttpPost("GetDiagnostics")]
-    public async Task<ActionResult<CrashReportDiagnosticsResult?>> GetDiagnosticsAsync([BindTenant] TenantId tenant, [FromBody] CrashReportModel crashReport, [FromServices] ITenantContextAccessor tenantContextAccessor, CancellationToken ct)
+    [HttpPost("Diagnostics")]
+    public async Task<ActionResult<CrashReportDiagnosticsResult?>> GetDiagnosticsAsync([FromBody, Required] CrashReportModel crashReport, [BindTenant] TenantId tenant, [FromServices] ITenantContextAccessor tenantContextAccessor, CancellationToken ct)
     {
         tenantContextAccessor.Current = tenant;
 
@@ -111,7 +111,7 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
 
         var currentModuleIdsWithoutAnyData = crashReport.Modules.Where(x => !x.IsOfficial && string.IsNullOrEmpty(x.Url) && x.UpdateInfo is null)
             .Select(x => ModuleId.From(x.Id)).ToArray();
-        var currentMexusModsUpdateInfos = crashReport.Modules.Where(x => !x.IsOfficial && x.UpdateInfo is { Provider: "NexusMods" })
+        var currentMexusModsUpdateInfos = crashReport.Modules.Where(x => x is { IsOfficial: false, UpdateInfo.Provider: "NexusMods" })
             .Select(x => NexusModsModId.TryParse(x.UpdateInfo!.Value, out var modId) ? modId : NexusModsModId.None)
             .Where(x => x != NexusModsModId.None).ToArray();
         var currentNexusModsIds = crashReport.Modules.Where(x => !x.IsOfficial && !string.IsNullOrEmpty(x.Url))
@@ -122,16 +122,18 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
         var currentModules = crashReport.Modules
             .Where(x => !x.IsOfficial).Select(x => new { ModuleId = ModuleId.From(x.Id), Version = ModuleVersion.From(x.Version) }).ToArray();
 
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
         // SMAPI uses different update providers - Chucklefish, NexusMods, GitHub
         // We curectly will only use NexusMods
         //var updateInfoEntries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.Module.ModuleId));
         //var entries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.Module.ModuleId));
-        var historicEntriesBasedOnModuleId = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => currentModuleIdsWithoutAnyData.Contains(x.Module.ModuleId));
-        var historicEntriesBasedOnNexusModsId = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => currentNexusModsIds.Contains(x.NexusModsMod.NexusModsModId));
-        var historicEntriesBasedOnUpdateInfo = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => currentMexusModsUpdateInfos.Contains(x.NexusModsMod.NexusModsModId));
+        var historicEntriesBasedOnModuleId = await unitOfRead.NexusModsModToModuleInfoHistory.GetAllAsync(x => currentModuleIdsWithoutAnyData.Contains(x.Module.ModuleId), null, ct);
+        var historicEntriesBasedOnNexusModsId = await unitOfRead.NexusModsModToModuleInfoHistory.GetAllAsync(x => currentNexusModsIds.Contains(x.NexusModsMod.NexusModsModId), null, ct);
+        var historicEntriesBasedOnUpdateInfo = await unitOfRead.NexusModsModToModuleInfoHistory.GetAllAsync(x => currentMexusModsUpdateInfos.Contains(x.NexusModsMod.NexusModsModId), null, ct);
         var allHistoricEntries = historicEntriesBasedOnModuleId.Concat(historicEntriesBasedOnNexusModsId).Concat(historicEntriesBasedOnUpdateInfo);
 
-        var historicEntriesCompatibleWithGameVersion = allHistoricEntries.AsEnumerable().Select(x => new
+        var historicEntriesCompatibleWithGameVersion = allHistoricEntries.Select(x => new
         {
             ModuleId = x.Module.ModuleId,
             ModuleVersion = ApplicationVersion.TryParse(x.ModuleVersion.Value, out var v) ? v : ApplicationVersion.Empty,

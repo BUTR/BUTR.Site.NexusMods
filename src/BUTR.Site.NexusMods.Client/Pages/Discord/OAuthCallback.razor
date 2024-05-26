@@ -102,7 +102,7 @@
                 return;
             }
 
-            await _discordClient.LinkAsync(code: queryCode);
+            await _discordClient.AddLinkAsync(code: queryCode);
             _ = await _authenticationProvider.ValidateAsync();
 
             if (await _discordClient.GetUserInfoAsync() is { Value: var userInfo })

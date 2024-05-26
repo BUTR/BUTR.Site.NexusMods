@@ -14,7 +14,7 @@ public sealed class LocalStorageTokenContainer : ITokenContainer
 
     public LocalStorageTokenContainer(ILocalStorageService localStorage)
     {
-        _localStorage = localStorage ?? throw new ArgumentNullException(nameof(localStorage));
+        _localStorage = localStorage;
     }
 
     public async Task<Token?> GetTokenAsync(CancellationToken ct = default)

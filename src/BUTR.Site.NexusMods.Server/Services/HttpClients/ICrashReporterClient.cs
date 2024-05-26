@@ -29,8 +29,8 @@ public sealed class CrashReporterClient : ICrashReporterClient
 
     public CrashReporterClient(HttpClient httpClient, IOptions<JsonSerializerOptions> jsonSerializerOptions)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
+        _httpClient = httpClient;
+        _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
     public async Task<string> GetCrashReportAsync(CrashReportFileId id, CancellationToken ct) => await _httpClient.GetStringAsync($"{id}.html", ct);
@@ -44,14 +44,16 @@ public sealed class CrashReporterClient : ICrashReporterClient
 
     public async IAsyncEnumerable<CrashReportFileMetadata?> GetNewCrashReportMetadatasAsync(DateTime dateTime, [EnumeratorCancellation] CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "getnewcrashreports") { Content = JsonContent.Create(new { DateTime = dateTime.ToString("o") }, options: _jsonSerializerOptions) };
+        using var request = new HttpRequestMessage(HttpMethod.Post, "getnewcrashreports");
+        request.Content = JsonContent.Create(new { DateTime = dateTime.ToString("o") }, options: _jsonSerializerOptions);
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         await foreach (var entry in JsonSerializer.DeserializeAsyncEnumerable<CrashReportFileMetadata>(await response.Content.ReadAsStreamAsync(ct), _jsonSerializerOptions, ct))
             yield return entry;
     }
     public async IAsyncEnumerable<CrashReportFileMetadata?> GetCrashReportMetadatasAsync(IEnumerable<CrashReportFileId> filenames, [EnumeratorCancellation] CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "getmetadata") { Content = JsonContent.Create(filenames, options: _jsonSerializerOptions) };
+        using var request = new HttpRequestMessage(HttpMethod.Post, "getmetadata");
+        request.Content = JsonContent.Create(filenames, options: _jsonSerializerOptions);
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         await foreach (var entry in JsonSerializer.DeserializeAsyncEnumerable<CrashReportFileMetadata>(await response.Content.ReadAsStreamAsync(ct), _jsonSerializerOptions, ct))
             yield return entry;

@@ -10,14 +10,17 @@ public class IntegrationGitHubTokensEntityConfiguration : BaseEntityConfiguratio
 {
     protected override void ConfigureModel(EntityTypeBuilder<IntegrationGitHubTokensEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("integration_github_tokens_id").HasValueObjectConversion().ValueGeneratedNever();
+        builder.Property(x => x.NexusModsUserId).HasColumnName("integration_github_tokens_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.GitHubUserId).HasColumnName("github_user_id");
         builder.Property(x => x.AccessToken).HasColumnName("access_token");
-        builder.ToTable("integration_github_tokens", "integration").HasKey(nameof(NexusModsUserEntity.NexusModsUserId));
+        builder.ToTable("integration_github_tokens", "integration").HasKey(x => new
+        {
+            x.NexusModsUserId,
+        });
 
         builder.HasOne(x => x.NexusModsUser)
             .WithOne()
-            .HasForeignKey<IntegrationGitHubTokensEntity>(nameof(NexusModsUserEntity.NexusModsUserId))
+            .HasForeignKey<IntegrationGitHubTokensEntity>(x => x.NexusModsUserId)
             .HasPrincipalKey<NexusModsUserEntity>(x => x.NexusModsUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -26,8 +29,6 @@ public class IntegrationGitHubTokensEntityConfiguration : BaseEntityConfiguratio
             .HasForeignKey<IntegrationGitHubTokensEntity>(x => x.GitHubUserId)
             .HasPrincipalKey<NexusModsUserToIntegrationGitHubEntity>(x => x.GitHubUserId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(x => x.NexusModsUser).AutoInclude();
 
         base.ConfigureModel(builder);
     }

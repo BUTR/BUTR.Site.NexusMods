@@ -40,7 +40,7 @@
 
     private async Task<DataGridPaging<NexusModsArticleModel>.ItemsResponse?> GetArticles(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
-        var response = await _articlesClient.PaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
+        var response = await _articlesClient.GetPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
         return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
     }
 
@@ -50,7 +50,7 @@
             await _jsRuntime.InvokeVoidAsync("open", mod.Url(TenantUtils.FromTenantToGameDomain(await _tenantProvider.GetTenantAsync())!), "_blank");
     }
 
-    private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => (await _articlesClient.AutocompleteAsync(filter, ct)).Value ?? Array.Empty<string>();
+    private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => (await _articlesClient.GetAutocompleteAuthorNamesAsync(filter, ct)).Value ?? Array.Empty<string>();
 
     private static IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
     {

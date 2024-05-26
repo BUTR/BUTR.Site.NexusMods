@@ -8,6 +8,7 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Jobs;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Options;
+using BUTR.Site.NexusMods.Server.Repositories;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
@@ -20,6 +21,7 @@ using Community.Microsoft.Extensions.Caching.PostgreSql;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,6 +59,7 @@ public sealed partial class Startup
     private const string ConnectionStringsSectionName = "ConnectionStrings";
     private const string CrashReporterSectionName = "CrashReporter";
     private const string NexusModsSectionName = "NexusMods";
+    private const string NexusModsUsersSectionName = "NexusModsUsers";
     private const string JwtSectionName = "Jwt";
     private const string GitHubSectionName = "GitHub";
     private const string DiscordSectionName = "Discord";
@@ -86,7 +89,7 @@ public sealed partial class Startup
 
     public Startup(IConfiguration configuration)
     {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _configuration = configuration;
     }
 
     partial void ConfigureServicesPartial(IServiceCollection services);
@@ -98,6 +101,7 @@ public sealed partial class Startup
         var connectionStringSection = _configuration.GetSection(ConnectionStringsSectionName);
         var crashReporterSection = _configuration.GetSection(CrashReporterSectionName);
         var nexusModsSection = _configuration.GetSection(NexusModsSectionName);
+        var nexusModsUsersSection = _configuration.GetSection(NexusModsUsersSectionName);
         var jwtSection = _configuration.GetSection(JwtSectionName);
         var gitHubSection = _configuration.GetSection(GitHubSectionName);
         var discordSection = _configuration.GetSection(DiscordSectionName);
@@ -108,6 +112,7 @@ public sealed partial class Startup
         services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>().Bind(connectionStringSection);
         services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>().Bind(crashReporterSection);
         services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>().Bind(nexusModsSection);
+        services.AddValidatedOptionsWithHttp<NexusModsUsersOptions, NexusModsUsersOptionsValidator>().Bind(nexusModsUsersSection);
         services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>().Bind(jwtSection);
         services.AddValidatedOptions<GitHubOptions, GitHubOptionsValidator>().Bind(gitHubSection);
         services.AddValidatedOptions<DiscordOptions, DiscordOptionsValidator>().Bind(discordSection);
@@ -126,6 +131,16 @@ public sealed partial class Startup
         services.AddHttpClient<INexusModsAPIClient, NexusModsAPIClient>().ConfigureHttpClient((_, client) =>
         {
             client.BaseAddress = new Uri("https://api.nexusmods.com/");
+            client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+        }).AddPolicyHandler(GetRetryPolicy());
+        services.AddHttpClient<INexusModsAPIv2Client, NexusModsAPIv2Client>().ConfigureHttpClient((_, client) =>
+        {
+            client.BaseAddress = new Uri("https://api.nexusmods.com/");
+            client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+        }).AddPolicyHandler(GetRetryPolicy());
+        services.AddHttpClient<INexusModsUsersClient, NexusModsUsersClient>().ConfigureHttpClient((_, client) =>
+        {
+            client.BaseAddress = new Uri("https://users.nexusmods.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }).AddPolicyHandler(GetRetryPolicy());
         services.AddHttpClient<ICrashReporterClient, CrashReporterClient>().ConfigureHttpClient((sp, client) =>
@@ -183,6 +198,8 @@ public sealed partial class Startup
             string AtEveryDay(int hour = 0) => $"0 0 {hour} ? * *";
             string AtEveryHour() => "0 0 * * * ?";
 #if DEBUG
+            //opt.AddJobAtStartup<CrashReportProcessor2Job>();
+            /*
             opt.AddJob<CrashReportProcessorJob>();
             opt.AddJob<CrashReportAnalyzerProcessorJob>();
             opt.AddJob<TopExceptionsTypesAnalyzerProcessorJob>();
@@ -192,6 +209,7 @@ public sealed partial class Startup
             opt.AddJob<NexusModsModFileUpdatesProcessorJob>();
             opt.AddJob<NexusModsArticleProcessorJob>();
             opt.AddJob<NexusModsArticleUpdatesProcessorJob>();
+            */
 #else
             // Hourly
             opt.AddJob<CrashReportProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
@@ -212,6 +230,8 @@ public sealed partial class Startup
 
         services.AddMemoryCache();
 
+
+
         var types = typeof(Startup).Assembly.GetTypes().Where(x => x is { IsAbstract: false, BaseType: { IsGenericType: true } }).ToList();
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfigurationWithTenant<>)))
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));
@@ -221,8 +241,6 @@ public sealed partial class Startup
         services.AddDbContext<BaseAppDbContext>(ServiceLifetime.Scoped);
         services.AddDbContextFactory<AppDbContextRead>(lifetime: ServiceLifetime.Scoped);
         services.AddDbContextFactory<AppDbContextWrite>(lifetime: ServiceLifetime.Scoped);
-        services.AddScoped<IAppDbContextRead>(sp => sp.GetRequiredService<IAppDbContextFactory>().CreateRead());
-        services.AddScoped<IAppDbContextWrite>(sp => sp.GetRequiredService<IAppDbContextFactory>().CreateWrite());
 
         services.AddNexusModsDefaultServices();
 
@@ -236,18 +254,24 @@ public sealed partial class Startup
 
         services.AddStreamingMultipartResult();
 
+        services.AddHttpContextAccessor();
+        services.AddRouting(opt =>
+        {
+            opt.ConstraintMap["slugify"] = typeof(SlugifyParameterTransformer);
+        });
         services.AddControllersWithAPIResult(opt =>
         {
+            opt.Conventions.Add(new SlugifyActionConvention());
+            opt.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
+
             opt.AddCsvOutputFormatters();
+
             opt.ValueProviderFactories.Add(new ClaimsValueProviderFactory());
         }).AddJsonOptions(opt => Configure(opt.JsonSerializerOptions));
-
-        services.AddHttpContextAccessor();
-        services.AddRouting();
-        services.AddResponseCompression(options =>
+        services.AddResponseCompression(opt =>
         {
-            options.Providers.Add<BrotliCompressionProvider>();
-            options.Providers.Add<GzipCompressionProvider>();
+            opt.Providers.Add<BrotliCompressionProvider>();
+            opt.Providers.Add<GzipCompressionProvider>();
         });
         services.Configure<BrotliCompressionProviderOptions>(options =>
         {
@@ -288,13 +312,15 @@ public sealed partial class Startup
                 { jwtSecurityScheme, Array.Empty<string>() }
             });
 
+            opt.OperationFilter<SwaggerOperationIdFilter>();
             opt.DescribeAllParametersInCamelCase();
             opt.SupportNonNullableReferenceTypes();
             opt.SchemaFilter<RequiredMemberFilter>();
+            opt.SchemaFilter<NullableFilter>();
             opt.OperationFilter<BindIgnoreFilter>();
             opt.OperationFilter<AuthResponsesOperationFilter>();
             opt.OperationFilter<ApiResultOperationFilter>();
-            opt.ValueObjectFilter();
+            opt.SchemaFilter<VogenSchemaFilter>();
             opt.EnableAnnotations();
             opt.UseAllOfToExtendReferenceSchemas();
 
@@ -308,7 +334,7 @@ public sealed partial class Startup
                 .Where(File.Exists)
                 .ToList();
             foreach (var xmlFilePath in xmlFilePaths)
-                opt.IncludeXmlComments(xmlFilePath);
+                opt.IncludeXmlComments(xmlFilePath, true);
         });
 
         services.Configure<ForwardedHeadersOptions>(options =>

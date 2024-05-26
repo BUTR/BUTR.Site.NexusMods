@@ -6,6 +6,7 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
+using BUTR.Site.NexusMods.Server.Repositories;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -26,7 +27,7 @@ public interface ICrashReportBatchedHandler : IAsyncDisposable
     Task<int> HandleBatchAsync(IEnumerable<CrashReportFileMetadata> requests, CancellationToken ct);
 }
 
-[TransientService<ICrashReportBatchedHandler>]
+[ScopedService<ICrashReportBatchedHandler>]
 public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
 {
     private record HttpResultEntry(CrashReportFileId FileId, DateTime Date, CrashReportModel? CrashReport);
@@ -53,17 +54,17 @@ CallStack:
 
     private readonly ILogger _logger;
     private readonly CrashReporterOptions _options;
-    private readonly ITenantContextAccessor _tenantContextAccessor;
-    private readonly IAppDbContextFactory _dbContextFactory;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly ICrashReporterClient _client;
+    private readonly ITenantContextAccessor _tenantContextAccessor;
 
-    public CrashReportBatchedHandler(ILogger<CrashReportBatchedHandler> logger, IOptions<CrashReporterOptions> options, ITenantContextAccessor tenantContextAccessor, IAppDbContextFactory dbContextFactory, ICrashReporterClient client)
+    public CrashReportBatchedHandler(ILogger<CrashReportBatchedHandler> logger, IOptions<CrashReporterOptions> options, IUnitOfWorkFactory unitOfWorkFactory, ICrashReporterClient client, ITenantContextAccessor tenantContextAccessor)
     {
         _logger = logger;
         _options = options.Value;
-        _tenantContextAccessor = tenantContextAccessor;
-        _dbContextFactory = dbContextFactory;
+        _unitOfWorkFactory = unitOfWorkFactory;
         _client = client;
+        _tenantContextAccessor = tenantContextAccessor;
     }
 
     public async Task<int> HandleBatchAsync(IEnumerable<CrashReportFileMetadata> requests, CancellationToken ct)
@@ -95,18 +96,19 @@ CallStack:
 
     private async Task FilterCrashReportsAsync(IEnumerable<CrashReportFileMetadata> crashReports, CancellationToken ct)
     {
+        var tenant = _tenantContextAccessor.Current;
+
         try
         {
-            var tenant = _tenantContextAccessor.Current;
-            var dbContextRead = await _dbContextFactory.CreateReadAsync(ct);
+            var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
 
             var uniqueCrashReports = crashReports.DistinctBy(x => x.CrashReportId).ToArray();
             var uniqueCrashReportIds = uniqueCrashReports.Select(x => x.CrashReportId).ToArray();
 
-            var existingCrashReportIds = dbContextRead.CrashReports.Where(x => uniqueCrashReportIds.Contains(x.CrashReportId)).Select(x => x.CrashReportId).Distinct().ToArray();
+            var existingCrashReportIds = await unitOfRead.CrashReports.GetAllAsync(x => uniqueCrashReportIds.Contains(x.CrashReportId), null, x => x.CrashReportId, ct);
             var missingCrashReportIds = uniqueCrashReports.ExceptBy(existingCrashReportIds, x => x.CrashReportId).Select(x => x.CrashReportId).ToHashSet();
 
-            var existingLinks = dbContextRead.CrashReportToFileIds.Where(x => existingCrashReportIds.Contains(x.CrashReportId)).Select(x => x.CrashReportId).Distinct().ToArray();
+            var existingLinks = await unitOfRead.CrashReportToFileIds.GetAllAsync(x => existingCrashReportIds.Contains(x.CrashReportId), null, x => x.CrashReportId, ct);
             var missingLinks = uniqueCrashReports.ExceptBy(existingLinks, x => x.CrashReportId).ToArray();
             foreach (var missingLink in missingLinks)
             {
@@ -119,10 +121,10 @@ CallStack:
                 }, ct);
             }
 
-            var duplicateLinks = dbContextRead.CrashReportToFileIds
-                .Where(x => uniqueCrashReportIds.Contains(x.CrashReportId))
-                .Select(x => new { x.CrashReportId, x.FileId })
-                .AsEnumerable()
+            var uniqueCrashReportsTuple = await unitOfRead.CrashReportToFileIds
+                .GetAllAsync(x => uniqueCrashReportIds.Contains(x.CrashReportId), null, x => new { x.CrashReportId, x.FileId }, ct);
+
+            var duplicateLinks = uniqueCrashReportsTuple
                 .Join(uniqueCrashReports, x => new { x.CrashReportId }, x => new { x.CrashReportId }, (x, y) => new { y.CrashReportId, DbFileId = x.FileId, DlFileId = y.FileId })
                 .Where(x => x.DbFileId != x.DlFileId)
                 .Select(x => new { x.CrashReportId, FileId = x.DlFileId })
@@ -133,7 +135,7 @@ CallStack:
                 await _ignoredCrashReportsChannel.Writer.WriteAsync(new CrashReportIgnoredFileEntity
                 {
                     TenantId = tenant,
-                    Value = duplicateLink.FileId
+                    CrashReportFileId = duplicateLink.FileId
                 }, ct);
             }
 
@@ -210,8 +212,7 @@ CallStack:
     {
         var tenant = _tenantContextAccessor.Current;
 
-        var dbContextWrite = await _dbContextFactory.CreateWriteAsync(ct);
-        var entityFactory = dbContextWrite.GetEntityFactory();
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
 
         var uniqueCrashReportIds = new HashSet<CrashReportId>();
 
@@ -237,13 +238,14 @@ CallStack:
                 ignoredCrashReportFileEntities.Add(new CrashReportIgnoredFileEntity
                 {
                     TenantId = tenant,
-                    Value = fileId
+                    CrashReportFileId = fileId
                 });
                 continue;
             }
 
             uniqueCrashReportIds.Add(crashReportId);
 
+            // TODO:
             var butrLoaderVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "BUTRLoaderVersion")?.Value;
             var blseVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "BLSEVersion")?.Value;
             var launcherExVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "LauncherExVersion")?.Value;
@@ -255,7 +257,8 @@ CallStack:
                 Url = CrashReportUrl.From(new Uri(new Uri(_options.Endpoint), fileId.ToString())),
                 Version = CrashReportVersion.From(report.Version),
                 GameVersion = GameVersion.From(report.Metadata.GameVersion),
-                ExceptionType = entityFactory.GetOrCreateExceptionType(ExceptionTypeId.FromException(report.Exception)),
+                ExceptionTypeId = ExceptionTypeId.FromException(report.Exception),
+                ExceptionType = unitOfWrite.UpsertEntityFactory.GetOrCreateExceptionType(ExceptionTypeId.FromException(report.Exception)),
                 Exception = GetException(report.Exception),
                 CreatedAt = fileId.Value.Length == 8 ? DateTimeOffset.UnixEpoch.ToUniversalTime() : date.ToUniversalTime(),
             });
@@ -270,16 +273,18 @@ CallStack:
                 BLSEVersion = blseVersion,
                 LauncherExVersion = launcherExVersion,
             });
-            crashReportModulesBuilder.AddRange(report.Modules.Select((x, i) => new CrashReportToModuleMetadataEntity
+            crashReportModulesBuilder.AddRange(report.Modules.DistinctBy(x => new { x.Id }).Select(x => new CrashReportToModuleMetadataEntity
             {
                 TenantId = tenant,
                 CrashReportId = crashReportId,
-                Module = entityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
+                ModuleId = ModuleId.From(x.Id),
+                Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
                 Version = ModuleVersion.From(x.Version),
-                NexusModsMod = NexusModsModId.TryParseUrl(x.Url, out var modId) ? entityFactory.GetOrCreateNexusModsMod(modId) : null,
+                NexusModsModId = NexusModsModId.TryParseUrl(x.Url, out var modId1) ? modId1 : null,
+                NexusModsMod = NexusModsModId.TryParseUrl(x.Url, out var modId2) ? unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modId2) : null,
                 InvolvedPosition = (byte) (report.InvolvedModules.IndexOf(y => y.ModuleOrLoaderPluginId == x.Id) + 1),
                 IsInvolved = report.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == x.Id),
-            }));
+            }).ToArray());
         }
 
         var linkedCrashReports = _linkedCrashReportsChannel.Reader.ReadAllAsync(ct)
@@ -289,17 +294,16 @@ CallStack:
             .Concat(failedCrashReportFileIds.Select(x => new CrashReportIgnoredFileEntity
             {
                 TenantId = tenant,
-                Value = x,
+                CrashReportFileId = x,
             }).ToAsyncEnumerable());
 
-        await using var _ = await dbContextWrite.CreateSaveScopeAsync();
-        await dbContextWrite.CrashReports.UpsertOnSaveAsync(crashReportsBuilder);
-        await dbContextWrite.CrashReportModuleInfos.UpsertOnSaveAsync(crashReportModulesBuilder);
-        await dbContextWrite.CrashReportToMetadatas.UpsertOnSaveAsync(crashReportMetadatasBuilder);
-        await dbContextWrite.CrashReportToFileIds.UpsertOnSaveAsync(linkedCrashReports);
-        await dbContextWrite.CrashReportIgnoredFileIds.UpsertOnSaveAsync(ignoredCrashReports);
-        // Disposing the DBContext will save the data
+        unitOfWrite.CrashReports.UpsertRange(crashReportsBuilder);
+        unitOfWrite.CrashReportModuleInfos.UpsertRange(crashReportModulesBuilder);
+        unitOfWrite.CrashReportToMetadatas.UpsertRange(crashReportMetadatasBuilder);
+        unitOfWrite.CrashReportToFileIds.UpsertRange(await linkedCrashReports.ToArrayAsync(ct));
+        unitOfWrite.CrashReportIgnoredFileIds.UpsertRange(await ignoredCrashReports.ToArrayAsync(ct));
 
+        await unitOfWrite.SaveChangesAsync(ct);
         return crashReportsBuilder.Count;
     }
 

@@ -37,7 +37,7 @@ public sealed class GOGAuthClient : IGOGAuthClient
 
     public GOGAuthClient(HttpClient httpClient)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _httpClient = httpClient;
     }
 
     public string GetOAuth2Url() => OAuth2Url;

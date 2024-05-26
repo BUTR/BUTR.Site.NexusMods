@@ -6,13 +6,15 @@ public sealed record NexusModsModToModuleEntity : IEntityWithTenant
 {
     public required TenantId TenantId { get; init; }
 
+    public required NexusModsModId NexusModsModId { get; init; }
     public required NexusModsModEntity NexusModsMod { get; init; }
 
+    public required ModuleId ModuleId { get; init; }
     public required ModuleEntity Module { get; init; }
 
     public required NexusModsModToModuleLinkType LinkType { get; init; }
 
     public required DateTimeOffset LastUpdateDate { get; init; }
 
-    public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsMod.NexusModsModId, Module.ModuleId, LinkType, LastUpdateDate);
+    public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsModId, ModuleId, LinkType, LastUpdateDate);
 }

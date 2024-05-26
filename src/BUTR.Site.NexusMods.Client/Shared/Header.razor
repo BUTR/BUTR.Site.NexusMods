@@ -9,7 +9,7 @@
      Breakpoint="@Breakpoint.Desktop"
      Background="@Background.Dark"
      ThemeContrast="@ThemeContrast.Dark">
-    <BarBrand Margin="@Margin.Is0.FromEnd">
+    <BarBrand Margin="@Margin.Is2.FromStart.Is0.FromEnd">
         <BarItem TextAlignment="@TextAlignment.Center">
             <BarLink To="" Padding="@Padding.Is0.OnY">
                 <Figure Margin="@Margin.Is0" Size="@FigureSize.Is48x48">
@@ -19,7 +19,7 @@
         </BarItem>
     </BarBrand>
     <BarToggler />
-    <BarMenu>
+    <BarMenu Margin="@Margin.Is2.FromStart">
         <BarStart>
             <AuthorizeView>
                 <Authorized>
@@ -207,7 +207,7 @@
     {
         if (state.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role) is { } claim && claim.Value !=  ApplicationRoles.Anonymous)
         {
-            var response = await _userClient.ProfileAsync();
+            var response = await _userClient.GetProfileAsync();
             _user = response.Value;
             StateHasChanged();
         }

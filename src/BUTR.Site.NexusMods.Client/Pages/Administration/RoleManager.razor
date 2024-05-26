@@ -53,7 +53,7 @@
     {
         try
         {
-            if (await _userClient.SetRoleAsync(nexusModsUserId: (int) _model.UserId, role: _model.Role) is { Error: not null })
+            if (await _userClient.SetRoleAsync(userId: (int) _model.UserId, role: _model.Role) is { Error: not null })
             {
                 await _notificationService.Success(
                     $"Assigned '{_model.Role}' to user with id '{_model.UserId}'!",

@@ -4,6 +4,7 @@ namespace BUTR.Site.NexusMods.Server.Models.Database;
 
 public sealed record IntegrationGOGTokensEntity : IEntity
 {
+    public required NexusModsUserId NexusModsUserId { get; init; }
     public required NexusModsUserEntity NexusModsUser { get; init; }
 
     public required string GOGUserId { get; init; }
@@ -19,5 +20,5 @@ public sealed record IntegrationGOGTokensEntity : IEntity
     public required string AccessToken { get; init; }
     public required DateTimeOffset AccessTokenExpiresAt { get; init; }
 
-    public override int GetHashCode() => HashCode.Combine(NexusModsUser.NexusModsUserId, GOGUserId, RefreshToken, AccessToken, AccessTokenExpiresAt);
+    public override int GetHashCode() => HashCode.Combine(NexusModsUserId, GOGUserId, RefreshToken, AccessToken, AccessTokenExpiresAt);
 }

@@ -3,18 +3,14 @@ namespace BUTR.Site.NexusMods.Server.Models;
 using TType = NexusModsArticleId;
 using TValueType = Int32;
 
-[TypeConverter(typeof(VogenTypeConverter<TType, TValueType>))]
-[JsonConverter(typeof(VogenJsonConverter<TType, TValueType>))]
-[ValueObject<TValueType>(conversions: Conversions.None)]
-public readonly partial record struct NexusModsArticleId : IVogen<TType, TValueType>, IVogenParsable<TType, TValueType>, IVogenSpanParsable<TType, TValueType>, IVogenUtf8SpanParsable<TType, TValueType>, IHasDefaultValue<TType>
+[ValueObject<TValueType>(conversions: Conversions.EfCoreValueConverter | Conversions.SystemTextJson | Conversions.TypeConverter)]
+public readonly partial struct NexusModsArticleId : IVogen<TType, TValueType>, IHasDefaultValue<TType>
 {
     public static readonly TType None = From(0);
 
     public static TType DefaultValue => None;
 
     public static TType Copy(TType instance) => instance with { };
-    public static bool IsInitialized(TType instance) => instance._isInitialized;
-    public static TType DeserializeDangerous(TValueType instance) => Deserialize(instance);
 
     public static bool TryParseUrl(string urlRaw, out TType articleId)
     {

@@ -25,7 +25,7 @@ public class SyncLoggingHttpMessageHandler : DelegatingHandler
     /// <exception cref="ArgumentNullException"><paramref name="logger"/> is <see langword="null"/>.</exception>
     public SyncLoggingHttpMessageHandler(ILogger logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger = logger;
     }
 
     /// <summary>
@@ -36,8 +36,8 @@ public class SyncLoggingHttpMessageHandler : DelegatingHandler
     /// <exception cref="ArgumentNullException"><paramref name="logger"/> or <paramref name="options"/> is <see langword="null"/>.</exception>
     public SyncLoggingHttpMessageHandler(ILogger logger, HttpClientFactoryOptions options)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _logger = logger;
+        _options = options;
     }
 
     protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken ct)

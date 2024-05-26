@@ -19,7 +19,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        html = await _recreateStacktraceClient.HtmlAsync(Id, CancellationToken.None);
+        html = await _recreateStacktraceClient.GetHtmlAsync(Id, CancellationToken.None);
     }
 
 }

@@ -12,17 +12,21 @@ public class NexusModsUserToRoleEntityConfiguration : BaseEntityConfigurationWit
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToRoleEntity> builder)
     {
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("nexusmods_user_role_id").HasValueObjectConversion().ValueGeneratedNever();
-        builder.Property(x => x.Role).HasColumnName("role").HasValueObjectConversion();
-        builder.Property(x => x.TenantId).HasColumnName("tenant").HasValueObjectConversion();
-        builder.ToTable("nexusmods_user_role", "nexusmods_user").HasKey(nameof(NexusModsUserToRoleEntity.TenantId), nameof(NexusModsUserEntity.NexusModsUserId));
+        builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_role_id").HasVogenConversion().ValueGeneratedNever();
+        builder.Property(x => x.Role).HasColumnName("role").HasVogenConversion();
+        builder.Property(x => x.TenantId).HasColumnName("tenant").HasVogenConversion();
+        builder.ToTable("nexusmods_user_role", "nexusmods_user").HasKey(x => new
+        {
+            x.TenantId,
+            x.NexusModsUserId,
+        });
 
         builder.HasOne(x => x.NexusModsUser)
             .WithMany(x => x.ToRoles)
-            .HasForeignKey(nameof(NexusModsUserEntity.NexusModsUserId))
+            .HasForeignKey(x => x.NexusModsUserId)
             .HasPrincipalKey(x => x.NexusModsUserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Navigation(x => x.NexusModsUser).AutoInclude();
+        base.ConfigureModel(builder);
     }
 }

@@ -8,12 +8,11 @@
           SelectedRowChanged="@(model => { DataGridUtils.SelectDeselect(model, ref Value, ref _dataGridRef); })"
           ReadData="@OnReadData"
           TotalItems="@Metadata.TotalCount"
-          PageSize="@Metadata.PageSize"
+          PageSizes="@PageSizes"
           SelectionMode="@DataGridSelectionMode.Single"
           ShowPager
           ShowPageSizes
           PagerOptions="@(new DataGridPagerOptions { PaginationPosition = PagerElementPosition.Center, ButtonRowPosition = PagerElementPosition.Start, TotalItemsPosition = PagerElementPosition.End })"
-          PageSizes="@PageSizes"
           Filterable="@Filterable"
           Sortable="@Sortable"
           Responsive
@@ -133,6 +132,7 @@
                 .Select(x => new Sorting(x.SortField, x.SortDirection.ToSortingType()))
                 .ToArray();
             var filterings = GetFilters is not null ? GetFilters(e.Columns).ToArray() : Array.Empty<Filtering>();
+            
             await LoadItems(e.Page, e.PageSize, filterings, sortings, CancellationToken.None);
         }
     }

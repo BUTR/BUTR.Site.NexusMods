@@ -1,6 +1,6 @@
-using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Repositories;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
@@ -8,10 +8,9 @@ using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 using System;
-using System.Linq;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,26 +30,20 @@ public sealed class DiscordController : ApiControllerBase
 
     private readonly IDiscordClient _discordClient;
     private readonly IDiscordStorage _discordStorage;
-    private readonly IAppDbContextRead _dbContextRead;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
-    public DiscordController(IDiscordClient discordClient, IDiscordStorage discordStorage, IAppDbContextRead dbContextRead)
+    public DiscordController(IDiscordClient discordClient, IDiscordStorage discordStorage, IUnitOfWorkFactory unitOfWorkFactory)
     {
-        _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
-        _discordStorage = discordStorage ?? throw new ArgumentNullException(nameof(discordStorage));
-        _dbContextRead = dbContextRead ?? throw new ArgumentNullException(nameof(dbContextRead));
+        _discordClient = discordClient;
+        _discordStorage = discordStorage;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
-    [HttpGet("GetOAuthUrl")]
-    [Produces("application/json")]
-    public ApiResult<DiscordOAuthUrlModel?> GetOAuthUrl()
+    [HttpPost]
+    public async Task<ApiResult<string?>> AddLinkAsync([FromQuery, Required] string code, [BindRole] ApplicationRole role, CancellationToken ct)
     {
-        var (url, state) = _discordClient.GetOAuthUrl();
-        return ApiResult(new DiscordOAuthUrlModel(url, state));
-    }
+        var userId = HttpContext.GetUserId();
 
-    [HttpGet("Link")]
-    public async Task<ApiResult<string?>> LinkAsync([FromQuery] string code, [BindRole] ApplicationRole role, [BindUserId] NexusModsUserId userId, CancellationToken ct)
-    {
         var tokens = await _discordClient.CreateTokensAsync(code, ct);
         if (tokens is null)
             return ApiBadRequest("Failed to link!");
@@ -65,9 +58,11 @@ public sealed class DiscordController : ApiControllerBase
         return ApiResult("Linked successful!");
     }
 
-    [HttpPost("Unlink")]
-    public async Task<ApiResult<string?>> UnlinkAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
+    [HttpDelete]
+    public async Task<ApiResult<string?>> RemoveLinkAsync(CancellationToken ct)
     {
+        var userId = HttpContext.GetUserId();
+
         var tokens = HttpContext.GetDiscordTokens();
 
         if (tokens?.Data is null)
@@ -89,18 +84,29 @@ public sealed class DiscordController : ApiControllerBase
         return ApiResult("Unlinked successful!");
     }
 
-    [HttpPost("UpdateMetadata")]
-    public async Task<ApiResult<string?>> UpdateMetadataAsync([BindRole] ApplicationRole role, [BindUserId] NexusModsUserId userId, CancellationToken ct)
+    [HttpGet("OAuthUrl")]
+    public ApiResult<DiscordOAuthUrlModel?> GetOAuthUrl()
     {
+        var (url, state) = _discordClient.GetOAuthUrl();
+        return ApiResult(new DiscordOAuthUrlModel(url, state));
+    }
+
+    [HttpPut("Metadata")]
+    public async Task<ApiResult<string?>> UpdateMetadataAsync([BindRole] ApplicationRole role, CancellationToken ct)
+    {
+        var userId = HttpContext.GetUserId();
+
         if (await UpdateMetadataInternalAsync(role, userId, ct) is not { } result)
             return ApiBadRequest("Failed to update");
+
         return result ? ApiResult("") : ApiBadRequest("Failed to update");
     }
 
-
-    [HttpPost("GetUserInfo")]
-    public async Task<ApiResult<DiscordUserInfo?>> GetUserInfoByAccessTokenAsync([BindUserId] NexusModsUserId userId, CancellationToken ct)
+    [HttpGet("UserInfo")]
+    public async Task<ApiResult<DiscordUserInfo?>> GetUserInfoAsync(CancellationToken ct)
     {
+        var userId = HttpContext.GetUserId();
+
         var tokens = HttpContext.GetDiscordTokens();
 
         if (tokens?.Data is null)
@@ -124,12 +130,9 @@ public sealed class DiscordController : ApiControllerBase
         if (tokens?.Data is null)
             return null;
 
-        var linkedModsCount = await _dbContextRead.NexusModsUsers
-            .Include(x => x.ToNexusModsMods)
-            .AsSplitQuery()
-            .Where(x => x.NexusModsUserId == userId)
-            .SelectMany(x => x.ToNexusModsMods)
-            .CountAsync(ct);
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead(TenantId.None);
+
+        var linkedModsCount = await unitOfRead.NexusModsUsers.GetLinkedModCountAsync(userId, ct);
 
         var refreshed = await _discordClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)

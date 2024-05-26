@@ -112,7 +112,7 @@
         if (save && _datagridPagingRef?.Value is not null)
         {
             var updatedCrashReport = _datagridPagingRef.Value with { };
-            if (await _crashReportsClient.UpdateAsync(updatedCrashReport) is { Error: not null })
+            if (await _crashReportsClient.UpdateAsync(updatedCrashReport.Id, updatedCrashReport.Status, updatedCrashReport.Comment) is { Error: not null })
             {
                 await _notificationService.Success("Saved Crash Report!", "Success!");
             }
@@ -134,7 +134,7 @@
         return await _crashReportsClient.PaginatedStreamingAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), ct);
     }
 
-    private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => await _crashReportsClient.AutocompleteAsync(new(filter), ct) is { Value: { } data } ? data : Array.Empty<string>();
+    private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => await _crashReportsClient.GetAutocompleteModuleIdsAsync(new(filter), ct) is { Value: { } data } ? data : Array.Empty<string>();
 
     private IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
     {

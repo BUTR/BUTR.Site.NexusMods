@@ -22,8 +22,8 @@ public sealed class CrashReporterClient : ICrashReporterClient
 
     public CrashReporterClient(HttpClient httpClient, IOptions<JsonSerializerOptions> jsonSerializerOptions)
     {
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _jsonSerializerOptions = jsonSerializerOptions.Value ?? throw new ArgumentNullException(nameof(jsonSerializerOptions));
+        _httpClient = httpClient;
+        _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
     public async Task<CrashReportModel?> GetCrashReportModelAsync(string id, CancellationToken ct)

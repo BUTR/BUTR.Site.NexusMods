@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,14 +21,15 @@ public sealed class ReportsController : ApiControllerBase
 
     public ReportsController(ILogger<ReportsController> logger, ICrashReporterClient crashReporterClient)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _crashReporterClient = crashReporterClient ?? throw new ArgumentNullException(nameof(crashReporterClient));
+        _logger = logger;
+        _crashReporterClient = crashReporterClient;
     }
 
-    [HttpGet("Get/{id}.html")]
+    [HttpGet("{id}.html")]
     [Produces("text/html")]
     public async Task<ActionResult<string>> GetAllAsync(CrashReportFileId id, CancellationToken ct) => Ok(await _crashReporterClient.GetCrashReportAsync(id, ct));
 
+    // Just so we have ApiResult type in swagger.json
     [HttpGet("BlankRequest")]
     [Produces("text/plain")]
     public ApiResult BlankRequest() => ApiResultError("", StatusCodes.Status400BadRequest);

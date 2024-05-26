@@ -1,11 +1,9 @@
 using BUTR.Site.NexusMods.DependencyInjection;
-using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Repositories;
 
-using Microsoft.EntityFrameworkCore;
-
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Services;
@@ -22,39 +20,55 @@ public interface IGitHubStorage
 [ScopedService<IGitHubStorage>]
 public sealed class DatabaseGitHubStorage : IGitHubStorage
 {
-    private readonly IAppDbContextRead _dbContextRead;
-    private readonly IAppDbContextWrite _dbContextWrite;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
-    public DatabaseGitHubStorage(IAppDbContextRead dbContextRead, IAppDbContextWrite dbContextWrite)
+    public DatabaseGitHubStorage(IUnitOfWorkFactory unitOfWorkFactory)
     {
-        _dbContextRead = dbContextRead;
-        _dbContextWrite = dbContextWrite;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
     public async Task<GitHubOAuthTokens?> GetAsync(string gitHubUserId)
     {
-        var entity = await _dbContextRead.IntegrationGitHubTokens.FirstOrDefaultAsync(x => x.GitHubUserId.Equals(gitHubUserId));
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead(TenantId.None);
+
+        var entity = await unitOfRead.IntegrationGitHubTokens.FirstOrDefaultAsync(x => x.GitHubUserId.Equals(gitHubUserId), null, CancellationToken.None);
         if (entity is null) return null;
         return new(entity.AccessToken);
     }
 
     public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string gitHubUserId, GitHubOAuthTokens tokens)
     {
-        var entityFactory = _dbContextWrite.GetEntityFactory();
-        await using var _ = await _dbContextWrite.CreateSaveScopeAsync();
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
-        var nexusModsUserToIntegrationGitHub = entityFactory.GetOrCreateNexusModsUserGitHub(nexusModsUserId, gitHubUserId);
-        var tokensGitHub = entityFactory.GetOrCreateIntegrationGitHubTokens(nexusModsUserId, gitHubUserId, tokens.AccessToken);
+        var nexusModsUserToIntegrationGitHub = new NexusModsUserToIntegrationGitHubEntity
+        {
+            NexusModsUserId = nexusModsUserId,
+            NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(nexusModsUserId),
+            GitHubUserId = gitHubUserId,
+        };
+        var tokensGitHub = new IntegrationGitHubTokensEntity
+        {
+            GitHubUserId = gitHubUserId,
+            NexusModsUserId = nexusModsUserId,
+            NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(nexusModsUserId),
+            AccessToken = tokens.AccessToken,
+        };
 
-        await _dbContextWrite.NexusModsUserToGitHub.UpsertOnSaveAsync(nexusModsUserToIntegrationGitHub);
-        await _dbContextWrite.IntegrationGitHubTokens.UpsertOnSaveAsync(tokensGitHub);
+        unitOfWrite.NexusModsUserToGitHub.Upsert(nexusModsUserToIntegrationGitHub);
+        unitOfWrite.IntegrationGitHubTokens.Upsert(tokensGitHub);
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return true;
     }
 
     public async Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string gitHubUserId)
     {
-        await _dbContextWrite.NexusModsUserToGitHub.Where(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.GitHubUserId == gitHubUserId).ExecuteDeleteAsync();
-        await _dbContextWrite.IntegrationGitHubTokens.Where(x => x.GitHubUserId == gitHubUserId).ExecuteDeleteAsync();
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
+
+        unitOfWrite.NexusModsUserToGitHub.Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.GitHubUserId == gitHubUserId);
+        unitOfWrite.IntegrationGitHubTokens.Remove(x => x.GitHubUserId == gitHubUserId);
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return true;
     }
 }

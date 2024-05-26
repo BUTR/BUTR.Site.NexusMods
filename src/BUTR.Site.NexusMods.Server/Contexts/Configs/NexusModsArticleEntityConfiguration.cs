@@ -12,19 +12,21 @@ public class NexusModsArticleEntityConfiguration : BaseEntityConfigurationWithTe
 
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsArticleEntity> builder)
     {
-        builder.Property(x => x.NexusModsArticleId).HasColumnName("nexusmods_article_entity_id").HasValueObjectConversion().ValueGeneratedNever();
+        builder.Property(x => x.NexusModsArticleId).HasColumnName("nexusmods_article_entity_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.Title).HasColumnName("title");
-        builder.Property<NexusModsUserId>(nameof(NexusModsUserEntity.NexusModsUserId)).HasColumnName("author_id").HasValueObjectConversion();
+        builder.Property(x => x.NexusModsUserId).HasColumnName("author_id").HasVogenConversion();
         builder.Property(x => x.CreateDate).HasColumnName("create_date");
-        builder.ToTable("nexusmods_article_entity", "nexusmods_article").HasKey(x => new { x.TenantId, x.NexusModsArticleId });
+        builder.ToTable("nexusmods_article_entity", "nexusmods_article").HasKey(x => new
+        {
+            x.TenantId,
+            x.NexusModsArticleId
+        });
 
         builder.HasOne(x => x.NexusModsUser)
             .WithMany(x => x.ToArticles)
-            .HasForeignKey(nameof(NexusModsUserEntity.NexusModsUserId))
+            .HasForeignKey(x => x.NexusModsUserId)
             .HasPrincipalKey(x => x.NexusModsUserId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(x => x.NexusModsUser).AutoInclude();
 
         base.ConfigureModel(builder);
     }
