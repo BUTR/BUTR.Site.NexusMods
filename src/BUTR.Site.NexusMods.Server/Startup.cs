@@ -85,7 +85,6 @@ public sealed partial class Startup
     }
 
     private readonly IConfiguration _configuration;
-    private readonly AssemblyName _assemblyName = typeof(Startup).Assembly.GetName();
 
     public Startup(IConfiguration configuration)
     {
@@ -96,7 +95,8 @@ public sealed partial class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        var userAgent = $"{_assemblyName.Name ?? "ERROR"} v{_assemblyName.Version?.ToString() ?? "ERROR"} (github.com/BUTR)";
+        var assemblyName = typeof(Startup).Assembly.GetName();
+        var userAgent = $"{assemblyName.Name ?? "ERROR"} v{assemblyName.Version?.ToString() ?? "ERROR"} (github.com/BUTR)";
 
         var connectionStringSection = _configuration.GetSection(ConnectionStringsSectionName);
         var crashReporterSection = _configuration.GetSection(CrashReporterSectionName);
