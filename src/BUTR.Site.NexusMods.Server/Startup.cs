@@ -118,6 +118,7 @@ public sealed partial class Startup
         services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>().Bind(steamAPISection);
         services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>().Bind(depotDownloaderSection);
 
+        return;
         services.AddHttpClient(string.Empty).ConfigureHttpClient((_, client) =>
         {
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
@@ -186,7 +187,6 @@ public sealed partial class Startup
             client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }).AddPolicyHandler(GetRetryPolicy());
-        return;
 
         Log.Warning("Test4");
         services.AddQuartzHostedService(options =>
