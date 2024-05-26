@@ -42,7 +42,9 @@ public static class Program
 
             var host = CreateHostBuilder(args).Build();
 
-            await host.SeedDbContext<BaseAppDbContext>().RunAsync();
+            await host
+                //.SeedDbContext<BaseAppDbContext>()
+                .RunAsync();
         }
         catch (Exception ex)
         {
@@ -58,12 +60,6 @@ public static class Program
         .CreateDefaultBuilder(args)
         .ConfigureServices((ctx, services) =>
         {
-            services.AddQuartzHostedService(options =>
-            {
-                options.AwaitApplicationStarted = true;
-                options.WaitForJobsToComplete = true;
-            });
-
             if (ctx.Configuration.GetSection("Oltp") is { } oltpSection)
             {
                 var openTelemetry = services.AddOpenTelemetry()

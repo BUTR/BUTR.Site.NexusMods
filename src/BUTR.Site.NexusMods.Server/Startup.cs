@@ -8,7 +8,6 @@ using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Jobs;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Options;
-using BUTR.Site.NexusMods.Server.Repositories;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
 using BUTR.Site.NexusMods.Server.Utils.BindingSources;
@@ -95,7 +94,6 @@ public sealed partial class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        Log.Warning("Test1");
         var assemblyName = typeof(Startup).Assembly.GetName();
         var userAgent = $"{assemblyName.Name ?? "ERROR"} v{assemblyName.Version?.ToString() ?? "ERROR"} (github.com/BUTR)";
 
@@ -108,6 +106,7 @@ public sealed partial class Startup
         var discordSection = _configuration.GetSection(DiscordSectionName);
         var steamAPISection = _configuration.GetSection(SteamAPISectionName);
         var depotDownloaderSection = _configuration.GetSection(DepotDownloaderSectionName);
+        return;
 
         Log.Warning("Test2");
         services.AddOptions<JsonSerializerOptions>().Configure(opt => Configure(opt));
@@ -192,6 +191,11 @@ public sealed partial class Startup
         }).AddPolicyHandler(GetRetryPolicy());
 
         Log.Warning("Test4");
+        services.AddQuartzHostedService(options =>
+        {
+            options.AwaitApplicationStarted = true;
+            options.WaitForJobsToComplete = true;
+        });
         services.AddQuartz(opt =>
         {
             opt.AddJobListener<IQuartzEventProviderService>(sp => sp.GetRequiredService<IQuartzEventProviderService>());
@@ -383,6 +387,7 @@ public sealed partial class Startup
 
     public void Configure(IApplicationBuilder app, IHostEnvironment env)
     {
+        return;
         app.UseForwardedHeaders();
 
         if (env.IsDevelopment())
