@@ -107,18 +107,19 @@ public sealed partial class Startup
         var steamAPISection = _configuration.GetSection(SteamAPISectionName);
         var depotDownloaderSection = _configuration.GetSection(DepotDownloaderSectionName);
 
-        //services.AddOptions<JsonSerializerOptions>().Configure(opt => Configure(opt));
+        services.AddOptions<JsonSerializerOptions>().Configure(opt => Configure(opt));
+        /*
         services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>().Bind(connectionStringSection);
         services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>().Bind(crashReporterSection);
         services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>().Bind(nexusModsSection);
-        //services.AddValidatedOptionsWithHttp<NexusModsUsersOptions, NexusModsUsersOptionsValidator>().Bind(nexusModsUsersSection);
+        services.AddValidatedOptionsWithHttp<NexusModsUsersOptions, NexusModsUsersOptionsValidator>().Bind(nexusModsUsersSection);
         services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>().Bind(jwtSection);
         services.AddValidatedOptions<GitHubOptions, GitHubOptionsValidator>().Bind(gitHubSection);
         services.AddValidatedOptions<DiscordOptions, DiscordOptionsValidator>().Bind(discordSection);
         services.AddValidatedOptions<SteamAPIOptions, SteamAPIOptionsValidator>().Bind(steamAPISection);
         services.AddValidatedOptions<SteamDepotDownloaderOptions, SteamDepotDownloaderOptionsValidator>().Bind(depotDownloaderSection);
+        */
 
-        return;
         services.AddHttpClient(string.Empty).ConfigureHttpClient((_, client) =>
         {
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
@@ -187,6 +188,7 @@ public sealed partial class Startup
             client.BaseAddress = new Uri("https://embed.gog.com/");
             client.DefaultRequestHeaders.Add("User-Agent", userAgent);
         }).AddPolicyHandler(GetRetryPolicy());
+        return;
 
         Log.Warning("Test4");
         services.AddQuartzHostedService(options =>
