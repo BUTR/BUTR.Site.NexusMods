@@ -109,9 +109,9 @@ public sealed partial class Startup
 
         services.AddOptions<JsonSerializerOptions>().Configure(opt => Configure(opt));
         services.AddValidatedOptions<ConnectionStringsOptions, ConnectionStringsOptionsValidator>().Bind(connectionStringSection);
-        /*
         services.AddValidatedOptionsWithHttp<CrashReporterOptions, CrashReporterOptionsValidator>().Bind(crashReporterSection);
         services.AddValidatedOptionsWithHttp<NexusModsOptions, NexusModsOptionsValidator>().Bind(nexusModsSection);
+        /*
         services.AddValidatedOptionsWithHttp<NexusModsUsersOptions, NexusModsUsersOptionsValidator>().Bind(nexusModsUsersSection);
         services.AddValidatedOptions<JwtOptions, JwtOptionsValidator>().Bind(jwtSection);
         services.AddValidatedOptions<GitHubOptions, GitHubOptionsValidator>().Bind(gitHubSection);
