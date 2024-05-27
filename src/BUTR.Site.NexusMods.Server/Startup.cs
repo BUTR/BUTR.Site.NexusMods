@@ -15,6 +15,7 @@ using BUTR.Site.NexusMods.Server.Utils.Csv.Extensions;
 using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 using BUTR.Site.NexusMods.Server.Utils.Http.Logging;
 using BUTR.Site.NexusMods.Server.Utils.Http.StreamingMultipartResults;
+using BUTR.Site.NexusMods.Server.ValueObjects.Utils;
 
 using Community.Microsoft.Extensions.Caching.PostgreSql;
 
@@ -49,7 +50,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Unicode;
-using BUTR.Site.NexusMods.Server.ValueObjects.Utils;
 
 namespace BUTR.Site.NexusMods.Server;
 
@@ -234,7 +234,7 @@ public sealed partial class Startup
 
         services.AddMemoryCache();
 
-        
+
         var types = typeof(Startup).Assembly.GetTypes().Where(x => x is { IsAbstract: false, BaseType: { IsGenericType: true } }).ToList();
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfigurationWithTenant<>)))
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));

@@ -147,7 +147,7 @@ public static class Program
             var loggingEndpoint = oltpSection.GetValue<string>("LoggingEndpoint");
             if (loggingEndpoint is null) return;
             var loggingProtocol = oltpSection.GetValue<OtlpExportProtocol>("LoggingProtocol");
-            
+
             builder.AddOpenTelemetry(o =>
             {
                 o.IncludeScopes = true;
