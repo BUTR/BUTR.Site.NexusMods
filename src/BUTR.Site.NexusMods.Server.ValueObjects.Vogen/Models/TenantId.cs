@@ -4,7 +4,7 @@ using TType = TenantId;
 using TValueType = Byte;
 
 [ValueObject<TValueType>(conversions: Conversions.EfCoreValueConverter | Conversions.SystemTextJson | Conversions.TypeConverter, deserializationStrictness: DeserializationStrictness.AllowKnownInstances)]
-public readonly partial struct TenantId : IVogen<TType, TValueType>, IHasDefaultValue<TType>
+public readonly partial struct TenantId : IHasDefaultValue<TType>
 {
     public static readonly TType None = From(0);
     public static readonly TType Bannerlord = From(TenantUtils.BannerlordId);
@@ -27,8 +27,6 @@ public readonly partial struct TenantId : IVogen<TType, TValueType>, IHasDefault
         }
     }
 
-    public static TType Copy(TType instance) => instance with { };
-
     public static TType FromTenant(int tenant)
     {
         foreach (var tenantId in Values)
@@ -44,11 +42,4 @@ public readonly partial struct TenantId : IVogen<TType, TValueType>, IHasDefault
         TenantUtils.FromTenantToGameDomain(Value) is { } gameDomainRaw ? NexusModsGameDomain.FromGameDomain(gameDomainRaw) : NexusModsGameDomain.None;
 
     public string ToName() => TenantUtils.FromTenantToName(Value) ?? string.Empty;
-
-    public static int GetHashCode(TType instance) => VogenDefaults<TType, TValueType>.GetHashCode(instance);
-
-    public static bool Equals(TType left, TType right) => VogenDefaults<TType, TValueType>.Equals(left, right);
-    public static bool Equals(TType left, TType right, IEqualityComparer<TType> comparer) => VogenDefaults<TType, TValueType>.Equals(left, right, comparer);
-
-    public static int CompareTo(TType left, TType right) => VogenDefaults<TType, TValueType>.CompareTo(left, right);
 }

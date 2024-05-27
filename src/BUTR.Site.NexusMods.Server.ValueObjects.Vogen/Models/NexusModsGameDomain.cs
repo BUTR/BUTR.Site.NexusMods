@@ -4,7 +4,7 @@ using TType = NexusModsGameDomain;
 using TValueType = String;
 
 [ValueObject<TValueType>(conversions: Conversions.SystemTextJson | Conversions.TypeConverter, deserializationStrictness: DeserializationStrictness.AllowKnownInstances)]
-public readonly partial struct NexusModsGameDomain : IVogen<TType, TValueType>, IHasDefaultValue<TType>
+public readonly partial struct NexusModsGameDomain : IHasDefaultValue<TType>
 {
     public static readonly TType None = From(string.Empty);
     public static readonly TType Bannerlord = From(TenantUtils.BannerlordGameDomain);
@@ -24,8 +24,6 @@ public readonly partial struct NexusModsGameDomain : IVogen<TType, TValueType>, 
             yield return Valheim;
         }
     }
-
-    public static TType Copy(TType instance) => instance with { };
 
     public static bool TryParse(string urlRaw, out TType gameDomain)
     {
@@ -56,12 +54,4 @@ public readonly partial struct NexusModsGameDomain : IVogen<TType, TValueType>, 
     }
 
     public TenantId ToTenant() => TenantUtils.FromGameDomainToTenant(Value) is { } tenantRaw ? TenantId.FromTenant(tenantRaw) : TenantId.None;
-
-
-    public static int GetHashCode(TType instance) => VogenDefaults<TType, TValueType>.GetHashCode(instance);
-
-    public static bool Equals(TType left, TType right) => VogenDefaults<TType, TValueType>.Equals(left, right);
-    public static bool Equals(TType left, TType right, IEqualityComparer<TType> comparer) => VogenDefaults<TType, TValueType>.Equals(left, right, comparer);
-
-    public static int CompareTo(TType left, TType right) => VogenDefaults<TType, TValueType>.CompareTo(left, right);
 }

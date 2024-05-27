@@ -9,7 +9,6 @@ global using System.Runtime.InteropServices;
 
 global using Vogen;
 
-/*
 [assembly: VogenDefaults(
     isInitializedMethodGeneration: IsInitializedMethodGeneration.Generate,
     systemTextJsonConverterFactoryGeneration: SystemTextJsonConverterFactoryGeneration.Generate,
@@ -20,4 +19,3 @@ global using Vogen;
                                StaticAbstractsGeneration.FactoryMethods |
                                StaticAbstractsGeneration.InstanceMethodsAndProperties,
     openApiSchemaCustomizations: OpenApiSchemaCustomizations.GenerateSwashbuckleSchemaFilter)]
-*/
