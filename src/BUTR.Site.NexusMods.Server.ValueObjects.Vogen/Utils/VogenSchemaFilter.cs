@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace BUTR.Site.NexusMods.Server.ValueObjects.Utils;
@@ -26,7 +27,7 @@ public sealed class VogenSchemaFilter : ISchemaFilter
 
         return newObject;
     }
-    
+
     public void Apply(OpenApiSchema schema, SchemaFilterContext context)
     {
         if (context.Type.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IVogen<,>)) is not { } vogen)

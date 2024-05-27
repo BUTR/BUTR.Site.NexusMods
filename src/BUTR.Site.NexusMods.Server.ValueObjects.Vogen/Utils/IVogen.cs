@@ -24,7 +24,7 @@ public interface IVogen<TVogen, TValueObject>
     static abstract bool Equals(TVogen left, TVogen right, IEqualityComparer<TVogen> comparer);
 
     static abstract int CompareTo(TVogen left, TVogen right);
-    
+
     TValueObject Value { get; }
 
     bool IsInitialized();

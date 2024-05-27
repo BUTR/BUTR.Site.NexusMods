@@ -46,20 +46,9 @@ public sealed class TopExceptionsTypesAnalyzerProcessorJob : IJob
     private async Task HandleTenantAsync(AsyncServiceScope scope, TenantId tenant, CancellationToken ct)
     {
         var unitOfWorkFactory = scope.ServiceProvider.GetRequiredService<IUnitOfWorkFactory>();
-        await using var unitOfRead = unitOfWorkFactory.CreateUnitOfRead();
         await using var unitOfWrite = unitOfWorkFactory.CreateUnitOfWrite();
 
-        var exceptionTypes = await unitOfRead.ExceptionTypes.GetAllAsync(null, null, ct);
-        var statistics = exceptionTypes.Select(x => new StatisticsTopExceptionsTypeEntity
-        {
-            TenantId = tenant,
-            ExceptionTypeId = x.ExceptionTypeId,
-            ExceptionType = unitOfWrite.UpsertEntityFactory.GetOrCreateExceptionType(x.ExceptionTypeId),
-            ExceptionCount = x.ToCrashReports.Count
-        }).ToList();
-
-        unitOfWrite.StatisticsTopExceptionsTypes.Remove(x => true);
-        unitOfWrite.StatisticsTopExceptionsTypes.UpsertRange(statistics);
+        await unitOfWrite.StatisticsTopExceptionsTypes.CalculateAsync(ct);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);
     }
