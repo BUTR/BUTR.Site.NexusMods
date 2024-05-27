@@ -79,7 +79,7 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
 
         var gameDomain = tenant.ToGameDomain();
 
-        var dateOneWeekAgo = DateTime.UtcNow.AddDays(-30);
+        var dateOneWeekAgo = DateTime.UtcNow.AddDays(-7);
         var updatesStoredWithinWeek = await unitOfRead.NexusModsModToFileUpdates.GetAllAsync(x => x.LastCheckedDate > dateOneWeekAgo, null, ct);
         var updatedWithinWeek = await _nexusModsAPIClient.GetAllModUpdatesWeekAsync(gameDomain, _nexusModsOptions.ApiKey, ct) ?? Array.Empty<NexusModsUpdatedModsResponse>();
         var newUpdates = updatedWithinWeek.Where(x =>

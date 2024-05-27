@@ -66,7 +66,7 @@ internal class UnitOfWrite : IUnitOfWrite
     private IDbContextTransaction _dbContextTransaction;
 
 
-    public UpsertEntityFactory UpsertEntityFactory { get; }
+    public UpsertEntityFactory UpsertEntityFactory { get; private set; }
 
     public IAutocompleteEntityRepositoryWrite Autocompletes { get; }
 
@@ -117,7 +117,6 @@ internal class UnitOfWrite : IUnitOfWrite
         dbContextProvider.Set(_dbContext);
 
         _dbContextTransaction = _dbContext.Database.BeginTransaction();
-
         UpsertEntityFactory = _dbContext.GetEntityFactory();
 
         Autocompletes = ActivatorUtilities.CreateInstance<AutocompleteEntityRepository>(serviceProvider, dbContextProvider);
@@ -168,6 +167,7 @@ internal class UnitOfWrite : IUnitOfWrite
             await _dbContext.SaveAsync(ct);
             await _dbContextTransaction.CommitAsync(ct);
             _dbContextTransaction = _dbContext.Database.BeginTransaction();
+            UpsertEntityFactory = _dbContext.GetEntityFactory();
         }
         catch (Exception e)
         {

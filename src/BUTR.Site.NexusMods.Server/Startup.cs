@@ -234,7 +234,7 @@ public sealed partial class Startup
 
         services.AddMemoryCache();
 
-        
+
         var types = typeof(Startup).Assembly.GetTypes().Where(x => x is { IsAbstract: false, BaseType: { IsGenericType: true } }).ToList();
         foreach (var type in types.Where(x => x.BaseType!.GetGenericTypeDefinition() == typeof(BaseEntityConfigurationWithTenant<>)))
             services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IEntityConfiguration), type));

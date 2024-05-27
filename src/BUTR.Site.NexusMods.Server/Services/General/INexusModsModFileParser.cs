@@ -114,6 +114,8 @@ public class NexusModsModFileParser : INexusModsModFileParser
                 httpStream.SetBufferSize(LargeBufferSize);
 
             var moduleInfosArchive = await GetModuleInfosFromArchiveAsync(archive, subModuleCount).ToListAsync(ct);
+            if (moduleInfosArchive.Count != subModuleCount) throw new InvalidOperationException($"Failed to get all ModuleInfos for file '{fileInfo.FileName}'");
+
             var dataArchive = await GetGameVersionsFromArchiveAsync(archive, moduleInfosArchive).ToListAsync(ct);
             foreach (var grouping in dataArchive.GroupBy(x => new { x.Item1.Id, x.Item1.Version }))
             {
