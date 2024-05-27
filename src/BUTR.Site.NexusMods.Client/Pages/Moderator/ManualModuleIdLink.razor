@@ -17,9 +17,8 @@
                 <Field>
                     <FieldLabel>Module Id to Remove</FieldLabel>
                     <FieldBody>
-                        <Select TValue="int?" @bind-SelectedValue="@_modIdToDelete">
+                        <Select @bind-SelectedValue="@_modIdToDelete">
                             @{
-                                _modIdToDelete = _dataGridRef.Value.NexusModsMods.Select(x => x.NexusModsModId).First();
                                 foreach (var allowedModId in _dataGridRef.Value.NexusModsMods.Select(x => x.NexusModsModId))
                                 {
                                     <SelectItem Value="@allowedModId">@allowedModId</SelectItem>
@@ -106,7 +105,11 @@
     private Modal _modalRef = default!;
     private DataGridPaging<LinkedByStaffModuleNexusModsModsModel>? _dataGridRef;
     
-    private async Task ShowModal() => await _modalRef.Show();
+    private async Task ShowModal()
+    {
+        _modIdToDelete = _dataGridRef?.Value?.NexusModsMods.Select(x => x.NexusModsModId).First();
+        await _modalRef.Show();
+    }
 
     private async Task HideModal(bool save)
     {
