@@ -38,6 +38,12 @@ public sealed class CrashReportsController : ApiControllerBase
         public string Comment { get; init; } = string.Empty;
     }
 
+    public sealed record CrashReportUpdateModel
+    {
+        public required CrashReportStatus? Status { get; init; }
+        public required string? Comment { get; init; }
+    }
+
 
     private readonly ILogger _logger;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
@@ -49,7 +55,7 @@ public sealed class CrashReportsController : ApiControllerBase
     }
 
     [HttpPatch]
-    public async Task<ApiResult<string?>> UpdateAsync([FromQuery, Required] CrashReportId crashReportId, [FromQuery] CrashReportStatus? status, [FromQuery] string? comment, [BindUserId] NexusModsUserId userId, [BindTenant] TenantId tenant)
+    public async Task<ApiResult<string?>> UpdateAsync([FromQuery, Required] CrashReportId crashReportId, [FromBody] CrashReportUpdateModel updateModel, [BindUserId] NexusModsUserId userId, [BindTenant] TenantId tenant)
     {
         await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
@@ -63,8 +69,8 @@ public sealed class CrashReportsController : ApiControllerBase
             NexusModsUserId = userId,
             NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(userId),
             CrashReportId = crashReportId,
-            Status = status ?? existingEntity?.Status ?? CrashReportStatus.New,
-            Comment = comment ?? existingEntity?.Comment ?? string.Empty,
+            Status = updateModel.Status ?? existingEntity?.Status ?? CrashReportStatus.New,
+            Comment = updateModel.Comment ?? existingEntity?.Comment ?? string.Empty,
         };
         unitOfWrite.NexusModsUserToCrashReports.Upsert(entity);
 
