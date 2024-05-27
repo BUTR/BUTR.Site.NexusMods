@@ -109,12 +109,12 @@
         if (!NexusModsUtils.TryParseModUrl(model.ModUrl, out _, out var modId) && !uint.TryParse(model.ModUrl, out modId))
             return false;
 
-        return await _userClient.AddNexusModsModLinkAsync((int) modId) is { Error: not null };
+        return await _userClient.AddNexusModsModLinkAsync((int) modId) is { Error: null };
     }
 
     private async Task<bool> DoUnlinkMod(UserLinkedModModel model)
     {
-        return await _userClient.RemoveNexusModsModLinkAsync(modId: model.NexusModsModId) is { Error: not null };
+        return await _userClient.RemoveNexusModsModLinkAsync(modId: model.NexusModsModId) is { Error: null };
     }
 
     private async Task<DataGridPaging<UserLinkedModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)

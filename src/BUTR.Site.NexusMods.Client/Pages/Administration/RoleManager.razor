@@ -53,24 +53,18 @@
     {
         try
         {
-            if (await _userClient.SetRoleAsync(userId: (int) _model.UserId, role: _model.Role) is { Error: not null })
+            if (await _userClient.SetRoleAsync(userId: (int) _model.UserId, role: _model.Role) is { Error: null })
             {
-                await _notificationService.Success(
-                    $"Assigned '{_model.Role}' to user with id '{_model.UserId}'!",
-                    "Success!");
+                await _notificationService.Success($"Assigned '{_model.Role}' to user with id '{_model.UserId}'!", "Success!");
             }
             else
             {
-                await _notificationService.Error(
-                    $"Failed to assign '{_model.Role}' to user with id '{_model.UserId}'!",
-                    "Error!");
+                await _notificationService.Error($"Failed to assign '{_model.Role}' to user with id '{_model.UserId}'!", "Error!");
             }
         }
         catch
         {
-            await _notificationService.Error(
-                $"Failed to assign '{_model.Role}' to user with id '{_model.UserId}'!",
-                "Error!");
+            await _notificationService.Error($"Failed to assign '{_model.Role}' to user with id '{_model.UserId}'!", "Error!");
         }
     }
 

@@ -116,14 +116,14 @@
         await _modalRef.Hide();
         if (save && _dataGridRef?.Value is not null && _modIdToDelete is not null)
         {
-            if (await _modClient.RemoveModuleManualLinkAsync(moduleId: _dataGridRef.Value.ModuleId, modId: _modIdToDelete.Value) is { Error: not null })
+            if (await _modClient.RemoveModuleManualLinkAsync(moduleId: _dataGridRef.Value.ModuleId, modId: _modIdToDelete.Value) is { Error: null })
             {
-                await _notificationService.Success($"Disallowed succesfully!", "Success!");
+                await _notificationService.Success("Disallowed succesfully!", "Success!");
                 await _dataGridRef.Reload();
             }
             else
             {
-                await _notificationService.Error($"Failed to disallow!", "Error!");
+                await _notificationService.Error("Failed to disallow!", "Error!");
             }
         }
     }
@@ -136,24 +136,18 @@
         {
             if (await DoManualLink(_model))
             {
-                await _notificationService.Success(
-                    $"Linked '{_model.ModuleId}' to mod '{_model.NexusModsUrl}'!",
-                    "Success!");
+                await _notificationService.Success($"Linked '{_model.ModuleId}' to mod '{_model.NexusModsUrl}'!", "Success!");
                 if (_dataGridRef is not null)
                     await _dataGridRef.Reload();
             }
             else
             {
-                await _notificationService.Error(
-                    $"Failed to link '{_model.ModuleId}' to mod '{_model.NexusModsUrl}'!",
-                    "Error!");
+                await _notificationService.Error($"Failed to link '{_model.ModuleId}' to mod '{_model.NexusModsUrl}'!", "Error!");
             }
         }
         catch
         {
-            await _notificationService.Error(
-                $"Failed to link '{_model.ModuleId}' to mod '{_model.NexusModsUrl}'!",
-                "Error!");
+            await _notificationService.Error($"Failed to link '{_model.ModuleId}' to mod '{_model.NexusModsUrl}'!", "Error!");
         }
 
         _isLoading = false;
@@ -179,7 +173,7 @@
         if (!NexusModsUtils.TryParseModUrl(model.NexusModsUrl, out _, out var nexusModsId) && !uint.TryParse(model.NexusModsUrl, out nexusModsId))
             return false;
         
-        return await _modClient.AddModuleManualLinkAsync(moduleId: model.ModuleId, modId: (int) nexusModsId) is { Error: not null };
+        return await _modClient.AddModuleManualLinkAsync(moduleId: model.ModuleId, modId: (int) nexusModsId) is { Error: null };
     }
     private async Task<bool> DoManualUnlink(LinkedByStaffModuleNexusModsModsModel model)
     {

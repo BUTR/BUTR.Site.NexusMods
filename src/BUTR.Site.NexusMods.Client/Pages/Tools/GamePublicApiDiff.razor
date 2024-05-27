@@ -21,7 +21,7 @@
             <NodeContent>
                 @context.Path.Replace(".diff", ".dll")
 
-                @if (context.Type == NodeType.File && context.Visible)
+                @if (context is { Type: NodeType.File, Visible: true })
                 {
                     if (context.Content.Count == 0)
                     {

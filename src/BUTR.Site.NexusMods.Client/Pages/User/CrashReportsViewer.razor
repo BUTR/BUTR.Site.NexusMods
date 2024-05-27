@@ -112,7 +112,7 @@
         if (save && _datagridPagingRef?.Value is not null)
         {
             var updatedCrashReport = _datagridPagingRef.Value with { };
-            if (await _crashReportsClient.UpdateAsync(updatedCrashReport.Id, updatedCrashReport.Status, updatedCrashReport.Comment) is { Error: not null })
+            if (await _crashReportsClient.UpdateAsync(updatedCrashReport.Id, updatedCrashReport.Status, updatedCrashReport.Comment) is { Error: null })
             {
                 await _notificationService.Success("Saved Crash Report!", "Success!");
             }

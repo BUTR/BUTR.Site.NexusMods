@@ -110,14 +110,14 @@
         await _modalRef.Hide();
         if (save && _dataGridRef?.Value is not null && _userIdToDelete is not null)
         {
-            if (await _userClient.RemoveNexusModsModManualLinkAsync(userId: (int) _userIdToDelete, modId: _dataGridRef.Value.NexusModsModId, cancellationToken: CancellationToken.None) is { Error: not null })
+            if (await _userClient.RemoveNexusModsModManualLinkAsync(userId: (int) _userIdToDelete, modId: _dataGridRef.Value.NexusModsModId, cancellationToken: CancellationToken.None) is { Error: null })
             {
-                await _notificationService.Success($"Disallowed succesfully!", "Success!");
+                await _notificationService.Success("Disallowed succesfully!", "Success!");
                 await _dataGridRef.Reload();
             }
             else
             {
-                await _notificationService.Error($"Failed to disallow!", "Error!");
+                await _notificationService.Error("Failed to disallow!", "Error!");
             }
         }
     }
@@ -127,24 +127,18 @@
         {
             if (await DoUserAllowMod(_model))
             {
-                await _notificationService.Success(
-                    $"Assigned '{_model.ModUrl}' to user '{_model.UserUrl}'!",
-                    "Success!");
+                await _notificationService.Success($"Assigned '{_model.ModUrl}' to user '{_model.UserUrl}'!", "Success!");
                 if (_dataGridRef is not null)
                     await _dataGridRef.Reload();
             }
             else
             {
-                await _notificationService.Error(
-                    $"Failed to assign '{_model.ModUrl}' to user '{_model.UserUrl}'!",
-                    "Error!");
+                await _notificationService.Error($"Failed to assign '{_model.ModUrl}' to user '{_model.UserUrl}'!", "Error!");
             }
         }
         catch
         {
-            await _notificationService.Error(
-                $"Failed to assign '{_model.ModUrl}' to user '{_model.UserUrl}'!",
-                "Error!");
+            await _notificationService.Error($"Failed to assign '{_model.ModUrl}' to user '{_model.UserUrl}'!", "Error!");
         }
     }
 
@@ -178,7 +172,7 @@
             return false;
         }
         
-        return await _userClient.AddNexusModsModManualLinkAsync(modId: (int) modId, userId: hasUserId ? (int) userId : null, username: hasUsername ? username : null) is { Error: not null };
+        return await _userClient.AddNexusModsModManualLinkAsync(modId: (int) modId, userId: hasUserId ? (int) userId : null, username: hasUsername ? username : null) is { Error: null };
     }
     private async Task<bool> DoUserDisallowMod(UserManuallyLinkedModModel model)
     {

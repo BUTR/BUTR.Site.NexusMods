@@ -80,17 +80,13 @@
     private async Task OnSave()
     {
         await _localStorage.SetItemAsync("settings", _userSettings);
-        await _notificationService.Success(
-            "Saved the settings!",
-            "Success!");
+        await _notificationService.Success("Saved the settings!", "Success!");
     }
 
     private async Task OnCancel()
     {
         _userSettings = await _localStorage.GetItemAsync<UserSettings>("settings") ?? new();
-        await _notificationService.Success(
-            $"Reloaded the settings!",
-            "Success!");
+        await _notificationService.Success($"Reloaded the settings!", "Success!");
     }
 
 }

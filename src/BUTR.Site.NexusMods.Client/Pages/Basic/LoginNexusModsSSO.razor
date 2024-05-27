@@ -154,7 +154,7 @@
 
     public async ValueTask DisposeAsync()
     {
-        _cancellationTokenSource.Cancel();
+        await _cancellationTokenSource.CancelAsync();
         try { await _client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None); }
         catch (Exception) { /* ignored */ }
         await Task.WhenAny(_receiveTask, Task.Delay(2000));
