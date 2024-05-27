@@ -6,11 +6,11 @@ using TValueType = String;
 [ValueObject<TValueType>(conversions: Conversions.SystemTextJson | Conversions.TypeConverter, deserializationStrictness: DeserializationStrictness.AllowKnownInstances)]
 public readonly partial struct NexusModsGameDomain : IHasDefaultValue<TType>
 {
-    public static readonly TType None = From(string.Empty);
-    public static readonly TType Bannerlord = From(TenantUtils.BannerlordGameDomain);
-    public static readonly TType Rimworld = From(TenantUtils.RimworldGameDomain);
-    public static readonly TType StardewValley = From(TenantUtils.StardewValleyGameDomain);
-    public static readonly TType Valheim = From(TenantUtils.ValheimGameDomain);
+    public static readonly TType None = new(string.Empty);
+    public static readonly TType Bannerlord = new(TenantUtils.BannerlordGameDomain);
+    public static readonly TType Rimworld = new(TenantUtils.RimworldGameDomain);
+    public static readonly TType StardewValley = new(TenantUtils.StardewValleyGameDomain);
+    public static readonly TType Valheim = new(TenantUtils.ValheimGameDomain);
 
     public static TType DefaultValue => None;
 
@@ -25,7 +25,7 @@ public readonly partial struct NexusModsGameDomain : IHasDefaultValue<TType>
         }
     }
 
-    public static bool TryParse(string urlRaw, out TType gameDomain)
+    public static bool TryParse(TValueType urlRaw, out TType gameDomain)
     {
         gameDomain = DefaultValue;
 
@@ -42,7 +42,7 @@ public readonly partial struct NexusModsGameDomain : IHasDefaultValue<TType>
         return true;
     }
 
-    public static TType FromGameDomain(string gameDomain)
+    public static TType FromGameDomain(TValueType gameDomain)
     {
         foreach (var nexusModsGameDomain in Values)
         {

@@ -6,12 +6,12 @@ using TValueType = Byte;
 [ValueObject<TValueType>(conversions: Conversions.EfCoreValueConverter | Conversions.SystemTextJson | Conversions.TypeConverter, deserializationStrictness: DeserializationStrictness.AllowKnownInstances)]
 public readonly partial struct TenantId : IHasDefaultValue<TType>
 {
-    public static readonly TType None = From(0);
-    public static readonly TType Bannerlord = From(TenantUtils.BannerlordId);
-    public static readonly TType Rimworld = From(TenantUtils.RimworldId);
-    public static readonly TType StardewValley = From(TenantUtils.StardewValleyId);
-    public static readonly TType Valheim = From(TenantUtils.ValheimId);
-    public static readonly TType Error = From(255);
+    public static readonly TType None = new(0);
+    public static readonly TType Bannerlord = new(TenantUtils.BannerlordId);
+    public static readonly TType Rimworld = new(TenantUtils.RimworldId);
+    public static readonly TType StardewValley = new(TenantUtils.StardewValleyId);
+    public static readonly TType Valheim = new(TenantUtils.ValheimId);
+    public static readonly TType Error = new(255);
 
     public static TType DefaultValue => None;
 

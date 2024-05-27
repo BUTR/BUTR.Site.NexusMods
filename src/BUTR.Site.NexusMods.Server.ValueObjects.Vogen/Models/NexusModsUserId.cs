@@ -6,7 +6,7 @@ using TValueType = Int32;
 [ValueObject<TValueType>(conversions: Conversions.EfCoreValueConverter | Conversions.SystemTextJson | Conversions.TypeConverter)]
 public readonly partial struct NexusModsUserId : IHasDefaultValue<TType>
 {
-    public static readonly TType None = From(0);
+    public static readonly TType None = new(0);
 
     public static TType DefaultValue => None;
 
