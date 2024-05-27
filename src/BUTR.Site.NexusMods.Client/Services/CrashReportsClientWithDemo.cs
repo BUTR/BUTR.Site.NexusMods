@@ -76,7 +76,7 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
         return new StringIListApiResultModel((await _implementation.GetAutocompleteModuleIdsAsync(modId, ct)).Value ?? Array.Empty<string>(), null!);
     }
 
-    public async Task<StringApiResultModel> UpdateAsync(Guid crash_report_id, CrashReportStatus? status = null, string? comment = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> UpdateAsync(Guid crash_report_id, CrashReportUpdateModel? body = null, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
@@ -84,6 +84,6 @@ public sealed class CrashReportsClientWithDemo : ICrashReportsClient
             return new StringApiResultModel("demo", null!);
         }
 
-        return await _implementation.UpdateAsync(crash_report_id, status, comment, ct);
+        return await _implementation.UpdateAsync(crash_report_id, body, ct);
     }
 }
