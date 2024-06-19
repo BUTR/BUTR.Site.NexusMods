@@ -74,6 +74,7 @@ public static class QueryableExtensions
         where TEntity : class
     {
         var startTime = Stopwatch.GetTimestamp();
+        
         var count = await queryable.CountAsync(ct);
 
         return new()
@@ -86,6 +87,49 @@ public static class QueryableExtensions
                 CurrentPage = page,
                 TotalCount = (uint) count,
                 TotalPages = (uint) Math.Floor((double) count / (double) pageSize),
+            }
+        };
+    }
+    
+    public static Task<Paging<TEntity>> PaginatedGroupedAsync<TEntity>(this IQueryable<TEntity> queryable, PaginatedQuery query, uint maxPageSize = 20, Sorting? defaultSorting = default, CancellationToken ct = default)
+        where TEntity : class
+    {
+        var page = query.Page;
+        var pageSize = Math.Max(Math.Min(query.PageSize, maxPageSize), 5);
+        var filters = query.Filters ?? Enumerable.Empty<Filtering>();
+        var sortings = query.Sortings is null || query.Sortings.Count == 0
+            ? defaultSorting == null ? Array.Empty<Sorting>() : new List<Sorting> { defaultSorting }
+            : query.Sortings;
+
+        return queryable
+            .WithFilter(filters)
+            .WithSort(sortings)
+            .PaginatedGroupedAsync(page, pageSize, ct);
+    }
+    
+    public static async Task<Paging<TEntity>> PaginatedGroupedAsync<TEntity>(this IQueryable<TEntity> queryable, uint page, uint pageSize, CancellationToken ct = default)
+        where TEntity : class
+    {
+        var startTime = Stopwatch.GetTimestamp();
+
+        var response = await queryable.GroupBy(_ => 1)
+            .Select(x => new 
+            {
+                PageItems = x.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).ToList(),
+                Total = x.Count()
+            })
+            .FirstAsync(cancellationToken: ct);
+        
+        return new()
+        {
+            StartTime = startTime,
+            Items = response.PageItems.ToAsyncEnumerable(),
+            Metadata = new()
+            {
+                PageSize = pageSize,
+                CurrentPage = page,
+                TotalCount = (uint) response.Total,
+                TotalPages = (uint) Math.Floor((double) response.Total / (double) pageSize),
             }
         };
     }

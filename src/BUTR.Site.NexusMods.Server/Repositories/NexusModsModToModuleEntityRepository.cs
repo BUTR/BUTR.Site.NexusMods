@@ -57,10 +57,10 @@ internal class NexusModsModToModuleEntityRepository : Repository<NexusModsModToM
 
     public async Task<Paging<LinkedByStaffModuleNexusModsModsModel>> GetByStaffPaginatedAsync(PaginatedQuery query, CancellationToken ct) => await _dbContext.NexusModsModModules
         .Where(x => x.LinkType == NexusModsModToModuleLinkType.ByStaff)
-        .GroupBy(x => x.Module.ModuleId)
+        .GroupBy(x => new { x.Module.ModuleId })
         .Select(x => new LinkedByStaffModuleNexusModsModsModel
         {
-            ModuleId = x.Key,
+            ModuleId = x.Key.ModuleId,
             NexusModsMods = x.Select(y => new LinkedByStaffNexusModsModModel
             {
                 NexusModsModId = y.NexusModsMod.NexusModsModId,
@@ -71,10 +71,10 @@ internal class NexusModsModToModuleEntityRepository : Repository<NexusModsModToM
 
     public async Task<Paging<LinkedByExposureNexusModsModModelsModel>> GetExposedPaginatedAsync(PaginatedQuery query, CancellationToken ct) => await _dbContext.NexusModsModModules
         .Where(x => x.LinkType == NexusModsModToModuleLinkType.ByUnverifiedFileExposure)
-        .GroupBy(x => x.NexusModsMod.NexusModsModId)
+        .GroupBy(x => new { x.NexusModsMod.NexusModsModId })
         .Select(x => new LinkedByExposureNexusModsModModelsModel
         {
-            NexusModsModId = x.Key,
+            NexusModsModId = x.Key.NexusModsModId,
             Modules = x.Select(y => new LinkedByExposureModuleModel
             {
                 ModuleId = y.Module.ModuleId,

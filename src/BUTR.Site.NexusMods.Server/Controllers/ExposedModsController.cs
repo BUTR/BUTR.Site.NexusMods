@@ -30,7 +30,7 @@ public class ExposedModsController : ApiControllerBase
     [HttpPost("Paginated")]
     public async Task<ApiResult<PagingData<LinkedByExposureNexusModsModModelsModel>?>> GetPaginatedAsync([FromBody, Required] PaginatedQuery query, CancellationToken ct)
     {
-        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead(TenantId.None);
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
 
         var paginated = await unitOfRead.NexusModsModModules.GetExposedPaginatedAsync(query, ct);
 
@@ -40,7 +40,7 @@ public class ExposedModsController : ApiControllerBase
     [HttpGet("Autocomplete/ModuleIds")]
     public async Task<ApiResult<IList<string>?>> GetAutocompleteModuleIdsAsync([FromQuery, Required] ModuleId moduleId)
     {
-        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead(TenantId.None);
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
 
         var moduleIds = await unitOfRead.Autocompletes.AutocompleteStartsWithAsync<NexusModsModToModuleEntity, ModuleId>(x => x.Module.ModuleId, moduleId, CancellationToken.None);
 
