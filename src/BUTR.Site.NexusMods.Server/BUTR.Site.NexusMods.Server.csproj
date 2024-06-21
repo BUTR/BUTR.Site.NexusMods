@@ -22,7 +22,7 @@
     <PackageReference Include="BUTR.CrashReport.Models" Version="13.0.0.81" />
     <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.81" />
     <PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="4.0.4" />
-    <PackageReference Include="CsvHelper" Version="33.0.0" />
+    <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="EFCore.BulkExtensions.PostgreSql" Version="8.0.4" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="9.0.0.7618-preview1" />
     <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
@@ -39,7 +39,7 @@
     <PackageReference Include="Npgsql.OpenTelemetry" Version="8.0.3" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.8.1" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
     <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.0.0-beta.11" />
     <PackageReference Include="OpenTelemetry.Instrumentation.GrpcNetClient" Version="1.8.0-beta.1" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.9.0" />
