@@ -104,6 +104,7 @@ internal class CrashReportEntityRepository : Repository<CrashReportEntity>, ICra
                                                                       x.ModuleInfos.Any(y => moduleIds.Contains(y.Module.ModuleId)) ||
                                                                       x.ModuleInfos.Where(y => y.NexusModsMod != null).Any(y => nexusModsModIds.Contains(y.NexusModsMod!.NexusModsModId)));
 
-        return await dbQuery.PaginatedGroupedAsync(query.Page, query.PageSize, ct);
+        //return await dbQuery.PaginatedGroupedAsync(query.Page, query.PageSize, ct);
+        return await dbQuery.PaginatedAsync(query.Page, query.PageSize, ct);
     }
 }

@@ -124,7 +124,8 @@ internal class NexusModsUserRepository : Repository<NexusModsUserEntity>, INexus
             });
 
         return await availableModsByNexusModsModLinkage
-            .PaginatedGroupedAsync(query, 20, new() { Property = nameof(UserLinkedModModel.NexusModsModId), Type = SortingType.Ascending }, ct);
+            //.PaginatedGroupedAsync(query, 20, new() { Property = nameof(UserLinkedModModel.NexusModsModId), Type = SortingType.Ascending }, ct);
+            .PaginatedAsync(query, 20, new() { Property = nameof(UserLinkedModModel.NexusModsModId), Type = SortingType.Ascending }, ct);
     }
 
     public async Task<Paging<UserAvailableModModel>> GetAvailableModsPaginatedAsync(NexusModsUserId userId, PaginatedQuery query, CancellationToken ct)

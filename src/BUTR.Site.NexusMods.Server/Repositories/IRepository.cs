@@ -129,12 +129,14 @@ internal abstract class Repository<TEntity> : IRepositoryWrite<TEntity> where TE
         .ToListAsync(ct);
 
     public Task<Paging<TEntity>> PaginatedAsync(PaginatedQuery query, uint maxPageSize = 20, Sorting? defaultSorting = default, CancellationToken ct = default) => InternalQuery
-        .PaginatedGroupedAsync(query, maxPageSize, defaultSorting, ct);
+        //.PaginatedGroupedAsync(query, maxPageSize, defaultSorting, ct);
+        .PaginatedAsync(query, maxPageSize, defaultSorting, ct);
 
     public Task<Paging<TProjection>> PaginatedAsync<TProjection>(Expression<Func<TEntity, TProjection>> projection, PaginatedQuery query, uint maxPageSize = 20, Sorting? defaultSorting = default, CancellationToken ct = default)
         where TProjection : class => InternalQuery
         .Select(projection)
-        .PaginatedGroupedAsync(query, maxPageSize, defaultSorting, ct);
+       //.PaginatedGroupedAsync(query, maxPageSize, defaultSorting, ct);
+        .PaginatedAsync(query, maxPageSize, defaultSorting, ct);
 
 
     public virtual void Add(TEntity entity) => _dbContext.Set<TEntity>()
