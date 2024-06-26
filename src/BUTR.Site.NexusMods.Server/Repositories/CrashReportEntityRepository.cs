@@ -19,6 +19,30 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
+public sealed record ModuleIdToVersionModel
+{
+    public required ModuleId ModuleId { get; init; }
+    public required ModuleVersion Version { get; init; }
+}
+public sealed record UserCrashReportModel
+{
+    public required CrashReportId Id { get; init; }
+    public required CrashReportVersion Version { get; init; }
+    public required GameVersion GameVersion { get; init; }
+    public required ExceptionTypeId ExceptionType { get; init; }
+    public required string Exception { get; init; }
+    public required DateTimeOffset CreatedAt { get; init; }
+    //public required ModuleId[] ModuleIds { get; init; }
+    //public required ModuleIdToVersionModel[] ModuleIdToVersion { get; init; }
+    public required ModuleId? TopInvolvedModuleId { get; init; } // Used for FE search
+    public required ModuleId[] InvolvedModuleIds { get; init; }
+    //public required NexusModsModId[] NexusModsModIds { get; init; }
+    public required CrashReportUrl Url { get; init; }
+
+    public required CrashReportStatus Status { get; init; }
+    public required string? Comment { get; init; }
+}
+
 public interface ICrashReportEntityRepositoryRead : IRepositoryRead<CrashReportEntity>
 {
     Task<Paging<UserCrashReportModel>> GetCrashReportsPaginatedAsync(NexusModsUserEntity user, PaginatedQuery query, ApplicationRole applicationRole, CancellationToken ct);
@@ -89,7 +113,7 @@ internal class CrashReportEntityRepository : Repository<CrashReportEntity>, ICra
                 Url = x.Url,
                 //ModuleIds = x.ModuleInfos.Select(y => y.Module).Select(y => y.ModuleId).ToArray(),
                 //ModuleIdToVersion = x.ModuleInfos.Select(y => new ModuleIdToVersionView { ModuleId = y.Module.ModuleId, Version = y.Version }).ToArray(),
-                //TopInvolvedModuleId = x.ModuleInfos.OrderBy(y => y.InvolvedPosition).Where(z => z.IsInvolved).Select(y => y.Module).Select(y => y.ModuleId).Cast<ModuleId?>().FirstOrDefault(),
+                TopInvolvedModuleId = x.ModuleInfos.OrderBy(y => y.InvolvedPosition).Where(z => z.IsInvolved).Select(y => y.Module).Select(y => y.ModuleId).Cast<ModuleId?>().FirstOrDefault(),
                 InvolvedModuleIds = x.ModuleInfos.OrderBy(y => y.InvolvedPosition).Where(z => z.IsInvolved).Select(y => y.Module).Select(y => y.ModuleId).ToArray(),
                 //NexusModsModIds = x.ModuleInfos.Select(y => y.NexusModsMod).Where(y => y != null).Select(y => y!.NexusModsModId).ToArray(),
                 Status = x.ToUsers.Where(y => y.NexusModsUser.NexusModsUserId == user.NexusModsUserId).Select(y => y.Status).FirstOrDefault(),

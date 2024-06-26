@@ -6,7 +6,6 @@ using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 

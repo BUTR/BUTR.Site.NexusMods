@@ -119,16 +119,14 @@ public sealed class DiscordClient : IDiscordClient
         if (DateTimeOffset.UtcNow <= tokens.ExpiresAt)
             return tokens;
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "v10/oauth2/token")
+        using var request = new HttpRequestMessage(HttpMethod.Post, "v10/oauth2/token");
+        request.Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>
         {
-            Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>
-            {
-                new("client_id", _options.ClientId),
-                new("redirect_uri", _options.RedirectUri),
-                new("grant_type", "refresh_token"),
-                new("refresh_token", tokens.RefreshToken),
-            })
-        };
+            new("client_id", _options.ClientId),
+            new("redirect_uri", _options.RedirectUri),
+            new("grant_type", "refresh_token"),
+            new("refresh_token", tokens.RefreshToken),
+        });
         using var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return null;
         var responseData = await JsonSerializer.DeserializeAsync<DiscordOAuthTokensResponse>(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);

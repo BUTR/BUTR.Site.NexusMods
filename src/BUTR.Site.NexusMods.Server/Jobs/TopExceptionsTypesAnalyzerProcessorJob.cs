@@ -1,6 +1,5 @@
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
-using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Repositories;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Quartz;
 
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 

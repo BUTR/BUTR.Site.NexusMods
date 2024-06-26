@@ -22,7 +22,7 @@ public class NexusModsArticleController : ApiControllerBase
     public sealed record NexusModsArticleModel
     {
         public NexusModsArticleId NexusModsArticleId { get; init; }
-        public string Title { get; init; }
+        public string Title { get; init; } = default!;
         public NexusModsUserId NexusModsUserId { get; init; }
         public NexusModsUserName Author { get; init; }
         public DateTimeOffset CreateDate { get; init; }

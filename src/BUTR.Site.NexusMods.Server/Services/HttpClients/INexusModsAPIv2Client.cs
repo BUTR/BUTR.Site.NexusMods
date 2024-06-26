@@ -23,13 +23,13 @@ public sealed class NexusModsAPIv2Client : INexusModsAPIv2Client
 {
     private record GraphQLQuery
     {
-        public string Query { get; init; }
+        public string Query { get; init; } = default!;
     }
 
     private record GraphQLResponse<TData>(TData Data);
     private record GraphQLGetUserByNameResponse
     {
-        public string MemberId { get; init; }
+        public string MemberId { get; init; } = default!;
     }
 
 

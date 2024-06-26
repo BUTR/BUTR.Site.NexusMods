@@ -14,7 +14,7 @@ public sealed record NexusModsModToModuleInfoHistoryGameVersionEntity : IEntityW
 
     public required GameVersion GameVersion { get; init; }
 
-    public NexusModsModToModuleInfoHistoryEntity MainEntity { get; init; }
+    public NexusModsModToModuleInfoHistoryEntity MainEntity { get; init; } = default!;
 
     public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsModId, ModuleId, ModuleVersion, NexusModsFileId, GameVersion);
 
