@@ -135,7 +135,7 @@ internal abstract class Repository<TEntity> : IRepositoryWrite<TEntity> where TE
     public Task<Paging<TProjection>> PaginatedAsync<TProjection>(Expression<Func<TEntity, TProjection>> projection, PaginatedQuery query, uint maxPageSize = 20, Sorting? defaultSorting = default, CancellationToken ct = default)
         where TProjection : class => InternalQuery
         .Select(projection)
-       //.PaginatedGroupedAsync(query, maxPageSize, defaultSorting, ct);
+        //.PaginatedGroupedAsync(query, maxPageSize, defaultSorting, ct);
         .PaginatedAsync(query, maxPageSize, defaultSorting, ct);
 
 
