@@ -74,7 +74,7 @@ public static class QueryableExtensions
         where TEntity : class
     {
         var startTime = Stopwatch.GetTimestamp();
-        
+
         var count = await queryable.CountAsync(ct);
 
         return new()
@@ -90,7 +90,7 @@ public static class QueryableExtensions
             }
         };
     }
-    
+
     public static Task<Paging<TEntity>> PaginatedGroupedAsync<TEntity>(this IQueryable<TEntity> queryable, PaginatedQuery query, uint maxPageSize = 20, Sorting? defaultSorting = default, CancellationToken ct = default)
         where TEntity : class
     {
@@ -106,20 +106,20 @@ public static class QueryableExtensions
             .WithSort(sortings)
             .PaginatedGroupedAsync(page, pageSize, ct);
     }
-    
+
     public static async Task<Paging<TEntity>> PaginatedGroupedAsync<TEntity>(this IQueryable<TEntity> queryable, uint page, uint pageSize, CancellationToken ct = default)
         where TEntity : class
     {
         var startTime = Stopwatch.GetTimestamp();
 
         var response = await queryable.GroupBy(_ => 1)
-            .Select(x => new 
+            .Select(x => new
             {
                 PageItems = x.Skip((int) ((page - 1) * pageSize)).Take((int) pageSize).ToList(),
                 Total = x.Count()
             })
             .FirstAsync(cancellationToken: ct);
-        
+
         return new()
         {
             StartTime = startTime,
