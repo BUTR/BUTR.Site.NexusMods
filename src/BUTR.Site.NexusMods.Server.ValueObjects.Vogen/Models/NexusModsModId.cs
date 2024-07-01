@@ -20,7 +20,10 @@ public readonly partial struct NexusModsModId : IHasDefaultValue<TType>
         if (!url.Host.EndsWith("nexusmods.com"))
             return false;
 
-        if (url.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is not [_, _, var modIdRaw, ..])
+        if (url.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is not [_, var mods, var modIdRaw, ..])
+            return false;
+        
+        if (!string.Equals(mods, "mods", StringComparison.OrdinalIgnoreCase))
             return false;
 
         return TryParse(modIdRaw, out modId);
