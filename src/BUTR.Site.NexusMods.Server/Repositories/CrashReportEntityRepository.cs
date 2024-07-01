@@ -91,6 +91,7 @@ internal class CrashReportEntityRepository : Repository<CrashReportEntity>, ICra
     {
         var moduleIds = user.ToModules.Select(x => x.Module.ModuleId).ToHashSet();
         var nexusModsModIds = user.ToNexusModsMods.Select(x => x.NexusModsMod.NexusModsModId).ToHashSet();
+        moduleIds.AddRange(_dbContext.NexusModsModModules.Where(x => nexusModsModIds.Contains(x.NexusModsModId)).Select(x => x.ModuleId));
 
         IQueryable<UserCrashReportModel> DbQueryBase(Expression<Func<CrashReportEntity, bool>> predicate) => _dbContext.CrashReports
             .Include(x => x.ToUsers).ThenInclude(x => x.NexusModsUser)
