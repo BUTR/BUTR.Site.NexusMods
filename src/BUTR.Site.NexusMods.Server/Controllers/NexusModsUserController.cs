@@ -136,6 +136,7 @@ public sealed class NexusModsUserController : ApiControllerBase
 
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
 
+        /* Offloading this to a background task
         if (HttpContext.GetIsPremium()) // Premium is needed for API based downloading
         {
             var response = await _nexusModsAPIClient.GetModFileInfosFullAsync(gameDomain, modInfo.Id, apiKey, ct);
@@ -157,6 +158,7 @@ public sealed class NexusModsUserController : ApiControllerBase
                 }).ToArrayAsync(ct);
             unitOfWrite.NexusModsModModules.UpsertRange(entities);
         }
+        */
 
         var nexusModsModToName = new NexusModsModToNameEntity
         {
