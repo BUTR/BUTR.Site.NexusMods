@@ -33,7 +33,7 @@ public sealed record UserLinkedModModel
 public interface INexusModsUserRepositoryRead : IRepositoryRead<NexusModsUserEntity>
 {
     Task<NexusModsUserEntity?> GetUserWithIntegrationsAsync(NexusModsUserId userId, CancellationToken ct);
-    Task<NexusModsUserEntity?> GetUserAsync(NexusModsUserId userId, CancellationToken ct);
+    Task<NexusModsUserEntity> GetUserAsync(NexusModsUserId userId, CancellationToken ct);
 
     Task<Paging<UserLinkedModModel>> GetNexusModsModsPaginatedAsync(NexusModsUserId userId, PaginatedQuery query, CancellationToken ct);
 
@@ -60,11 +60,11 @@ internal class NexusModsUserRepository : Repository<NexusModsUserEntity>, INexus
 
     public NexusModsUserRepository(IAppDbContextProvider appDbContextProvider) : base(appDbContextProvider.Get()) { }
 
-    public async Task<NexusModsUserEntity?> GetUserAsync(NexusModsUserId userId, CancellationToken ct) => await _dbContext.NexusModsUsers
+    public async Task<NexusModsUserEntity> GetUserAsync(NexusModsUserId userId, CancellationToken ct) => await _dbContext.NexusModsUsers
         .Include(x => x.ToModules).ThenInclude(x => x.Module)
         .Include(x => x.ToNexusModsMods).ThenInclude(x => x.NexusModsMod)
         .AsSplitQuery()
-        .FirstAsync(x => x.NexusModsUserId == userId, ct);
+        .FirstOrDefaultAsync(x => x.NexusModsUserId == userId, ct) ?? NexusModsUserEntity.Create(userId);
 
     public async Task<NexusModsUserEntity?> GetUserWithIntegrationsAsync(NexusModsUserId userId, CancellationToken ct) => await _dbContext.NexusModsUsers
         .Include(x => x.ToRoles)

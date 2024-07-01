@@ -125,8 +125,8 @@ internal class CrashReportEntityRepository : Repository<CrashReportEntity>, ICra
         var dbQuery = applicationRole == ApplicationRoles.Administrator || applicationRole == ApplicationRoles.Moderator
             ? DbQueryBase(x => true)
             : DbQueryBase(x => x.ToUsers.Any(y => y.NexusModsUser.NexusModsUserId == user.NexusModsUserId) ||
-                                                                      x.ModuleInfos.Any(y => moduleIds.Contains(y.Module.ModuleId)) ||
-                                                                      x.ModuleInfos.Where(y => y.NexusModsMod != null).Any(y => nexusModsModIds.Contains(y.NexusModsMod!.NexusModsModId)));
+                               x.ModuleInfos.Any(y => moduleIds.Contains(y.Module.ModuleId)) ||
+                               x.ModuleInfos.Any(y => nexusModsModIds.Contains(y.NexusModsMod!.NexusModsModId)));
 
         //return await dbQuery.PaginatedGroupedAsync(query.Page, query.PageSize, ct);
         return await dbQuery.PaginatedAsync(query.Page, query.PageSize, ct);

@@ -90,7 +90,7 @@ public sealed class CrashReportsController : ApiControllerBase
         await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
 
         var user = await unitOfRead.NexusModsUsers.GetUserAsync(userId, ct);
-        return await unitOfRead.CrashReports.GetCrashReportsPaginatedAsync(user!, new PaginatedQuery(page, pageSize, filters, sortings), HttpContext.GetRole(), ct);
+        return await unitOfRead.CrashReports.GetCrashReportsPaginatedAsync(user, new PaginatedQuery(page, pageSize, filters, sortings), HttpContext.GetRole(), ct);
     }
 
     [HttpPost("Paginated")]
