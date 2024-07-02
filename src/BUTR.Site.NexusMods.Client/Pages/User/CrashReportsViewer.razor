@@ -65,6 +65,20 @@
         </CardTitle>
     </CardHeader>
     <CardBody>
+        <Alert Color="Color.Warning" @bind-Visible="@_hideReminder">
+            <Heading Size="HeadingSize.Is4" TextColor="TextColor.Secondary">
+                Reminder!
+                <CloseButton Clicked="OnCloseAlarm" />
+            </Heading>
+            <AlertMessage>
+                Don't see any crash reports? Make sure you've linked your mods in the <Link href="mods">Mods</Link> page!
+                <br/>
+                Still not seeing any? Make sure your mod contains a SubModule.xml file with the <Link href="https://github.com/BUTR/Bannerlord.BLSE?tab=readme-ov-file#community-metadata">Url tag</Link> pointing to the NexusMods page!
+                <br/>
+                You can also contact <Link href="https://discord.com/users/219563269680136192">Aragas (BUTR)</Link> on Discord for help!
+            </AlertMessage>
+        </Alert>
+        
         <DataGridStreamingPaging @ref="@_datagridPagingRef" TItem="CrashReportModel2" GetFilters="@GetFilters" GetItems="@GetCrashReports" Sortable Filterable DefaultPageSize="@UserSettings.DefaultCrashReportPageSize" PageSizes="@UserSettings.AvailableCrashReportPageSizes" GetPageSize="@(x => x.CrashReportPageSize)" FixedHeader>
             <DataGridColumns>
                 <DataGridColumnText TItem="CrashReportModel2" ElementId="game-version" Field="@nameof(CrashReportModel2.GameVersion)" Caption="Game Version" Filterable Placeholder="v1.0.0" Sortable SortField="@nameof(EntityFields.GameVersion)"/>
@@ -95,12 +109,14 @@
     private enum EntityFields { GameVersion, Version, TopInvolvedModuleId, ExceptionType, CreatedAt, Status, Comment }
 
     private Modal _modalRef = default!;
+    private bool _hideReminder;
     private DataGridStreamingPaging<CrashReportModel2>? _datagridPagingRef;
     private UserSettings? _userSettings;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        _hideReminder = await _localStorage.GetItemAsync<bool?>("cr_hide_reminder") ?? true;
         _userSettings = await _localStorage.GetItemAsync<UserSettings>("settings") ?? new();
     }
 
@@ -192,6 +208,11 @@
     {
         if (_datagridPagingRef is not null)
             await _datagridPagingRef.Reload();
+    }
+
+    private async Task OnCloseAlarm()
+    {
+        await _localStorage.SetItemAsync<bool?>("cr_hide_reminder", false);
     }
 
 }

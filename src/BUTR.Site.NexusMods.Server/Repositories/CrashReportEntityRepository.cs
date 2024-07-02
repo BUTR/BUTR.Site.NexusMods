@@ -89,9 +89,9 @@ internal class CrashReportEntityRepository : Repository<CrashReportEntity>, ICra
 
     public async Task<Paging<UserCrashReportModel>> GetCrashReportsPaginatedAsync(NexusModsUserEntity user, PaginatedQuery query, ApplicationRole applicationRole, CancellationToken ct)
     {
-        var moduleIds = user.ToModules.Select(x => x.Module.ModuleId).ToHashSet();
         var nexusModsModIds = user.ToNexusModsMods.Select(x => x.NexusModsMod.NexusModsModId).ToHashSet();
-        moduleIds.AddRange(_dbContext.NexusModsModModules.Where(x => nexusModsModIds.Contains(x.NexusModsModId)).Select(x => x.ModuleId));
+        var moduleIds = _dbContext.NexusModsModModules.Where(x => nexusModsModIds.Contains(x.NexusModsModId)).Select(x => x.ModuleId)
+            .Concat(user.ToModules.Select(x => x.Module.ModuleId));
 
         IQueryable<UserCrashReportModel> DbQueryBase(Expression<Func<CrashReportEntity, bool>> predicate) => _dbContext.CrashReports
             .Include(x => x.ToUsers).ThenInclude(x => x.NexusModsUser)
