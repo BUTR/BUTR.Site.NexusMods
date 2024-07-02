@@ -25,7 +25,7 @@ public readonly partial struct NexusModsUserId : IHasDefaultValue<TType>
 
         if (!string.Equals(users, "users", StringComparison.OrdinalIgnoreCase))
             return false;
-        
+
         return TryParse(userIdRaw, out userId);
     }
 

@@ -6,7 +6,9 @@ using BUTR.Site.NexusMods.Server.Utils.Http.StreamingMultipartResults;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using System;
@@ -17,8 +19,6 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Routing;
-using Microsoft.Extensions.Logging;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
@@ -112,11 +112,11 @@ public partial class ApiControllerBase : ControllerBase
     {
         var routeAttribute = Url.ActionContext.ActionDescriptor.EndpointMetadata.OfType<HttpMethodAttribute>().First();
         var routeTemplate = routeAttribute.Template;
-        
+
         var loggerFactory = HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger(GetType());
         logger.LogError("Route: {Route}, API Error: {Error}", routeTemplate, error);
-        
+
         if (statusCode is < 400 or >= 600)
             throw new ArgumentOutOfRangeException(nameof(statusCode));
 

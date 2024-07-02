@@ -22,7 +22,7 @@ public readonly partial struct NexusModsArticleId : IHasDefaultValue<TType>
 
         if (url.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) is not [_, var articles, var articleIdRaw, ..])
             return false;
-        
+
         if (!string.Equals(articles, "articles", StringComparison.OrdinalIgnoreCase))
             return false;
 

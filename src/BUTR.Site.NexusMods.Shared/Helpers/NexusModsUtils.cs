@@ -23,7 +23,7 @@ public static class NexusModsUtils
         var split = str1[1].Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (split.Length != 3)
             return false;
-        
+
         if (!string.Equals(split[1], "mods", StringComparison.OrdinalIgnoreCase))
             return false;
 
@@ -56,7 +56,7 @@ public static class NexusModsUtils
 
         if (!string.Equals(split[1], "users", StringComparison.OrdinalIgnoreCase))
             return false;
-        
+
         if (!uint.TryParse(split[2], out var userIdNumber))
             return false;
 
