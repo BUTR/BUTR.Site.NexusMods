@@ -1,3 +1,5 @@
+using Bannerlord.ModuleManager;
+
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
@@ -107,7 +109,9 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
                 var infos = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modUpdate.Id, response.Files.Where(x => updates.Any(y => y.NewId == x.FileId)), _nexusModsOptions.ApiKey, ct).ToArrayAsync(ct);
                 var lastUpdateTime = DateTimeOffset.FromUnixTimeSeconds(modUpdate.LatestFileUpdateTimestamp).ToUniversalTime();
 
-                unitOfWrite.NexusModsModModules.UpsertRange(infos.Select(x => x.ModuleInfo).DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
+                exceptions.AddRange(infos.Select(x => x.Exception).OfType<Exception>());
+
+                unitOfWrite.NexusModsModModules.UpsertRange(infos.Select(x => x.ModuleInfo).OfType<ModuleInfoExtended>().DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
                 {
                     TenantId = tenant,
                     NexusModsModId = modUpdate.Id,
@@ -124,13 +128,13 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
                     NexusModsMod = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
                     LastCheckedDate = lastUpdateTime
                 });
-                unitOfWrite.NexusModsModToModuleInfoHistory.UpsertRange(infos.DistinctBy(x => new { x.ModuleInfo.Id, x.ModuleInfo.Version, x.FileId }).Select(x => new NexusModsModToModuleInfoHistoryEntity
+                unitOfWrite.NexusModsModToModuleInfoHistory.UpsertRange(infos.Where(x => x.ModuleInfo is not null).DistinctBy(x => new { x.ModuleInfo!.Id, x.ModuleInfo.Version, x.FileId }).Select(x => new NexusModsModToModuleInfoHistoryEntity
                 {
                     TenantId = tenant,
                     NexusModsFileId = x.FileId,
                     NexusModsModId = modUpdate.Id,
                     NexusModsMod = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modUpdate.Id),
-                    ModuleId = ModuleId.From(x.ModuleInfo.Id),
+                    ModuleId = ModuleId.From(x.ModuleInfo!.Id),
                     Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(ModuleId.From(x.ModuleInfo.Id)),
                     ModuleVersion = ModuleVersion.From(x.ModuleInfo.Version.ToString()),
                     ModuleInfo = ModuleInfoModel.Create(x.ModuleInfo),

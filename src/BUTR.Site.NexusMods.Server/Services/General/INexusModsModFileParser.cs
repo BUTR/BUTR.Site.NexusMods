@@ -30,10 +30,11 @@ namespace BUTR.Site.NexusMods.Server.Services;
 
 public sealed record NexusModsModFileParserResult
 {
-    public required ModuleInfoExtended ModuleInfo { get; init; }
+    public required ModuleInfoExtended? ModuleInfo { get; init; }
     public required GameVersion[] GameVersions { get; init; }
     public required NexusModsFileId FileId { get; init; }
     public required DateTimeOffset Uploaded { get; init; }
+    public required Exception? Exception { get; init; }
 }
 
 public interface INexusModsModFileParser
@@ -77,20 +78,53 @@ public class NexusModsModFileParser : INexusModsModFileParser
             if (await SubModuleXmlCountAsync(fileInfo) is var subModuleCount && false || subModuleCount == 0) continue;
 
             var uploadedTimestamp = DateTimeOffset.FromUnixTimeSeconds(uploadedTimestampRaw).ToUniversalTime();
-            var downloadLinks = await _apiClient.GetModFileLinksAsync(gameDomain, modId, fileId, apiKey, ct) ?? Array.Empty<NexusModsDownloadLinkResponse>();
+            var downloadLinks = await _apiClient.GetModFileLinksAsync(gameDomain, modId, fileId, apiKey, ct) ?? [];
             if (downloadLinks.Length == 0) continue;
 
             await using var httpStream = HttpRangeStream.CreateOrDefault(downloadLinks.OrderByDescending(x => x.Url.Contains("cf-files")).Select(x => new Uri(x.Url)).ToArray(), _httpClient, new HttpRangeOptions { BufferSize = DefaultBufferSize });
-            if (httpStream is null) throw new InvalidOperationException($"Failed to get HttpStream for file '{fileInfo.FileName}'");
+            if (httpStream is null)
+            {
+                yield return new()
+                {
+                    Exception = new InvalidOperationException($"Failed to get HttpStream for file '{fileInfo.FileName}'"),
+                    FileId = fileId,
+                    Uploaded = uploadedTimestamp,
+                    ModuleInfo = null,
+                    GameVersions = []
+                };
+                continue;
+            }
 
             using var archive = ArchiveExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
-            if (archive is null) throw new InvalidOperationException($"Failed to get Archive for file '{fileInfo.FileName}'");
+            if (archive is null)
+            {
+                yield return new()
+                {
+                    Exception = new InvalidOperationException($"Failed to get Archive for file '{fileInfo.FileName}'"),
+                    FileId = fileId,
+                    Uploaded = uploadedTimestamp,
+                    ModuleInfo = null,
+                    GameVersions = []
+                };
+                continue;
+            }
 
             if (archive is { IsSolid: true, Type: ArchiveType.Rar })
             {
                 httpStream.SetBufferSize(LargeBufferSize);
                 using var reader = ReaderExtensions.OpenOrDefault(httpStream, new ReaderOptions { LeaveStreamOpen = true });
-                if (reader is null) throw new InvalidOperationException($"Failed to get Reader for file '{fileInfo.FileName}'");
+                if (reader is null)
+                {
+                    yield return new()
+                    {
+                        Exception = new InvalidOperationException($"Failed to get Reader for file '{fileInfo.FileName}'"),
+                        FileId = fileId,
+                        Uploaded = uploadedTimestamp,
+                        ModuleInfo = null,
+                        GameVersions = []
+                    };
+                    continue;
+                }
 
                 var moduleInfosReader = await GetModuleInfosFromReaderAsync(reader, subModuleCount).ToListAsync(ct);
                 var gameVersions = await GetGameVersionsFromReaderAsync(reader, moduleInfosReader).ToListAsync(ct);
@@ -101,7 +135,8 @@ public class NexusModsModFileParser : INexusModsModFileParser
                         ModuleInfo = grouping.Select(x => x.Item1).First(),
                         FileId = fileId,
                         Uploaded = uploadedTimestamp,
-                        GameVersions = grouping.Select(x => GameVersion.From(x.Item3)).ToArray()
+                        GameVersions = grouping.Select(x => GameVersion.From(x.Item3)).ToArray(),
+                        Exception = null,
                     };
                 }
                 continue;
@@ -114,7 +149,18 @@ public class NexusModsModFileParser : INexusModsModFileParser
                 httpStream.SetBufferSize(LargeBufferSize);
 
             var moduleInfosArchive = await GetModuleInfosFromArchiveAsync(archive, subModuleCount).ToListAsync(ct);
-            if (moduleInfosArchive.Count != subModuleCount) throw new InvalidOperationException($"Failed to get all ModuleInfos for file '{fileInfo.FileName}'");
+            if (moduleInfosArchive.Count != subModuleCount)
+            {
+                yield return new()
+                {
+                    Exception = new InvalidOperationException($"Failed to get all ModuleInfos for file '{fileInfo.FileName}'"),
+                    FileId = fileId,
+                    Uploaded = uploadedTimestamp,
+                    ModuleInfo = null,
+                    GameVersions = []
+                };
+                continue;
+            }
 
             var dataArchive = await GetGameVersionsFromArchiveAsync(archive, moduleInfosArchive).ToListAsync(ct);
             foreach (var grouping in dataArchive.GroupBy(x => new { x.Item1.Id, x.Item1.Version }))
@@ -124,7 +170,8 @@ public class NexusModsModFileParser : INexusModsModFileParser
                     ModuleInfo = grouping.Select(x => x.Item1).First(),
                     FileId = fileId,
                     Uploaded = uploadedTimestamp,
-                    GameVersions = grouping.Select(x => GameVersion.From(x.Item3)).ToArray()
+                    GameVersions = grouping.Select(x => GameVersion.From(x.Item3)).ToArray(),
+                    Exception = null,
                 };
             }
         }
@@ -283,8 +330,10 @@ public class NexusModsModFileParser : INexusModsModFileParser
     {
         try
         {
+            // No idea why stream based reader is not working sometimes
+            using var reader = new StreamReader(stream);
             var document = new XmlDocument();
-            document.Load(stream);
+            document.LoadXml(reader.ReadToEnd());
 
             return ModuleInfoExtended.FromXml(document);
         }

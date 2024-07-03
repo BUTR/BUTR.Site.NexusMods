@@ -1,3 +1,5 @@
+using Bannerlord.ModuleManager;
+
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
@@ -77,7 +79,6 @@ public sealed class NexusModsModFileProcessorJob : IJob
         var modIdRaw = 1; //2907, 5090
         while (!ct.IsCancellationRequested)
         {
-
             var modId = NexusModsModId.From(modIdRaw);
 
             var nexusModsModModuleEntities = ImmutableArray.CreateBuilder<NexusModsModToModuleEntity>();
@@ -100,7 +101,9 @@ public sealed class NexusModsModFileProcessorJob : IJob
                 var infos = await _nexusModsModFileParser.GetModuleInfosAsync(gameDomain, modId, response.Files, _nexusModsOptions.ApiKey, ct).ToArrayAsync(ct);
                 var latestFileUpdate = DateTimeOffset.FromUnixTimeSeconds(response.Files.Select(x => x.UploadedTimestamp).Where(x => x is not null).Max() ?? 0).ToUniversalTime();
 
-                nexusModsModModuleEntities.AddRange(infos.Select(x => x.ModuleInfo).DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
+                exceptions.AddRange(infos.Select(x => x.Exception).OfType<Exception>());
+
+                nexusModsModModuleEntities.AddRange(infos.Select(x => x.ModuleInfo).OfType<ModuleInfoExtended>().DistinctBy(x => x.Id).Select(x => new NexusModsModToModuleEntity
                 {
                     TenantId = tenant,
                     NexusModsModId = modId,
@@ -117,13 +120,13 @@ public sealed class NexusModsModFileProcessorJob : IJob
                     NexusModsMod = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modId),
                     LastCheckedDate = latestFileUpdate,
                 });
-                nexusModsModToModuleInfoHistoryEntities.AddRange(infos.DistinctBy(x => new { x.ModuleInfo.Id, x.ModuleInfo.Version, x.FileId }).Select(x => new NexusModsModToModuleInfoHistoryEntity
+                nexusModsModToModuleInfoHistoryEntities.AddRange(infos.Where(x => x.ModuleInfo is not null).DistinctBy(x => new { x.ModuleInfo!.Id, x.ModuleInfo.Version, x.FileId }).Select(x => new NexusModsModToModuleInfoHistoryEntity
                 {
                     TenantId = tenant,
                     NexusModsFileId = x.FileId,
                     NexusModsModId = modId,
                     NexusModsMod = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modId),
-                    ModuleId = ModuleId.From(x.ModuleInfo.Id),
+                    ModuleId = ModuleId.From(x.ModuleInfo!.Id),
                     Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(ModuleId.From(x.ModuleInfo.Id)),
                     ModuleVersion = ModuleVersion.From(x.ModuleInfo.Version.ToString()),
                     ModuleInfo = ModuleInfoModel.Create(x.ModuleInfo),
