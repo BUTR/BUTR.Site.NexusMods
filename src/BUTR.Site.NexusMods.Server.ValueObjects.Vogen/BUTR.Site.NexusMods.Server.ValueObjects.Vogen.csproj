@@ -9,10 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BUTR.CrashReport.Models" Version="13.0.0.81" />
+    <PackageReference Include="BUTR.CrashReport.Models" Version="13.0.0.82" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.6.2" />
-    <PackageReference Include="Vogen" Version="4.0.12" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.7.3" />
+    <PackageReference Include="Vogen" Version="4.0.19" />
   </ItemGroup>
 
   <ItemGroup>
