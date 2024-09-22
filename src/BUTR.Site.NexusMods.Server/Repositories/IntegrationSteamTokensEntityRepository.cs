@@ -8,9 +8,6 @@ using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface IIntegrationSteamTokensEntityRepositoryRead : IRepositoryRead<IntegrationSteamTokensEntity>;
-public interface IIntegrationSteamTokensEntityRepositoryWrite : IRepositoryWrite<IntegrationSteamTokensEntity>, IIntegrationSteamTokensEntityRepositoryRead;
-
 [ScopedService<IIntegrationSteamTokensEntityRepositoryWrite, IIntegrationSteamTokensEntityRepositoryRead>]
 internal class IntegrationSteamTokensEntityRepository : Repository<IntegrationSteamTokensEntity>, IIntegrationSteamTokensEntityRepositoryWrite
 {

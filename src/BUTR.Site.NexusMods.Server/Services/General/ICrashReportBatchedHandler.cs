@@ -1,8 +1,5 @@
-using BUTR.CrashReport.Bannerlord.Parser;
-using BUTR.CrashReport.Models;
 using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts;
-using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
@@ -19,6 +16,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using BUTR.Site.NexusMods.Server.CrashReport.v13;
+using BUTR.Site.NexusMods.Server.CrashReport.v14;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
@@ -30,20 +29,9 @@ public interface ICrashReportBatchedHandler : IAsyncDisposable
 [ScopedService<ICrashReportBatchedHandler>]
 public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
 {
-    private record HttpResultEntry(CrashReportFileId FileId, DateTime Date, CrashReportModel? CrashReport);
+    private record HttpResultEntry(CrashReportFileId FileId, DateTime Date, byte Version, string? CrashReportContent);
 
     private static readonly int ParallelCount = Environment.ProcessorCount / 2;
-
-    private static string GetException(ExceptionModel? exception, bool inner = false) => exception is null ? string.Empty : $"""
-
-{(inner ? "Inner " : string.Empty)}Exception information
-Type: {exception.Type}
-Message: {exception.Message}
-CallStack:
-{exception.CallStack}
-
-{GetException(exception.InnerException, true)}
-""";
 
     private Channel<CrashReportFileMetadata> _toDownloadChannel = Channel.CreateBounded<CrashReportFileMetadata>(ParallelCount * 2);
     private Channel<HttpResultEntry> _httpResultChannel = Channel.CreateBounded<HttpResultEntry>(ParallelCount * 2);
@@ -167,33 +155,26 @@ CallStack:
                 {
                     var (fileId, _, version, date) = entry;
 
-                    CrashReportModel? model;
-                    if (version <= 12)
+                    string? content;
+                    try
                     {
-                        var content = await _client.GetCrashReportAsync(fileId, ct2);
-
-                        try
+                        if (version <= 12)
                         {
-                            model = CrashReportParser.ParseLegacyHtml(version, content);
+                            content = await _client.GetCrashReportAsync(fileId, ct2);
                         }
-                        catch (Exception e)
+                        else
                         {
-                            _logger.LogError(e, "Exception while parsing Legacy HTML report {FileId}", fileId);
-                            model = null;
+                            content = await _client.GetCrashReportJsonAsync(fileId, ct2);
                         }
                     }
-                    else
+                    catch (Exception e)
                     {
-                        model = await _client.GetCrashReportModelAsync(fileId, ct2);
-                    }
-
-                    if (model is null)
-                    {
-                        _logger.LogError("Failed to parse {FileId}", fileId);
+                        _logger.LogError(e, "Failed to download {FileId}", fileId);
+                        content = null;
                     }
 
                     await _httpResultChannel.Writer.WaitToWriteAsync(ct2);
-                    await _httpResultChannel.Writer.WriteAsync(new(fileId, date, model), ct2);
+                    await _httpResultChannel.Writer.WriteAsync(new(fileId, date, version, content), ct2);
                 }
                 catch (Exception e)
                 {
@@ -223,17 +204,85 @@ CallStack:
         var crashReportsBuilder = ImmutableArray.CreateBuilder<CrashReportEntity>();
         var crashReportMetadatasBuilder = ImmutableArray.CreateBuilder<CrashReportToMetadataEntity>();
         var crashReportModulesBuilder = ImmutableArray.CreateBuilder<CrashReportToModuleMetadataEntity>();
-        await foreach (var (fileId, date, report) in _httpResultChannel.Reader.ReadAllAsync(ct))
+        await foreach (var (fileId, date, version, content) in _httpResultChannel.Reader.ReadAllAsync(ct))
         {
-            if (report is null)
+            if (content is null)
             {
                 failedCrashReportFileIds.Add(fileId);
                 continue;
             }
 
-            var crashReportId = CrashReportId.From(report.Id);
+            CrashReportEntity? crashReportEntity = null;
+            CrashReportToMetadataEntity? crashReportToMetadataEntity = null;
+            IList<CrashReportToModuleMetadataEntity>? crashReportToModuleMetadataEntities = null;
 
-            if (uniqueCrashReportIds.Contains(crashReportId))
+            var url = CrashReportUrl.From(new Uri(new Uri(_options.Endpoint), fileId.ToString()));
+            
+            if (version <= 12)
+            {
+                var result = CrashReportV14.TryFromHtml(
+                    unitOfWrite,
+                    tenant,
+                    fileId,
+                    url,
+                    date,
+                    version,
+                    content,
+                    out crashReportEntity,
+                    out crashReportToMetadataEntity,
+                    out crashReportToModuleMetadataEntities);
+                if (!result)
+                {
+                    failedCrashReportFileIds.Add(fileId);
+                    continue;
+                }
+            }
+            if (version == 13)
+            {
+                var result = CrashReportV13.TryFromJson(
+                    unitOfWrite,
+                    tenant,
+                    fileId,
+                    url,
+                    date,
+                    version,
+                    content,
+                    out crashReportEntity,
+                    out crashReportToMetadataEntity,
+                    out crashReportToModuleMetadataEntities);
+                if (!result)
+                {
+                    failedCrashReportFileIds.Add(fileId);
+                    continue;
+                }
+            }
+            if (version == 14)
+            {
+                var result = CrashReportV14.TryFromJson(
+                    unitOfWrite,
+                    tenant,
+                    fileId,
+                    url,
+                    date,
+                    version,
+                    content,
+                    out crashReportEntity,
+                    out crashReportToMetadataEntity,
+                    out crashReportToModuleMetadataEntities);
+                if (!result)
+                {
+                    failedCrashReportFileIds.Add(fileId);
+                    continue;
+                }
+            }
+            
+            if (crashReportEntity is null || crashReportToMetadataEntity is null || crashReportToModuleMetadataEntities is null)
+            {
+                failedCrashReportFileIds.Add(fileId);
+                continue;
+            }
+
+            if (!uniqueCrashReportIds.Add(crashReportEntity.CrashReportId))
             {
                 ignoredCrashReportFileEntities.Add(new CrashReportIgnoredFileEntity
                 {
@@ -243,48 +292,9 @@ CallStack:
                 continue;
             }
 
-            uniqueCrashReportIds.Add(crashReportId);
-
-            // TODO:
-            var butrLoaderVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "BUTRLoaderVersion")?.Value;
-            var blseVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "BLSEVersion")?.Value;
-            var launcherExVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "LauncherExVersion")?.Value;
-
-            crashReportsBuilder.Add(new CrashReportEntity
-            {
-                TenantId = tenant,
-                CrashReportId = crashReportId,
-                Url = CrashReportUrl.From(new Uri(new Uri(_options.Endpoint), fileId.ToString())),
-                Version = CrashReportVersion.From(report.Version),
-                GameVersion = GameVersion.From(report.Metadata.GameVersion),
-                ExceptionTypeId = ExceptionTypeId.FromException(report.Exception),
-                ExceptionType = unitOfWrite.UpsertEntityFactory.GetOrCreateExceptionType(ExceptionTypeId.FromException(report.Exception)),
-                Exception = GetException(report.Exception),
-                CreatedAt = fileId.Value.Length == 8 ? DateTimeOffset.UnixEpoch.ToUniversalTime() : date.ToUniversalTime(),
-            });
-            crashReportMetadatasBuilder.Add(new CrashReportToMetadataEntity
-            {
-                TenantId = tenant,
-                CrashReportId = crashReportId,
-                LauncherType = string.IsNullOrEmpty(report.Metadata.LauncherType) ? null : report.Metadata.LauncherType,
-                LauncherVersion = string.IsNullOrEmpty(report.Metadata.LauncherVersion) ? null : report.Metadata.LauncherVersion,
-                Runtime = string.IsNullOrEmpty(report.Metadata.Runtime) ? null : report.Metadata.Runtime,
-                BUTRLoaderVersion = butrLoaderVersion,
-                BLSEVersion = blseVersion,
-                LauncherExVersion = launcherExVersion,
-            });
-            crashReportModulesBuilder.AddRange(report.Modules.DistinctBy(x => new { x.Id }).Select(x => new CrashReportToModuleMetadataEntity
-            {
-                TenantId = tenant,
-                CrashReportId = crashReportId,
-                ModuleId = ModuleId.From(x.Id),
-                Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
-                Version = ModuleVersion.From(x.Version),
-                NexusModsModId = NexusModsModId.TryParseUrl(x.Url, out var modId1) ? modId1 : null,
-                NexusModsMod = NexusModsModId.TryParseUrl(x.Url, out var modId2) ? unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modId2) : null,
-                InvolvedPosition = (byte) (report.InvolvedModules.IndexOf(y => y.ModuleOrLoaderPluginId == x.Id) + 1),
-                IsInvolved = report.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == x.Id),
-            }).ToArray());
+            crashReportsBuilder.Add(crashReportEntity);
+            crashReportMetadatasBuilder.Add(crashReportToMetadataEntity);
+            crashReportModulesBuilder.AddRange(crashReportToModuleMetadataEntities);
         }
 
         var linkedCrashReports = _linkedCrashReportsChannel.Reader.ReadAllAsync(ct)

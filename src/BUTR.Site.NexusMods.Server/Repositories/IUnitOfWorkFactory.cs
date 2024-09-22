@@ -8,15 +8,6 @@ using System;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface IUnitOfWorkFactory
-{
-    IUnitOfRead CreateUnitOfRead();
-    IUnitOfRead CreateUnitOfRead(TenantId tenant);
-
-    IUnitOfWrite CreateUnitOfWrite();
-    IUnitOfWrite CreateUnitOfWrite(TenantId tenant);
-}
-
 [ScopedService<IUnitOfWorkFactory>]
 internal class UnitOfWorkFactory : IUnitOfWorkFactory
 {

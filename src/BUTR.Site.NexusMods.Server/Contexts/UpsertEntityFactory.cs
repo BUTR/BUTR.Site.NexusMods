@@ -7,6 +7,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using BUTR.Site.NexusMods.Server.Repositories;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 
@@ -14,7 +15,7 @@ namespace BUTR.Site.NexusMods.Server.Contexts;
 /// Upsert is a pain in the ass, especially the graph inclusion.
 /// Instead, we manually track such entities and save them manually
 /// </summary>
-public sealed class UpsertEntityFactory
+public sealed class UpsertEntityFactory : IUpsertEntityFactory
 {
     private readonly ITenantContextAccessor _tenantContextAccessor;
     private readonly AppDbContextWrite _dbContextWrite;

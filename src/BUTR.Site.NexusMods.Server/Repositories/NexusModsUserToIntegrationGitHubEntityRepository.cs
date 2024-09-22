@@ -8,9 +8,6 @@ using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface INexusModsUserToIntegrationGitHubEntityRepositoryRead : IRepositoryRead<NexusModsUserToIntegrationGitHubEntity>;
-public interface INexusModsUserToIntegrationGitHubEntityRepositoryWrite : IRepositoryWrite<NexusModsUserToIntegrationGitHubEntity>, INexusModsUserToIntegrationGitHubEntityRepositoryRead;
-
 [ScopedService<INexusModsUserToIntegrationGitHubEntityRepositoryWrite, INexusModsUserToIntegrationGitHubEntityRepositoryRead>]
 internal class NexusModsUserToIntegrationGitHubEntityRepository : Repository<NexusModsUserToIntegrationGitHubEntity>, INexusModsUserToIntegrationGitHubEntityRepositoryWrite
 {

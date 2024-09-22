@@ -12,12 +12,6 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface IStatisticsTopExceptionsTypeEntityRepositoryRead : IRepositoryRead<StatisticsTopExceptionsTypeEntity>;
-public interface IStatisticsTopExceptionsTypeEntityRepositoryWrite : IRepositoryWrite<StatisticsTopExceptionsTypeEntity>, IStatisticsTopExceptionsTypeEntityRepositoryRead
-{
-    Task CalculateAsync(CancellationToken ct);
-}
-
 [ScopedService<IStatisticsTopExceptionsTypeEntityRepositoryWrite, IStatisticsTopExceptionsTypeEntityRepositoryRead>]
 internal class StatisticsTopExceptionsTypeEntityRepository : Repository<StatisticsTopExceptionsTypeEntity>, IStatisticsTopExceptionsTypeEntityRepositoryWrite
 {

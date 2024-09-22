@@ -14,13 +14,6 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface IAutocompleteEntityRepositoryRead : IRepositoryRead<AutocompleteEntity>
-{
-    Task<IList<string>> AutocompleteStartsWithAsync<TEntity, TParameter>(Expression<Func<TEntity, TParameter>> property, TParameter value, CancellationToken ct)
-        where TEntity : class, IEntity;
-}
-public interface IAutocompleteEntityRepositoryWrite : IRepositoryWrite<AutocompleteEntity>, IAutocompleteEntityRepositoryRead;
-
 [ScopedService<IAutocompleteEntityRepositoryWrite, IAutocompleteEntityRepositoryRead>]
 internal class AutocompleteEntityRepository : Repository<AutocompleteEntity>, IAutocompleteEntityRepositoryWrite
 {

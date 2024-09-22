@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BUTR.CrashReport.Models" Version="13.0.0.82" />
+    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="13.0.0.82" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BUTR.Site.NexusMods.Server.Persistence\BUTR.Site.NexusMods.Server.Persistence.csproj" />
+    <ProjectReference Include="..\BUTR.Site.NexusMods.Server.ValueObjects.Vogen\BUTR.Site.NexusMods.Server.ValueObjects.Vogen.csproj" />
+  </ItemGroup>
+  
+</Project>

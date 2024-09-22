@@ -1,0 +1,6 @@
+using BUTR.Site.NexusMods.Server.Models.Database;
+
+namespace BUTR.Site.NexusMods.Server.Repositories;
+
+public interface IIntegrationSteamTokensEntityRepositoryRead : IRepositoryRead<IntegrationSteamTokensEntity>;
+public interface IIntegrationSteamTokensEntityRepositoryWrite : IRepositoryWrite<IntegrationSteamTokensEntity>, IIntegrationSteamTokensEntityRepositoryRead;

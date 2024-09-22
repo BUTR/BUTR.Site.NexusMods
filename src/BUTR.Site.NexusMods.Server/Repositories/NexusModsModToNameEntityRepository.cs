@@ -8,11 +8,7 @@ using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface INexusModsModToNameEntityRepositoryRead : IRepositoryRead<NexusModsModToNameEntity>;
-public interface INexusModsModToNameEntityRepositoryWrite : IRepositoryWrite<NexusModsModToNameEntity>, INexusModsModToNameEntityRepositoryRead;
-
 [ScopedService<INexusModsModToNameEntityRepositoryWrite, INexusModsModToNameEntityRepositoryRead>]
-
 internal class NexusModsModToNameEntityRepository : Repository<NexusModsModToNameEntity>, INexusModsModToNameEntityRepositoryWrite
 {
     protected override IQueryable<NexusModsModToNameEntity> InternalQuery => base.InternalQuery

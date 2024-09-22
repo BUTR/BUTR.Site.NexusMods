@@ -8,9 +8,6 @@ using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface INexusModsUserToCrashReportEntityRepositoryRead : IRepositoryRead<NexusModsUserToCrashReportEntity>;
-public interface INexusModsUserToCrashReportEntityRepositoryWrite : IRepositoryWrite<NexusModsUserToCrashReportEntity>, INexusModsUserToCrashReportEntityRepositoryRead;
-
 [ScopedService<INexusModsUserToCrashReportEntityRepositoryWrite, INexusModsUserToCrashReportEntityRepositoryRead>]
 internal class NexusModsUserToCrashReportEntityRepository : Repository<NexusModsUserToCrashReportEntity>, INexusModsUserToCrashReportEntityRepositoryWrite
 {

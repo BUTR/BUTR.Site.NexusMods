@@ -1,0 +1,6 @@
+using BUTR.Site.NexusMods.Server.Models.Database;
+
+namespace BUTR.Site.NexusMods.Server.Repositories;
+
+public interface INexusModsUserToIntegrationSteamEntityRepositoryRead : IRepositoryRead<NexusModsUserToIntegrationSteamEntity>;
+public interface INexusModsUserToIntegrationSteamEntityRepositoryWrite : IRepositoryWrite<NexusModsUserToIntegrationSteamEntity>, INexusModsUserToIntegrationSteamEntityRepositoryRead;

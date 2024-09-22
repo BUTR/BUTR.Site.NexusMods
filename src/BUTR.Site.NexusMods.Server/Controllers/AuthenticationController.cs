@@ -189,7 +189,7 @@ public sealed class AuthenticationController : ApiControllerBase
             UserId = (uint) nexusModsUserId.Value,
             Name = userInfo.Name.Value,
             EMail = userInfo.Email.Value,
-            ProfileUrl = userInfo.AvatarUrl,
+            ProfileUrl = userInfo.AvatarUrl ?? "",
             IsSupporter = userInfo.MembershipRoles.Contains("supporter"),
             IsPremium = userInfo.MembershipRoles.Contains("premium"),
             APIKey = null,

@@ -6,9 +6,6 @@ using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface IExceptionTypeRepositoryRead : IRepositoryRead<ExceptionTypeEntity>;
-public interface IExceptionTypeRepositoryWrite : IRepositoryWrite<ExceptionTypeEntity>, IExceptionTypeRepositoryRead;
-
 [ScopedService<IExceptionTypeRepositoryWrite, IExceptionTypeRepositoryRead>]
 internal class ExceptionTypeRepository : Repository<ExceptionTypeEntity>, IExceptionTypeRepositoryWrite
 {

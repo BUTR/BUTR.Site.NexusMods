@@ -6,9 +6,6 @@ using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface IIntegrationGOGToOwnedTenantEntityRepositoryRead : IRepositoryRead<IntegrationGOGToOwnedTenantEntity>;
-public interface IIntegrationGOGToOwnedTenantEntityRepositoryWrite : IRepositoryWrite<IntegrationGOGToOwnedTenantEntity>, IIntegrationGOGToOwnedTenantEntityRepositoryRead;
-
 [ScopedService<IIntegrationGOGToOwnedTenantEntityRepositoryWrite, IIntegrationGOGToOwnedTenantEntityRepositoryRead>]
 internal class IntegrationGOGToOwnedTenantEntityRepository : Repository<IntegrationGOGToOwnedTenantEntity>, IIntegrationGOGToOwnedTenantEntityRepositoryWrite
 {

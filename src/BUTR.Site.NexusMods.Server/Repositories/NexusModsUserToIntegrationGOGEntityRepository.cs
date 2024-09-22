@@ -8,9 +8,6 @@ using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface INexusModsUserToIntegrationGOGEntityRepositoryRead : IRepositoryRead<NexusModsUserToIntegrationGOGEntity>;
-public interface INexusModsUserToIntegrationGOGEntityRepositoryWrite : IRepositoryWrite<NexusModsUserToIntegrationGOGEntity>, INexusModsUserToIntegrationGOGEntityRepositoryRead;
-
 [ScopedService<INexusModsUserToIntegrationGOGEntityRepositoryWrite, INexusModsUserToIntegrationGOGEntityRepositoryRead>]
 internal class NexusModsUserToIntegrationGOGEntityRepository : Repository<NexusModsUserToIntegrationGOGEntity>, INexusModsUserToIntegrationGOGEntityRepositoryWrite
 {

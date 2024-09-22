@@ -1,0 +1,6 @@
+using BUTR.Site.NexusMods.Server.Models.Database;
+
+namespace BUTR.Site.NexusMods.Server.Repositories;
+
+public interface INexusModsUserToIntegrationGitHubEntityRepositoryRead : IRepositoryRead<NexusModsUserToIntegrationGitHubEntity>;
+public interface INexusModsUserToIntegrationGitHubEntityRepositoryWrite : IRepositoryWrite<NexusModsUserToIntegrationGitHubEntity>, INexusModsUserToIntegrationGitHubEntityRepositoryRead;

@@ -1,5 +1,3 @@
-using BUTR.CrashReport.Models;
-
 namespace BUTR.Site.NexusMods.Server.Models;
 
 using TType = ExceptionTypeId;
@@ -8,14 +6,6 @@ using TValueType = String;
 [ValueObject<TValueType>(conversions: Conversions.EfCoreValueConverter | Conversions.SystemTextJson | Conversions.TypeConverter)]
 public readonly partial struct ExceptionTypeId
 {
-    public static TType FromException(ExceptionModel exception)
-    {
-        var exc = exception;
-        while (exc.InnerException is not null)
-            exc = exc.InnerException;
-
-        return From(exc.Type);
-    }
     public static bool TryParseFromException(TValueType exception, out TType value)
     {
         Span<Range> dest = stackalloc Range[32];

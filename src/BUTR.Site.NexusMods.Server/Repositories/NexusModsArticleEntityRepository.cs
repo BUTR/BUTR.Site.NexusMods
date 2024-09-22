@@ -15,16 +15,6 @@ using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface INexusModsArticleEntityRepositoryRead : IRepositoryRead<NexusModsArticleEntity>
-{
-    Task<IList<string>> GetAllModuleIdsAsync(string authorName, CancellationToken ct);
-}
-
-public interface INexusModsArticleEntityRepositoryWrite : IRepositoryWrite<NexusModsArticleEntity>, INexusModsArticleEntityRepositoryRead
-{
-    Task GenerateAutoCompleteForAuthorNameAsync(CancellationToken ct);
-}
-
 [ScopedService<INexusModsArticleEntityRepositoryWrite, INexusModsArticleEntityRepositoryRead>]
 internal class NexusModsArticleEntityRepository : Repository<NexusModsArticleEntity>, INexusModsArticleEntityRepositoryWrite
 {

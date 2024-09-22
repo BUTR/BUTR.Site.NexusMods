@@ -1,0 +1,6 @@
+using BUTR.Site.NexusMods.Server.Models.Database;
+
+namespace BUTR.Site.NexusMods.Server.Repositories;
+
+public interface IIntegrationGOGTokensEntityRepositoryRead : IRepositoryRead<IntegrationGOGTokensEntity>;
+public interface IIntegrationGOGTokensEntityRepositoryWrite : IRepositoryWrite<IntegrationGOGTokensEntity>, IIntegrationGOGTokensEntityRepositoryRead;

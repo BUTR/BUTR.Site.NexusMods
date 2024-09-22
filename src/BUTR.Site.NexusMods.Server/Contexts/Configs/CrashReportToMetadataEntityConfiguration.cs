@@ -19,6 +19,8 @@ public class CrashReportToMetadataEntityConfiguration : BaseEntityConfigurationW
         builder.Property(x => x.BUTRLoaderVersion).HasColumnName("butrloader_version");
         builder.Property(x => x.BLSEVersion).HasColumnName("blse_version");
         builder.Property(x => x.LauncherExVersion).HasColumnName("launcherex_version");
+        builder.Property(x => x.OperatingSystemType).HasColumnName("operating_system_type");
+        builder.Property(x => x.OperatingSystemVersion).HasColumnName("operating_system_version");
         builder.ToTable("crash_report_metadata", "crashreport").HasKey(x => new
         {
             x.TenantId,

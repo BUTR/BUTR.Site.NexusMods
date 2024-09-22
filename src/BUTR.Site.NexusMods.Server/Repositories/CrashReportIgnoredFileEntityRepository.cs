@@ -6,9 +6,6 @@ using System.Linq;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
-public interface ICrashReportIgnoredFileEntityRepositoryRead : IRepositoryRead<CrashReportIgnoredFileEntity>;
-public interface ICrashReportIgnoredFileEntityRepositoryWrite : IRepositoryWrite<CrashReportIgnoredFileEntity>, ICrashReportIgnoredFileEntityRepositoryRead;
-
 [ScopedService<ICrashReportIgnoredFileEntityRepositoryWrite, ICrashReportIgnoredFileEntityRepositoryRead>]
 internal class CrashReportIgnoredFileEntityRepository : Repository<CrashReportIgnoredFileEntity>, ICrashReportIgnoredFileEntityRepositoryWrite
 {
