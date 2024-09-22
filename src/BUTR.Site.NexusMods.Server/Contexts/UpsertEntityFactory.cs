@@ -1,5 +1,6 @@
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
+using BUTR.Site.NexusMods.Server.Repositories;
 
 using EFCore.BulkExtensions;
 
@@ -7,7 +8,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using BUTR.Site.NexusMods.Server.Repositories;
 
 namespace BUTR.Site.NexusMods.Server.Contexts;
 

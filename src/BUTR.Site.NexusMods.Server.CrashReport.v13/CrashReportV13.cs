@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text.Json;
 using BUTR.CrashReport.Models;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Repositories;
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Text.Json;
 
 namespace BUTR.Site.NexusMods.Server.CrashReport.v13;
 
@@ -21,7 +22,7 @@ public static class CrashReportV13
 
         return ExceptionTypeId.From(exc.Type);
     }
-    
+
     private static string GetException(ExceptionModel? exception, bool inner = false) => exception is null ? string.Empty : $"""
 
 {(inner ? "Inner " : string.Empty)}Exception information
@@ -52,7 +53,7 @@ CallStack:
             crashReportToModuleMetadataEntities = null!;
             return false;
         }
-        
+
         var report = JsonSerializer.Deserialize<CrashReportModel>(content);
         if (report is null)
         {
@@ -61,7 +62,7 @@ CallStack:
             crashReportToModuleMetadataEntities = null!;
             return false;
         }
-        
+
         var butrLoaderVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "BUTRLoaderVersion")?.Value;
         var blseVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "BLSEVersion")?.Value;
         var launcherExVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "LauncherExVersion")?.Value;
@@ -104,7 +105,7 @@ CallStack:
             InvolvedPosition = (byte) (report.InvolvedModules.IndexOf(y => y.ModuleOrLoaderPluginId == x.Id) + 1),
             IsInvolved = report.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == x.Id),
         }).ToArray();
-        
+
         return true;
     }
 }

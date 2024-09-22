@@ -28,7 +28,7 @@ namespace BUTR.Site.NexusMods.Server;
 public static class Program
 {
     private const string OltpSectionName = "Oltp";
-    
+
     public static async Task Main(string[] args)
     {
         Log.Logger = new LoggerConfiguration()
@@ -65,7 +65,7 @@ public static class Program
                 .WithMetrics()
                 .WithTracing()
                 .WithLogging();
-            
+
             if (ctx.Configuration.GetSection(OltpSectionName) is { } oltpSection)
             {
                 openTelemetry
@@ -109,11 +109,11 @@ public static class Program
                         })
                         .AddNpgsql(instrumentationOptions =>
                         {
-                            
+
                         })
                         .AddGrpcClientInstrumentation(instrumentationOptions =>
                         {
-                            
+
                         })
                         .AddHttpClientInstrumentation(instrumentationOptions =>
                         {

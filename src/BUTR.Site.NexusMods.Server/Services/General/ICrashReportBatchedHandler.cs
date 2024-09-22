@@ -1,5 +1,7 @@
 using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts;
+using BUTR.Site.NexusMods.Server.CrashReport.v13;
+using BUTR.Site.NexusMods.Server.CrashReport.v14;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
@@ -16,8 +18,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using BUTR.Site.NexusMods.Server.CrashReport.v13;
-using BUTR.Site.NexusMods.Server.CrashReport.v14;
 
 namespace BUTR.Site.NexusMods.Server.Services;
 
@@ -217,7 +217,7 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
             IList<CrashReportToModuleMetadataEntity>? crashReportToModuleMetadataEntities = null;
 
             var url = CrashReportUrl.From(new Uri(new Uri(_options.Endpoint), fileId.ToString()));
-            
+
             if (version <= 12)
             {
                 var result = CrashReportV14.TryFromHtml(
@@ -275,7 +275,7 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
                     continue;
                 }
             }
-            
+
             if (crashReportEntity is null || crashReportToMetadataEntity is null || crashReportToModuleMetadataEntities is null)
             {
                 failedCrashReportFileIds.Add(fileId);

@@ -18,7 +18,7 @@ public sealed record CrashReportToMetadataEntity : IEntityWithTenant
 
     public required string? BLSEVersion { get; init; }
     public required string? LauncherExVersion { get; init; }
-    
+
     public required string? OperatingSystemType { get; init; }
     public required string? OperatingSystemVersion { get; init; }
 

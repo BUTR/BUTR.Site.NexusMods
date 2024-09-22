@@ -1,5 +1,7 @@
-﻿using Aragas.Extensions.Options.FluentValidation.Extensions;
+using Aragas.Extensions.Options.FluentValidation.Extensions;
+
 using FluentValidation;
+
 using OpenTelemetry.Exporter;
 
 namespace BUTR.Site.NexusMods.Server.Options;
