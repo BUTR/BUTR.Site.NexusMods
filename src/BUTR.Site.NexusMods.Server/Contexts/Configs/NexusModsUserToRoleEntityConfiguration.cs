@@ -14,7 +14,6 @@ public class NexusModsUserToRoleEntityConfiguration : BaseEntityConfigurationWit
     {
         builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_role_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.Role).HasColumnName("role").HasVogenConversion();
-        builder.Property(x => x.TenantId).HasColumnName("tenant").HasVogenConversion();
         builder.ToTable("nexusmods_user_role", "nexusmods_user").HasKey(x => new
         {
             x.TenantId,
