@@ -3,18 +3,22 @@ ARG TARGETARCH
 WORKDIR /build
 
 COPY ["src/BUTR.Site.NexusMods.DependencyInjection/BUTR.Site.NexusMods.DependencyInjection.csproj", "src/BUTR.Site.NexusMods.DependencyInjection/"]
+COPY ["src/BUTR.Site.NexusMods.Server.CrashReport.v13/BUTR.Site.NexusMods.Server.CrashReport.v13.csproj", "src/BUTR.Site.NexusMods.Server.CrashReport.v13/"]
 COPY ["src/BUTR.Site.NexusMods.Shared/BUTR.Site.NexusMods.Shared.csproj", "src/BUTR.Site.NexusMods.Shared/"]
 COPY ["src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj", "src/BUTR.Site.NexusMods.Server/"]
 COPY ["src/BUTR.Site.NexusMods.Server.ValueObjects.Vogen/BUTR.Site.NexusMods.Server.ValueObjects.Vogen.csproj", "src/BUTR.Site.NexusMods.Server.ValueObjects.Vogen/"]
+COPY ["src/BUTR.Site.NexusMods.Server.CrashReport.v14/BUTR.Site.NexusMods.Server.CrashReport.v14.csproj", "src/BUTR.Site.NexusMods.Server.CrashReport.v14/"]
 #COPY ["src/BUTR.Site.NexusMods.Server.ValueObjects.TVO/BUTR.Site.NexusMods.Server.ValueObjects.TVO.csproj", "src/BUTR.Site.NexusMods.Server.ValueObjects.TVO/"]
 COPY ["src/nuget.config", "src/"]
 
 RUN dotnet restore "src/BUTR.Site.NexusMods.Server/BUTR.Site.NexusMods.Server.csproj" -a $TARGETARCH;
 
 COPY ["src/BUTR.Site.NexusMods.DependencyInjection/", "src/BUTR.Site.NexusMods.DependencyInjection/"]
+COPY ["src/BUTR.Site.NexusMods.Server.CrashReport.v13/", "src/BUTR.Site.NexusMods.Server.CrashReport.v13/"]
 COPY ["src/BUTR.Site.NexusMods.Shared/", "src/BUTR.Site.NexusMods.Shared/"]
 COPY ["src/BUTR.Site.NexusMods.Server/", "src/BUTR.Site.NexusMods.Server/"]
 COPY ["src/BUTR.Site.NexusMods.Server.ValueObjects.Vogen/", "src/BUTR.Site.NexusMods.Server.ValueObjects.Vogen/"]
+COPY ["src/BUTR.Site.NexusMods.Server.CrashReport.v14/", "src/BUTR.Site.NexusMods.Server.CrashReport.v14/"]
 #COPY ["src/BUTR.Site.NexusMods.Server.ValueObjects.TVO/", "src/BUTR.Site.NexusMods.Server.ValueObjects.TVO/"]
 
 COPY [".git/HEAD", ".git/HEAD"]
