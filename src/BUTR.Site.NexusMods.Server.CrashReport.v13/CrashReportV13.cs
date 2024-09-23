@@ -54,7 +54,16 @@ CallStack:
             return false;
         }
 
-        var report = JsonSerializer.Deserialize<CrashReportModel>(content);
+        CrashReportModel? report;
+        try
+        {
+            report = JsonSerializer.Deserialize<CrashReportModel>(content);
+        }
+        catch
+        {
+            report = null;
+        }
+        
         if (report is null)
         {
             crashReportEntity = null!;
@@ -63,6 +72,20 @@ CallStack:
             return false;
         }
 
+        return TryFromModel(unitOfWrite, tenant, fileId, url, date, report, out crashReportEntity, out crashReportToMetadataEntity, out crashReportToModuleMetadataEntities);
+    }
+    
+    public static bool TryFromModel(
+        IUnitOfWrite unitOfWrite,
+        TenantId tenant,
+        CrashReportFileId fileId,
+        CrashReportUrl url,
+        DateTime date,
+        CrashReportModel report,
+        [NotNullWhen(true)] out CrashReportEntity? crashReportEntity,
+        [NotNullWhen(true)] out CrashReportToMetadataEntity? crashReportToMetadataEntity,
+        [NotNullWhen(true)] out IList<CrashReportToModuleMetadataEntity>? crashReportToModuleMetadataEntities)
+    {
         var butrLoaderVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "BUTRLoaderVersion")?.Value;
         var blseVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "BLSEVersion")?.Value;
         var launcherExVersion = report.Metadata.AdditionalMetadata.FirstOrDefault(x => x.Key == "LauncherExVersion")?.Value;

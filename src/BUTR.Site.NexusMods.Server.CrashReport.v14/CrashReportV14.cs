@@ -47,7 +47,16 @@ CallStack:
         [NotNullWhen(true)] out CrashReportToMetadataEntity? crashReportToMetadataEntity,
         [NotNullWhen(true)] out IList<CrashReportToModuleMetadataEntity>? crashReportToModuleMetadataEntities)
     {
-        var report = CrashReportParser.ParseLegacyHtml(version, content);
+        CrashReportModel? report;
+        try
+        {
+            report = CrashReportParser.ParseLegacyHtml(version, content);
+        }
+        catch
+        {
+            report = null;
+        }
+        
         if (report is null)
         {
             crashReportEntity = null!;
@@ -55,6 +64,7 @@ CallStack:
             crashReportToModuleMetadataEntities = null!;
             return false;
         }
+        
         return TryFromModel(unitOfWrite, tenant, fileId, url, date, report, out crashReportEntity, out crashReportToMetadataEntity, out crashReportToModuleMetadataEntities);
     }
 
@@ -78,7 +88,16 @@ CallStack:
             return false;
         }
 
-        var report = JsonSerializer.Deserialize<CrashReportModel>(content);
+        CrashReportModel? report;
+        try
+        {
+            report = JsonSerializer.Deserialize<CrashReportModel>(content);
+        }
+        catch
+        {
+            report = null;
+        }
+        
         if (report is null)
         {
             crashReportEntity = null!;
@@ -89,7 +108,8 @@ CallStack:
 
         return TryFromModel(unitOfWrite, tenant, fileId, url, date, report, out crashReportEntity, out crashReportToMetadataEntity, out crashReportToModuleMetadataEntities);
     }
-    public static bool TryFromModel(
+    
+    private static bool TryFromModel(
         IUnitOfWrite unitOfWrite,
         TenantId tenant,
         CrashReportFileId fileId,
