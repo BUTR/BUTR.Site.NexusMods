@@ -221,6 +221,7 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
             if (version <= 12)
             {
                 var result = CrashReportV14.TryFromHtml(
+                    _logger,
                     unitOfWrite,
                     tenant,
                     fileId,
@@ -240,6 +241,7 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
             if (version == 13)
             {
                 var result = CrashReportV13.TryFromJson(
+                    _logger,
                     unitOfWrite,
                     tenant,
                     fileId,
@@ -259,6 +261,7 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
             if (version == 14)
             {
                 var result = CrashReportV14.TryFromJson(
+                    _logger,
                     unitOfWrite,
                     tenant,
                     fileId,

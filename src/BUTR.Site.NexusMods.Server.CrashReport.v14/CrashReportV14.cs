@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace BUTR.Site.NexusMods.Server.CrashReport.v14;
 
@@ -36,6 +37,7 @@ CallStack:
 """;
 
     public static bool TryFromHtml(
+        ILogger logger,
         IUnitOfWrite unitOfWrite,
         TenantId tenant,
         CrashReportFileId fileId,
@@ -52,8 +54,9 @@ CallStack:
         {
             report = CrashReportParser.ParseLegacyHtml(version, content);
         }
-        catch
+        catch (Exception e)
         {
+            logger.LogError(e, "Failed to parse HTML crash report. FileId: {FileId}, Url: {Url}", fileId, url);
             report = null;
         }
         
@@ -69,6 +72,7 @@ CallStack:
     }
 
     public static bool TryFromJson(
+        ILogger logger,
         IUnitOfWrite unitOfWrite,
         TenantId tenant,
         CrashReportFileId fileId,
@@ -93,8 +97,9 @@ CallStack:
         {
             report = JsonSerializer.Deserialize<CrashReportModel>(content);
         }
-        catch
+        catch (Exception e)
         {
+            logger.LogError(e, "Failed to parse JSON crash report. FileId: {FileId}, Url: {Url}", fileId, url);
             report = null;
         }
         

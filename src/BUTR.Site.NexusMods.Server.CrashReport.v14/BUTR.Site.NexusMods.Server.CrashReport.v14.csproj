@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BUTR.CrashReport.Models" Version="14.0.0.84" />
-    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="14.0.0.84" />
+    <PackageReference Include="BUTR.CrashReport.Models" Version="14.0.0.85" />
+    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="14.0.0.85" />
   </ItemGroup>
 
   <ItemGroup>
