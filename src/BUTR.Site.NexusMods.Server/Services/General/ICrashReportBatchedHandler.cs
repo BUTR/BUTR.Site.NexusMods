@@ -15,6 +15,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -42,14 +43,16 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
 
     private readonly ILogger _logger;
     private readonly CrashReporterOptions _options;
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly ICrashReporterClient _client;
     private readonly ITenantContextAccessor _tenantContextAccessor;
 
-    public CrashReportBatchedHandler(ILogger<CrashReportBatchedHandler> logger, IOptions<CrashReporterOptions> options, IUnitOfWorkFactory unitOfWorkFactory, ICrashReporterClient client, ITenantContextAccessor tenantContextAccessor)
+    public CrashReportBatchedHandler(ILogger<CrashReportBatchedHandler> logger, IOptions<CrashReporterOptions> options, IOptions<JsonSerializerOptions> jsonSerializerOptions, IUnitOfWorkFactory unitOfWorkFactory, ICrashReporterClient client, ITenantContextAccessor tenantContextAccessor)
     {
         _logger = logger;
         _options = options.Value;
+        _jsonSerializerOptions = jsonSerializerOptions.Value;
         _unitOfWorkFactory = unitOfWorkFactory;
         _client = client;
         _tenantContextAccessor = tenantContextAccessor;
@@ -243,6 +246,7 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
                 var result = CrashReportV13.TryFromJson(
                     _logger,
                     unitOfWrite,
+                    _jsonSerializerOptions,
                     tenant,
                     fileId,
                     url,
@@ -263,6 +267,7 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
                 var result = CrashReportV14.TryFromJson(
                     _logger,
                     unitOfWrite,
+                    _jsonSerializerOptions,
                     tenant,
                     fileId,
                     url,

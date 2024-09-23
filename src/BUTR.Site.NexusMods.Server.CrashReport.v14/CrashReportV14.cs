@@ -74,6 +74,7 @@ CallStack:
     public static bool TryFromJson(
         ILogger logger,
         IUnitOfWrite unitOfWrite,
+        JsonSerializerOptions jsonSerializerOptions,
         TenantId tenant,
         CrashReportFileId fileId,
         CrashReportUrl url,
@@ -95,7 +96,7 @@ CallStack:
         CrashReportModel? report;
         try
         {
-            report = JsonSerializer.Deserialize<CrashReportModel>(content);
+            report = JsonSerializer.Deserialize<CrashReportModel>(content, jsonSerializerOptions);
         }
         catch (Exception e)
         {
