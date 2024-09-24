@@ -4,12 +4,13 @@ using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Repositories;
 
+using Microsoft.Extensions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 
 namespace BUTR.Site.NexusMods.Server.CrashReport.v13;
 
@@ -67,7 +68,7 @@ CallStack:
             logger.LogError(e, "Failed to parse JSON crash report. FileId: {FileId}, Url: {Url}", fileId, url);
             report = null;
         }
-        
+
         if (report is null)
         {
             crashReportEntity = null!;
@@ -78,7 +79,7 @@ CallStack:
 
         return TryFromModel(unitOfWrite, tenant, fileId, url, date, report, out crashReportEntity, out crashReportToMetadataEntity, out crashReportToModuleMetadataEntities);
     }
-    
+
     public static bool TryFromModel(
         IUnitOfWrite unitOfWrite,
         TenantId tenant,
