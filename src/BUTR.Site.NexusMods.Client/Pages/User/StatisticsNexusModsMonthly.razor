@@ -1,0 +1,55 @@
+﻿@attribute [Authorize]
+@page "/statistics-nexusmods-monthly"
+
+<Container>
+    <Card Margin="@Margin.Is4">
+        <CardBody>
+            <Fields>
+                <Field ColumnSize="ColumnSize.Is3.OnDesktop" Position="Position.Relative">
+                    <FieldLabel RequiredIndicator>Dates</FieldLabel>
+                    <FieldBody>
+                        <DatePicker TValue="DateOnly?" DatesChanged="OnDatesChanged" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range"/>
+                    </FieldBody>
+                </Field>
+                <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                    <Tooltip Text="Will be used to take NexusMods data" TriggerTargetId="tooltip-target-1" Inline>
+                        <FieldLabel RequiredIndicator ElementId="tooltip-target-1">NexusMods Mod Url</FieldLabel>
+                    </Tooltip>
+                    <FieldBody>
+                        <TextEdit TextChanged="OnModUrlChanged" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1"></TextEdit>
+                    </FieldBody>
+                </Field>
+                <Field ColumnSize="ColumnSize.Is3.OnDesktop">
+                    <Tooltip Text="Will be used to get the crash reports info" TriggerTargetId="tooltip-target-2" Inline>
+                        <FieldLabel RequiredIndicator ElementId="tooltip-target-2">Module Id</FieldLabel>
+                    </Tooltip>
+                    <FieldBody>
+                        <Autocomplete TItem="string"
+                                      TValue="string"
+                                      ElementId="module-id"
+                                      Data="@_modIdsAutocompleteValues"
+                                      ReadData="@OnHandleModuleIdReadData"
+                                      TextField="@(x => x)"
+                                      ValueField="@(x => x)"
+                                      SelectionMode="@AutocompleteSelectionMode.Default"
+                                      Placeholder="Bannerlord.Harmony"
+                                      SelectedValueChanged="@OnModuleIdChanged"
+                                      FreeTyping>
+                        </Autocomplete>
+                    </FieldBody>
+                </Field>
+            </Fields>
+            <Fields>
+                <Field ColumnSize="ColumnSize.Is5.OnDesktop">
+                    <FieldLabel>Options:</FieldLabel>
+                    <FieldBody>
+                        <Tooltip Text="Will be used to filter the crash reports that are linked to NexusMods" >
+                            <Check TValue="bool" CheckedChanged="OnlyLinkedToNexusModsChanged">Only Crash Reports Linked to NexusMods Mod Id</Check>
+                        </Tooltip>
+                    </FieldBody>
+                </Field>
+            </Fields>
+            <LineChart @ref="@_lineChart" TItem="double?" Options="@_options"/>
+        </CardBody>
+    </Card>
+</Container>

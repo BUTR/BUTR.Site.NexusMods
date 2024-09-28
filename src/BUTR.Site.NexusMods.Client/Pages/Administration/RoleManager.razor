@@ -14,13 +14,13 @@
                 <CardBody>
                     <Form>
                         <Field>
-                            <FieldLabel>NexusMods User Id</FieldLabel>
+                            <FieldLabel RequiredIndicator>NexusMods User Id</FieldLabel>
                             <FieldBody>
                                 <NumericEdit ElementId="user-id" TValue="uint" @bind-Value="@_model.UserId"/>
                             </FieldBody>
                         </Field>
                         <Field>
-                            <FieldLabel>Role</FieldLabel>
+                            <FieldLabel RequiredIndicator>Role</FieldLabel>
                             <FieldBody>
                                 <Select ElementId="role" @bind-SelectedValue="@_model.Role" TValue="string">
                                     <SelectItem Value="@ApplicationRoles.User">@nameof(ApplicationRoles.User)</SelectItem>

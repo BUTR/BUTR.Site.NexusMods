@@ -29,6 +29,8 @@ internal class UnitOfRead : IUnitOfRead
 
     public IStatisticsTopExceptionsTypeEntityRepositoryRead StatisticsTopExceptionsTypes { get; }
     public IStatisticsCrashScoreInvolvedEntityRepositoryRead StatisticsCrashScoreInvolveds { get; }
+    public IStatisticsCrashReportsPerDayEntityRepositoryRead StatisticsCrashReportsPerDay { get; }
+    public IStatisticsCrashReportsPerMonthEntityRepositoryRead StatisticsCrashReportsPerMonth { get; }
 
     public INexusModsArticleEntityRepositoryRead NexusModsArticles { get; }
 
@@ -78,6 +80,8 @@ internal class UnitOfRead : IUnitOfRead
 
         StatisticsTopExceptionsTypes = ActivatorUtilities.CreateInstance<StatisticsTopExceptionsTypeEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
         StatisticsCrashScoreInvolveds = ActivatorUtilities.CreateInstance<StatisticsCrashScoreInvolvedEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
+        StatisticsCrashReportsPerDay = ActivatorUtilities.CreateInstance<StatisticsCrashReportsPerDayEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
+        StatisticsCrashReportsPerMonth = ActivatorUtilities.CreateInstance<StatisticsCrashReportsPerMonthEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
 
         NexusModsArticles = ActivatorUtilities.CreateInstance<NexusModsArticleEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
 

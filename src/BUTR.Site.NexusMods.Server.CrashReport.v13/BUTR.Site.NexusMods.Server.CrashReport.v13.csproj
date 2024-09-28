@@ -7,9 +7,9 @@
 
   <PropertyGroup>
     <ILRepackTargetConfigurations>Debug;Release</ILRepackTargetConfigurations>
+    <ILRepackAllowDuplicateResources>false</ILRepackAllowDuplicateResources>
     <ILRepackMergeDebugSymbols>true</ILRepackMergeDebugSymbols>
-    <ILRepackPerformInternalize>true</ILRepackPerformInternalize>
-    <ILRepackCopyAttributes>false</ILRepackCopyAttributes>
+    <ILRepackRenameInternalized>true</ILRepackRenameInternalized>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ILRepack" Version="2.0.34" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />

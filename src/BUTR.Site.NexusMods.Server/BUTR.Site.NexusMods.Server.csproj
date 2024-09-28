@@ -53,8 +53,8 @@
     <PackageReference Include="Serilog.Sinks.Async" Version="2.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="SharpCompress" Version="0.37.2" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.7.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.8.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -65,8 +65,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BUTR.Site.NexusMods.DependencyInjection\BUTR.Site.NexusMods.DependencyInjection.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
-    <ProjectReference Include="..\BUTR.Site.NexusMods.Server.CrashReport.v13\BUTR.Site.NexusMods.Server.CrashReport.v13.csproj" />
-    <ProjectReference Include="..\BUTR.Site.NexusMods.Server.CrashReport.v14\BUTR.Site.NexusMods.Server.CrashReport.v14.csproj" />
+    <ProjectReference Include="..\BUTR.Site.NexusMods.Server.CrashReport.v13\BUTR.Site.NexusMods.Server.CrashReport.v13.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\BUTR.Site.NexusMods.Server.CrashReport.v14\BUTR.Site.NexusMods.Server.CrashReport.v14.csproj" PrivateAssets="all" />
     <ProjectReference Include="..\BUTR.Site.NexusMods.Server.Persistence\BUTR.Site.NexusMods.Server.Persistence.csproj" />
     <ProjectReference Include="..\BUTR.Site.NexusMods.Server.ValueObjects.Vogen\BUTR.Site.NexusMods.Server.ValueObjects.Vogen.csproj" />
     <ProjectReference Include="..\BUTR.Site.NexusMods.Shared\BUTR.Site.NexusMods.Shared.csproj" />
@@ -90,7 +90,7 @@
 
   <Target Name="GenerateOpenApi" Condition="$(DOTNET_RUNNING_IN_CONTAINER) != true" AfterTargets="PostBuildEvent">
     <Exec Command="dotnet new tool-manifest --force" />
-    <Exec Command="dotnet tool install --local Swashbuckle.AspNetCore.Cli --version 6.7.3" />
+    <Exec Command="dotnet tool install --local Swashbuckle.AspNetCore.Cli --version 6.8.0" />
     <Exec Command="dotnet swagger tofile --output $(AssemblyName).json $(OutputPath)$(AssemblyName).dll v1" />
   </Target>
 

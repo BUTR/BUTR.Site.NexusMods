@@ -43,21 +43,23 @@
     </CardHeader>
     <CardBody>
         <Form>
-            <Field>
-                <FieldLabel>Module Id</FieldLabel>
-                <FieldBody>
-                    <TextEdit ElementId="module-id" Role="@TextRole.Text" @bind-Text="@_model.ModuleId" Placeholder="Bannerlord.Harmony" />
-                </FieldBody>
-            </Field>
-            <Field>
-                <FieldLabel>NexusMods Url</FieldLabel>
-                <FieldBody>
-                    <TextEdit ElementId="mod-url" Role="@TextRole.Url" @bind-Text="@_model.NexusModsUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1"/>
-                </FieldBody>
-            </Field>
+            <Fields>
+                <Field ColumnSize="ColumnSize.Is3.OnDesktop">
+                    <FieldLabel RequiredIndicator>Module Id</FieldLabel>
+                    <FieldBody>
+                        <TextEdit ElementId="module-id" Role="@TextRole.Text" @bind-Text="@_model.ModuleId" Placeholder="Bannerlord.Harmony" />
+                    </FieldBody>
+                </Field>
+                <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                    <FieldLabel RequiredIndicator>NexusMods Mod Url</FieldLabel>
+                    <FieldBody>
+                        <TextEdit ElementId="mod-url" Role="@TextRole.Url" @bind-Text="@_model.NexusModsUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1"/>
+                    </FieldBody>
+                </Field>
+            </Fields>
             <Field>
                 <Button Color="@Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSubmit" PreventDefaultOnSubmit>
-                     <LoadingTemplate>
+                    <LoadingTemplate>
                         Linking...
                     </LoadingTemplate>
                     <ChildContent>

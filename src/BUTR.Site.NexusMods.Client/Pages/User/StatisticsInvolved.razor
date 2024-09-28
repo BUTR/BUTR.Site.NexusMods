@@ -4,43 +4,45 @@
 <Container>
     <Card Margin="@Margin.Is4">
         <CardBody>
-            <Field>
-                <FieldLabel>Game Version</FieldLabel>
-                <FieldBody>
-                    <Autocomplete TItem="string"
-                                  TValue="string"
-                                  ElementId="game-version"
-                                  Data="@_gameVersionsAutocompleteValues"
-                                  ReadData="@OnHandleGameVersionReadData"
-                                  TextField="@(x => x)"
-                                  ValueField="@(x => x)"
-                                  SelectionMode="@AutocompleteSelectionMode.Multiple"
-                                  Placeholder="v1.0.0"
-                                  SelectedValues="@_gameVersions"
-                                  SelectedTextsChanged="@OnGameVersionChanged"
-                                  FreeTyping>
-                    </Autocomplete>
-                </FieldBody>
-            </Field>
-            <Field>
-                <FieldLabel>Mod Id</FieldLabel>
-                <FieldBody>
-                    <Autocomplete TItem="string"
-                                  TValue="string"
-                                  ElementId="module-id"
-                                  Data="@_modIdsAutocompleteValues"
-                                  ReadData="@OnHandleModIdReadData"
-                                  TextField="@(x => x)"
-                                  ValueField="@(x => x)"
-                                  SelectionMode="@AutocompleteSelectionMode.Multiple"
-                                  Placeholder="Bannerlord.Harmony"
-                                  SelectedValues="@_modIds"
-                                  SelectedTextsChanged="@OnModIdChanged"
-                                  FreeTyping>
-                    </Autocomplete>
-                </FieldBody>
-            </Field>
-            <LineChart @ref="@_lineChart" TItem="double?" Options="@_options" />
+            <Fields>
+                <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                    <FieldLabel RequiredIndicator>Game Versions</FieldLabel>
+                    <FieldBody>
+                        <Autocomplete TItem="string"
+                                      TValue="string"
+                                      ElementId="game-version"
+                                      Data="@_gameVersionsAutocompleteValues"
+                                      ReadData="@OnHandleGameVersionReadData"
+                                      TextField="@(x => x)"
+                                      ValueField="@(x => x)"
+                                      SelectionMode="@AutocompleteSelectionMode.Multiple"
+                                      Placeholder="v1.0.0"
+                                      SelectedValues="@_gameVersions"
+                                      SelectedTextsChanged="@OnGameVersionChanged"
+                                      FreeTyping>
+                        </Autocomplete>
+                    </FieldBody>
+                </Field>
+                <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                    <FieldLabel RequiredIndicator>Module Ids</FieldLabel>
+                    <FieldBody>
+                        <Autocomplete TItem="string"
+                                      TValue="string"
+                                      ElementId="module-id"
+                                      Data="@_modIdsAutocompleteValues"
+                                      ReadData="@OnHandleModuleIdReadData"
+                                      TextField="@(x => x)"
+                                      ValueField="@(x => x)"
+                                      SelectionMode="@AutocompleteSelectionMode.Multiple"
+                                      Placeholder="Bannerlord.Harmony"
+                                      SelectedValues="@_moduleIds"
+                                      SelectedTextsChanged="@OnModuleIdChanged"
+                                      FreeTyping>
+                        </Autocomplete>
+                    </FieldBody>
+                </Field>
+            </Fields>
+            <LineChart @ref="@_lineChart" TItem="double?" Options="@_options"/>
         </CardBody>
     </Card>
 </Container>

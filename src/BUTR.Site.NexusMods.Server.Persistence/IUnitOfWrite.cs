@@ -22,6 +22,8 @@ public interface IUnitOfWrite : IDisposable, IAsyncDisposable
 
     IStatisticsTopExceptionsTypeEntityRepositoryWrite StatisticsTopExceptionsTypes { get; }
     IStatisticsCrashScoreInvolvedEntityRepositoryWrite StatisticsCrashScoreInvolveds { get; }
+    IStatisticsCrashReportsPerDayEntityRepositoryWrite StatisticsCrashReportsPerDay { get; }
+    IStatisticsCrashReportsPerMonthEntityRepositoryWrite StatisticsCrashReportsPerMonth { get; }
 
     INexusModsArticleEntityRepositoryWrite NexusModsArticles { get; }
 

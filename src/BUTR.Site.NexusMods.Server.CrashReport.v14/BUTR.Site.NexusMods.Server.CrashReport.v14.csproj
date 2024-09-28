@@ -7,9 +7,9 @@
 
   <PropertyGroup>
     <ILRepackTargetConfigurations>Debug;Release</ILRepackTargetConfigurations>
+    <ILRepackAllowDuplicateResources>false</ILRepackAllowDuplicateResources>
     <ILRepackMergeDebugSymbols>true</ILRepackMergeDebugSymbols>
-    <ILRepackPerformInternalize>true</ILRepackPerformInternalize>
-    <ILRepackCopyAttributes>false</ILRepackCopyAttributes>
+    <ILRepackRenameInternalized>true</ILRepackRenameInternalized>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ILRepack" Version="2.0.34" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
@@ -17,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BUTR.CrashReport.Models" Version="14.0.0.85" />
-    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="14.0.0.85" />
+    <PackageReference Include="BUTR.CrashReport.Models" Version="14.0.0.87" />
+    <PackageReference Include="BUTR.CrashReport.Bannerlord.Parser" Version="14.0.0.87" />
   </ItemGroup>
 
   <ItemGroup>

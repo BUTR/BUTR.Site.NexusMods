@@ -60,6 +60,8 @@ public class BaseAppDbContext : DbContext
 
     public DbSet<StatisticsTopExceptionsTypeEntity> StatisticsTopExceptionsTypes { get; set; } = default!;
     public DbSet<StatisticsCrashScoreInvolvedEntity> StatisticsCrashScoreInvolveds { get; set; } = default!;
+    public DbSet<StatisticsCrashReportsPerDayEntity> StatisticsCrashReportsPerDays { get; set; } = default!;
+    public DbSet<StatisticsCrashReportsPerMonthEntity> StatisticsCrashReportsPerMonths { get; set; } = default!;
 
     public DbSet<QuartzExecutionLogEntity> QuartzExecutionLogs { get; set; } = default!;
 
@@ -137,6 +139,9 @@ public class BaseAppDbContext : DbContext
 
         _entityConfigurationFactory.ApplyConfigurationWithTenant<StatisticsCrashScoreInvolvedEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<StatisticsTopExceptionsTypeEntity>(modelBuilder);
+        _entityConfigurationFactory.ApplyConfigurationWithTenant<StatisticsCrashReportsPerDateEntity>(modelBuilder);
+        _entityConfigurationFactory.ApplyConfiguration<StatisticsCrashReportsPerDayEntity>(modelBuilder);
+        _entityConfigurationFactory.ApplyConfiguration<StatisticsCrashReportsPerMonthEntity>(modelBuilder);
 
         _entityConfigurationFactory.ApplyConfiguration<TenantEntity>(modelBuilder);
     }

@@ -5,6 +5,7 @@
     <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
     <BlazorWebAssemblyPreserveCollationData>false</BlazorWebAssemblyPreserveCollationData>
     <HybridGlobalization>true</HybridGlobalization>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <!--

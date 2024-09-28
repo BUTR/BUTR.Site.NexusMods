@@ -197,7 +197,8 @@ public sealed partial class Startup
             opt.AddJobListener<IQuartzEventProviderService>(sp => sp.GetRequiredService<IQuartzEventProviderService>());
             opt.AddTriggerListener<IQuartzEventProviderService>(sp => sp.GetRequiredService<IQuartzEventProviderService>());
 
-            string AtEveryFirstDayOfMonth(int hour = 0) => $"0 0 {hour} ? 1-12 * *";
+            string AtEveryFirstDayOfMonth(int hour = 0) => $"0 0 {hour} ? * * *";
+            string AtEveryLastDayOfMonth(int hour = 0) => $"0 0 {hour} L * ? *";
             string AtEveryMonday(int hour = 0) => $"0 0 {hour} ? * MON *";
             string AtEveryDay(int hour = 0) => $"0 0 {hour} ? * *";
             string AtEveryHour() => "0 0 * * * ?";
@@ -222,11 +223,13 @@ public sealed partial class Startup
             opt.AddJob<CrashReportAnalyzerProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryHour()).InTimeZone(TimeZoneInfo.Utc));
 
             // Daily
+            opt.AddJob<CrashReportsPerDayAnalyzerJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(00)).InTimeZone(TimeZoneInfo.Utc));
             opt.AddJob<QuartzLogHistoryManagerExecutionLogsJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(00)).InTimeZone(TimeZoneInfo.Utc));
             opt.AddJob<NexusModsModFileUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(00)).InTimeZone(TimeZoneInfo.Utc));
             opt.AddJob<NexusModsArticleUpdatesProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryDay(12)).InTimeZone(TimeZoneInfo.Utc));
 
             // Monthly
+            opt.AddJob<CrashReportsPerMonthAnalyzerJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(00)).InTimeZone(TimeZoneInfo.Utc));
             //opt.AddJob<NexusModsModFileProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(06)).InTimeZone(TimeZoneInfo.Utc));
             //opt.AddJob<NexusModsArticleProcessorJob>(CronScheduleBuilder.CronSchedule(AtEveryFirstDayOfMonth(18)).InTimeZone(TimeZoneInfo.Utc));
 #endif

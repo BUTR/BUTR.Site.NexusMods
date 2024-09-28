@@ -35,6 +35,8 @@ internal class UnitOfWrite : IUnitOfWrite
 
     public IStatisticsTopExceptionsTypeEntityRepositoryWrite StatisticsTopExceptionsTypes { get; }
     public IStatisticsCrashScoreInvolvedEntityRepositoryWrite StatisticsCrashScoreInvolveds { get; }
+    public IStatisticsCrashReportsPerDayEntityRepositoryWrite StatisticsCrashReportsPerDay { get; }
+    public IStatisticsCrashReportsPerMonthEntityRepositoryWrite StatisticsCrashReportsPerMonth { get; }
 
     public INexusModsArticleEntityRepositoryWrite NexusModsArticles { get; }
 
@@ -86,6 +88,8 @@ internal class UnitOfWrite : IUnitOfWrite
 
         StatisticsTopExceptionsTypes = ActivatorUtilities.CreateInstance<StatisticsTopExceptionsTypeEntityRepository>(serviceProvider, dbContextProvider);
         StatisticsCrashScoreInvolveds = ActivatorUtilities.CreateInstance<StatisticsCrashScoreInvolvedEntityRepository>(serviceProvider, dbContextProvider);
+        StatisticsCrashReportsPerDay = ActivatorUtilities.CreateInstance<StatisticsCrashReportsPerDayEntityRepository>(serviceProvider, dbContextProvider);
+        StatisticsCrashReportsPerMonth = ActivatorUtilities.CreateInstance<StatisticsCrashReportsPerMonthEntityRepository>(serviceProvider, dbContextProvider);
 
         NexusModsArticles = ActivatorUtilities.CreateInstance<NexusModsArticleEntityRepository>(serviceProvider, dbContextProvider);
 

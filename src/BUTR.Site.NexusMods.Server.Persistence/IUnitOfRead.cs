@@ -18,6 +18,8 @@ public interface IUnitOfRead : IDisposable, IAsyncDisposable
 
     IStatisticsTopExceptionsTypeEntityRepositoryRead StatisticsTopExceptionsTypes { get; }
     IStatisticsCrashScoreInvolvedEntityRepositoryRead StatisticsCrashScoreInvolveds { get; }
+    IStatisticsCrashReportsPerDayEntityRepositoryRead StatisticsCrashReportsPerDay { get; }
+    IStatisticsCrashReportsPerMonthEntityRepositoryRead StatisticsCrashReportsPerMonth { get; }
 
     INexusModsArticleEntityRepositoryRead NexusModsArticles { get; }
 

@@ -26,12 +26,17 @@ public partial class StatisticsInvolved
     private ICollection<string> _modIdsAutocompleteValues = default!;
 
     private List<string> _gameVersions = new();
-    private List<string> _modIds = new();
+    private List<string> _moduleIds = new();
 
     private LineChart<double?> _lineChart = default!;
     private readonly LineChartOptions _options = new()
     {
         Responsive = true,
+        Interaction = new()
+        {
+            Mode = "index",
+            Intersect = false,
+        },
         SpanGaps = true,
         Scales = new()
         {
@@ -60,7 +65,7 @@ public partial class StatisticsInvolved
     {
         var queries = NavigationManager.QueryString();
         _gameVersions = queries.GetValues("gameVersions")?.ToList() ?? _gameVersions;
-        _modIds = queries.GetValues("modIds")?.ToList() ?? _modIds;
+        _moduleIds = queries.GetValues("modIds")?.ToList() ?? _moduleIds;
 
         await Refresh();
 
@@ -72,9 +77,9 @@ public partial class StatisticsInvolved
         if (_lineChart is null) return;
 
         await _lineChart.Clear();
-        if (_modIds.Count == 0) return;
+        if (_moduleIds.Count == 0) return;
 
-        var data = (await StatisticsClient.GetInvolvedModulesAsync(_gameVersions, _modIds, Array.Empty<string>())).Value ?? Array.Empty<StatisticsInvolvedModuleScoresForGameVersionModel>();
+        var data = (await StatisticsClient.GetInvolvedModulesAsync(_gameVersions, _moduleIds, Array.Empty<string>())).Value ?? Array.Empty<StatisticsInvolvedModuleScoresForGameVersionModel>();
 
         var allGameVersions = data.Select(x => x.GameVersion).ToArray();
         var allModIdsWithVersions = data
@@ -84,7 +89,7 @@ public partial class StatisticsInvolved
             .ToDictionary(x => x.Id, x => x.Versions.Select(y => y.Version).Distinct().OrderBy(y => y, new AlphanumComparatorFast()).ToArray());
 
         var gameVersions = (_gameVersions.Count == 0 ? (ICollection<string>) allGameVersions : (ICollection<string>) _gameVersions);
-        var modIds = (_modIds.Count == 0 ? (ICollection<string>) allModIdsWithVersions.Keys : (ICollection<string>) _modIds);
+        var modIds = (_moduleIds.Count == 0 ? (ICollection<string>) allModIdsWithVersions.Keys : (ICollection<string>) _moduleIds);
         var modIdsWithVersions = modIds.Where(x => allModIdsWithVersions.ContainsKey(x)).Select(x => new { Key = x, Value = allModIdsWithVersions[x] }).ToList();
 
         var backgrounds = ChartUtiities.GetColors(gameVersions.Count * modIds.Count, 0.2f).ToList();
@@ -127,7 +132,7 @@ public partial class StatisticsInvolved
             _gameVersionsAutocompleteValues = (await StatisticsClient.GetAutocompleteGameVersionsAsync(autocompleteReadDataEventArgs.SearchValue)).Value ?? Array.Empty<string>();
         }
     }
-    private async Task OnHandleModIdReadData(AutocompleteReadDataEventArgs autocompleteReadDataEventArgs)
+    private async Task OnHandleModuleIdReadData(AutocompleteReadDataEventArgs autocompleteReadDataEventArgs)
     {
         if (!autocompleteReadDataEventArgs.CancellationToken.IsCancellationRequested && autocompleteReadDataEventArgs.SearchValue.Length >= 3)
         {
@@ -140,9 +145,9 @@ public partial class StatisticsInvolved
         _gameVersions = gameVersions;
         await Refresh();
     }
-    private async void OnModIdChanged(List<string> modIds)
+    private async void OnModuleIdChanged(List<string> modIds)
     {
-        _modIds = modIds;
+        _moduleIds = modIds;
         await Refresh();
     }
 }

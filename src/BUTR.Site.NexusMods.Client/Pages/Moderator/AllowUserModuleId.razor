@@ -44,18 +44,20 @@
     </CardHeader>
     <CardBody>
         <Form>
-            <Field>
-                <FieldLabel>NexusMods User Url</FieldLabel>
-                <FieldBody>
-                    <TextEdit ElementId="user-url" Role="@TextRole.Text" @bind-Text="@_model.UserUrl" Placeholder="https://nexusmods.com/users/1 or https://next.nexusmods.com/profile/Dark0ne" />
-                </FieldBody>
-            </Field>
-            <Field>
-                <FieldLabel>Module Id</FieldLabel>
-                <FieldBody>
-                    <TextEdit ElementId="module-id" Role="@TextRole.Text" @bind-Text="@_model.ModuleId" Placeholder="Bannerlord.Harmony" />
-                </FieldBody>
-            </Field>
+            <Fields>
+                <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                    <FieldLabel RequiredIndicator>NexusMods User Url</FieldLabel>
+                    <FieldBody>
+                        <TextEdit ElementId="user-url" Role="@TextRole.Text" @bind-Text="@_model.UserUrl" Placeholder="https://nexusmods.com/users/1 or https://next.nexusmods.com/profile/Dark0ne" />
+                    </FieldBody>
+                </Field>
+                <Field ColumnSize="ColumnSize.Is3.OnDesktop">
+                    <FieldLabel RequiredIndicator>Module Id</FieldLabel>
+                    <FieldBody>
+                        <TextEdit ElementId="module-id" Role="@TextRole.Text" @bind-Text="@_model.ModuleId" Placeholder="Bannerlord.Harmony" />
+                    </FieldBody>
+                </Field>
+            </Fields>
             <Field>
                 <Button Color="@Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSubmit" PreventDefaultOnSubmit>
                     <LoadingTemplate>Allowing...</LoadingTemplate>

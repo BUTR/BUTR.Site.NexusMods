@@ -69,6 +69,7 @@ public static class Program
             {
                 services.Configure<BackendOptions>(builder.Configuration.GetSection("Backend"));
                 services.Configure<CrashReporterOptions>(builder.Configuration.GetSection("CrashReporter"));
+                services.Configure<ModStatisticsOptions>(builder.Configuration.GetSection("ModStatistics"));
 
                 services.AddScoped(_ => new HttpClient
                 {
@@ -86,6 +87,12 @@ public static class Program
                     client.BaseAddress = new Uri(opts.Endpoint);
                     client.DefaultRequestHeaders.Add("User-Agent", userAgent);
                 }).AddHttpMessageHandler<AuthenticationAnd401DelegatingHandler>();
+                services.AddHttpClient<IModStatisticsClient, ModStatisticsClient>().ConfigureHttpClient((sp, client) =>
+                {
+                    var opts = sp.GetRequiredService<IOptions<ModStatisticsOptions>>().Value;
+                    client.BaseAddress = new Uri(opts.Endpoint);
+                    client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+                });
                 services.AddHttpClient("BackendAuthentication").ConfigureBackend(userAgent)
                     .AddHttpMessageHandler<AuthenticationInjectionDelegatingHandler>().AddHttpMessageHandler<TenantDelegatingHandler>();
                 services.AddHttpClient("Backend").ConfigureBackend(userAgent)

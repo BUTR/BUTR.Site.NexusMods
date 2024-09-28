@@ -7,6 +7,7 @@ using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -50,6 +51,30 @@ public sealed class StatisticsController : ApiControllerBase
         //    return StatusCode(StatusCodes.Status403Forbidden, Array.Empty<GameStorage>());
 
         var data = await unitOfRead.StatisticsCrashScoreInvolveds.GetAllInvolvedModuleScoresForGameVersionAsync(gameVersions, moduleIds, moduleVersions, CancellationToken.None);
+
+        return ApiResult(data);
+    }
+
+    [HttpGet("CrashReportsPerDay")]
+    public async Task<ApiResult<IList<StatisticsCrashReportsPerDateModel>?>> GetCrashReportsPerDayAsync(
+        [FromQuery] DateOnly from, [FromQuery] DateOnly to,
+        [FromQuery] NexusModsModId[]? modIds, [FromQuery] GameVersion[]? gameVersions, [FromQuery] ModuleId[]? moduleIds, [FromQuery] ModuleVersion[]? moduleVersions)
+    {
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
+        var data = await unitOfRead.StatisticsCrashReportsPerDay.GetAllAsync(from, to, modIds, gameVersions, moduleIds, moduleVersions, CancellationToken.None);
+
+        return ApiResult(data);
+    }
+
+    [HttpGet("CrashReportsPerMonth")]
+    public async Task<ApiResult<IList<StatisticsCrashReportsPerDateModel>?>> GetCrashReportsPerMonthAsync(
+        [FromQuery] DateOnly from, [FromQuery] DateOnly to,
+        [FromQuery] NexusModsModId[]? modIds, [FromQuery] GameVersion[]? gameVersions, [FromQuery] ModuleId[]? moduleIds, [FromQuery] ModuleVersion[]? moduleVersions)
+    {
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
+        var data = await unitOfRead.StatisticsCrashReportsPerMonth.GetAllAsync(from, to, modIds, gameVersions, moduleIds, moduleVersions, CancellationToken.None);
 
         return ApiResult(data);
     }
