@@ -12,7 +12,7 @@
     <ILRepackRenameInternalized>true</ILRepackRenameInternalized>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="ILRepack" Version="2.0.34" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+    <PackageReference Include="ILRepack" Version="2.0.35" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
     <PackageReference Include="ILRepack.FullAuto" Version="1.6.0" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
   </ItemGroup>
 
