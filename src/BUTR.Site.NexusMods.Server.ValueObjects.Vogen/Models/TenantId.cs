@@ -22,7 +22,7 @@ public readonly partial struct TenantId : IHasDefaultValue<TType>
             yield return Bannerlord;
             //yield return Rimworld;
             //yield return StardewValley;
-            //yield return Valheim;
+            yield return Valheim;
             //yield return DarkestDungeon;
         }
     }
