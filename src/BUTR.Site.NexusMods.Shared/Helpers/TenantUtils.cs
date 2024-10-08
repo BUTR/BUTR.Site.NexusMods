@@ -20,7 +20,7 @@ public static class TenantUtils
     public const string StardewValleyGameDomain = "stardewvalley";
     public const int StardewValleyNexusModsId = 1303;
 
-    public const int ValheimId = 3;
+    public const int ValheimId = 4;
     public const string ValheimName = "Valheim";
     public const string ValheimGameDomain = "valheim";
     public const int ValheimNexusModsId = 3667;
