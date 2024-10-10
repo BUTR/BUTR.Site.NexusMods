@@ -148,6 +148,8 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
 
     private async Task DownloadCrashReportsAsync(CancellationToken ct)
     {
+        var tenant = _tenantContextAccessor.Current;
+
         try
         {
             var exceptions = new ConcurrentQueue<Exception>();
@@ -163,11 +165,11 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
                     {
                         if (version <= 12)
                         {
-                            content = await _client.GetCrashReportAsync(fileId, ct2);
+                            content = await _client.GetCrashReportAsync(tenant, fileId, ct2);
                         }
                         else
                         {
-                            content = await _client.GetCrashReportJsonAsync(fileId, ct2);
+                            content = await _client.GetCrashReportJsonAsync(tenant, fileId, ct2);
                         }
                     }
                     catch (Exception e)

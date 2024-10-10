@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 using System.Threading;
 using System.Threading.Tasks;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
@@ -27,7 +28,10 @@ public sealed class ReportsController : ApiControllerBase
 
     [HttpGet("{id}.html")]
     [Produces("text/html")]
-    public async Task<ActionResult<string>> GetAllAsync(CrashReportFileId id, CancellationToken ct) => Ok(await _crashReporterClient.GetCrashReportAsync(id, ct));
+    public async Task<ActionResult<string>> GetAllAsync([BindTenant] TenantId tenant, CrashReportFileId id, CancellationToken ct)
+    {
+        return Ok(await _crashReporterClient.GetCrashReportAsync(tenant, id, ct));
+    }
 
     // Just so we have ApiResult type in swagger.json
     [HttpGet("BlankRequest")]

@@ -39,7 +39,7 @@ public sealed class CrashReportProcessorJob : IJob
         {
             await using var scope = _serviceScopeFactory.CreateAsyncScope().WithTenant(tenant);
             var crashReportBatchedHandler = scope.ServiceProvider.GetRequiredService<ICrashReportBatchedHandler>();
-            await foreach (var batch in _crashReporterClient.GetNewCrashReportMetadatasAsync(DateTime.UtcNow.AddDays(-2), ct).OfType<CrashReportFileMetadata>().ChunkAsync(100).WithCancellation(ct))
+            await foreach (var batch in _crashReporterClient.GetNewCrashReportMetadatasAsync(tenant, DateTime.UtcNow.AddDays(-2), ct).OfType<CrashReportFileMetadata>().ChunkAsync(100).WithCancellation(ct))
                 processed += await crashReportBatchedHandler.HandleBatchAsync(batch, ct);
         }
 

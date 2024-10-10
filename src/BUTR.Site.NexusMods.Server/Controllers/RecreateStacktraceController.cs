@@ -20,6 +20,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
@@ -39,7 +40,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
 
     [HttpGet("Json")]
     [Produces("application/json")]
-    public async Task<ApiResult<IEnumerable<RecreatedStacktrace>?>> GetJsonAsync([FromQuery] CrashReportFileId id, CancellationToken ct)
+    public async Task<ApiResult<IEnumerable<RecreatedStacktrace>?>> GetJsonAsync([BindTenant] TenantId tenant, [FromQuery] CrashReportFileId id, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
             return ApiResultError("Game is not owned!", StatusCodes.Status401Unauthorized);
@@ -47,7 +48,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
         string crashReportContent;
         try
         {
-            crashReportContent = await _crashReporterClient.GetCrashReportAsync(id, ct);
+            crashReportContent = await _crashReporterClient.GetCrashReportAsync(tenant, id, ct);
         }
         catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
         {
@@ -76,7 +77,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
 
     [HttpGet("Html")]
     [Produces("text/plain")]
-    public async Task<ActionResult<string>> GetHtmlAsync([FromQuery] CrashReportFileId id, CancellationToken ct)
+    public async Task<ActionResult<string>> GetHtmlAsync([BindTenant] TenantId tenant, [FromQuery] CrashReportFileId id, CancellationToken ct)
     {
         if (!HttpContext.OwnsTenantGame())
             return Unauthorized();
@@ -84,7 +85,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
         string crashReportContent;
         try
         {
-            crashReportContent = await _crashReporterClient.GetCrashReportAsync(id, ct);
+            crashReportContent = await _crashReporterClient.GetCrashReportAsync(tenant, id, ct);
         }
         catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.NotFound)
         {
