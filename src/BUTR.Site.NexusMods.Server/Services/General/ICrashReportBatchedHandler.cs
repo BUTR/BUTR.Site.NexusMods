@@ -221,7 +221,7 @@ public sealed class CrashReportBatchedHandler : ICrashReportBatchedHandler
             CrashReportToMetadataEntity? crashReportToMetadataEntity = null;
             IList<CrashReportToModuleMetadataEntity>? crashReportToModuleMetadataEntities = null;
 
-            var url = CrashReportUrl.From(new Uri(new Uri(_options.Endpoint), fileId.ToString()));
+            var url = CrashReportUrl.From(new Uri(new Uri(_options.Endpoint), tenant == TenantId.Bannerlord ? $"{fileId}" : $"{tenant}/{fileId}"));
 
             if (version <= 12)
             {
