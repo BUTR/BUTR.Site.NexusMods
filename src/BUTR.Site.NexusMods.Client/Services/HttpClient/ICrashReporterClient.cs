@@ -12,7 +12,7 @@ namespace BUTR.Site.NexusMods.Client.Services;
 
 public interface ICrashReporterClient
 {
-    Task<CrashReportModel?> GetCrashReportModelAsync(string id, CancellationToken ct);
+    Task<CrashReportModel?> GetCrashReportModelAsync(int tenant, string id, CancellationToken ct);
 }
 
 public sealed class CrashReporterClient : ICrashReporterClient
@@ -26,9 +26,9 @@ public sealed class CrashReporterClient : ICrashReporterClient
         _jsonSerializerOptions = jsonSerializerOptions.Value;
     }
 
-    public async Task<CrashReportModel?> GetCrashReportModelAsync(string id, CancellationToken ct)
+    public async Task<CrashReportModel?> GetCrashReportModelAsync(int tenant, string id, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"{id}.json");
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{tenant}/{id}.json");
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         if (!response.IsSuccessStatusCode) return null;
         return await JsonSerializer.DeserializeAsync<CrashReportModel>(await response.Content.ReadAsStreamAsync(ct), _jsonSerializerOptions, ct);

@@ -45,7 +45,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
         if (!HttpContext.OwnsTenantGame())
             return ApiResultError("Game is not owned!", StatusCodes.Status401Unauthorized);
 
-        string crashReportContent;
+        string? crashReportContent;
         try
         {
             crashReportContent = await _crashReporterClient.GetCrashReportAsync(tenant, id, ct);
@@ -55,7 +55,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
             return ApiOk(Enumerable.Empty<RecreatedStacktrace>());
         }
 
-        if (!CrashReportParser.TryParse(crashReportContent, out var version, out var crashReport, out var json))
+        if (string.IsNullOrEmpty(crashReportContent) || !CrashReportParser.TryParse(crashReportContent, out var version, out var crashReport, out var json))
             return ApiBadRequest("Invalid crash report!");
 
         var gameVersion = crashReport.Metadata.GameVersion;
@@ -82,7 +82,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
         if (!HttpContext.OwnsTenantGame())
             return Unauthorized();
 
-        string crashReportContent;
+        string? crashReportContent;
         try
         {
             crashReportContent = await _crashReporterClient.GetCrashReportAsync(tenant, id, ct);
@@ -92,7 +92,7 @@ public sealed class RecreateStacktraceController : ApiControllerBase
             return Content(string.Empty, "text/html", Encoding.UTF8);
         }
 
-        if (!CrashReportParser.TryParse(crashReportContent, out var version, out var crashReport, out var json))
+        if (string.IsNullOrEmpty(crashReportContent) || !CrashReportParser.TryParse(crashReportContent, out var version, out var crashReport, out var json))
             return BadRequest();
 
         var gameVersion = crashReport.Metadata.GameVersion;

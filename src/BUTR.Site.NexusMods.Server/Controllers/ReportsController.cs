@@ -28,7 +28,7 @@ public sealed class ReportsController : ApiControllerBase
 
     [HttpGet("{id}.html")]
     [Produces("text/html")]
-    public async Task<ActionResult<string>> GetAllAsync([BindTenant] TenantId tenant, CrashReportFileId id, CancellationToken ct)
+    public async Task<ActionResult<string?>> GetAllAsync([BindTenant] TenantId tenant, CrashReportFileId id, CancellationToken ct)
     {
         return Ok(await _crashReporterClient.GetCrashReportAsync(tenant, id, ct));
     }
