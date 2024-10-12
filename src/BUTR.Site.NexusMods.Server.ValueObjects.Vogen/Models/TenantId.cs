@@ -11,6 +11,7 @@ public readonly partial struct TenantId : IHasDefaultValue<TType>
     public static readonly TType Rimworld = new(TenantUtils.RimworldId);
     public static readonly TType StardewValley = new(TenantUtils.StardewValleyId);
     public static readonly TType Valheim = new(TenantUtils.ValheimId);
+    public static readonly TType Terraria = new(TenantUtils.TerrariaId);
     public static readonly TType Error = new(255);
 
     public static TType DefaultValue => None;
@@ -23,6 +24,7 @@ public readonly partial struct TenantId : IHasDefaultValue<TType>
             //yield return Rimworld;
             //yield return StardewValley;
             yield return Valheim;
+            yield return Terraria;
             //yield return DarkestDungeon;
         }
     }

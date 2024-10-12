@@ -25,14 +25,21 @@ public static class TenantUtils
     public const string ValheimGameDomain = "valheim";
     public const int ValheimNexusModsId = 3667;
 
-    private sealed record TenantMetadata(int Id, string NexusModsGameDomain, string Name, int NexusModsId);
+
+    public const int TerrariaId = 5;
+    public const string TerrariaName = "Terraria";
+    public const string TerrariaGameDomain = "terraria";
+    public const int TerrariaNexusModsId = 549;
+
+    private sealed record TenantMetadata(int Id, string Name, string NexusModsGameDomain, int NexusModsId);
 
     private static readonly List<TenantMetadata> TenantMetadatas = new()
     {
-        new(BannerlordId, BannerlordGameDomain, BannerlordName, BannerlordNexusModsId),
-        new(RimworldId, RimworldGameDomain, RimworldName, RimworldNexusModsId),
-        new(StardewValleyId, StardewValleyGameDomain, StardewValleyName, StardewValleyNexusModsId),
-        new(ValheimId, ValheimGameDomain, ValheimName, ValheimNexusModsId),
+        new(BannerlordId, BannerlordName, BannerlordGameDomain, BannerlordNexusModsId),
+        new(RimworldId, RimworldName, RimworldGameDomain, RimworldNexusModsId),
+        new(StardewValleyId, StardewValleyName, StardewValleyGameDomain, StardewValleyNexusModsId),
+        new(ValheimId, ValheimName, ValheimGameDomain, ValheimNexusModsId),
+        new(TerrariaId, TerrariaName, TerrariaGameDomain, TerrariaNexusModsId),
     };
 
     public static int? FromGameDomainToTenant(string gameDomain) => TenantMetadatas.Find(x => string.Equals(x.NexusModsGameDomain, gameDomain, StringComparison.Ordinal))?.Id;

@@ -30,6 +30,7 @@ public sealed class DatabaseGOGStorage : IGOGStorage
         { TenantId.Bannerlord, [1802539526, 1564781494] },
         { TenantId.Rimworld, [1094900565] },
         { TenantId.StardewValley, [1453375253] },
+        { TenantId.Terraria, [1207665503] },
     };
 
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;

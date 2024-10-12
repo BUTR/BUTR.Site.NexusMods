@@ -28,6 +28,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
         { TenantId.Rimworld, [294100] },
         { TenantId.StardewValley, [413150] },
         { TenantId.Valheim, [892970] },
+        { TenantId.Terraria, [105600] },
     };
 
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
