@@ -1,8 +1,12 @@
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
+using BUTR.Site.NexusMods.Server.Models.API;
+using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Options;
+using BUTR.Site.NexusMods.Server.Repositories;
 using BUTR.Site.NexusMods.Server.Services;
 using BUTR.Site.NexusMods.Server.Utils;
+using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 using BUTR.Site.NexusMods.Server.Utils.Http.ApiResults;
 using BUTR.Site.NexusMods.Shared.Helpers;
 
@@ -15,10 +19,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
-using BUTR.Site.NexusMods.Server.Models.API;
-using BUTR.Site.NexusMods.Server.Models.Database;
-using BUTR.Site.NexusMods.Server.Repositories;
-using BUTR.Site.NexusMods.Server.Utils.BindingSources;
 
 namespace BUTR.Site.NexusMods.Server.Controllers;
 
@@ -111,8 +111,8 @@ public sealed class SteamController : ApiControllerBase
         var result = await _steamAPIClient.GetUserInfoAsync(SteamUserId.From(tokens.ExternalId), ct);
         return ApiResult(result);
     }
-    
-    
+
+
     [HttpPost("ModuleManualLinks")]
     [ButrNexusModsAuthorization(Roles = $"{ApplicationRoles.Administrator},{ApplicationRoles.Moderator}")]
     public async Task<ApiResult<string?>> AddModuleManualLinkAsync([FromQuery, Required] SteamWorkshopModId modId, [FromQuery, Required] ModuleId moduleId, [BindTenant] TenantId tenant)

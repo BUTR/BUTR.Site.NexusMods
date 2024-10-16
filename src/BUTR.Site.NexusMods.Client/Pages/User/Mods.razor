@@ -1,165 +1,19 @@
 ﻿@attribute [Authorize]
 @page "/mods"
 
-@inject INexusModsUserClient _userClient
-@inject TenantProvider _tenantProvider
-@inject IJSRuntime _jsRuntime;
-
 <Card Margin="@Margin.Is2">
     <CardBody>
-        <Tabs SelectedTab="@selectedTab" SelectedTabChanged="@OnSelectedTabChanged">
+        <Tabs SelectedTab="@_selectedTab" SelectedTabChanged="@OnSelectedTabChanged">
             <Items>
                 <Tab Name="nexusmods"><b>NexusMods Mods</b></Tab>
                 <Tab Name="steamwokshop"><b>Steam Workshop Mods</b></Tab>
             </Items>
             <Content>
                 <TabPanel Name="nexusmods">
-                    <Card Margin="@Margin.Is2">
-                        <CardHeader>
-                            <CardTitle Size="4" Margin="@Margin.Is0">Link Mod</CardTitle>
-                        </CardHeader>
-                        <CardBody>
-                            <Form>
-                                <Field>
-                                    <FieldLabel>NexusMods Mod Url</FieldLabel>
-                                    <FieldBody>
-                                        <TextEdit ElementId="nexusmods-mod-url" Role="@TextRole.Url" @bind-Text="@_model.ModUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1"></TextEdit>
-                                    </FieldBody>
-                                </Field>
-                                <Field>
-                                    <Button Color="@Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnNexusModsSubmit" PreventDefaultOnSubmit>
-                                        <LoadingTemplate>Linking...</LoadingTemplate>
-                                        <ChildContent>Link</ChildContent>
-                                    </Button>
-                                </Field>
-                            </Form>
-                        </CardBody>
-                    </Card>
-
-                    <Card Margin="@Margin.Is2" Overflow="@Overflow.Auto">
-                        <CardHeader>
-                            <CardTitle Size="4" Margin="@Margin.Is0">Linked Mods</CardTitle>
-                        </CardHeader>
-                        <CardBody>
-                            <DataGridPaging @ref="@_dataGridRef" TItem="UserLinkedNexusModsModModel" GetItems="@GetNexusModsMods" FixedHeader>
-                                <DataGridColumns>
-                                    <DataGridColumn TItem="UserLinkedNexusModsModModel" ElementId="nexusmods-mod-id" Field="@nameof(UserLinkedNexusModsModModel.NexusModsModId)" Caption="Mod Id"/>
-                                    <DataGridColumn TItem="UserLinkedNexusModsModModel" ElementId="nexusmods-mod-name" Field="@nameof(UserLinkedNexusModsModModel.Name)" Caption="Name"/>
-                                    <DataGridColumn TItem="UserLinkedNexusModsModModel" ElementId="nexusmods-user-ids" Field="@nameof(UserLinkedNexusModsModModel.AllowedNexusModsUserIds)" Caption="Allowed User Ids">
-                                        <DisplayTemplate>@(string.Join(", ", context.AllowedNexusModsUserIds))</DisplayTemplate>
-                                    </DataGridColumn>
-                                    <DataGridColumn TItem="UserLinkedNexusModsModModel" ElementId="nexusmods-manual-user-ids" Field="@nameof(UserLinkedNexusModsModModel.ManuallyLinkedNexusModsUserIds)" Caption="Manually Linked User Ids">
-                                        <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedNexusModsUserIds))</DisplayTemplate>
-                                    </DataGridColumn>
-                                    <DataGridColumn TItem="UserLinkedNexusModsModModel" ElementId="nexusmods-confirmed-mod-ids" Field="@nameof(UserLinkedNexusModsModModel.ManuallyLinkedModuleIds)" Caption="Confirmed Module Id">
-                                        <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedModuleIds))</DisplayTemplate>
-                                    </DataGridColumn>
-                                    <DataGridColumn TItem="UserLinkedNexusModsModModel" ElementId="nexusmods-known-mod-ids" Field="@nameof(UserLinkedNexusModsModModel.ManuallyLinkedModuleIds)" Caption="Known Module Id">
-                                        <DisplayTemplate>@(string.Join(", ", context.KnownModuleIds))</DisplayTemplate>
-                                    </DataGridColumn>
-                                </DataGridColumns>
-
-                                <ButtonRowTemplate>
-                                    <Button Color="@Color.Primary" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnNexusModsClick(_dataGridRef!.Value))">Open Page</Button>
-                                    <Button Color="@Color.Danger" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnNexusModsDelete(context))">
-                                        <LoadingTemplate>Unlinking...</LoadingTemplate>
-                                        <ChildContent>Unlink</ChildContent>
-                                    </Button>
-                                </ButtonRowTemplate>
-                            </DataGridPaging>
-                        </CardBody>
-                    </Card>
-
-                    <Card Margin="@Margin.Is2" Overflow="@Overflow.Auto">
-                        <CardHeader>
-                            <CardTitle Size="4" Margin="@Margin.Is0">Available Mods</CardTitle>
-                        </CardHeader>
-                        <CardBody>
-                            <DataGridPaging @ref="@_dataGridRef2" TItem="UserAvailableNexusModsModModel" GetItems="@GetNexusModsAllowedMods" PageSizes="@(new[] { 5, 10, 20 })" FixedHeader>
-                                <DataGridColumns>
-                                    <DataGridColumn TItem="UserAvailableNexusModsModModel" ElementId="nexusmods-mod-id" Field="@nameof(UserAvailableNexusModsModModel.NexusModsModId)" Caption="Mod Id"/>
-                                    <DataGridColumn TItem="UserAvailableNexusModsModModel" ElementId="nexusmods-mod-name" Field="@nameof(UserAvailableNexusModsModModel.Name)" Caption="Name"/>
-                                </DataGridColumns>
-                            </DataGridPaging>
-                        </CardBody>
-                    </Card>
+                    <BUTR.Site.NexusMods.Client.Pages.User.ModsComponents.NexusMods />
                 </TabPanel>
                 <TabPanel Name="steamwokshop">
-                    @if (_user?.SteamUserId is null)
-                    {
-                        <p>You need to link your Steam account to use this feature.</p>
-                        <Button Color="@Color.Primary" To="profile">Link Steam</Button>
-                    } else {
-                        <Card Margin="@Margin.Is2">
-                            <CardHeader>
-                                <CardTitle Size="4" Margin="@Margin.Is0">Link Mod</CardTitle>
-                            </CardHeader>
-                            <CardBody>
-                                <Form>
-                                    <Field>
-                                        <FieldLabel>Steam Workshop Mod Url</FieldLabel>
-                                        <FieldBody>
-                                            <TextEdit ElementId="steamworkshop-mod-url" Role="@TextRole.Url" @bind-Text="@_model.ModUrl" Placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=1"></TextEdit>
-                                        </FieldBody>
-                                    </Field>
-                                    <Field>
-                                        <Button Color="@Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSteamWorkshopSubmit" PreventDefaultOnSubmit>
-                                            <LoadingTemplate>Linking...</LoadingTemplate>
-                                            <ChildContent>Link</ChildContent>
-                                        </Button>
-                                    </Field>
-                                </Form>
-                            </CardBody>
-                        </Card>
-
-                        <Card Margin="@Margin.Is2" Overflow="@Overflow.Auto">
-                            <CardHeader>
-                                <CardTitle Size="4" Margin="@Margin.Is0">Linked Mods</CardTitle>
-                            </CardHeader>
-                            <CardBody>
-                                <DataGridPaging @ref="@_dataGridRef3" TItem="UserLinkedSteamWorkshopModModel" GetItems="@GetSteamWorkshopMods" FixedHeader>
-                                    <DataGridColumns>
-                                        <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-mod-id" Field="@nameof(UserLinkedSteamWorkshopModModel.SteamWorkshopModId)" Caption="Mod Id"/>
-                                        <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-mod-name" Field="@nameof(UserLinkedSteamWorkshopModModel.Name)" Caption="Name"/>
-                                        <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-user-ids" Field="@nameof(UserLinkedSteamWorkshopModModel.AllowedNexusModsUserIds)" Caption="Allowed User Ids">
-                                            <DisplayTemplate>@(string.Join(", ", context.AllowedNexusModsUserIds))</DisplayTemplate>
-                                        </DataGridColumn>
-                                        <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-manual-user-ids" Field="@nameof(UserLinkedSteamWorkshopModModel.ManuallyLinkedNexusModsUserIds)" Caption="Manually Linked User Ids">
-                                            <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedNexusModsUserIds))</DisplayTemplate>
-                                        </DataGridColumn>
-                                        <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-confirmed-mod-ids" Field="@nameof(UserLinkedSteamWorkshopModModel.ManuallyLinkedModuleIds)" Caption="Confirmed Module Id">
-                                            <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedModuleIds))</DisplayTemplate>
-                                        </DataGridColumn>
-                                        <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-known-mod-ids" Field="@nameof(UserLinkedSteamWorkshopModModel.ManuallyLinkedModuleIds)" Caption="Known Module Id">
-                                            <DisplayTemplate>@(string.Join(", ", context.KnownModuleIds))</DisplayTemplate>
-                                        </DataGridColumn>
-                                    </DataGridColumns>
-
-                                    <ButtonRowTemplate>
-                                        <Button Color="@Color.Primary" Disabled="@(_dataGridRef3?.Value is null)" Clicked="@(async () => await OnSteamWorkshopClick(_dataGridRef3!.Value))">Open Page</Button>
-                                        <Button Color="@Color.Danger" Disabled="@(_dataGridRef3?.Value is null)" Clicked="@(async () => await OnSteamWorkshopDelete(context))">
-                                            <LoadingTemplate>Unlinking...</LoadingTemplate>
-                                            <ChildContent>Unlink</ChildContent>
-                                        </Button>
-                                    </ButtonRowTemplate>
-                                </DataGridPaging>
-                            </CardBody>
-                        </Card>
-
-                        <Card Margin="@Margin.Is2" Overflow="@Overflow.Auto">
-                            <CardHeader>
-                                <CardTitle Size="4" Margin="@Margin.Is0">Available Mods</CardTitle>
-                            </CardHeader>
-                            <CardBody>
-                                <DataGridPaging @ref="@_dataGridRef4" TItem="UserAvailableSteamWorkshopModModel" GetItems="@GetSteamWorkshopAllowedMods" PageSizes="@(new[] {5, 10, 20})" FixedHeader>
-                                    <DataGridColumns>
-                                        <DataGridColumn TItem="UserAvailableSteamWorkshopModModel" ElementId="steamworkshop-mod-id" Field="@nameof(UserAvailableSteamWorkshopModModel.SteamWorkshopModId)" Caption="Mod Id"/>
-                                        <DataGridColumn TItem="UserAvailableSteamWorkshopModModel" ElementId="steamworkshop-mod-name" Field="@nameof(UserAvailableSteamWorkshopModModel.Name)" Caption="Name"/>
-                                    </DataGridColumns>
-                                </DataGridPaging>
-                            </CardBody>
-                        </Card>
-                    }
+                    <BUTR.Site.NexusMods.Client.Pages.User.ModsComponents.SteamWorkshop />
                 </TabPanel>
             </Content>
         </Tabs>
@@ -168,140 +22,13 @@
 
 @code {
     
-    string selectedTab = "nexusmods";
+    private string _selectedTab = "nexusmods";
 
     private Task OnSelectedTabChanged( string name )
     {
-        selectedTab = name;
+        _selectedTab = name;
 
         return Task.CompletedTask;
     }
 
-    private sealed record LinkModModel
-    {
-        public string ModUrl { get; set; } = string.Empty;
-    }
-
-    private bool _isLoading;
-
-    private LinkModModel _model = new();
-
-    private DataGridPaging<UserLinkedNexusModsModModel>? _dataGridRef;
-    private DataGridPaging<UserAvailableNexusModsModModel>? _dataGridRef2;
-
-    private DataGridPaging<UserLinkedSteamWorkshopModModel>? _dataGridRef3;
-    private DataGridPaging<UserAvailableSteamWorkshopModModel>? _dataGridRef4;
-
-    private ProfileModel? _user;
-    
-    override protected async Task OnInitializedAsync()
-    {
-        var userResponse = await _userClient.GetProfileAsync();
-        _user = userResponse.Value;
-        
-        await base.OnInitializedAsync();
-    }
-    
-    private async Task OnNexusModsSubmit()
-    {
-        _isLoading = true;
-
-        if (await DoNexusModsLinkMod(_model))
-        {
-            _model = new LinkModModel();
-            if (_dataGridRef is not null)
-                await _dataGridRef.Reload();
-        }
-
-        _isLoading = false;
-        StateHasChanged();
-    }
-    private async Task OnSteamWorkshopSubmit()
-    {
-        _isLoading = true;
-
-        if (await DoSteamWorkshopLinkMod(_model))
-        {
-            _model = new LinkModModel();
-            if (_dataGridRef is not null)
-                await _dataGridRef.Reload();
-        }
-
-        _isLoading = false;
-        StateHasChanged();
-    }
-
-    private async Task<bool> DoNexusModsLinkMod(LinkModModel model)
-    {
-        if (!NexusModsUtils.TryParseModUrl(model.ModUrl, out _, out var modId) && !uint.TryParse(model.ModUrl, out modId))
-            return false;
-
-        return await _userClient.AddNexusModsModLinkAsync((int) modId) is { Error: null };
-    }
-
-    private async Task<bool> DoSteamWorkshopLinkMod(LinkModModel model)
-    {
-        if (!SteamUtils.TryParseWorkshopId(model.ModUrl, out var modId))
-            modId = model.ModUrl;
-
-        return await _userClient.AddSteamWorkshopModLinkAsync(modId) is { Error: null };
-    }
-
-    private async Task<bool> DoNexusModsUnlinkMod(UserLinkedNexusModsModModel model)
-    {
-        return await _userClient.RemoveNexusModsModLinkAsync(modId: model.NexusModsModId) is { Error: null };
-    }
-
-    private async Task<bool> DoSteamWorkshopUnlinkMod(UserLinkedSteamWorkshopModModel model)
-    {
-        return await _userClient.RemoveSteamWorkshopModLinkAsync(modId: model.SteamWorkshopModId) is { Error: null };
-    }
-
-    private async Task<DataGridPaging<UserLinkedNexusModsModModel>.ItemsResponse?> GetNexusModsMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
-    {
-        var response = await _userClient.GetNexusModsModsPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
-        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
-    }
-    private async Task<DataGridPaging<UserLinkedSteamWorkshopModModel>.ItemsResponse?> GetSteamWorkshopMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
-    {
-        var response = await _userClient.GetSteamWorkshopModsPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
-        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
-    }
-
-    private async Task<DataGridPaging<UserAvailableNexusModsModModel>.ItemsResponse?> GetNexusModsAllowedMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
-    {
-        var response = await _userClient.GetNexusModsModsPaginateAvailabledAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
-        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
-    }
-    private async Task<DataGridPaging<UserAvailableSteamWorkshopModModel>.ItemsResponse?> GetSteamWorkshopAllowedMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
-    {
-        var response = await _userClient.GetSteamWorkshopModsPaginateAvailabledAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
-        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
-    }
-    
-    private async Task OnNexusModsClick(UserLinkedNexusModsModModel? mod)
-    {
-        if (mod is not null)
-            await _jsRuntime.InvokeVoidAsync("open", mod.Url(TenantUtils.FromTenantToGameDomain(await _tenantProvider.GetTenantAsync())!), "_blank");
-    }
-    private async Task OnSteamWorkshopClick(UserLinkedSteamWorkshopModModel? mod)
-    {
-        if (mod is not null)
-            await _jsRuntime.InvokeVoidAsync("open", mod.Url(), "_blank");
-    }
-
-    private async Task OnNexusModsDelete(ButtonRowContext<UserLinkedNexusModsModModel> context)
-    {
-        if (context.DeleteCommand.Item is not null && await DoNexusModsUnlinkMod(context.DeleteCommand.Item))
-        {
-            await context.DeleteCommand.Clicked.InvokeAsync();
-        }
-    }
-    private async Task OnSteamWorkshopDelete(ButtonRowContext<UserLinkedSteamWorkshopModModel> context)
-    {
-        if (context.DeleteCommand.Item is not null && await DoSteamWorkshopUnlinkMod(context.DeleteCommand.Item))
-        {
-            await context.DeleteCommand.Clicked.InvokeAsync();
-        }
-    }
 }

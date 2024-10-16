@@ -17,7 +17,7 @@ public sealed record LinkedByStaffNexusModsModModel
 public sealed record LinkedByStaffModuleNexusModsModsModel
 {
     public required ModuleId ModuleId { get; init; }
-    public required LinkedByStaffNexusModsModModel[] NexusModsMods { get; init; }
+    public required LinkedByStaffNexusModsModModel[] Mods { get; init; }
 }
 
 public sealed record LinkedByExposureModuleModel
@@ -51,7 +51,7 @@ public sealed record LinkedByStaffSteamWorkshopModModel
 public sealed record LinkedByStaffModuleSteamWorkshopModsModel
 {
     public required ModuleId ModuleId { get; init; }
-    public required LinkedByStaffSteamWorkshopModModel[] NexusModsMods { get; init; }
+    public required LinkedByStaffSteamWorkshopModModel[] Mods { get; init; }
 }
 
 public sealed record LinkedByExposureSteamWorkshopModModelsModel

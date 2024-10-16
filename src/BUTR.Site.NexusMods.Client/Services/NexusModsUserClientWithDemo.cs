@@ -186,15 +186,30 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
 
         return await _implementation.RemoveNexusModsModManualLinkAsync(modId, userId, username, ct);
     }
+    
+    public async Task<StringApiResultModel> AddSteamWorkshopModManualLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default(CancellationToken))
+    {
+        return await _implementation.AddSteamWorkshopModManualLinkAsync(modId, userId, username, ct);
+    }
 
-    public async Task<UserManuallyLinkedModModelPagingDataApiResultModel> GetNexusModsModManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> RemoveSteamWorkshopModManualLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default(CancellationToken))
+    {
+        return await _implementation.RemoveSteamWorkshopModManualLinkAsync(modId, userId, username, ct);
+    }
+
+    public async Task<UserManuallyLinkedSteamWorkshopModModelPagingDataApiResultModel> GetSteamWorkshopModManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default(CancellationToken))
+    {
+        return await _implementation.GetSteamWorkshopModManualLinkPaginatedAsync(body, ct);
+    }
+
+    public async Task<UserManuallyLinkedNexusModsModModelPagingDataApiResultModel> GetNexusModsModManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
     {
         if (body is null)
             return await _implementation.GetNexusModsModManualLinkPaginatedAsync(body, ct);
 
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
-            return new UserManuallyLinkedModModelPagingDataApiResultModel(new UserManuallyLinkedModModelPagingData(PagingAdditionalMetadata.Empty, new List<UserManuallyLinkedModModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), null!);
+            return new UserManuallyLinkedNexusModsModModelPagingDataApiResultModel(new UserManuallyLinkedNexusModsModModelPagingData(PagingAdditionalMetadata.Empty, new List<UserManuallyLinkedNexusModsModModel>(), new PagingMetadata(1, 1, body.PageSize, 1)), null!);
 
         return await _implementation.GetNexusModsModManualLinkPaginatedAsync(body, ct);
     }

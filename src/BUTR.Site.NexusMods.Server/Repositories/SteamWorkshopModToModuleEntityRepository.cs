@@ -1,13 +1,15 @@
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Contexts;
 using BUTR.Site.NexusMods.Server.Extensions;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+
 using Microsoft.EntityFrameworkCore;
+
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 
@@ -26,7 +28,7 @@ internal class SteamWorkshopModToModuleEntityRepository : Repository<SteamWorksh
         .Select(x => new LinkedByStaffModuleSteamWorkshopModsModel
         {
             ModuleId = x.Key.ModuleId,
-            NexusModsMods = x.Select(y => new LinkedByStaffSteamWorkshopModModel
+            Mods = x.Select(y => new LinkedByStaffSteamWorkshopModModel
             {
                 SteamWorkshopModId = y.SteamWorkshopModId,
                 LastCheckedDate = y.LastUpdateDate.ToUniversalTime(),

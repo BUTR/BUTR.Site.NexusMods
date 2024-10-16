@@ -143,7 +143,7 @@ public class BaseAppDbContext : DbContext
         _entityConfigurationFactory.ApplyConfigurationWithTenant<SteamWorkshopModToFileUpdateEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<SteamWorkshopModToModuleEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<SteamWorkshopModToNameEntity>(modelBuilder);
-        
+
         _entityConfigurationFactory.ApplyConfiguration<QuartzExecutionLogEntity>(modelBuilder);
 
         _entityConfigurationFactory.ApplyConfigurationWithTenant<StatisticsCrashScoreInvolvedEntity>(modelBuilder);

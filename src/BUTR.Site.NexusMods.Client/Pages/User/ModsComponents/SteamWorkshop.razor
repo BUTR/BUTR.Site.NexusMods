@@ -1,0 +1,150 @@
+﻿@inject INexusModsUserClient _userClient
+@inject IJSRuntime _jsRuntime;
+
+@if (_user?.SteamUserId is null)
+{
+    <p>You need to link your Steam account to use this feature.</p>
+    <Button Color="@Color.Primary" To="profile">Link Steam</Button>
+} else {
+    <Card Margin="@Margin.Is2">
+        <CardHeader>
+            <CardTitle Size="4" Margin="@Margin.Is0">Link Mod</CardTitle>
+        </CardHeader>
+        <CardBody>
+            <Form>
+                <Field>
+                    <FieldLabel>Steam Workshop Mod Url</FieldLabel>
+                    <FieldBody>
+                        <TextEdit ElementId="steamworkshop-mod-url" Role="@TextRole.Url" @bind-Text="@_modUrl" Placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=1"></TextEdit>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <Button Color="@Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSubmit" PreventDefaultOnSubmit>
+                        <LoadingTemplate>Linking...</LoadingTemplate>
+                        <ChildContent>Link</ChildContent>
+                    </Button>
+                </Field>
+            </Form>
+        </CardBody>
+    </Card>
+
+    <Card Margin="@Margin.Is2" Overflow="@Overflow.Auto">
+        <CardHeader>
+            <CardTitle Size="4" Margin="@Margin.Is0">Linked Mods</CardTitle>
+        </CardHeader>
+        <CardBody>
+            <DataGridPaging @ref="@_dataGridRef" TItem="UserLinkedSteamWorkshopModModel" GetItems="@GetMods" FixedHeader>
+                <DataGridColumns>
+                    <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-mod-id" Field="@nameof(UserLinkedSteamWorkshopModModel.SteamWorkshopModId)" Caption="Mod Id"/>
+                    <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-mod-name" Field="@nameof(UserLinkedSteamWorkshopModModel.Name)" Caption="Name"/>
+                    <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-user-ids" Field="@nameof(UserLinkedSteamWorkshopModModel.AllowedNexusModsUserIds)" Caption="Allowed User Ids">
+                        <DisplayTemplate>@(string.Join(", ", context.AllowedNexusModsUserIds))</DisplayTemplate>
+                    </DataGridColumn>
+                    <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-manual-user-ids" Field="@nameof(UserLinkedSteamWorkshopModModel.ManuallyLinkedNexusModsUserIds)" Caption="Manually Linked User Ids">
+                        <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedNexusModsUserIds))</DisplayTemplate>
+                    </DataGridColumn>
+                    <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-confirmed-mod-ids" Field="@nameof(UserLinkedSteamWorkshopModModel.ManuallyLinkedModuleIds)" Caption="Confirmed Module Id">
+                        <DisplayTemplate>@(string.Join(", ", context.ManuallyLinkedModuleIds))</DisplayTemplate>
+                    </DataGridColumn>
+                    <DataGridColumn TItem="UserLinkedSteamWorkshopModModel" ElementId="steamworkshop-known-mod-ids" Field="@nameof(UserLinkedSteamWorkshopModModel.ManuallyLinkedModuleIds)" Caption="Known Module Id">
+                        <DisplayTemplate>@(string.Join(", ", context.KnownModuleIds))</DisplayTemplate>
+                    </DataGridColumn>
+                </DataGridColumns>
+
+                <ButtonRowTemplate>
+                    <Button Color="@Color.Primary" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnClick(_dataGridRef!.Value))">Open Page</Button>
+                    <Button Color="@Color.Danger" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnDelete(context))">
+                        <LoadingTemplate>Unlinking...</LoadingTemplate>
+                        <ChildContent>Unlink</ChildContent>
+                    </Button>
+                </ButtonRowTemplate>
+            </DataGridPaging>
+        </CardBody>
+    </Card>
+
+    <Card Margin="@Margin.Is2" Overflow="@Overflow.Auto">
+        <CardHeader>
+            <CardTitle Size="4" Margin="@Margin.Is0">Available Mods</CardTitle>
+        </CardHeader>
+        <CardBody>
+            <DataGridPaging TItem="UserAvailableSteamWorkshopModModel" GetItems="@GetAllowedMods" PageSizes="@(new[] {5, 10, 20})" FixedHeader>
+                <DataGridColumns>
+                    <DataGridColumn TItem="UserAvailableSteamWorkshopModModel" ElementId="steamworkshop-mod-id" Field="@nameof(UserAvailableSteamWorkshopModModel.SteamWorkshopModId)" Caption="Mod Id"/>
+                    <DataGridColumn TItem="UserAvailableSteamWorkshopModModel" ElementId="steamworkshop-mod-name" Field="@nameof(UserAvailableSteamWorkshopModModel.Name)" Caption="Name"/>
+                </DataGridColumns>
+            </DataGridPaging>
+        </CardBody>
+    </Card>
+}
+
+@code {
+    
+    private DataGridPaging<UserLinkedSteamWorkshopModModel>? _dataGridRef;
+
+    private ProfileModel? _user;
+    private bool _isLoading;
+    private string _modUrl = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userResponse = await _userClient.GetProfileAsync();
+        _user = userResponse.Value;
+        
+        await base.OnInitializedAsync();
+    }
+    private async Task OnSubmit()
+    {
+        _isLoading = true;
+
+        if (await DoLinkMod())
+        {
+            _modUrl = string.Empty;
+            if (_dataGridRef is not null)
+                await _dataGridRef.Reload();
+        }
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task<bool> DoLinkMod()
+    {
+        if (!SteamUtils.TryParseWorkshopId(_modUrl, out var modId))
+            modId = _modUrl;
+
+        return await _userClient.AddSteamWorkshopModLinkAsync(modId) is { Error: null };
+    }
+
+    private async Task<bool> DoUnlinkMod(UserLinkedSteamWorkshopModModel model)
+    {
+        return await _userClient.RemoveSteamWorkshopModLinkAsync(modId: model.SteamWorkshopModId) is { Error: null };
+    }
+    
+    private async Task<DataGridPaging<UserLinkedSteamWorkshopModModel>.ItemsResponse?> GetMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
+    {
+        var response = await _userClient.GetSteamWorkshopModsPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
+        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    }
+    
+    private async Task<DataGridPaging<UserAvailableSteamWorkshopModModel>.ItemsResponse?> GetAllowedMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
+    {
+        var response = await _userClient.GetSteamWorkshopModsPaginateAvailabledAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
+        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    }
+    
+    private async Task OnClick(UserLinkedSteamWorkshopModModel? mod)
+    {
+        if (mod is null)
+            return;
+        
+        await _jsRuntime.InvokeVoidAsync("open", mod.Url(), "_blank");
+    }
+    
+    private async Task OnDelete(ButtonRowContext<UserLinkedSteamWorkshopModModel> context)
+    {
+        if (context.DeleteCommand.Item is not null && await DoUnlinkMod(context.DeleteCommand.Item))
+        {
+            await context.DeleteCommand.Clicked.InvokeAsync();
+        }
+    }
+}

@@ -544,13 +544,115 @@ public sealed class NexusModsUserController : ApiControllerBase
     }
 
     [HttpPost("NexusModsModManualLinks/Paginated")]
-    public async Task<ApiResult<PagingData<UserManuallyLinkedModModel>?>> GetNexusModsModManualLinkPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    public async Task<ApiResult<PagingData<UserManuallyLinkedNexusModsModModel>?>> GetNexusModsModManualLinkPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
     {
         var userId = HttpContext.GetUserId();
 
         await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
 
         var paginated = await unitOfRead.NexusModsUserToNexusModsMods.GetManuallyLinkedPaginatedAsync(userId, query, ct);
+
+        return ApiPagingResult(paginated);
+    }
+
+
+    [HttpPost("SteamWorkshopModManualLinks")]
+    public async Task<ApiResult<string?>> AddSteamWorkshopModManualLinkAsync([FromQuery, Required] SteamWorkshopModId modId, [FromQuery] NexusModsUserId? userId, [FromQuery] NexusModsUserName? username, [BindTenant] TenantId tenant, CancellationToken ct)
+    {
+        var nexusModsUserId = await GetUserIdAsync(userId, username, ct);
+        if (nexusModsUserId == NexusModsUserId.None)
+            return ApiBadRequest("User not found!");
+
+        var currentUserId = HttpContext.GetUserId();
+        if (currentUserId != nexusModsUserId && HttpContext.GetRole() != ApplicationRoles.Moderator && HttpContext.GetRole() != ApplicationRoles.Administrator)
+            return ApiBadRequest("Permission denied!");
+
+        var tokens = HttpContext.GetSteamTokens();
+        if (tokens is null)
+            return ApiBadRequest("Steam not linked!");
+
+        var steamUserId = SteamUserId.From(tokens.ExternalId);
+
+        return await AddSteamWorkshopModManualLinkWithApiKeyAsync(steamUserId, modId, nexusModsUserId, tenant, ct);
+    }
+    private async Task<ApiResult<string?>> AddSteamWorkshopModManualLinkWithApiKeyAsync(SteamUserId steamUserId, SteamWorkshopModId modId, NexusModsUserId userId, TenantId tenant, CancellationToken ct)
+    {
+        var steamWorkshopItemInfo = default(SteamWorkshopItemInfo);
+        foreach (var steamAppId in TenantUtils.FromTenantToSteamAppIds(tenant.Value))
+        {
+            steamWorkshopItemInfo = await _steamAPIClient.GetOwnedWorkshopItemAsync(steamUserId, steamAppId, modId, ct);
+            if (steamWorkshopItemInfo is not null) break;
+        }
+
+        if (steamWorkshopItemInfo is null)
+            return ApiBadRequest("Steam Workshop Item not owned!");
+
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
+
+        var steamWorkshopModToName = new SteamWorkshopModToNameEntity
+        {
+            TenantId = tenant,
+            SteamWorkshopModId = modId,
+            SteamWorkshopMod = unitOfWrite.UpsertEntityFactory.GetOrCreateSteamWorkshopMod(modId),
+            Name = steamWorkshopItemInfo.Name,
+        };
+        unitOfWrite.SteamWorkshopModName.Upsert(steamWorkshopModToName);
+
+        var nexusModsUserToSteamWorkshopMod = new NexusModsUserToSteamWorkshopModEntity[]
+        {
+            new()
+            {
+                TenantId = tenant,
+                NexusModsUserId = userId,
+                NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(userId),
+                SteamWorkshopModId = modId,
+                SteamWorkshopMod = unitOfWrite.UpsertEntityFactory.GetOrCreateSteamWorkshopMod(modId),
+                LinkType = NexusModsUserToModLinkType.ByAPIConfirmation,
+            },
+            new()
+            {
+                TenantId = tenant,
+                NexusModsUserId = userId,
+                NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(userId),
+                SteamWorkshopModId = modId,
+                SteamWorkshopMod = unitOfWrite.UpsertEntityFactory.GetOrCreateSteamWorkshopMod(modId),
+                LinkType = NexusModsUserToModLinkType.ByOwner,
+            },
+        };
+        unitOfWrite.NexusModsUserToSteamWorkshopMods.UpsertRange(nexusModsUserToSteamWorkshopMod);
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
+        return ApiResult("Allowed successful!");
+    }
+
+    [HttpDelete("SteamWorkshopModManualLinks")]
+    public async Task<ApiResult<string?>> RemoveSteamWorkshopModManualLinkAsync([FromQuery, Required] SteamWorkshopModId modId, [FromQuery] NexusModsUserId? userId, [FromQuery] NexusModsUserName? username, CancellationToken ct)
+    {
+        var nexusModsUserId = await GetUserIdAsync(userId, username, ct);
+        if (nexusModsUserId == NexusModsUserId.None)
+            return ApiBadRequest("User not found!");
+
+        var currentUserId = HttpContext.GetUserId();
+        if (currentUserId != nexusModsUserId && HttpContext.GetRole() != ApplicationRoles.Moderator && HttpContext.GetRole() != ApplicationRoles.Administrator)
+            return ApiBadRequest("Permission denied!");
+
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
+
+        unitOfWrite.NexusModsUserToSteamWorkshopMods
+            .Remove(x => x.NexusModsUserId == nexusModsUserId && x.SteamWorkshopModId == modId && x.LinkType == NexusModsUserToModLinkType.ByOwner);
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
+        return ApiResult("Disallowed successful!");
+    }
+
+    [HttpPost("SteamWorkshopModManualLinks/Paginated")]
+    public async Task<ApiResult<PagingData<UserManuallyLinkedSteamWorkshopModModel>?>> GetSteamWorkshopModManualLinkPaginatedAsync([FromBody] PaginatedQuery query, CancellationToken ct)
+    {
+        var userId = HttpContext.GetUserId();
+
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
+        var paginated = await unitOfRead.NexusModsUserToSteamWorkshopMods.GetManuallyLinkedPaginatedAsync(userId, query, ct);
 
         return ApiPagingResult(paginated);
     }

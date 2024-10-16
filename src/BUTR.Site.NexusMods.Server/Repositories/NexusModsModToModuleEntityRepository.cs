@@ -29,7 +29,7 @@ internal class NexusModsModToModuleEntityRepository : Repository<NexusModsModToM
         .Select(x => new LinkedByStaffModuleNexusModsModsModel
         {
             ModuleId = x.Key.ModuleId,
-            NexusModsMods = x.Select(y => new LinkedByStaffNexusModsModModel
+            Mods = x.Select(y => new LinkedByStaffNexusModsModModel
             {
                 NexusModsModId = y.NexusModsModId,
                 LastCheckedDate = y.LastUpdateDate.ToUniversalTime(),

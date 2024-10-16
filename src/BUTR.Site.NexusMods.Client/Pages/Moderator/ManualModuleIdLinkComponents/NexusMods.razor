@@ -1,0 +1,175 @@
+﻿@inject INotificationService _notificationService
+@inject INexusModsModClient _modClient
+
+<Modal @ref="@_modalRef">
+    <ModalContent Size="@ModalSize.ExtraLarge" Centered>
+        <ModalHeader>
+            <ModalTitle>Remove Allowed Module Id</ModalTitle>
+            <CloseButton/>
+        </ModalHeader>
+        <ModalBody>
+            @if (_dataGridRef?.Value is not null)
+            {
+            <Form>
+                <Field>
+                    <FieldLabel>Module Id to Remove</FieldLabel>
+                    <FieldBody>
+                        <Select @bind-SelectedValue="@_modIdToDelete">
+                            @{
+                            foreach (var allowedModId in _dataGridRef.Value.Mods.Select(x => x.NexusModsModId))
+                            {
+                            <SelectItem Value="@allowedModId">@allowedModId</SelectItem>
+                            }
+                            }
+                        </Select>
+                    </FieldBody>
+                </Field>
+            </Form>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="@Color.Secondary" Clicked="@(async () => await HideModal(false))">Cancel</Button>
+            <Button Color="@Color.Primary" Clicked="@(async () => await HideModal(true))">Done</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Card Margin="@Margin.Is2">
+    <CardHeader>
+        <CardTitle Size="4" Margin="@Margin.Is0">Manual Module Id Link</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <Form>
+            <Fields>
+                <Field ColumnSize="ColumnSize.Is3.OnDesktop">
+                    <FieldLabel RequiredIndicator>Module Id</FieldLabel>
+                    <FieldBody>
+                        <TextEdit ElementId="nexusmods-module-id" Role="@TextRole.Text" @bind-Text="@_moduleId" Placeholder="Bannerlord.Harmony" />
+                    </FieldBody>
+                </Field>
+                <Field ColumnSize="ColumnSize.Is6.OnDesktop">
+                    <FieldLabel RequiredIndicator>NexusMods Mod Url</FieldLabel>
+                    <FieldBody>
+                        <TextEdit ElementId="nexusmods-mod-url" Role="@TextRole.Url" @bind-Text="@_modUrl" Placeholder="https://nexusmods.com/mountandblade2bannerlord/mods/1"/>
+                    </FieldBody>
+                </Field>
+            </Fields>
+            <Field>
+                <Button Color="@Color.Primary" Type="@ButtonType.Submit" @bind-Loading="@_isLoading" Clicked="@OnSubmit" PreventDefaultOnSubmit>
+                    <LoadingTemplate>
+                        Linking...
+                    </LoadingTemplate>
+                    <ChildContent>
+                        Link
+                    </ChildContent>
+                </Button>
+            </Field>
+        </Form>
+    </CardBody>
+</Card>
+
+<Card Margin="@Margin.Is2" Overflow="@Overflow.Auto">
+    <CardHeader>
+        <CardTitle Size="4" Margin="@Margin.Is0">Manual Module Id Links</CardTitle>
+    </CardHeader>
+    <CardBody>
+        <DataGridPaging @ref="@_dataGridRef" TItem="LinkedByStaffModuleNexusModsModsModel" GetItems="@GetManualLinks" FixedHeader>
+            <DataGridColumns>
+                <DataGridColumnText TItem="LinkedByStaffModuleNexusModsModsModel" Field="@nameof(LinkedByStaffModuleNexusModsModsModel.ModuleId)" Caption="Module Id"/>
+                <DataGridColumnText TItem="LinkedByStaffModuleNexusModsModsModel" Field="@nameof(LinkedByStaffModuleNexusModsModsModel.Mods)" Caption="Mod Id" >
+                    <DisplayTemplate>@(string.Join(", ", context.Mods.Select(x => x.NexusModsModId)))</DisplayTemplate>
+                </DataGridColumnText>
+            </DataGridColumns>
+            <ButtonRowTemplate>
+                <Button Color="@Color.Primary" Disabled="@(_dataGridRef?.Value is null)" Clicked="@(async () => await OnDisallow(context))">Unlink</Button>
+            </ButtonRowTemplate>
+        </DataGridPaging>
+    </CardBody>
+</Card>
+
+@code {
+
+    private Modal _modalRef = default!;
+    private DataGridPaging<LinkedByStaffModuleNexusModsModsModel>? _dataGridRef;
+
+    private bool _isLoading;
+    private string _moduleId = string.Empty;
+    private string _modUrl = string.Empty;
+    private int? _modIdToDelete = null;
+    
+    private async Task ShowModal()
+    {
+        _modIdToDelete = _dataGridRef?.Value?.Mods.Select(x => x.NexusModsModId).FirstOrDefault() ?? 0;
+        await _modalRef.Show();
+    }
+    
+    private async Task HideModal(bool save)
+    {
+        await _modalRef.Hide();
+        if (save && _dataGridRef?.Value is not null && _modIdToDelete is not null)
+        {
+            if (await _modClient.RemoveModuleManualLinkAsync(moduleId: _dataGridRef.Value.ModuleId, modId: _modIdToDelete.Value) is { Error: null })
+            {
+                await _notificationService.Success("Disallowed succesfully!", "Success!");
+                await _dataGridRef.Reload();
+            }
+            else
+            {
+                await _notificationService.Error("Failed to disallow!", "Error!");
+            }
+        }
+    }
+
+    private async Task OnSubmit()
+    {
+        _isLoading = true;
+
+        try
+        {
+            if (await DoManualLink())
+            {
+                await _notificationService.Success($"Linked '{_moduleId}' to mod '{_modUrl}'!", "Success!");
+                if (_dataGridRef is not null)
+                    await _dataGridRef.Reload();
+            }
+            else
+            {
+                await _notificationService.Error($"Failed to link '{_moduleId}' to mod '{_modUrl}'!", "Error!");
+            }
+        }
+        catch
+        {
+            await _notificationService.Error($"Failed to link '{_moduleId}' to mod '{_modUrl}'!", "Error!");
+        }
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task<DataGridPaging<LinkedByStaffModuleNexusModsModsModel>.ItemsResponse?> GetManualLinks(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct)
+    {
+        var response = await _modClient.GetModuleManualLinkPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
+        return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
+    }
+
+    private async Task OnDisallow(ButtonRowContext<LinkedByStaffModuleNexusModsModsModel> context)
+    {
+        if (context.DeleteCommand.Item is not null && await DoManualUnlink())
+        {
+            //await context.DeleteCommand.Clicked.InvokeAsync();
+        }
+    }
+
+    private async Task<bool> DoManualLink()
+    {
+        if (!NexusModsUtils.TryParseModUrl(_modUrl, out _, out var nexusModsId) && !uint.TryParse(_modUrl, out nexusModsId))
+            return false;
+        
+        return await _modClient.AddModuleManualLinkAsync(moduleId: _moduleId, modId: (int) nexusModsId) is { Error: null };
+    }
+    private async Task<bool> DoManualUnlink()
+    {
+        await ShowModal();
+        return true;
+    }
+}

@@ -44,7 +44,7 @@ internal class UnitOfWrite : IUnitOfWrite
     public INexusModsModToNameEntityRepositoryWrite NexusModsModName { get; }
     public INexusModsModToModuleInfoHistoryEntityRepositoryWrite NexusModsModToModuleInfoHistory { get; }
     public INexusModsModToFileUpdateEntityRepositoryWrite NexusModsModToFileUpdates { get; }
-    
+
     public ISteamWorkshopModToModuleEntityRepositoryWrite SteamWorkshopModModules { get; }
     public ISteamWorkshopModToNameEntityRepositoryWrite SteamWorkshopModName { get; }
 
