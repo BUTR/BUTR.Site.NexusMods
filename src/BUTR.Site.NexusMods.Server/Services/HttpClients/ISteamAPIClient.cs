@@ -101,7 +101,7 @@ public sealed class SteamAPIClient : ISteamAPIClient
 
     public async Task<SteamWorkshopItemInfo?> GetOwnedWorkshopItemAsync(SteamUserId steamUserId, uint appId, SteamWorkshopModId workshopModId, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"ISteamRemoteStorage/GetPublishedFileDetails/v1/?key={_options.APIKey}");
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"ISteamRemoteStorage/GetPublishedFileDetails/v1/?key={_options.APIKey}");
         request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "itemcount", "1" },

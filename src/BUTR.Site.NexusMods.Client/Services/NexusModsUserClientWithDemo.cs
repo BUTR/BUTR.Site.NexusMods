@@ -127,17 +127,17 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
         return await _implementation.GetSteamWorkshopModsPaginateAvailabledAsync(body, ct);
     }
 
-    public async Task<StringApiResultModel> AddSteamWorkshopModLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> AddSteamWorkshopModLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         return await _implementation.AddSteamWorkshopModLinkAsync(modId, userId, username, ct);
     }
 
-    public async Task<StringApiResultModel> UpdateSteamWorkshopModLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> UpdateSteamWorkshopModLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         return await _implementation.UpdateSteamWorkshopModLinkAsync(modId, userId, username, ct);
     }
 
-    public async Task<StringApiResultModel> RemoveSteamWorkshopModLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default)
+    public async Task<StringApiResultModel> RemoveSteamWorkshopModLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         return await _implementation.RemoveSteamWorkshopModLinkAsync(modId, userId, username, ct);
     }

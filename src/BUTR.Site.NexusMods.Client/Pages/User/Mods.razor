@@ -241,10 +241,10 @@
 
     private async Task<bool> DoSteamWorkshopLinkMod(LinkModModel model)
     {
-        if (!NexusModsUtils.TryParseModUrl(model.ModUrl, out _, out var modId) && !uint.TryParse(model.ModUrl, out modId))
-            return false;
+        if (!SteamUtils.TryParseWorkshopId(model.ModUrl, out var modId))
+            modId = model.ModUrl;
 
-        return await _userClient.AddSteamWorkshopModLinkAsync((int) modId) is { Error: null };
+        return await _userClient.AddSteamWorkshopModLinkAsync(modId) is { Error: null };
     }
 
     private async Task<bool> DoNexusModsUnlinkMod(UserLinkedNexusModsModModel model)

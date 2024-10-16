@@ -1,12 +1,14 @@
+using System.Globalization;
+
 namespace BUTR.Site.NexusMods.Server.Models;
 
 using TType = SteamWorkshopModId;
-using TValueType = Int32;
+using TValueType = String;
 
 [ValueObject<TValueType>(conversions: Conversions.EfCoreValueConverter | Conversions.SystemTextJson | Conversions.TypeConverter)]
 public readonly partial struct SteamWorkshopModId : IHasDefaultValue<TType>
 {
-    public static readonly TType None = new(0);
+    public static readonly TType None = new(string.Empty);
 
     public static TType DefaultValue => None;
 
@@ -29,6 +31,6 @@ public readonly partial struct SteamWorkshopModId : IHasDefaultValue<TType>
         if (!string.Equals(mods, "mods", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        return TryParse(modIdRaw, out modId);
+        return TryParse(modIdRaw, CultureInfo.InvariantCulture, out modId);
     }
 }
