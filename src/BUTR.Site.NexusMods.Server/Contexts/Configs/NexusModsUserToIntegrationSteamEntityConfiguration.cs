@@ -11,7 +11,7 @@ public class NexusModsUserToIntegrationSteamEntityConfiguration : BaseEntityConf
     protected override void ConfigureModel(EntityTypeBuilder<NexusModsUserToIntegrationSteamEntity> builder)
     {
         builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_to_steam_id").HasVogenConversion().ValueGeneratedNever();
-        builder.Property(x => x.SteamUserId).HasColumnName("steam_user_id");
+        builder.Property(x => x.SteamUserId).HasColumnName("steam_user_id").HasVogenConversion();
         builder.ToTable("nexusmods_user_to_integration_steam", "nexusmods_user").HasKey(x => new
         {
             x.NexusModsUserId,

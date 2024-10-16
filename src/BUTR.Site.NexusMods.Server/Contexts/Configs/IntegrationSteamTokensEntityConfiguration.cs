@@ -11,7 +11,7 @@ public sealed class IntegrationSteamTokensEntityConfiguration : BaseEntityConfig
     protected override void ConfigureModel(EntityTypeBuilder<IntegrationSteamTokensEntity> builder)
     {
         builder.Property(x => x.NexusModsUserId).HasColumnName("integration_steam_tokens_id").HasVogenConversion().ValueGeneratedNever();
-        builder.Property(x => x.SteamUserId).HasColumnName("steam_user_id");
+        builder.Property(x => x.SteamUserId).HasColumnName("steam_user_id").HasVogenConversion();
         builder.Property(x => x.Data).HasColumnName("data").HasColumnType("hstore");
         builder.ToTable("integration_steam_tokens", "integration").HasKey(x => new
         {

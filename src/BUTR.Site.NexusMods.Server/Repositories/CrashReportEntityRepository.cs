@@ -56,13 +56,16 @@ internal class CrashReportEntityRepository : Repository<CrashReportEntity>, ICra
     public async Task<Paging<UserCrashReportModel>> GetCrashReportsPaginatedAsync(NexusModsUserEntity user, PaginatedQuery query, ApplicationRole applicationRole, CancellationToken ct)
     {
         var nexusModsModIds = user.ToNexusModsMods.Select(x => x.NexusModsMod.NexusModsModId).ToHashSet();
+        var steamWorkshopModIds = user.ToSteamWorkshopMods.Select(x => x.SteamWorkshopMod.SteamWorkshopModId).ToHashSet();
         var moduleIds = _dbContext.NexusModsModModules.Where(x => nexusModsModIds.Contains(x.NexusModsModId)).Select(x => x.ModuleId)
+            .Concat(_dbContext.SteamWorkshopModModules.Where(x => steamWorkshopModIds.Contains(x.SteamWorkshopModId)).Select(x => x.ModuleId))
             .Concat(user.ToModules.Select(x => x.Module.ModuleId));
 
         IQueryable<UserCrashReportModel> DbQueryBase(Expression<Func<CrashReportEntity, bool>> predicate) => _dbContext.CrashReports
             .Include(x => x.ToUsers).ThenInclude(x => x.NexusModsUser)
             .Include(x => x.ModuleInfos).ThenInclude(x => x.Module)
             .Include(x => x.ModuleInfos).ThenInclude(x => x.NexusModsMod)
+            .Include(x => x.ModuleInfos).ThenInclude(x => x.SteamWorkshopMod)
             .Include(x => x.ModuleInfos).ThenInclude(x => x.Module)
             .Include(x => x.ExceptionType)
             .AsSplitQuery()
@@ -92,8 +95,12 @@ internal class CrashReportEntityRepository : Repository<CrashReportEntity>, ICra
         var dbQuery = applicationRole == ApplicationRoles.Administrator || applicationRole == ApplicationRoles.Moderator
             ? DbQueryBase(x => true)
             : DbQueryBase(x => x.ToUsers.Any(y => y.NexusModsUser.NexusModsUserId == user.NexusModsUserId) ||
+
                                x.ModuleInfos.Any(y => moduleIds.Contains(y.Module.ModuleId)) ||
-                               x.ModuleInfos.Any(y => nexusModsModIds.Contains(y.NexusModsMod!.NexusModsModId)));
+
+                               x.ModuleInfos.Any(y => nexusModsModIds.Contains(y.NexusModsMod!.NexusModsModId)) ||
+
+                               x.ModuleInfos.Any(y => steamWorkshopModIds.Contains(y.SteamWorkshopMod!.SteamWorkshopModId)));
 
         //return await dbQuery.PaginatedGroupedAsync(query.Page, query.PageSize, ct);
         return await dbQuery.PaginatedAsync(query.Page, query.PageSize, ct);

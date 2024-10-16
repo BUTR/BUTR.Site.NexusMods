@@ -24,7 +24,7 @@ internal class NexusModsUserToNexusModsModEntityRepository : Repository<NexusMod
 
     public async Task<Paging<UserManuallyLinkedModModel>> GetManuallyLinkedPaginatedAsync(NexusModsUserId userId, PaginatedQuery query, CancellationToken ct) => await _dbContext.NexusModsUserToNexusModsMods
         .Include(x => x.NexusModsUser).ThenInclude(x => x.Name)
-        .Where(x => x.NexusModsUser.NexusModsUserId == userId && x.LinkType == NexusModsUserToNexusModsModLinkType.ByOwner)
+        .Where(x => x.NexusModsUser.NexusModsUserId == userId && x.LinkType == NexusModsUserToModLinkType.ByOwner)
         .GroupBy(x => new { x.NexusModsMod.NexusModsModId })
         .Select(x => new UserManuallyLinkedModModel
         {

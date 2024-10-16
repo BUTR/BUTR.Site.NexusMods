@@ -121,17 +121,29 @@ CallStack:
             OperatingSystemType = null,
             OperatingSystemVersion = null,
         };
-        crashReportToModuleMetadataEntities = report.Modules.DistinctBy(x => new { x.Id }).Select(x => new CrashReportToModuleMetadataEntity
+        crashReportToModuleMetadataEntities = report.Modules.DistinctBy(x => new { x.Id }).Select(x =>
         {
-            TenantId = tenant,
-            CrashReportId = crashReportId,
-            ModuleId = ModuleId.From(x.Id),
-            Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
-            Version = ModuleVersion.From(x.Version),
-            NexusModsModId = NexusModsModId.TryParseUrl(x.Url, out var modId1) ? modId1 : null,
-            NexusModsMod = NexusModsModId.TryParseUrl(x.Url, out var modId2) ? unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modId2) : null,
-            InvolvedPosition = (byte) (report.InvolvedModules.IndexOf(y => y.ModuleOrLoaderPluginId == x.Id) + 1),
-            IsInvolved = report.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == x.Id),
+            var nexusModsModId = NexusModsModId.DefaultValue;
+            nexusModsModId = NexusModsModId.TryParseUrl(x.Url, out var nexusModsModIdVal) ? nexusModsModIdVal : nexusModsModId;
+
+            var steamWorkshopModId = SteamWorkshopModId.DefaultValue;
+            steamWorkshopModId = SteamWorkshopModId.TryParseUrl(x.Url, out var steamWorkshopModIdVal) ? steamWorkshopModIdVal : steamWorkshopModId;
+            steamWorkshopModId = x.AdditionalMetadata.FirstOrDefault(x => x.Key == "SteamWorkshopModId") is { Value: { } steamWorkshopModIdStr } && int.TryParse(steamWorkshopModIdStr, out var steamWorkshopModIdRaw) ? SteamWorkshopModId.From(steamWorkshopModIdRaw) : steamWorkshopModId;
+            
+            return new CrashReportToModuleMetadataEntity
+            {
+                TenantId = tenant,
+                CrashReportId = crashReportId,
+                ModuleId = ModuleId.From(x.Id),
+                Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
+                Version = ModuleVersion.From(x.Version),
+                NexusModsModId = nexusModsModId != NexusModsModId.DefaultValue ? nexusModsModId : null,
+                NexusModsMod = nexusModsModId != NexusModsModId.DefaultValue ? unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(nexusModsModId) : null,
+                SteamWorkshopModId = steamWorkshopModId != SteamWorkshopModId.DefaultValue ? steamWorkshopModId : null,
+                SteamWorkshopMod = steamWorkshopModId != SteamWorkshopModId.DefaultValue ? unitOfWrite.UpsertEntityFactory.GetOrCreateSteamWorkshopMod(steamWorkshopModId) : null,
+                InvolvedPosition = (byte) (report.InvolvedModules.IndexOf(y => y.ModuleOrLoaderPluginId == x.Id) + 1),
+                IsInvolved = report.InvolvedModules.Any(y => y.ModuleOrLoaderPluginId == x.Id),
+            };
         }).ToArray();
 
         return true;

@@ -210,6 +210,10 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("nexusmods_mod_id");
 
+                    b.Property<int?>("SteamWorkshopModId")
+                        .HasColumnType("integer")
+                        .HasColumnName("steamworkshop_mod_id");
+
                     b.Property<string>("Version")
                         .IsRequired()
                         .HasColumnType("text")
@@ -220,6 +224,8 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                     b.HasIndex("TenantId", "ModuleId");
 
                     b.HasIndex("TenantId", "NexusModsModId");
+
+                    b.HasIndex("TenantId", "SteamWorkshopModId");
 
                     b.ToTable("crash_report_module_info", "crashreport");
                 });
@@ -482,7 +488,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
 
                     b.Property<int>("LinkType")
                         .HasColumnType("integer")
-                        .HasColumnName("nexusmods_mod_module_link_type_id");
+                        .HasColumnName("mod_module_link_type_id");
 
                     b.Property<DateTimeOffset>("LastUpdateDate")
                         .HasColumnType("timestamp with time zone")
@@ -757,7 +763,7 @@ namespace BUTR.Site.NexusMods.Server.Migrations
 
                     b.Property<int>("LinkType")
                         .HasColumnType("integer")
-                        .HasColumnName("nexusmods_user_nexusmods_mod_link_type_id");
+                        .HasColumnName("nexusmods_user_mod_link_type_id");
 
                     b.HasKey("TenantId", "NexusModsUserId", "NexusModsModId", "LinkType");
 
@@ -788,6 +794,33 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                     b.HasIndex("NexusModsUserId");
 
                     b.ToTable("nexusmods_user_role", "nexusmods_user");
+                });
+
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.NexusModsUserToSteamWorkshopModEntity", b =>
+                {
+                    b.Property<byte>("TenantId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("tenant");
+
+                    b.Property<int>("NexusModsUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("nexusmods_user_steamworkshop_mod_id");
+
+                    b.Property<int>("SteamWorkshopModId")
+                        .HasColumnType("integer")
+                        .HasColumnName("steamworkshop_mod_id");
+
+                    b.Property<int>("LinkType")
+                        .HasColumnType("integer")
+                        .HasColumnName("nexusmods_user_mod_link_type_id");
+
+                    b.HasKey("TenantId", "NexusModsUserId", "SteamWorkshopModId", "LinkType");
+
+                    b.HasIndex("NexusModsUserId");
+
+                    b.HasIndex("TenantId", "SteamWorkshopModId");
+
+                    b.ToTable("nexusmods_user_steamworkshop_mod", "nexusmods_user");
                 });
 
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.QuartzExecutionLogEntity", b =>
@@ -987,6 +1020,89 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                     b.ToTable("top_exceptions_type", "statistics");
                 });
 
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModEntity", b =>
+                {
+                    b.Property<byte>("TenantId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("tenant");
+
+                    b.Property<int>("SteamWorkshopModId")
+                        .HasColumnType("integer")
+                        .HasColumnName("steamworkshop_mod_id");
+
+                    b.HasKey("TenantId", "SteamWorkshopModId");
+
+                    b.ToTable("steamworkshop_mod", "steamworkshop_mod");
+                });
+
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModToFileUpdateEntity", b =>
+                {
+                    b.Property<byte>("TenantId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("tenant");
+
+                    b.Property<int>("SteamWorkshopModId")
+                        .HasColumnType("integer")
+                        .HasColumnName("steamworkshop_mod_file_update_id");
+
+                    b.Property<DateTimeOffset>("LastCheckedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_of_last_check");
+
+                    b.HasKey("TenantId", "SteamWorkshopModId");
+
+                    b.ToTable("steamworkshop_mod_file_update", "steamworkshop_mod");
+                });
+
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModToModuleEntity", b =>
+                {
+                    b.Property<byte>("TenantId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("tenant");
+
+                    b.Property<int>("SteamWorkshopModId")
+                        .HasColumnType("integer")
+                        .HasColumnName("steamworkshop_mod_module_id");
+
+                    b.Property<string>("ModuleId")
+                        .HasColumnType("text")
+                        .HasColumnName("module_id");
+
+                    b.Property<int>("LinkType")
+                        .HasColumnType("integer")
+                        .HasColumnName("mod_module_link_type_id");
+
+                    b.Property<DateTimeOffset>("LastUpdateDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_of_last_update");
+
+                    b.HasKey("TenantId", "SteamWorkshopModId", "ModuleId", "LinkType");
+
+                    b.HasIndex("TenantId", "ModuleId");
+
+                    b.ToTable("steamworkshop_mod_module", "steamworkshop_mod");
+                });
+
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModToNameEntity", b =>
+                {
+                    b.Property<byte>("TenantId")
+                        .HasColumnType("smallint")
+                        .HasColumnName("tenant");
+
+                    b.Property<int>("SteamWorkshopModId")
+                        .HasColumnType("integer")
+                        .HasColumnName("steamworkshop_mod_name_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.HasKey("TenantId", "SteamWorkshopModId");
+
+                    b.ToTable("steamworkshop_mod_name", "steamworkshop_mod");
+                });
+
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.TenantEntity", b =>
                 {
                     b.Property<byte>("TenantId")
@@ -1106,9 +1222,16 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                         .HasForeignKey("TenantId", "NexusModsModId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModEntity", "SteamWorkshopMod")
+                        .WithMany()
+                        .HasForeignKey("TenantId", "SteamWorkshopModId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Module");
 
                     b.Navigation("NexusModsMod");
+
+                    b.Navigation("SteamWorkshopMod");
 
                     b.Navigation("ToCrashReport");
                 });
@@ -1534,6 +1657,31 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                     b.Navigation("NexusModsUser");
                 });
 
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.NexusModsUserToSteamWorkshopModEntity", b =>
+                {
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.NexusModsUserEntity", "NexusModsUser")
+                        .WithMany("ToSteamWorkshopMods")
+                        .HasForeignKey("NexusModsUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModEntity", "SteamWorkshopMod")
+                        .WithMany("ToNexusModsUsers")
+                        .HasForeignKey("TenantId", "SteamWorkshopModId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("NexusModsUser");
+
+                    b.Navigation("SteamWorkshopMod");
+                });
+
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.StatisticsCrashReportsPerDateEntity", b =>
                 {
                     b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.TenantEntity", null)
@@ -1577,6 +1725,74 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                     b.Navigation("ExceptionType");
                 });
 
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModEntity", b =>
+                {
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModToFileUpdateEntity", b =>
+                {
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModEntity", "SteamWorkshopMod")
+                        .WithOne("FileUpdate")
+                        .HasForeignKey("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModToFileUpdateEntity", "TenantId", "SteamWorkshopModId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SteamWorkshopMod");
+                });
+
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModToModuleEntity", b =>
+                {
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.ModuleEntity", "Module")
+                        .WithMany("ToSteamWorkshopMods")
+                        .HasForeignKey("TenantId", "ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModEntity", "SteamWorkshopMod")
+                        .WithMany("ModuleIds")
+                        .HasForeignKey("TenantId", "SteamWorkshopModId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+
+                    b.Navigation("SteamWorkshopMod");
+                });
+
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModToNameEntity", b =>
+                {
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.TenantEntity", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModEntity", "SteamWorkshopMod")
+                        .WithOne("Name")
+                        .HasForeignKey("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModToNameEntity", "TenantId", "SteamWorkshopModId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SteamWorkshopMod");
+                });
+
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.CrashReportEntity", b =>
                 {
                     b.Navigation("FileId");
@@ -1602,6 +1818,8 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                     b.Navigation("ToNexusModsMods");
 
                     b.Navigation("ToNexusModsUsers");
+
+                    b.Navigation("ToSteamWorkshopMods");
                 });
 
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.NexusModsModEntity", b =>
@@ -1641,6 +1859,8 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                     b.Navigation("ToRoles");
 
                     b.Navigation("ToSteam");
+
+                    b.Navigation("ToSteamWorkshopMods");
                 });
 
             modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.NexusModsUserToIntegrationDiscordEntity", b =>
@@ -1665,6 +1885,17 @@ namespace BUTR.Site.NexusMods.Server.Migrations
                     b.Navigation("ToOwnedTenants");
 
                     b.Navigation("ToTokens");
+                });
+
+            modelBuilder.Entity("BUTR.Site.NexusMods.Server.Models.Database.SteamWorkshopModEntity", b =>
+                {
+                    b.Navigation("FileUpdate");
+
+                    b.Navigation("ModuleIds");
+
+                    b.Navigation("Name");
+
+                    b.Navigation("ToNexusModsUsers");
                 });
 #pragma warning restore 612, 618
         }

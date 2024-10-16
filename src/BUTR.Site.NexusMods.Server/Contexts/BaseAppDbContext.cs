@@ -36,6 +36,7 @@ public class BaseAppDbContext : DbContext
     public DbSet<NexusModsUserToNameEntity> NexusModsUserToName { get; set; } = default!;
     public DbSet<NexusModsUserToCrashReportEntity> NexusModsUserToCrashReports { get; set; } = default!;
     public DbSet<NexusModsUserToNexusModsModEntity> NexusModsUserToNexusModsMods { get; set; } = default!;
+    public DbSet<NexusModsUserToSteamWorkshopModEntity> NexusModsUserToSteamWorkshopMods { get; set; } = default!;
     public DbSet<NexusModsUserToModuleEntity> NexusModsUserToModules { get; set; } = default!;
 
     public DbSet<NexusModsUserToIntegrationGitHubEntity> NexusModsUserToGitHub { get; set; } = default!;
@@ -57,6 +58,8 @@ public class BaseAppDbContext : DbContext
     public DbSet<NexusModsModToModuleEntity> NexusModsModModules { get; set; } = default!;
     public DbSet<NexusModsModToFileUpdateEntity> NexusModsModToFileUpdates { get; set; } = default!;
     public DbSet<NexusModsModToModuleInfoHistoryEntity> NexusModsModToModuleInfoHistory { get; set; } = default!;
+
+    public DbSet<SteamWorkshopModToModuleEntity> SteamWorkshopModModules { get; set; } = default!;
 
     public DbSet<StatisticsTopExceptionsTypeEntity> StatisticsTopExceptionsTypes { get; set; } = default!;
     public DbSet<StatisticsCrashScoreInvolvedEntity> StatisticsCrashScoreInvolveds { get; set; } = default!;
@@ -132,9 +135,15 @@ public class BaseAppDbContext : DbContext
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsUserToModuleEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfiguration<NexusModsUserToNameEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsUserToNexusModsModEntity>(modelBuilder);
+        _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsUserToSteamWorkshopModEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfigurationWithTenant<NexusModsUserToRoleEntity>(modelBuilder);
         _entityConfigurationFactory.ApplyConfiguration<NexusModsUserToIntegrationSteamEntity>(modelBuilder);
 
+        _entityConfigurationFactory.ApplyConfigurationWithTenant<SteamWorkshopModEntity>(modelBuilder);
+        _entityConfigurationFactory.ApplyConfigurationWithTenant<SteamWorkshopModToFileUpdateEntity>(modelBuilder);
+        _entityConfigurationFactory.ApplyConfigurationWithTenant<SteamWorkshopModToModuleEntity>(modelBuilder);
+        _entityConfigurationFactory.ApplyConfigurationWithTenant<SteamWorkshopModToNameEntity>(modelBuilder);
+        
         _entityConfigurationFactory.ApplyConfiguration<QuartzExecutionLogEntity>(modelBuilder);
 
         _entityConfigurationFactory.ApplyConfigurationWithTenant<StatisticsCrashScoreInvolvedEntity>(modelBuilder);

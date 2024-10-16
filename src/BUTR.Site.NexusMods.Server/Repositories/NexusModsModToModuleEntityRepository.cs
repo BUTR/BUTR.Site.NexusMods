@@ -24,7 +24,7 @@ internal class NexusModsModToModuleEntityRepository : Repository<NexusModsModToM
     public NexusModsModToModuleEntityRepository(IAppDbContextProvider appDbContextProvider) : base(appDbContextProvider.Get()) { }
 
     public async Task<Paging<LinkedByStaffModuleNexusModsModsModel>> GetByStaffPaginatedAsync(PaginatedQuery query, CancellationToken ct) => await _dbContext.NexusModsModModules
-        .Where(x => x.LinkType == NexusModsModToModuleLinkType.ByStaff)
+        .Where(x => x.LinkType == ModToModuleLinkType.ByStaff)
         .GroupBy(x => new { x.Module.ModuleId })
         .Select(x => new LinkedByStaffModuleNexusModsModsModel
         {
@@ -38,7 +38,7 @@ internal class NexusModsModToModuleEntityRepository : Repository<NexusModsModToM
         .PaginatedAsync(query, 100, new() { Property = nameof(LinkedByStaffModuleNexusModsModsModel.ModuleId), Type = SortingType.Ascending }, ct);
 
     public async Task<Paging<LinkedByExposureNexusModsModModelsModel>> GetExposedPaginatedAsync(PaginatedQuery query, CancellationToken ct) => await _dbContext.NexusModsModModules
-        .Where(x => x.LinkType == NexusModsModToModuleLinkType.ByUnverifiedFileExposure)
+        .Where(x => x.LinkType == ModToModuleLinkType.ByUnverifiedFileExposure)
         .GroupBy(x => new { x.NexusModsMod.NexusModsModId })
         .Select(x => new LinkedByExposureNexusModsModModelsModel
         {

@@ -16,6 +16,7 @@ public class CrashReportToModuleMetadataEntityConfiguration : BaseEntityConfigur
         builder.Property(x => x.ModuleId).HasColumnName("module_id").HasVogenConversion();
         builder.Property(x => x.Version).HasVogenConversion().HasColumnName("version");
         builder.Property(x => x.NexusModsModId).HasColumnName("nexusmods_mod_id").HasConversion<NexusModsModId.EfCoreValueConverter, NexusModsModId.EfCoreValueComparer>().IsRequired(false);
+        builder.Property(x => x.SteamWorkshopModId).HasColumnName("steamworkshop_mod_id").HasConversion<SteamWorkshopModId.EfCoreValueConverter, SteamWorkshopModId.EfCoreValueComparer>().IsRequired(false);
         builder.Property(x => x.InvolvedPosition).HasColumnName("involved_position");
         builder.Property(x => x.IsInvolved).HasColumnName("is_involved");
         builder.ToTable("crash_report_module_info", "crashreport").HasKey(x => new
@@ -35,6 +36,12 @@ public class CrashReportToModuleMetadataEntityConfiguration : BaseEntityConfigur
             .WithMany()
             .HasForeignKey(x => new { x.TenantId, x.NexusModsModId })
             .HasPrincipalKey(x => new { x.TenantId, x.NexusModsModId })
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.SteamWorkshopMod)
+            .WithMany()
+            .HasForeignKey(x => new { x.TenantId, x.SteamWorkshopModId })
+            .HasPrincipalKey(x => new { x.TenantId, x.SteamWorkshopModId })
             .OnDelete(DeleteBehavior.SetNull);
 
         //builder.HasIndex(x => x.CrashReportId);

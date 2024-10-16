@@ -39,3 +39,31 @@ public interface INexusModsModToModuleEntityRepositoryRead : IRepositoryRead<Nex
     Task<Paging<LinkedByExposureNexusModsModModelsModel>> GetExposedPaginatedAsync(PaginatedQuery query, CancellationToken ct);
 }
 public interface INexusModsModToModuleEntityRepositoryWrite : IRepositoryWrite<NexusModsModToModuleEntity>, INexusModsModToModuleEntityRepositoryRead;
+
+
+
+public sealed record LinkedByStaffSteamWorkshopModModel
+{
+    public SteamWorkshopModId SteamWorkshopModId { get; init; }
+    public DateTimeOffset LastCheckedDate { get; init; }
+}
+
+public sealed record LinkedByStaffModuleSteamWorkshopModsModel
+{
+    public required ModuleId ModuleId { get; init; }
+    public required LinkedByStaffSteamWorkshopModModel[] NexusModsMods { get; init; }
+}
+
+public sealed record LinkedByExposureSteamWorkshopModModelsModel
+{
+    public required SteamWorkshopModId SteamWorkshopModId { get; init; }
+    public required LinkedByExposureModuleModel[] Modules { get; init; }
+}
+
+public interface ISteamWorkshopModToModuleEntityRepositoryRead : IRepositoryRead<SteamWorkshopModToModuleEntity>
+{
+    Task<Paging<LinkedByStaffModuleSteamWorkshopModsModel>> GetByStaffPaginatedAsync(PaginatedQuery query, CancellationToken ct);
+
+    Task<Paging<LinkedByExposureSteamWorkshopModModelsModel>> GetExposedPaginatedAsync(PaginatedQuery query, CancellationToken ct);
+}
+public interface ISteamWorkshopModToModuleEntityRepositoryWrite : IRepositoryWrite<SteamWorkshopModToModuleEntity>, ISteamWorkshopModToModuleEntityRepositoryRead;

@@ -47,7 +47,7 @@ internal class NexusModsUserRepository : Repository<NexusModsUserEntity>, INexus
         .AsSplitQuery()
         .FirstOrDefaultAsync(x => x.NexusModsUserId == userId, ct);
 
-    public async Task<Paging<UserLinkedModModel>> GetNexusModsModsPaginatedAsync(NexusModsUserId userId, PaginatedQuery query, CancellationToken ct)
+    public async Task<Paging<UserLinkedNexusModsModModel>> GetNexusModsModsPaginatedAsync(NexusModsUserId userId, PaginatedQuery query, CancellationToken ct)
     {
         var availableModsByNexusModsModLinkage = _dbContext.NexusModsUsers
             .Include(x => x.ToNexusModsMods).ThenInclude(x => x.NexusModsMod).ThenInclude(x => x.Name)
@@ -57,23 +57,23 @@ internal class NexusModsUserRepository : Repository<NexusModsUserEntity>, INexus
             .SelectMany(x => x.ToNexusModsMods)
             .Select(x => x.NexusModsMod)
             .AsSplitQuery()
-            .Select(x => new UserLinkedModModel
+            .Select(x => new UserLinkedNexusModsModModel
             {
                 NexusModsModId = x.NexusModsModId,
                 Name = x.Name!.Name,
-                OwnerNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToNexusModsModLinkType.ByAPIConfirmation).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
-                AllowedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToNexusModsModLinkType.ByOwner || y.LinkType == NexusModsUserToNexusModsModLinkType.ByStaff).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
-                ManuallyLinkedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToNexusModsModLinkType.ByOwner).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
-                ManuallyLinkedModuleIds = x.ModuleIds.Where(y => y.LinkType == NexusModsModToModuleLinkType.ByStaff).Select(y => y.Module.ModuleId).ToArray(),
-                KnownModuleIds = x.ModuleIds.Where(y => y.LinkType == NexusModsModToModuleLinkType.ByUnverifiedFileExposure).Select(y => y.Module.ModuleId).ToArray(),
+                OwnerNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByAPIConfirmation).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
+                AllowedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner || y.LinkType == NexusModsUserToModLinkType.ByStaff).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
+                ManuallyLinkedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
+                ManuallyLinkedModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByStaff).Select(y => y.Module.ModuleId).ToArray(),
+                KnownModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByUnverifiedFileExposure).Select(y => y.Module.ModuleId).ToArray(),
             });
 
         return await availableModsByNexusModsModLinkage
             //.PaginatedGroupedAsync(query, 20, new() { Property = nameof(UserLinkedModModel.NexusModsModId), Type = SortingType.Ascending }, ct);
-            .PaginatedAsync(query, 20, new() { Property = nameof(UserLinkedModModel.NexusModsModId), Type = SortingType.Ascending }, ct);
+            .PaginatedAsync(query, 20, new() { Property = nameof(UserLinkedNexusModsModModel.NexusModsModId), Type = SortingType.Ascending }, ct);
     }
 
-    public async Task<Paging<UserAvailableModModel>> GetAvailableModsPaginatedAsync(NexusModsUserId userId, PaginatedQuery query, CancellationToken ct)
+    public async Task<Paging<UserAvailableNexusModsModModel>> GetAvailableNexusModsModsPaginatedAsync(NexusModsUserId userId, PaginatedQuery query, CancellationToken ct)
     {
         var userToModIds = _dbContext.NexusModsUserToNexusModsMods
             .Include(x => x.NexusModsMod).ThenInclude(x => x.Name)
@@ -89,16 +89,67 @@ internal class NexusModsUserRepository : Repository<NexusModsUserEntity>, INexus
             .Select(x => x.NexusModsMod);
 
         return await userToModIds.Union(userToModuleIdsToModIds)
-            .Select(x => new UserAvailableModModel
+            .Select(x => new UserAvailableNexusModsModModel
             {
                 NexusModsModId = x.NexusModsModId,
                 Name = x.Name!.Name,
             })
-            .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsModEntity.NexusModsModId), Type = SortingType.Ascending }, ct);
+            .PaginatedAsync(query, 20, new() { Property = nameof(UserAvailableNexusModsModModel.NexusModsModId), Type = SortingType.Ascending }, ct);
     }
 
 
-    public async Task<int> GetLinkedModCountAsync(NexusModsUserId userId, CancellationToken ct) => await _dbContext.NexusModsUsers
+    public async Task<Paging<UserLinkedSteamWorkshopModModel>> GetSteamWorkshopModsPaginatedAsync(NexusModsUserId userId, PaginatedQuery query, CancellationToken ct)
+    {
+        var availableModsByNexusModsModLinkage = _dbContext.NexusModsUsers
+            .Include(x => x.ToSteamWorkshopMods).ThenInclude(x => x.SteamWorkshopMod).ThenInclude(x => x.Name)
+            .Include(x => x.ToSteamWorkshopMods).ThenInclude(x => x.SteamWorkshopMod).ThenInclude(x => x.ToNexusModsUsers).ThenInclude(x => x.NexusModsUser)
+            .Include(x => x.ToSteamWorkshopMods).ThenInclude(x => x.SteamWorkshopMod).ThenInclude(x => x.ModuleIds).ThenInclude(x => x.Module)
+            .Where(x => x.NexusModsUserId == userId)
+            .SelectMany(x => x.ToSteamWorkshopMods)
+            .Select(x => x.SteamWorkshopMod)
+            .AsSplitQuery()
+            .Select(x => new UserLinkedSteamWorkshopModModel
+            {
+                SteamWorkshopModId = x.SteamWorkshopModId,
+                Name = x.Name!.Name,
+                OwnerNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByAPIConfirmation).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
+                AllowedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner || y.LinkType == NexusModsUserToModLinkType.ByStaff).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
+                ManuallyLinkedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
+                ManuallyLinkedModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByStaff).Select(y => y.Module.ModuleId).ToArray(),
+                KnownModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByUnverifiedFileExposure).Select(y => y.Module.ModuleId).ToArray(),
+            });
+
+        return await availableModsByNexusModsModLinkage
+            //.PaginatedGroupedAsync(query, 20, new() { Property = nameof(UserLinkedSteamWorkshopModModel.SteamWorkshopModId), Type = SortingType.Ascending }, ct);
+            .PaginatedAsync(query, 20, new() { Property = nameof(UserLinkedSteamWorkshopModModel.SteamWorkshopModId), Type = SortingType.Ascending }, ct);
+    }
+
+    public async Task<Paging<UserAvailableSteamWorkshopModModel>> GetAvailableSteamWorkshopModsPaginatedAsync(NexusModsUserId userId, PaginatedQuery query, CancellationToken ct)
+    {
+        var userToModIds = _dbContext.NexusModsUserToSteamWorkshopMods
+            .Include(x => x.SteamWorkshopMod).ThenInclude(x => x.Name)
+            .Where(x => x.NexusModsUser.NexusModsUserId == userId)
+            .Select(x => x.SteamWorkshopMod);
+
+        var userToModuleIdsToModIds = _dbContext.NexusModsUserToModules
+            .Include(x => x.Module).ThenInclude(x => x.ToSteamWorkshopMods).ThenInclude(x => x.SteamWorkshopMod).ThenInclude(x => x.Name)
+            .AsSplitQuery()
+            .Where(x => x.NexusModsUser.NexusModsUserId == userId)
+            .Select(x => x.Module)
+            .SelectMany(x => x.ToSteamWorkshopMods)
+            .Select(x => x.SteamWorkshopMod);
+
+        return await userToModIds.Union(userToModuleIdsToModIds)
+            .Select(x => new UserAvailableSteamWorkshopModModel
+            {
+                SteamWorkshopModId = x.SteamWorkshopModId,
+                Name = x.Name!.Name,
+            })
+            .PaginatedAsync(query, 20, new() { Property = nameof(UserAvailableSteamWorkshopModModel.SteamWorkshopModId), Type = SortingType.Ascending }, ct);
+    }
+
+
+    public async Task<int> GetLinkedNexusModsModCountAsync(NexusModsUserId userId, CancellationToken ct) => await _dbContext.NexusModsUsers
         .Include(x => x.ToNexusModsMods)
         .AsSplitQuery()
         .Where(x => x.NexusModsUserId == userId)

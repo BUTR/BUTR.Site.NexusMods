@@ -32,10 +32,14 @@ public interface IUnitOfWrite : IDisposable, IAsyncDisposable
     INexusModsModToModuleInfoHistoryEntityRepositoryWrite NexusModsModToModuleInfoHistory { get; }
     INexusModsModToFileUpdateEntityRepositoryWrite NexusModsModToFileUpdates { get; }
 
+    ISteamWorkshopModToModuleEntityRepositoryWrite SteamWorkshopModModules { get; }
+    ISteamWorkshopModToNameEntityRepositoryWrite SteamWorkshopModName { get; }
+
     INexusModsUserRepositoryWrite NexusModsUsers { get; }
     INexusModsUserToNameEntityRepositoryWrite NexusModsUserToName { get; }
     INexusModsUserToCrashReportEntityRepositoryWrite NexusModsUserToCrashReports { get; }
     INexusModsUserToNexusModsModEntityRepositoryWrite NexusModsUserToNexusModsMods { get; }
+    INexusModsUserToSteamWorkshopModEntityRepositoryWrite NexusModsUserToSteamWorkshopMods { get; }
     INexusModsUserToModuleEntityRepositoryWrite NexusModsUserToModules { get; }
 
     INexusModsUserToIntegrationGitHubEntityRepositoryWrite NexusModsUserToGitHub { get; }

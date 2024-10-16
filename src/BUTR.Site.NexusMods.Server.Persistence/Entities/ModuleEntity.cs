@@ -14,6 +14,7 @@ public record ModuleEntity : IEntityWithTenant
     public required ModuleId ModuleId { get; init; }
     public ICollection<NexusModsUserToModuleEntity> ToNexusModsUsers { get; init; } = new List<NexusModsUserToModuleEntity>();
     public ICollection<NexusModsModToModuleEntity> ToNexusModsMods { get; init; } = new List<NexusModsModToModuleEntity>();
+    public ICollection<SteamWorkshopModToModuleEntity> ToSteamWorkshopMods { get; init; } = new List<SteamWorkshopModToModuleEntity>();
     public ICollection<StatisticsCrashScoreInvolvedEntity> ToCrashScore { get; init; } = new List<StatisticsCrashScoreInvolvedEntity>();
 
     public override int GetHashCode() => HashCode.Combine(TenantId, ModuleId);

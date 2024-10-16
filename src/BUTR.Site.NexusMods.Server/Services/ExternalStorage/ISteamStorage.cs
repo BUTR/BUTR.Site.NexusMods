@@ -2,9 +2,11 @@ using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Repositories;
+using BUTR.Site.NexusMods.Shared.Helpers;
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,25 +14,16 @@ namespace BUTR.Site.NexusMods.Server.Services;
 
 public interface ISteamStorage
 {
-    Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string steamUserId);
+    Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, SteamUserId steamUserId);
 
-    Task<Dictionary<string, string>?> GetAsync(string steamUserId);
-    Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string steamUserId, Dictionary<string, string> data);
-    Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string steamUserId);
+    Task<Dictionary<string, string>?> GetAsync(SteamUserId steamUserId);
+    Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, SteamUserId steamUserId, Dictionary<string, string> data);
+    Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, SteamUserId steamUserId);
 }
 
 [ScopedService<ISteamStorage>]
 public sealed class DatabaseSteamStorage : ISteamStorage
 {
-    private Dictionary<TenantId, HashSet<uint>> TenantToGameIds { get; } = new()
-    {
-        { TenantId.Bannerlord, [261550] },
-        { TenantId.Rimworld, [294100] },
-        { TenantId.StardewValley, [413150] },
-        { TenantId.Valheim, [892970] },
-        { TenantId.Terraria, [105600] },
-    };
-
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly ISteamAPIClient _steamAPIClient;
 
@@ -40,7 +33,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
         _steamAPIClient = steamAPIClient;
     }
 
-    public async Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, string steamUserId)
+    public async Task<bool> CheckOwnedGamesAsync(NexusModsUserId nexusModsUserId, SteamUserId steamUserId)
     {
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
@@ -52,7 +45,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
         };
 
         var list = ImmutableArray.CreateBuilder<IntegrationSteamToOwnedTenantEntity>();
-        foreach (var (tenant, gameIds) in TenantToGameIds)
+        foreach (var (tenant, gameIds) in TenantId.Values.Select(x => (x, TenantUtils.FromTenantToSteamAppIds(x.Value))))
         {
             var ownsTenant = false;
             foreach (var gameId in gameIds)
@@ -79,7 +72,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
         return true;
     }
 
-    public async Task<Dictionary<string, string>?> GetAsync(string steamUserId)
+    public async Task<Dictionary<string, string>?> GetAsync(SteamUserId steamUserId)
     {
         await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead(TenantId.None);
 
@@ -88,7 +81,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
         return entity.Data;
     }
 
-    public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, string steamUserId, Dictionary<string, string> data)
+    public async Task<bool> UpsertAsync(NexusModsUserId nexusModsUserId, SteamUserId steamUserId, Dictionary<string, string> data)
     {
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
@@ -113,7 +106,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
         return true;
     }
 
-    public async Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, string steamUserId)
+    public async Task<bool> RemoveAsync(NexusModsUserId nexusModsUserId, SteamUserId steamUserId)
     {
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 

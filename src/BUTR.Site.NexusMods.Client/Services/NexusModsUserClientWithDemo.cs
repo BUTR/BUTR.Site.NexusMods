@@ -66,13 +66,13 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
         return await _implementation.RemoveRoleAsync(userId, username, ct);
     }
 
-    public async Task<UserLinkedModModelPagingDataApiResultModel> GetNexusModsModsPaginatedAsync(PaginatedQuery body, CancellationToken ct = default)
+    public async Task<UserLinkedNexusModsModModelPagingDataApiResultModel> GetNexusModsModsPaginatedAsync(PaginatedQuery body, CancellationToken ct = default)
     {
         var token = await _tokenContainer.GetTokenAsync(ct);
         if (token?.Type.Equals("demo", StringComparison.OrdinalIgnoreCase) == true)
         {
             var mods = await DemoUser.GetMods().ToListAsync(ct);
-            return new UserLinkedModModelPagingDataApiResultModel(new UserLinkedModModelPagingData(PagingAdditionalMetadata.Empty, mods, new PagingMetadata(1, (int) Math.Ceiling((double) mods.Count / (double) body.PageSize), body.PageSize, mods.Count)), null!);
+            return new UserLinkedNexusModsModModelPagingDataApiResultModel(new UserLinkedNexusModsModModelPagingData(PagingAdditionalMetadata.Empty, mods, new PagingMetadata(1, (int) Math.Ceiling((double) mods.Count / (double) body.PageSize), body.PageSize, mods.Count)), null!);
         }
 
         return await _implementation.GetNexusModsModsPaginatedAsync(body, ct);
@@ -115,6 +115,31 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
         }
 
         return await _implementation.RemoveNexusModsModLinkAsync(modId, userId, username, ct);
+    }
+
+    public async Task<UserLinkedSteamWorkshopModModelPagingDataApiResultModel> GetSteamWorkshopModsPaginatedAsync(PaginatedQuery body, CancellationToken ct = default)
+    {
+        return await _implementation.GetSteamWorkshopModsPaginatedAsync(body, ct);
+    }
+
+    public async Task<UserAvailableSteamWorkshopModModelPagingDataApiResultModel> GetSteamWorkshopModsPaginateAvailabledAsync(PaginatedQuery body, CancellationToken ct = default)
+    {
+        return await _implementation.GetSteamWorkshopModsPaginateAvailabledAsync(body, ct);
+    }
+
+    public async Task<StringApiResultModel> AddSteamWorkshopModLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default)
+    {
+        return await _implementation.AddSteamWorkshopModLinkAsync(modId, userId, username, ct);
+    }
+
+    public async Task<StringApiResultModel> UpdateSteamWorkshopModLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default)
+    {
+        return await _implementation.UpdateSteamWorkshopModLinkAsync(modId, userId, username, ct);
+    }
+
+    public async Task<StringApiResultModel> RemoveSteamWorkshopModLinkAsync(int modId, int? userId = null, string? username = null, CancellationToken ct = default)
+    {
+        return await _implementation.RemoveSteamWorkshopModLinkAsync(modId, userId, username, ct);
     }
 
     public async Task<StringApiResultModel> AddModuleManualLinkAsync(string moduleId, int? userId = null, string? username = null, CancellationToken ct = default)
@@ -174,7 +199,7 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
         return await _implementation.GetNexusModsModManualLinkPaginatedAsync(body, ct);
     }
 
-    public async Task<UserAvailableModModelPagingDataApiResultModel> GetNexusModsModsPaginateAvailabledAsync(PaginatedQuery body, CancellationToken ct = default)
+    public async Task<UserAvailableNexusModsModModelPagingDataApiResultModel> GetNexusModsModsPaginateAvailabledAsync(PaginatedQuery body, CancellationToken ct = default)
     {
         return await _implementation.GetNexusModsModsPaginateAvailabledAsync(body, ct);
     }

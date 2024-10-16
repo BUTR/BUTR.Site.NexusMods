@@ -10,12 +10,12 @@ public class IntegrationSteamToOwnedTenantEntityConfiguration : BaseEntityConfig
 {
     protected override void ConfigureModel(EntityTypeBuilder<IntegrationSteamToOwnedTenantEntity> builder)
     {
-        builder.Property(x => x.SteamUserId).HasColumnName("integration_steam_owned_tenant_id");
+        builder.Property(x => x.SteamUserId).HasColumnName("integration_steam_owned_tenant_id").HasVogenConversion();
         builder.Property(x => x.OwnedTenant).HasColumnName("owned_tenant").HasVogenConversion();
         builder.ToTable("integration_steam_owned_tenant", "integration").HasKey(x => new
         {
             x.SteamUserId,
-            x.OwnedTenant
+            x.OwnedTenant,
         });
 
         builder.HasOne<NexusModsUserToIntegrationSteamEntity>()

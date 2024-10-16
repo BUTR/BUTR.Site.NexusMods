@@ -17,6 +17,9 @@ public sealed record CrashReportToModuleMetadataEntity : IEntityWithTenant
     public required NexusModsModId? NexusModsModId { get; init; }
     public required NexusModsModEntity? NexusModsMod { get; init; }
 
+    public required SteamWorkshopModId? SteamWorkshopModId { get; init; }
+    public required SteamWorkshopModEntity? SteamWorkshopMod { get; init; }
+
     public required byte InvolvedPosition { get; init; }
 
     public required bool IsInvolved { get; init; }

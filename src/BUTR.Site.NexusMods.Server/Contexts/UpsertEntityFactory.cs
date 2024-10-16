@@ -23,6 +23,7 @@ public sealed class UpsertEntityFactory : IUpsertEntityFactory
     private readonly ConcurrentDictionary<NexusModsUserId, NexusModsUserEntity> _nexusModsUsers = new();
     private readonly ConcurrentDictionary<NexusModsUserId, NexusModsUserToNameEntity> _nexusModsUserNames = new();
     private readonly ConcurrentDictionary<NexusModsModId, NexusModsModEntity> _nexusModsMods = new();
+    private readonly ConcurrentDictionary<SteamWorkshopModId, SteamWorkshopModEntity> _steamWorkshopMods = new();
     private readonly ConcurrentDictionary<ModuleId, ModuleEntity> _modules = new();
     private readonly ConcurrentDictionary<ExceptionTypeId, ExceptionTypeEntity> _exceptionTypes = new();
 
@@ -59,6 +60,14 @@ public sealed class UpsertEntityFactory : IUpsertEntityFactory
         static NexusModsModEntity ValueFactory(NexusModsModId id, TenantId tenant) => NexusModsModEntity.Create(tenant, id);
     }
 
+    public SteamWorkshopModEntity GetOrCreateSteamWorkshopMod(SteamWorkshopModId steamWorkshopModId)
+    {
+        var tenant = _tenantContextAccessor.Current;
+        return _steamWorkshopMods.GetOrAdd(steamWorkshopModId, ValueFactory, tenant);
+
+        static SteamWorkshopModEntity ValueFactory(SteamWorkshopModId id, TenantId tenant) => SteamWorkshopModEntity.Create(tenant, id);
+    }
+
     public ModuleEntity GetOrCreateModule(ModuleId moduleId)
     {
         var tenant = _tenantContextAccessor.Current;
@@ -91,6 +100,7 @@ public sealed class UpsertEntityFactory : IUpsertEntityFactory
             if (!_nexusModsUsers.IsEmpty) await DoChangeAsync(() => _dbContextWrite.BulkInsertOrUpdateAsync(_nexusModsUsers.Values, o => o.IncludeGraph = false, cancellationToken: ct));
             if (!_nexusModsUserNames.IsEmpty) await DoChangeAsync(() => _dbContextWrite.BulkInsertOrUpdateAsync(_nexusModsUserNames.Values, o => o.IncludeGraph = false, cancellationToken: ct));
             if (!_nexusModsMods.IsEmpty) await DoChangeAsync(() => _dbContextWrite.BulkInsertOrUpdateAsync(_nexusModsMods.Values, o => o.IncludeGraph = false, cancellationToken: ct));
+            if (!_steamWorkshopMods.IsEmpty) await DoChangeAsync(() => _dbContextWrite.BulkInsertOrUpdateAsync(_steamWorkshopMods.Values, o => o.IncludeGraph = false, cancellationToken: ct));
             if (!_modules.IsEmpty) await DoChangeAsync(() => _dbContextWrite.BulkInsertOrUpdateAsync(_modules.Values, o => o.IncludeGraph = false, cancellationToken: ct));
             if (!_exceptionTypes.IsEmpty) await DoChangeAsync(() => _dbContextWrite.BulkInsertOrUpdateAsync(_exceptionTypes.Values, o => o.IncludeGraph = false, cancellationToken: ct));
 

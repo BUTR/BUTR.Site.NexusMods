@@ -27,8 +27,8 @@ public class ExposedModsController : ApiControllerBase
         _unitOfWorkFactory = unitOfWorkFactory;
     }
 
-    [HttpPost("Paginated")]
-    public async Task<ApiResult<PagingData<LinkedByExposureNexusModsModModelsModel>?>> GetPaginatedAsync([FromBody, Required] PaginatedQuery query, CancellationToken ct)
+    [HttpPost("NexusModsMod/Paginated")]
+    public async Task<ApiResult<PagingData<LinkedByExposureNexusModsModModelsModel>?>> GetNexusModsModPaginatedAsync([FromBody, Required] PaginatedQuery query, CancellationToken ct)
     {
         await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
 
@@ -37,12 +37,32 @@ public class ExposedModsController : ApiControllerBase
         return ApiPagingResult(paginated);
     }
 
-    [HttpGet("Autocomplete/ModuleIds")]
-    public async Task<ApiResult<IList<string>?>> GetAutocompleteModuleIdsAsync([FromQuery, Required] ModuleId moduleId)
+    [HttpGet("NexusModsMod/Autocomplete/ModuleIds")]
+    public async Task<ApiResult<IList<string>?>> GetNexusModsModAutocompleteModuleIdsAsync([FromQuery, Required] ModuleId moduleId)
     {
         await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
 
-        var moduleIds = await unitOfRead.Autocompletes.AutocompleteStartsWithAsync<NexusModsModToModuleEntity, ModuleId>(x => x.Module.ModuleId, moduleId, CancellationToken.None);
+        var moduleIds = await unitOfRead.Autocompletes.AutocompleteStartsWithAsync<NexusModsModToModuleEntity, ModuleId>(x => x.ModuleId, moduleId, CancellationToken.None);
+
+        return ApiResult(moduleIds);
+    }
+
+    [HttpPost("SteamWorkshopMod/Paginated")]
+    public async Task<ApiResult<PagingData<LinkedByExposureSteamWorkshopModModelsModel>?>> GetSteamWorkshopModPaginatedAsync([FromBody, Required] PaginatedQuery query, CancellationToken ct)
+    {
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
+        var paginated = await unitOfRead.SteamWorkshopModModules.GetExposedPaginatedAsync(query, ct);
+
+        return ApiPagingResult(paginated);
+    }
+
+    [HttpGet("SteamWorkshopMod/Autocomplete/ModuleIds")]
+    public async Task<ApiResult<IList<string>?>> GetSteamWorkshopModAutocompleteModuleIdsAsync([FromQuery, Required] ModuleId moduleId)
+    {
+        await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
+
+        var moduleIds = await unitOfRead.Autocompletes.AutocompleteStartsWithAsync<SteamWorkshopModToModuleEntity, ModuleId>(x => x.ModuleId, moduleId, CancellationToken.None);
 
         return ApiResult(moduleIds);
     }

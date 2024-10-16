@@ -72,7 +72,7 @@ public sealed class NexusModsModController : ApiControllerBase
             NexusModsMod = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsMod(modId),
             ModuleId = moduleId,
             Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(moduleId),
-            LinkType = NexusModsModToModuleLinkType.ByStaff,
+            LinkType = ModToModuleLinkType.ByStaff,
             LastUpdateDate = DateTimeOffset.UtcNow,
         };
         unitOfWrite.NexusModsModModules.Upsert(nexusModsModToModule);
@@ -88,7 +88,7 @@ public sealed class NexusModsModController : ApiControllerBase
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
 
         unitOfWrite.NexusModsModModules
-            .Remove(x => x.Module.ModuleId == moduleId && x.NexusModsMod.NexusModsModId == modId && x.LinkType == NexusModsModToModuleLinkType.ByStaff);
+            .Remove(x => x.Module.ModuleId == moduleId && x.NexusModsMod.NexusModsModId == modId && x.LinkType == ModToModuleLinkType.ByStaff);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return ApiResult("Unlinked successful!");

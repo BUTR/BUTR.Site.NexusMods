@@ -12,7 +12,7 @@ public record NexusModsUserToNexusModsModEntity : IEntityWithTenant
     public required NexusModsModId NexusModsModId { get; init; }
     public required NexusModsModEntity NexusModsMod { get; init; }
 
-    public required NexusModsUserToNexusModsModLinkType LinkType { get; init; }
+    public required NexusModsUserToModLinkType LinkType { get; init; }
 
     public override int GetHashCode() => HashCode.Combine(TenantId, NexusModsUserId, NexusModsModId, LinkType);
 }

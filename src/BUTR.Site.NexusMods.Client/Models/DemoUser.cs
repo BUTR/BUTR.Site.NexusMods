@@ -28,7 +28,7 @@ public static class DemoUser
             gitHubUserId: null!,
             hasTenantGame: true,
             availableTenants: new List<ProfileTenantModel> { new(tenantId: 1, name: "Bannerlord") });
-    private static readonly List<UserLinkedModModel> _mods = new()
+    private static readonly List<UserLinkedNexusModsModModel> _mods = new()
     {
         new(nexusModsModId: 1, name: "Demo Mod 1", ownerNexusModsUserIds: Array.Empty<int>(), allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
         new(nexusModsModId: 2, name: "Demo Mod 2", ownerNexusModsUserIds: Array.Empty<int>(), allowedNexusModsUserIds: Array.Empty<int>(), manuallyLinkedNexusModsUserIds: Array.Empty<int>(), knownModuleIds: Array.Empty<string>(), manuallyLinkedModuleIds: Array.Empty<string>()),
@@ -38,7 +38,7 @@ public static class DemoUser
     private static List<CrashReportModel2>? _crashReports;
 
     public static Task<ProfileModel> GetProfile() => Task.FromResult(_profile);
-    public static IAsyncEnumerable<UserLinkedModModel> GetMods() => _mods.ToAsyncEnumerable();
+    public static IAsyncEnumerable<UserLinkedNexusModsModModel> GetMods() => _mods.ToAsyncEnumerable();
     public static async IAsyncEnumerable<CrashReportModel2> GetCrashReports(IHttpClientFactory factory)
     {
         static string GetException(ExceptionModel? exception, bool inner = false) => exception is null ? string.Empty : $"""

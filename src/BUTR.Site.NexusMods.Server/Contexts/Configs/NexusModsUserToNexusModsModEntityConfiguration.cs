@@ -14,7 +14,7 @@ public class NexusModsUserToNexusModsModEntityConfiguration : BaseEntityConfigur
     {
         builder.Property(x => x.NexusModsUserId).HasColumnName("nexusmods_user_nexusmods_mod_id").HasVogenConversion();
         builder.Property(x => x.NexusModsModId).HasColumnName("nexusmods_mod_id").HasVogenConversion();
-        builder.Property(x => x.LinkType).HasColumnName("nexusmods_user_nexusmods_mod_link_type_id");
+        builder.Property(x => x.LinkType).HasColumnName("nexusmods_user_mod_link_type_id");
         builder.ToTable("nexusmods_user_nexusmods_mod", "nexusmods_user").HasKey(x => new
         {
             x.TenantId,

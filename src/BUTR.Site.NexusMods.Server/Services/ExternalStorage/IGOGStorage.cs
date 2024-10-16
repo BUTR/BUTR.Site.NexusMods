@@ -2,9 +2,9 @@ using BUTR.Site.NexusMods.DependencyInjection;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.Database;
 using BUTR.Site.NexusMods.Server.Repositories;
+using BUTR.Site.NexusMods.Shared.Helpers;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,13 +25,7 @@ public interface IGOGStorage
 [ScopedService<IGOGStorage>]
 public sealed class DatabaseGOGStorage : IGOGStorage
 {
-    private Dictionary<TenantId, HashSet<uint>> TenantToGameIds { get; } = new()
-    {
-        { TenantId.Bannerlord, [1802539526, 1564781494] },
-        { TenantId.Rimworld, [1094900565] },
-        { TenantId.StardewValley, [1453375253] },
-        { TenantId.Terraria, [1207665503] },
-    };
+
 
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IGOGEmbedClient _gogEmbedClient;
@@ -57,8 +51,10 @@ public sealed class DatabaseGOGStorage : IGOGStorage
             GOGUserId = gogUserId,
         };
 
-        var ownedTenants = TenantToGameIds.Where(x => x.Value.Intersect(games.Owned.Where(y => y.HasValue).Select(y => y!.Value)).Any());
-        var list = ownedTenants.Select(x => x.Key).Select(x => new IntegrationGOGToOwnedTenantEntity
+        var ownedTenants = TenantId.Values
+            .Select(x => (TenantId: x, GOGIds: TenantUtils.FromTenantToGOGIds(x.Value)))
+            .Where(x => x.GOGIds.Intersect(games.Owned.Where(y => y.HasValue).Select(y => y!.Value)).Any());
+        var list = ownedTenants.Select(x => x.TenantId).Select(x => new IntegrationGOGToOwnedTenantEntity
         {
             GOGUserId = gogUserId,
             OwnedTenant = x,

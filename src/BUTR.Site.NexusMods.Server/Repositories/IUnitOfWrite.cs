@@ -44,11 +44,15 @@ internal class UnitOfWrite : IUnitOfWrite
     public INexusModsModToNameEntityRepositoryWrite NexusModsModName { get; }
     public INexusModsModToModuleInfoHistoryEntityRepositoryWrite NexusModsModToModuleInfoHistory { get; }
     public INexusModsModToFileUpdateEntityRepositoryWrite NexusModsModToFileUpdates { get; }
+    
+    public ISteamWorkshopModToModuleEntityRepositoryWrite SteamWorkshopModModules { get; }
+    public ISteamWorkshopModToNameEntityRepositoryWrite SteamWorkshopModName { get; }
 
     public INexusModsUserRepositoryWrite NexusModsUsers { get; }
     public INexusModsUserToNameEntityRepositoryWrite NexusModsUserToName { get; }
     public INexusModsUserToCrashReportEntityRepositoryWrite NexusModsUserToCrashReports { get; }
     public INexusModsUserToNexusModsModEntityRepositoryWrite NexusModsUserToNexusModsMods { get; }
+    public INexusModsUserToSteamWorkshopModEntityRepositoryWrite NexusModsUserToSteamWorkshopMods { get; }
     public INexusModsUserToModuleEntityRepositoryWrite NexusModsUserToModules { get; }
 
     public INexusModsUserToIntegrationGitHubEntityRepositoryWrite NexusModsUserToGitHub { get; }
@@ -98,10 +102,14 @@ internal class UnitOfWrite : IUnitOfWrite
         NexusModsModToModuleInfoHistory = ActivatorUtilities.CreateInstance<NexusModsModToModuleInfoHistoryEntityRepository>(serviceProvider, dbContextProvider);
         NexusModsModToFileUpdates = ActivatorUtilities.CreateInstance<NexusModsModToFileUpdateEntityRepository>(serviceProvider, dbContextProvider);
 
+        SteamWorkshopModModules = ActivatorUtilities.CreateInstance<SteamWorkshopModToModuleEntityRepository>(serviceProvider, dbContextProvider);
+        SteamWorkshopModName = ActivatorUtilities.CreateInstance<SteamWorkshopModToNameEntityRepository>(serviceProvider, dbContextProvider);
+
         NexusModsUsers = ActivatorUtilities.CreateInstance<NexusModsUserRepository>(serviceProvider, dbContextProvider);
         NexusModsUserToName = ActivatorUtilities.CreateInstance<NexusModsUserToNameEntityRepository>(serviceProvider, dbContextProvider);
         NexusModsUserToCrashReports = ActivatorUtilities.CreateInstance<NexusModsUserToCrashReportEntityRepository>(serviceProvider, dbContextProvider);
         NexusModsUserToNexusModsMods = ActivatorUtilities.CreateInstance<NexusModsUserToNexusModsModEntityRepository>(serviceProvider, dbContextProvider);
+        NexusModsUserToSteamWorkshopMods = ActivatorUtilities.CreateInstance<NexusModsUserToSteamWorkshopModEntityRepository>(serviceProvider, dbContextProvider);
         NexusModsUserToModules = ActivatorUtilities.CreateInstance<NexusModsUserToModuleEntityRepository>(serviceProvider, dbContextProvider);
 
         NexusModsUserToGitHub = ActivatorUtilities.CreateInstance<NexusModsUserToIntegrationGitHubEntityRepository>(serviceProvider, dbContextProvider);

@@ -33,7 +33,7 @@
 
     private async Task<DataGridPaging<LinkedByExposureNexusModsModModelsModel>.ItemsResponse?> GetExposedMods(int page, int pageSize, ICollection<Filtering> filters, ICollection<Sorting> sortings, CancellationToken ct = default)
     {
-        var response = await _exposedModsClient.GetPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
+        var response = await _exposedModsClient.GetNexusModsModPaginatedAsync(new(page: page, pageSize: pageSize, filters: filters, sortings: sortings), cancellationToken: ct);
         return response is { Value: { } data } ? new(data.Metadata, data.Items, data.AdditionalMetadata) : null;
     }
 
@@ -43,7 +43,7 @@
             await _jsRuntime.InvokeVoidAsync("open", mod.Url(TenantUtils.FromTenantToGameDomain(await _tenantProvider.GetTenantAsync())!), "_blank");
     }
 
-    private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => (await _exposedModsClient.GetAutocompleteModuleIdsAsync(new(filter), ct)).Value ?? Array.Empty<string>();
+    private async Task<ICollection<string>> GetAutocompleteValues(string filter, CancellationToken ct) => (await _exposedModsClient.GetNexusModsModAutocompleteModuleIdsAsync(new(filter), ct)).Value ?? Array.Empty<string>();
 
     private static IEnumerable<Filtering> GetFilters(IEnumerable<DataGridColumnInfo> columnInfos)
     {

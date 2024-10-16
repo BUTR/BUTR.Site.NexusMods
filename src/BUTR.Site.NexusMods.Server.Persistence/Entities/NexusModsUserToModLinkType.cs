@@ -1,6 +1,6 @@
 namespace BUTR.Site.NexusMods.Server.Models.Database;
 
-public enum NexusModsUserToNexusModsModLinkType
+public enum NexusModsUserToModLinkType
 {
     ByStaff = 1,
     ByOwner = 2,

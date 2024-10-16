@@ -119,7 +119,7 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
                     ModuleId = ModuleId.From(x.Id),
                     Module = unitOfWrite.UpsertEntityFactory.GetOrCreateModule(ModuleId.From(x.Id)),
                     LastUpdateDate = lastUpdateTime,
-                    LinkType = NexusModsModToModuleLinkType.ByUnverifiedFileExposure
+                    LinkType = ModToModuleLinkType.ByUnverifiedFileExposure
                 }).ToList());
                 unitOfWrite.NexusModsModToFileUpdates.Upsert(new NexusModsModToFileUpdateEntity
                 {

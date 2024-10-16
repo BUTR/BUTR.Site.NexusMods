@@ -132,7 +132,7 @@ public sealed class DiscordController : ApiControllerBase
 
         await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead(TenantId.None);
 
-        var linkedModsCount = await unitOfRead.NexusModsUsers.GetLinkedModCountAsync(userId, ct);
+        var linkedModsCount = await unitOfRead.NexusModsUsers.GetLinkedNexusModsModCountAsync(userId, ct);
 
         var refreshed = await _discordClient.GetOrRefreshTokensAsync(tokens.Data, ct);
         if (refreshed is null)

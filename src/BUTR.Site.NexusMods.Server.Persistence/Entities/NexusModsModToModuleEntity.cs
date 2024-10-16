@@ -12,7 +12,7 @@ public sealed record NexusModsModToModuleEntity : IEntityWithTenant
     public required ModuleId ModuleId { get; init; }
     public required ModuleEntity Module { get; init; }
 
-    public required NexusModsModToModuleLinkType LinkType { get; init; }
+    public required ModToModuleLinkType LinkType { get; init; }
 
     public required DateTimeOffset LastUpdateDate { get; init; }
 

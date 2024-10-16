@@ -39,6 +39,9 @@ internal class UnitOfRead : IUnitOfRead
     public INexusModsModToModuleInfoHistoryEntityRepositoryRead NexusModsModToModuleInfoHistory { get; }
     public INexusModsModToFileUpdateEntityRepositoryRead NexusModsModToFileUpdates { get; }
 
+    public ISteamWorkshopModToModuleEntityRepositoryRead SteamWorkshopModModules { get; }
+    public ISteamWorkshopModToNameEntityRepositoryRead SteamWorkshopModName { get; }
+
     public INexusModsUserRepositoryRead NexusModsUsers { get; }
     public INexusModsUserToNameEntityRepositoryRead NexusModsUserToName { get; }
     public INexusModsUserToCrashReportEntityRepositoryRead NexusModsUserToCrashReports { get; }
@@ -84,11 +87,14 @@ internal class UnitOfRead : IUnitOfRead
         StatisticsCrashReportsPerMonth = ActivatorUtilities.CreateInstance<StatisticsCrashReportsPerMonthEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
 
         NexusModsArticles = ActivatorUtilities.CreateInstance<NexusModsArticleEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
-
+        
         NexusModsModModules = ActivatorUtilities.CreateInstance<NexusModsModToModuleEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
         NexusModsModName = ActivatorUtilities.CreateInstance<NexusModsModToNameEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
         NexusModsModToModuleInfoHistory = ActivatorUtilities.CreateInstance<NexusModsModToModuleInfoHistoryEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
         NexusModsModToFileUpdates = ActivatorUtilities.CreateInstance<NexusModsModToFileUpdateEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
+
+        SteamWorkshopModModules = ActivatorUtilities.CreateInstance<SteamWorkshopModToModuleEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
+        SteamWorkshopModName = ActivatorUtilities.CreateInstance<SteamWorkshopModToNameEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);
 
         NexusModsUsers = ActivatorUtilities.CreateInstance<NexusModsUserRepository>(_serviceScope.ServiceProvider, dbContextProvider);
         NexusModsUserToName = ActivatorUtilities.CreateInstance<NexusModsUserToNameEntityRepository>(_serviceScope.ServiceProvider, dbContextProvider);

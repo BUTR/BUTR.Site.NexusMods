@@ -14,7 +14,7 @@ public class NexusModsModToModuleEntityConfiguration : BaseEntityConfigurationWi
     {
         builder.Property(x => x.NexusModsModId).HasColumnName("nexusmods_mod_module_id").HasVogenConversion().ValueGeneratedNever();
         builder.Property(x => x.ModuleId).HasColumnName("module_id").HasVogenConversion();
-        builder.Property(x => x.LinkType).HasColumnName("nexusmods_mod_module_link_type_id");
+        builder.Property(x => x.LinkType).HasColumnName("mod_module_link_type_id");
         builder.Property(x => x.LastUpdateDate).HasColumnName("date_of_last_update");
         builder.ToTable("nexusmods_mod_module", "nexusmods_mod").HasKey(x => new
         {

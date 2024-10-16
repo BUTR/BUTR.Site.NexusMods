@@ -1,3 +1,4 @@
+using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Options;
 
 using Microsoft.Extensions.Options;
@@ -12,13 +13,18 @@ using System.Threading.Tasks;
 namespace BUTR.Site.NexusMods.Server.Services;
 
 public sealed record SteamUserInfo(
-    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("id")] SteamUserId Id,
     [property: JsonPropertyName("username")] string Username);
+
+public sealed record SteamWorkshopItemInfo(
+    [property: JsonPropertyName("id")] SteamUserId Id,
+    [property: JsonPropertyName("name")] string Name);
 
 public interface ISteamAPIClient
 {
-    Task<SteamUserInfo?> GetUserInfoAsync(string steamId, CancellationToken ct);
-    Task<bool> IsOwningGameAsync(string steamId, uint appId, CancellationToken ct);
+    Task<SteamUserInfo?> GetUserInfoAsync(SteamUserId steamUserId, CancellationToken ct);
+    Task<bool> IsOwningGameAsync(SteamUserId steamUserId, uint appId, CancellationToken ct);
+    Task<SteamWorkshopItemInfo?> GetOwnedWorkshopItemAsync(SteamUserId steamUserId, uint appId, SteamWorkshopModId workshopModId, CancellationToken ct);
 }
 
 public sealed class SteamAPIClient : ISteamAPIClient
@@ -30,25 +36,8 @@ public sealed class SteamAPIClient : ISteamAPIClient
         [property: JsonPropertyName("players")] IReadOnlyList<GetUserInfoPlayer> Players
     );
     public record GetUserInfoPlayer(
-        [property: JsonPropertyName("steamid")] string Steamid,
-        [property: JsonPropertyName("communityvisibilitystate")] int? Communityvisibilitystate,
-        [property: JsonPropertyName("profilestate")] int? Profilestate,
-        [property: JsonPropertyName("personaname")] string Personaname,
-        [property: JsonPropertyName("commentpermission")] int? Commentpermission,
-        [property: JsonPropertyName("profileurl")] string Profileurl,
-        [property: JsonPropertyName("avatar")] string Avatar,
-        [property: JsonPropertyName("avatarmedium")] string Avatarmedium,
-        [property: JsonPropertyName("avatarfull")] string Avatarfull,
-        [property: JsonPropertyName("avatarhash")] string Avatarhash,
-        [property: JsonPropertyName("lastlogoff")] int? Lastlogoff,
-        [property: JsonPropertyName("personastate")] int? Personastate,
-        [property: JsonPropertyName("realname")] string Realname,
-        [property: JsonPropertyName("primaryclanid")] string Primaryclanid,
-        [property: JsonPropertyName("timecreated")] int? Timecreated,
-        [property: JsonPropertyName("personastateflags")] int? Personastateflags,
-        [property: JsonPropertyName("loccountrycode")] string Loccountrycode,
-        [property: JsonPropertyName("locstatecode")] string Locstatecode,
-        [property: JsonPropertyName("loccityid")] int? Loccityid
+        [property: JsonPropertyName("steamid")] SteamUserId SteamUserId,
+        [property: JsonPropertyName("personaname")] string Personaname
     );
 
     public record IsOwningGameRoot(
@@ -56,16 +45,25 @@ public sealed class SteamAPIClient : ISteamAPIClient
     );
     public record IsOwningGameResponse(
         [property: JsonPropertyName("game_count")] int? GameCount,
-        [property: JsonPropertyName("games")] IReadOnlyList<IsOwningGameGame> Games
+        [property: JsonPropertyName("games")] IReadOnlyList<IsOwningGame> Games
     );
-    public record IsOwningGameGame(
-        [property: JsonPropertyName("appid")] int? Appid,
-        [property: JsonPropertyName("playtime_2weeks")] int? Playtime2weeks,
-        [property: JsonPropertyName("playtime_forever")] int? PlaytimeForever,
-        [property: JsonPropertyName("playtime_windows_forever")] int? PlaytimeWindowsForever,
-        [property: JsonPropertyName("playtime_mac_forever")] int? PlaytimeMacForever,
-        [property: JsonPropertyName("playtime_linux_forever")] int? PlaytimeLinuxForever,
-        [property: JsonPropertyName("rtime_last_played")] int? RtimeLastPlayed
+    public record IsOwningGame(
+        [property: JsonPropertyName("appid")] int? Appid
+    );
+
+    public record IsOwningWorkshopItemRoot(
+        [property: JsonPropertyName("response")] IsOwningWorkshopItemResponse Response
+    );
+    public record IsOwningWorkshopItemResponse(
+        [property: JsonPropertyName("result")] int Result,
+        [property: JsonPropertyName("resultcount")] int ResultCount,
+        [property: JsonPropertyName("publishedfiledetails")] IReadOnlyList<IsOwningWorkshopItem> WorkshopItems
+    );
+    public record IsOwningWorkshopItem(
+        [property: JsonPropertyName("publishedfileid")] SteamWorkshopModId SteamWorkshopModId,
+        [property: JsonPropertyName("creator")] SteamUserId SteamUserId,
+        [property: JsonPropertyName("consumer_app_id")] int AppId,
+        [property: JsonPropertyName("title")] string Name
     );
 
     private readonly HttpClient _httpClient;
@@ -77,21 +75,21 @@ public sealed class SteamAPIClient : ISteamAPIClient
         _options = options.Value;
     }
 
-    public async Task<SteamUserInfo?> GetUserInfoAsync(string steamId, CancellationToken ct)
+    public async Task<SteamUserInfo?> GetUserInfoAsync(SteamUserId steamUserId, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"ISteamUser/GetPlayerSummaries/v0002/?key={_options.APIKey}&steamids={steamId}");
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"ISteamUser/GetPlayerSummaries/v0002/?key={_options.APIKey}&steamids={steamUserId}");
         using var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return null;
 
         var data = JsonSerializer.Deserialize<GetUserInfoRoot>(await response.Content.ReadAsStreamAsync(ct));
         if (data is null) return null;
 
-        return new SteamUserInfo(data.Response.Players[0].Steamid, data.Response.Players[0].Personaname);
+        return new SteamUserInfo(data.Response.Players[0].SteamUserId, data.Response.Players[0].Personaname);
     }
 
-    public async Task<bool> IsOwningGameAsync(string steamId, uint appId, CancellationToken ct)
+    public async Task<bool> IsOwningGameAsync(SteamUserId steamUserId, uint appId, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"IPlayerService/GetOwnedGames/v1/?key={_options.APIKey}&steamid={steamId}&include_appinfo=false&include_played_free_games=false&appids_filter[0]={appId}");
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"IPlayerService/GetOwnedGames/v1/?key={_options.APIKey}&steamid={steamUserId}&include_appinfo=false&include_played_free_games=false&appids_filter[0]={appId}");
         using var response = await _httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode) return false;
 
@@ -99,5 +97,28 @@ public sealed class SteamAPIClient : ISteamAPIClient
         if (data is null) return false;
 
         return data.Response.GameCount == 1;
+    }
+
+    public async Task<SteamWorkshopItemInfo?> GetOwnedWorkshopItemAsync(SteamUserId steamUserId, uint appId, SteamWorkshopModId workshopModId, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"ISteamRemoteStorage/GetPublishedFileDetails/v1/?key={_options.APIKey}");
+        request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "itemcount", "1" },
+            { "publishedfileids[0]", workshopModId.Value.ToString() },
+        });
+        using var response = await _httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode) return null;
+
+        var data = JsonSerializer.Deserialize<IsOwningWorkshopItemRoot>(await response.Content.ReadAsStreamAsync(ct));
+        if (data is null) return null;
+
+        var ownsItem = data.Response is { ResultCount: 1, WorkshopItems.Count: 1 } &&
+               data.Response.WorkshopItems[0].AppId == appId &&
+               data.Response.WorkshopItems[0].SteamUserId == steamUserId &&
+               data.Response.WorkshopItems[0].SteamWorkshopModId == workshopModId;
+        if (!ownsItem) return null;
+
+        return new SteamWorkshopItemInfo(data.Response.WorkshopItems[0].SteamUserId, data.Response.WorkshopItems[0].Name);
     }
 }

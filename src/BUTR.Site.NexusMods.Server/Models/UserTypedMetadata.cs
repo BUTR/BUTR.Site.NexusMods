@@ -36,7 +36,7 @@ public record UserTypedMetadata
         }
         if (userEntity?.ToSteam is { ToTokens: { } tokensSteam, ToOwnedTenants: { } steamOwnedTenants } steam)
         {
-            Steam = new ExternalDataHolder<Dictionary<string, string>>(steam.SteamUserId, tokensSteam.Data);
+            Steam = new ExternalDataHolder<Dictionary<string, string>>(steam.SteamUserId.Value, tokensSteam.Data);
             ownedTenants.AddRange(steamOwnedTenants.Select(x => x.OwnedTenant));
         }
         OwnedTenants = ownedTenants.ToArray();

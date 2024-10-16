@@ -250,9 +250,14 @@ public partial class ModsAnalyzerClient
     }
 }
 
-public partial record UserLinkedModModel
+public partial record UserLinkedNexusModsModModel
 {
     public string Url(string gameDomain) => $"https://nexusmods.com/{gameDomain}/mods/{NexusModsModId}";
+}
+
+public partial record UserLinkedSteamWorkshopModModel
+{
+    public string Url() => $"https://steamcommunity.com/sharedfiles/filedetails/?id={SteamWorkshopModId}";
 }
 
 public partial record ProfileModel
