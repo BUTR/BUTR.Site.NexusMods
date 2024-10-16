@@ -272,6 +272,55 @@ public sealed class NexusModsUserController : ApiControllerBase
     }
 
 
+    [HttpPost("SteamWorkshopModsLinks/ImportAll")]
+    public async Task<ApiResult<string?>> AddSteamWorkshopModLinkImportAllAsync([FromQuery] NexusModsUserId? userId, [FromQuery] NexusModsUserName? username, [BindTenant] TenantId tenant, CancellationToken ct)
+    {
+        var nexusModsUserId = await GetUserIdAsync(userId, username, ct);
+        if (nexusModsUserId == NexusModsUserId.None)
+            return ApiBadRequest("User not found!");
+
+        var currentUserId = HttpContext.GetUserId();
+        if (currentUserId != nexusModsUserId && HttpContext.GetRole() != ApplicationRoles.Moderator && HttpContext.GetRole() != ApplicationRoles.Administrator)
+            return ApiBadRequest("Permission denied!");
+
+        var tokens = HttpContext.GetSteamTokens();
+        if (tokens is null)
+            return ApiBadRequest("Steam not linked!");
+
+        var steamUserId = SteamUserId.From(tokens.ExternalId);
+
+        await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
+        foreach (var steamAppId in TenantUtils.FromTenantToSteamAppIds(tenant.Value))
+        {
+            foreach (var steamWorkshopItemInfo in await _steamAPIClient.GetAllOwnedWorkshopItemAsync(steamUserId, steamAppId, ct))
+            {
+                var steamWorkshopModToName = new SteamWorkshopModToNameEntity
+                {
+                    TenantId = tenant,
+                    SteamWorkshopModId = steamWorkshopItemInfo.ModId,
+                    SteamWorkshopMod = unitOfWrite.UpsertEntityFactory.GetOrCreateSteamWorkshopMod(steamWorkshopItemInfo.ModId),
+                    Name = steamWorkshopItemInfo.Name,
+                };
+                unitOfWrite.SteamWorkshopModName.Upsert(steamWorkshopModToName);
+
+                var nexusModsUserToSteamWorkshopMod = new NexusModsUserToSteamWorkshopModEntity
+                {
+                    TenantId = tenant,
+                    NexusModsUserId = userId!.Value,
+                    NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(userId.Value),
+                    SteamWorkshopModId = steamWorkshopItemInfo.ModId,
+                    SteamWorkshopMod = unitOfWrite.UpsertEntityFactory.GetOrCreateSteamWorkshopMod(steamWorkshopItemInfo.ModId),
+                    LinkType = NexusModsUserToModLinkType.ByAPIConfirmation,
+                };
+                unitOfWrite.NexusModsUserToSteamWorkshopMods.Upsert(nexusModsUserToSteamWorkshopMod);
+
+            }
+        }
+
+        await unitOfWrite.SaveChangesAsync(CancellationToken.None);
+        return ApiResult("Linked successful!");
+    }
+
     [HttpPost("SteamWorkshopModsLinks")]
     public async Task<ApiResult<string?>> AddSteamWorkshopModLinkAsync([FromQuery, Required] SteamWorkshopModId modId, [FromQuery] NexusModsUserId? userId, [FromQuery] NexusModsUserName? username, [BindTenant] TenantId tenant, CancellationToken ct)
     {

@@ -24,6 +24,11 @@
                         <ChildContent>Link</ChildContent>
                     </Button>
                 </Field>
+                <Field>
+                    <Button Color="@Color.Primary" Type="@ButtonType.Submit" Clicked="@OnImportAll" PreventDefaultOnSubmit>
+                        <ChildContent>Import All from Steam Workshop</ChildContent>
+                    </Button>
+                </Field>
             </Form>
         </CardBody>
     </Card>
@@ -105,6 +110,12 @@
 
         _isLoading = false;
         StateHasChanged();
+    }
+    private async Task OnImportAll()
+    {
+        await _userClient.AddSteamWorkshopModLinkImportAllAsync();
+        if (_dataGridRef is not null)
+            await _dataGridRef.Reload();
     }
 
     private async Task<bool> DoLinkMod()

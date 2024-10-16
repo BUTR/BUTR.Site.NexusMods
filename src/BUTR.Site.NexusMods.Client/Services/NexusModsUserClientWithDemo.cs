@@ -127,6 +127,11 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
         return await _implementation.GetSteamWorkshopModsPaginateAvailabledAsync(body, ct);
     }
 
+    public async Task<StringApiResultModel> AddSteamWorkshopModLinkImportAllAsync(int? userId = null, string? username = null, CancellationToken ct = default)
+    {
+        return await _implementation.AddSteamWorkshopModLinkImportAllAsync(userId, username, ct);
+    }
+
     public async Task<StringApiResultModel> AddSteamWorkshopModLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         return await _implementation.AddSteamWorkshopModLinkAsync(modId, userId, username, ct);
@@ -187,17 +192,17 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
         return await _implementation.RemoveNexusModsModManualLinkAsync(modId, userId, username, ct);
     }
     
-    public async Task<StringApiResultModel> AddSteamWorkshopModManualLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default(CancellationToken))
+    public async Task<StringApiResultModel> AddSteamWorkshopModManualLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         return await _implementation.AddSteamWorkshopModManualLinkAsync(modId, userId, username, ct);
     }
 
-    public async Task<StringApiResultModel> RemoveSteamWorkshopModManualLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default(CancellationToken))
+    public async Task<StringApiResultModel> RemoveSteamWorkshopModManualLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         return await _implementation.RemoveSteamWorkshopModManualLinkAsync(modId, userId, username, ct);
     }
 
-    public async Task<UserManuallyLinkedSteamWorkshopModModelPagingDataApiResultModel> GetSteamWorkshopModManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default(CancellationToken))
+    public async Task<UserManuallyLinkedSteamWorkshopModModelPagingDataApiResultModel> GetSteamWorkshopModManualLinkPaginatedAsync(PaginatedQuery? body = null, CancellationToken ct = default)
     {
         return await _implementation.GetSteamWorkshopModManualLinkPaginatedAsync(body, ct);
     }

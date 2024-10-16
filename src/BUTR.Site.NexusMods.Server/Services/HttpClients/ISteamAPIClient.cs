@@ -4,6 +4,7 @@ using BUTR.Site.NexusMods.Server.Options;
 using Microsoft.Extensions.Options;
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -17,7 +18,8 @@ public sealed record SteamUserInfo(
     [property: JsonPropertyName("username")] string Username);
 
 public sealed record SteamWorkshopItemInfo(
-    [property: JsonPropertyName("id")] SteamUserId Id,
+    [property: JsonPropertyName("id")] SteamUserId UserId,
+    [property: JsonPropertyName("mod_id")] SteamWorkshopModId ModId,
     [property: JsonPropertyName("name")] string Name);
 
 public interface ISteamAPIClient
@@ -25,6 +27,7 @@ public interface ISteamAPIClient
     Task<SteamUserInfo?> GetUserInfoAsync(SteamUserId steamUserId, CancellationToken ct);
     Task<bool> IsOwningGameAsync(SteamUserId steamUserId, uint appId, CancellationToken ct);
     Task<SteamWorkshopItemInfo?> GetOwnedWorkshopItemAsync(SteamUserId steamUserId, uint appId, SteamWorkshopModId workshopModId, CancellationToken ct);
+    Task<List<SteamWorkshopItemInfo>> GetAllOwnedWorkshopItemAsync(SteamUserId steamUserId, uint appId, CancellationToken ct);
 }
 
 public sealed class SteamAPIClient : ISteamAPIClient
@@ -55,8 +58,6 @@ public sealed class SteamAPIClient : ISteamAPIClient
         [property: JsonPropertyName("response")] IsOwningWorkshopItemResponse Response
     );
     public record IsOwningWorkshopItemResponse(
-        [property: JsonPropertyName("result")] int Result,
-        [property: JsonPropertyName("resultcount")] int ResultCount,
         [property: JsonPropertyName("publishedfiledetails")] IReadOnlyList<IsOwningWorkshopItem> WorkshopItems
     );
     public record IsOwningWorkshopItem(
@@ -113,12 +114,24 @@ public sealed class SteamAPIClient : ISteamAPIClient
         var data = JsonSerializer.Deserialize<IsOwningWorkshopItemRoot>(await response.Content.ReadAsStreamAsync(ct));
         if (data is null) return null;
 
-        var ownsItem = data.Response is { ResultCount: 1, WorkshopItems.Count: 1 } &&
+        var ownsItem = data.Response is { WorkshopItems.Count: 1 } &&
                data.Response.WorkshopItems[0].AppId == appId &&
                data.Response.WorkshopItems[0].SteamUserId == steamUserId &&
                data.Response.WorkshopItems[0].SteamWorkshopModId == workshopModId;
         if (!ownsItem) return null;
 
-        return new SteamWorkshopItemInfo(data.Response.WorkshopItems[0].SteamUserId, data.Response.WorkshopItems[0].Name);
+        return new SteamWorkshopItemInfo(data.Response.WorkshopItems[0].SteamUserId, data.Response.WorkshopItems[0].SteamWorkshopModId, data.Response.WorkshopItems[0].Name);
+    }
+
+    public async Task<List<SteamWorkshopItemInfo>> GetAllOwnedWorkshopItemAsync(SteamUserId steamUserId, uint appId, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"IPublishedFileService/GetUserFiles/v1/?key={_options.APIKey}&steamid={steamUserId}&appid={appId}&return_short_description=true");
+        using var response = await _httpClient.SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode) return null;
+
+        var data = JsonSerializer.Deserialize<IsOwningWorkshopItemRoot>(await response.Content.ReadAsStreamAsync(ct));
+        if (data is not { Response.WorkshopItems.Count: > 0 }) return null;
+
+        return data.Response.WorkshopItems.Select(x => new SteamWorkshopItemInfo(x.SteamUserId, x.SteamWorkshopModId, x.Name)).ToList();
     }
 }
