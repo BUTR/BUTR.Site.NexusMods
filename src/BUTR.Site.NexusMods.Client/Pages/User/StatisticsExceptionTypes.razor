@@ -1,14 +1,14 @@
 ﻿@attribute [Authorize]
 @page "/statistics-top-exception-types"
 
-<Card Margin="@Margin.Is4">
+<Card Margin="@Margin.Is2">
     <CardHeader>
         <CardTitle Size="4" Margin="@Margin.Is0">Top Exception Types</CardTitle>
     </CardHeader>
     <CardBody>
         <Row>
             <Column ColumnSize="@ColumnSize.Is6">
-                <Card Margin="@Margin.Is4">
+                <Card Margin="@Margin.Is2">
                     <CardBody>
                         <LoadingIndicator @ref="loadingIndicator">
                             <DoughnutChart @ref="doughnutChart" TItem="double" Options="@doughnutChartOptions"/>
@@ -17,7 +17,7 @@
                 </Card>        
             </Column>
             <Column ColumnSize="@ColumnSize.Is6">
-                <Card Margin="@Margin.Is4">
+                <Card Margin="@Margin.Is2">
                     <CardBody>
                         <DataGridInMemory @ref="@_dataGridRef" TItem="TopExceptionsEntry">
                             <DataGridColumns>
