@@ -61,11 +61,11 @@ internal class NexusModsUserRepository : Repository<NexusModsUserEntity>, INexus
             {
                 NexusModsModId = x.NexusModsModId,
                 Name = x.Name!.Name,
-                OwnerNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByAPIConfirmation).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
-                AllowedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner || y.LinkType == NexusModsUserToModLinkType.ByStaff).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
-                ManuallyLinkedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
-                ManuallyLinkedModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByStaff).Select(y => y.Module.ModuleId).ToArray(),
-                KnownModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByUnverifiedFileExposure).Select(y => y.Module.ModuleId).ToArray(),
+                OwnerNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByAPIConfirmation).Select(y => y.NexusModsUserId).ToArray(),
+                AllowedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner || y.LinkType == NexusModsUserToModLinkType.ByStaff).Select(y => y.NexusModsUserId).ToArray(),
+                ManuallyLinkedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner).Select(y => y.NexusModsUserId).ToArray(),
+                ManuallyLinkedModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByStaff).Select(y => y.ModuleId).ToArray(),
+                KnownModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByUnverifiedFileExposure).Select(y => y.ModuleId).ToArray(),
             });
 
         return await availableModsByNexusModsModLinkage
@@ -77,13 +77,13 @@ internal class NexusModsUserRepository : Repository<NexusModsUserEntity>, INexus
     {
         var userToModIds = _dbContext.NexusModsUserToNexusModsMods
             .Include(x => x.NexusModsMod).ThenInclude(x => x.Name)
-            .Where(x => x.NexusModsUser.NexusModsUserId == userId)
+            .Where(x => x.NexusModsUserId == userId)
             .Select(x => x.NexusModsMod);
 
         var userToModuleIdsToModIds = _dbContext.NexusModsUserToModules
             .Include(x => x.Module).ThenInclude(x => x.ToNexusModsMods).ThenInclude(x => x.NexusModsMod).ThenInclude(x => x.Name)
             .AsSplitQuery()
-            .Where(x => x.NexusModsUser.NexusModsUserId == userId)
+            .Where(x => x.NexusModsUserId == userId)
             .Select(x => x.Module)
             .SelectMany(x => x.ToNexusModsMods)
             .Select(x => x.NexusModsMod);
@@ -112,11 +112,11 @@ internal class NexusModsUserRepository : Repository<NexusModsUserEntity>, INexus
             {
                 SteamWorkshopModId = x.SteamWorkshopModId,
                 Name = x.Name!.Name,
-                OwnerNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByAPIConfirmation).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
-                AllowedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner || y.LinkType == NexusModsUserToModLinkType.ByStaff).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
-                ManuallyLinkedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUser.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner).Select(y => y.NexusModsUser.NexusModsUserId).ToArray(),
-                ManuallyLinkedModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByStaff).Select(y => y.Module.ModuleId).ToArray(),
-                KnownModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByUnverifiedFileExposure).Select(y => y.Module.ModuleId).ToArray(),
+                OwnerNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByAPIConfirmation).Select(y => y.NexusModsUserId).ToArray(),
+                AllowedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner || y.LinkType == NexusModsUserToModLinkType.ByStaff).Select(y => y.NexusModsUserId).ToArray(),
+                ManuallyLinkedNexusModsUserIds = x.ToNexusModsUsers.Where(y => y.NexusModsUserId != userId && y.LinkType == NexusModsUserToModLinkType.ByOwner).Select(y => y.NexusModsUserId).ToArray(),
+                ManuallyLinkedModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByStaff).Select(y => y.ModuleId).ToArray(),
+                KnownModuleIds = x.ModuleIds.Where(y => y.LinkType == ModToModuleLinkType.ByUnverifiedFileExposure).Select(y => y.ModuleId).ToArray(),
             });
 
         return await availableModsByNexusModsModLinkage
@@ -128,13 +128,13 @@ internal class NexusModsUserRepository : Repository<NexusModsUserEntity>, INexus
     {
         var userToModIds = _dbContext.NexusModsUserToSteamWorkshopMods
             .Include(x => x.SteamWorkshopMod).ThenInclude(x => x.Name)
-            .Where(x => x.NexusModsUser.NexusModsUserId == userId)
+            .Where(x => x.NexusModsUserId == userId)
             .Select(x => x.SteamWorkshopMod);
 
         var userToModuleIdsToModIds = _dbContext.NexusModsUserToModules
             .Include(x => x.Module).ThenInclude(x => x.ToSteamWorkshopMods).ThenInclude(x => x.SteamWorkshopMod).ThenInclude(x => x.Name)
             .AsSplitQuery()
-            .Where(x => x.NexusModsUser.NexusModsUserId == userId)
+            .Where(x => x.NexusModsUserId == userId)
             .Select(x => x.Module)
             .SelectMany(x => x.ToSteamWorkshopMods)
             .Select(x => x.SteamWorkshopMod);

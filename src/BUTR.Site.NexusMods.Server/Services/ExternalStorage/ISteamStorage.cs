@@ -110,7 +110,7 @@ public sealed class DatabaseSteamStorage : ISteamStorage
     {
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
-        unitOfWrite.NexusModsUserToSteam.Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.SteamUserId == steamUserId);
+        unitOfWrite.NexusModsUserToSteam.Remove(x => x.NexusModsUserId == nexusModsUserId && x.SteamUserId == steamUserId);
         unitOfWrite.IntegrationSteamTokens.Remove(x => x.SteamUserId == steamUserId);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);

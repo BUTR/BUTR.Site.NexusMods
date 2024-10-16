@@ -61,7 +61,7 @@ public sealed class CrashReportsController : ApiControllerBase
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
 
         var existingEntity = await unitOfWrite.NexusModsUserToCrashReports.FirstOrDefaultAsync(
-            x => x.TenantId == tenant && x.NexusModsUser.NexusModsUserId == userId && x.CrashReportId == crashReportId,
+            x => x.TenantId == tenant && x.NexusModsUserId == userId && x.CrashReportId == crashReportId,
             null, CancellationToken.None);
         var entity = new NexusModsUserToCrashReportEntity
         {
@@ -137,7 +137,7 @@ public sealed class CrashReportsController : ApiControllerBase
     {
         await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
 
-        var moduleIds = await unitOfRead.Autocompletes.AutocompleteStartsWithAsync<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId, moduleId, CancellationToken.None);
+        var moduleIds = await unitOfRead.Autocompletes.AutocompleteStartsWithAsync<CrashReportToModuleMetadataEntity, ModuleId>(x => x.ModuleId, moduleId, CancellationToken.None);
 
         return ApiResult(moduleIds);
     }

@@ -95,7 +95,7 @@ public sealed class StatisticsController : ApiControllerBase
     {
         await using var unitOfRead = _unitOfWorkFactory.CreateUnitOfRead();
 
-        var moduleIds = await unitOfRead.Autocompletes.AutocompleteStartsWithAsync<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId, moduleId, CancellationToken.None);
+        var moduleIds = await unitOfRead.Autocompletes.AutocompleteStartsWithAsync<CrashReportToModuleMetadataEntity, ModuleId>(x => x.ModuleId, moduleId, CancellationToken.None);
 
         return ApiResult(moduleIds);
     }

@@ -48,7 +48,7 @@ public class NexusModsArticleController : ApiControllerBase
             {
                 NexusModsArticleId = x.NexusModsArticleId,
                 Title = x.Title,
-                NexusModsUserId = x.NexusModsUser.NexusModsUserId,
+                NexusModsUserId = x.NexusModsUserId,
                 Author = x.NexusModsUser.Name != null ? x.NexusModsUser.Name.Name : NexusModsUserName.Empty,
                 CreateDate = x.CreateDate
             },

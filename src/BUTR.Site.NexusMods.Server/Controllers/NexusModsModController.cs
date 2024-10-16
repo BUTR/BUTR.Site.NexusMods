@@ -88,7 +88,7 @@ public sealed class NexusModsModController : ApiControllerBase
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
 
         unitOfWrite.NexusModsModModules
-            .Remove(x => x.Module.ModuleId == moduleId && x.NexusModsMod.NexusModsModId == modId && x.LinkType == ModToModuleLinkType.ByStaff);
+            .Remove(x => x.ModuleId == moduleId && x.NexusModsModId == modId && x.LinkType == ModToModuleLinkType.ByStaff);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return ApiResult("Unlinked successful!");

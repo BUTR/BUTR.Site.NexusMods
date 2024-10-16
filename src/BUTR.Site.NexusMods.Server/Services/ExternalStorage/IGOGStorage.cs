@@ -108,7 +108,7 @@ public sealed class DatabaseGOGStorage : IGOGStorage
     {
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
-        unitOfWrite.NexusModsUserToGOG.Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.GOGUserId == gogUserId);
+        unitOfWrite.NexusModsUserToGOG.Remove(x => x.NexusModsUserId == nexusModsUserId && x.GOGUserId == gogUserId);
         unitOfWrite.IntegrationGOGTokens.Remove(x => x.GOGUserId == gogUserId);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);

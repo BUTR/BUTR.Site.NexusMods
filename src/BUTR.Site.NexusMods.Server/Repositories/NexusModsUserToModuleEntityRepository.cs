@@ -28,12 +28,12 @@ internal class NexusModsUserToModuleEntityRepository : Repository<NexusModsUserT
         return await _dbContext.NexusModsUserToModules
             .Include(x => x.NexusModsUser).ThenInclude(x => x.Name)
             .Where(x => x.LinkType == linkType)
-            .GroupBy(x => new { x.NexusModsUser.NexusModsUserId, x.NexusModsUser.Name!.Name })
+            .GroupBy(x => new { x.NexusModsUserId, x.NexusModsUser.Name!.Name })
             .Select(x => new UserManuallyLinkedModuleModel
             {
                 NexusModsUserId = x.Key.NexusModsUserId,
                 NexusModsUsername = x.Select(y => y.NexusModsUser.Name == null ? unknown : y.NexusModsUser.Name.Name).First(),
-                ModuleIds = x.Select(y => y.Module.ModuleId).ToArray(),
+                ModuleIds = x.Select(y => y.ModuleId).ToArray(),
             })
             .PaginatedAsync(query, 20, new() { Property = nameof(NexusModsUserEntity.NexusModsUserId), Type = SortingType.Ascending }, ct);
     }

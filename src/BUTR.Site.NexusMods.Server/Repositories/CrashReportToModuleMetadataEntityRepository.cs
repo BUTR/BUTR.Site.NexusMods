@@ -33,27 +33,27 @@ internal class CrashReportToModuleMetadataEntityRepository : Repository<CrashRep
     public async Task<IList<StatisticsCrashReport>> GetAllStatisticsAsync(CancellationToken ct)
     {
         var allModVersionsQuery = _dbContext.CrashReportModuleInfos
-            .GroupBy(x => new { x.Module.ModuleId, x.Version })
+            .GroupBy(x => new { x.ModuleId, x.Version })
             .Select(x => new { x.Key.ModuleId, x.Key.Version })
             .Distinct();
 
         var modCountsQuery = _dbContext.CrashReportModuleInfos
             .Include(x => x.ToCrashReport!)
-            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.Module.ModuleId, x.Version })
+            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.ModuleId, x.Version })
             .Select(x => new { x.Key.GameVersion, x.Key.ModuleId, x.Key.Version, Count = x.Count() })
             .Distinct();
 
         var involvedModCountsQuery = _dbContext.CrashReportModuleInfos
             .Include(x => x.ToCrashReport!)
             .Where(x => x.IsInvolved)
-            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.Module.ModuleId, x.Version })
+            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.ModuleId, x.Version })
             .Select(x => new { x.Key.GameVersion, x.Key.ModuleId, x.Key.Version, Count = x.Count() })
             .Distinct();
 
         var notInvolvedModCountsQuery = _dbContext.CrashReportModuleInfos
             .Include(x => x.ToCrashReport!)
             .Where(x => !x.IsInvolved)
-            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.Module.ModuleId, x.Version })
+            .GroupBy(x => new { x.ToCrashReport!.GameVersion, x.ModuleId, x.Version })
             .Select(x => new { x.Key.GameVersion, x.Key.ModuleId, x.Key.Version, Count = x.Count() })
             .Distinct();
 
@@ -80,11 +80,11 @@ internal class CrashReportToModuleMetadataEntityRepository : Repository<CrashRep
     public async Task GenerateAutoCompleteForModuleIdsAsync(CancellationToken ct)
     {
         var tenant = _tenantContextAccessor.Current;
-        var key = AutocompleteProcessorProcessorJob.GenerateName<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId);
+        var key = AutocompleteProcessorProcessorJob.GenerateName<CrashReportToModuleMetadataEntity, ModuleId>(x => x.ModuleId);
 
         await _dbContext.Autocompletes.Where(x => x.Type == key).ExecuteDeleteAsync(ct);
 
-        var data = await _dbContext.CrashReportModuleInfos.Select(y => y.Module.ModuleId.Value).Distinct().Select(x => new AutocompleteEntity
+        var data = await _dbContext.CrashReportModuleInfos.Select(y => y.ModuleId.Value).Distinct().Select(x => new AutocompleteEntity
         {
             AutocompleteId = default,
             TenantId = tenant,

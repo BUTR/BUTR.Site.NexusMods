@@ -24,13 +24,13 @@ internal class StatisticsCrashScoreInvolvedEntityRepository : Repository<Statist
     public async Task<IList<StatisticsInvolvedModuleScoresForGameVersionModel>> GetAllInvolvedModuleScoresForGameVersionAsync(GameVersion[]? gameVersions, ModuleId[]? moduleIds, ModuleVersion[]? moduleVersions, CancellationToken ct) => await _dbContext.StatisticsCrashScoreInvolveds
         .Include(x => x.Module)
         .WhereIf(gameVersions != null && gameVersions.Length != 0, x => gameVersions!.Contains(x.GameVersion))
-        .WhereIf(moduleIds != null && moduleIds.Length != 0, x => moduleIds!.Contains(x.Module.ModuleId))
+        .WhereIf(moduleIds != null && moduleIds.Length != 0, x => moduleIds!.Contains(x.ModuleId))
         .WhereIf(moduleVersions != null && moduleVersions.Length != 0, x => moduleVersions!.Contains(x.ModuleVersion))
         .GroupBy(x => new { x.GameVersion })
         .Select(x => new StatisticsInvolvedModuleScoresForGameVersionModel
         {
             GameVersion = x.Key.GameVersion,
-            Modules = x.GroupBy(y => new { y.Module.ModuleId }).Select(y => new ModuleStorageModel
+            Modules = x.GroupBy(y => new { y.ModuleId }).Select(y => new ModuleStorageModel
             {
                 ModuleId = y.Key.ModuleId,
                 Versions = y.GroupBy(z => new { z.ModuleVersion }).Select(z => new VersionStorageModel
@@ -49,8 +49,8 @@ internal class StatisticsCrashScoreInvolvedEntityRepository : Repository<Statist
         }).ToListAsync(ct);
 
     public async Task<IList<StatisticsRawScoresForModuleModel>> GetAllRawScoresForAllModulesAsync(GameVersion gameVersion, ModuleId[] moduleIds, CancellationToken ct) => await _dbContext.StatisticsCrashScoreInvolveds
-        .Where(x => x.GameVersion == gameVersion && moduleIds.Contains(x.Module.ModuleId))
-        .GroupBy(x => x.Module.ModuleId)
+        .Where(x => x.GameVersion == gameVersion && moduleIds.Contains(x.ModuleId))
+        .GroupBy(x => x.ModuleId)
         .Select(x => new StatisticsRawScoresForModuleModel
         {
             ModuleId = x.Key,

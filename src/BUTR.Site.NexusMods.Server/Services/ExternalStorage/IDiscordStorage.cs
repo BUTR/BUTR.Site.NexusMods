@@ -68,7 +68,7 @@ public sealed class DatabaseDiscordStorage : IDiscordStorage
     {
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
-        unitOfWrite.NexusModsUserToDiscord.Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.DiscordUserId == discordUserId);
+        unitOfWrite.NexusModsUserToDiscord.Remove(x => x.NexusModsUserId == nexusModsUserId && x.DiscordUserId == discordUserId);
         unitOfWrite.IntegrationDiscordTokens.Remove(x => x.DiscordUserId == discordUserId);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);

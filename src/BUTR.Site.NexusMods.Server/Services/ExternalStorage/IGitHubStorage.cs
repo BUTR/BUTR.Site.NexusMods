@@ -65,7 +65,7 @@ public sealed class DatabaseGitHubStorage : IGitHubStorage
     {
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite(TenantId.None);
 
-        unitOfWrite.NexusModsUserToGitHub.Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.GitHubUserId == gitHubUserId);
+        unitOfWrite.NexusModsUserToGitHub.Remove(x => x.NexusModsUserId == nexusModsUserId && x.GitHubUserId == gitHubUserId);
         unitOfWrite.IntegrationGitHubTokens.Remove(x => x.GitHubUserId == gitHubUserId);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);

@@ -240,7 +240,7 @@ public sealed class NexusModsUserController : ApiControllerBase
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
 
         unitOfWrite.NexusModsUserToNexusModsMods
-            .Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.NexusModsMod.NexusModsModId == modId && x.LinkType == NexusModsUserToModLinkType.ByOwner);
+            .Remove(x => x.NexusModsUserId == nexusModsUserId && x.NexusModsModId == modId && x.LinkType == NexusModsUserToModLinkType.ByOwner);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return ApiResult("Unlinked successful!");
@@ -273,7 +273,7 @@ public sealed class NexusModsUserController : ApiControllerBase
 
 
     [HttpPost("SteamWorkshopModsLinks")]
-    public async Task<ApiResult<string?>> AddSteamWorkshopModsLinkAsync([FromQuery, Required] SteamWorkshopModId modId, [FromQuery] NexusModsUserId? userId, [FromQuery] NexusModsUserName? username, [BindTenant] TenantId tenant, CancellationToken ct)
+    public async Task<ApiResult<string?>> AddSteamWorkshopModLinkAsync([FromQuery, Required] SteamWorkshopModId modId, [FromQuery] NexusModsUserId? userId, [FromQuery] NexusModsUserName? username, [BindTenant] TenantId tenant, CancellationToken ct)
     {
         var nexusModsUserId = await GetUserIdAsync(userId, username, ct);
         if (nexusModsUserId == NexusModsUserId.None)
@@ -389,7 +389,7 @@ public sealed class NexusModsUserController : ApiControllerBase
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
 
         unitOfWrite.NexusModsUserToSteamWorkshopMods
-            .Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.SteamWorkshopMod.SteamWorkshopModId == modId && x.LinkType == NexusModsUserToModLinkType.ByOwner);
+            .Remove(x => x.NexusModsUserId == nexusModsUserId && x.SteamWorkshopModId == modId && x.LinkType == NexusModsUserToModLinkType.ByOwner);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return ApiResult("Unlinked successful!");
@@ -440,7 +440,7 @@ public sealed class NexusModsUserController : ApiControllerBase
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
 
         unitOfWrite.NexusModsUserToModules
-            .Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.Module.ModuleId == moduleId && x.LinkType == NexusModsUserToModuleLinkType.ByStaff);
+            .Remove(x => x.NexusModsUserId == nexusModsUserId && x.ModuleId == moduleId && x.LinkType == NexusModsUserToModuleLinkType.ByStaff);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return ApiResult("Disallowed successful!");
@@ -537,7 +537,7 @@ public sealed class NexusModsUserController : ApiControllerBase
         await using var unitOfWrite = _unitOfWorkFactory.CreateUnitOfWrite();
 
         unitOfWrite.NexusModsUserToNexusModsMods
-            .Remove(x => x.NexusModsUser.NexusModsUserId == nexusModsUserId && x.NexusModsMod.NexusModsModId == modId && x.LinkType == NexusModsUserToModLinkType.ByOwner);
+            .Remove(x => x.NexusModsUserId == nexusModsUserId && x.NexusModsModId == modId && x.LinkType == NexusModsUserToModLinkType.ByOwner);
 
         await unitOfWrite.SaveChangesAsync(CancellationToken.None);
         return ApiResult("Disallowed successful!");

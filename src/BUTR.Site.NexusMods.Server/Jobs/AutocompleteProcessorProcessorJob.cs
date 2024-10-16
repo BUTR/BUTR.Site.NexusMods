@@ -31,14 +31,14 @@ public sealed class AutocompleteProcessorProcessorJob : IJob
     private static readonly AutocompleteEntry[] ToAutocomplete =
     [
         new(GenerateName<CrashReportEntity, GameVersion>(x => x.GameVersion), x => x.CrashReports.GetAllGameVersions().Select(y => y.Value)),
-        new(GenerateName<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId), x => x.CrashReportModuleInfos.GetAllModuleIds().Select(y => y.Value)),
+        new(GenerateName<CrashReportToModuleMetadataEntity, ModuleId>(x => x.ModuleId), x => x.CrashReportModuleInfos.GetAllModuleIds().Select(y => y.Value)),
         new(GenerateName<NexusModsArticleEntity, NexusModsUserName>(x => x.NexusModsUser.Name!.Name), x => x.NexusModsArticles.GetAllUserNames().Select(y => y.Value))
     ];
 
     private static readonly AutocompleteGroupingEntry[] ToAutocompleteGrouping =
     [
-        new(GenerateName<CrashReportToModuleMetadataEntity, ModuleId>(x => x.Module.ModuleId),
-            x => x.CrashReportModuleInfos.GroupBy(y => y.Module.ModuleId).Select(y => new GroupingEntry { Key = y.Key, Values = y.Select(z => z.Version).Distinct().ToArray() })),
+        new(GenerateName<CrashReportToModuleMetadataEntity, ModuleId>(x => x.ModuleId),
+            x => x.CrashReportModuleInfos.GroupBy(y => y.ModuleId).Select(y => new GroupingEntry { Key = y.Key, Values = y.Select(z => z.Version).Distinct().ToArray() })),
     ];
     */
 

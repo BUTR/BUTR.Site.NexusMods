@@ -126,16 +126,16 @@ public sealed class CrashReportsAnalyzerController : ApiControllerBase
 
         // SMAPI uses different update providers - Chucklefish, NexusMods, GitHub
         // We curectly will only use NexusMods
-        //var updateInfoEntries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.Module.ModuleId));
-        //var entries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.Module.ModuleId));
-        var historicEntriesBasedOnModuleId = await unitOfRead.NexusModsModToModuleInfoHistory.GetAllAsync(x => currentModuleIdsWithoutAnyData.Contains(x.Module.ModuleId), null, ct);
-        var historicEntriesBasedOnNexusModsId = await unitOfRead.NexusModsModToModuleInfoHistory.GetAllAsync(x => currentNexusModsIds.Contains(x.NexusModsMod.NexusModsModId), null, ct);
-        var historicEntriesBasedOnUpdateInfo = await unitOfRead.NexusModsModToModuleInfoHistory.GetAllAsync(x => currentMexusModsUpdateInfos.Contains(x.NexusModsMod.NexusModsModId), null, ct);
+        //var updateInfoEntries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.ModuleId));
+        //var entries = _dbContextRead.NexusModsModToModuleInfoHistory.Where(x => moduleIds.Contains(x.ModuleId));
+        var historicEntriesBasedOnModuleId = await unitOfRead.NexusModsModToModuleInfoHistory.GetAllAsync(x => currentModuleIdsWithoutAnyData.Contains(x.ModuleId), null, ct);
+        var historicEntriesBasedOnNexusModsId = await unitOfRead.NexusModsModToModuleInfoHistory.GetAllAsync(x => currentNexusModsIds.Contains(x.NexusModsModId), null, ct);
+        var historicEntriesBasedOnUpdateInfo = await unitOfRead.NexusModsModToModuleInfoHistory.GetAllAsync(x => currentMexusModsUpdateInfos.Contains(x.NexusModsModId), null, ct);
         var allHistoricEntries = historicEntriesBasedOnModuleId.Concat(historicEntriesBasedOnNexusModsId).Concat(historicEntriesBasedOnUpdateInfo);
 
         var historicEntriesCompatibleWithGameVersion = allHistoricEntries.Select(x => new
         {
-            ModuleId = x.Module.ModuleId,
+            ModuleId = x.ModuleId,
             ModuleVersion = ApplicationVersion.TryParse(x.ModuleVersion.Value, out var v) ? v : ApplicationVersion.Empty,
             ModuleInfo = ModuleInfoModel.Create(x.ModuleInfo),
         }).Where(x => x.ModuleInfo.DependentModuleMetadatas.Any(y =>

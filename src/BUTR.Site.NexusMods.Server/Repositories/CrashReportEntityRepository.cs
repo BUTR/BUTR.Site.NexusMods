@@ -55,11 +55,11 @@ internal class CrashReportEntityRepository : Repository<CrashReportEntity>, ICra
 
     public async Task<Paging<UserCrashReportModel>> GetCrashReportsPaginatedAsync(NexusModsUserEntity user, PaginatedQuery query, ApplicationRole applicationRole, CancellationToken ct)
     {
-        var nexusModsModIds = user.ToNexusModsMods.Select(x => x.NexusModsMod.NexusModsModId).ToHashSet();
-        var steamWorkshopModIds = user.ToSteamWorkshopMods.Select(x => x.SteamWorkshopMod.SteamWorkshopModId).ToHashSet();
+        var nexusModsModIds = user.ToNexusModsMods.Select(x => x.NexusModsModId).ToHashSet();
+        var steamWorkshopModIds = user.ToSteamWorkshopMods.Select(x => x.SteamWorkshopModId).ToHashSet();
         var moduleIds = _dbContext.NexusModsModModules.Where(x => nexusModsModIds.Contains(x.NexusModsModId)).Select(x => x.ModuleId)
             .Concat(_dbContext.SteamWorkshopModModules.Where(x => steamWorkshopModIds.Contains(x.SteamWorkshopModId)).Select(x => x.ModuleId))
-            .Concat(user.ToModules.Select(x => x.Module.ModuleId));
+            .Concat(user.ToModules.Select(x => x.ModuleId));
 
         IQueryable<UserCrashReportModel> DbQueryBase(Expression<Func<CrashReportEntity, bool>> predicate) => _dbContext.CrashReports
             .Include(x => x.ToUsers).ThenInclude(x => x.NexusModsUser)
@@ -86,17 +86,17 @@ internal class CrashReportEntityRepository : Repository<CrashReportEntity>, ICra
                 TopInvolvedModuleId = x.ModuleInfos.OrderBy(y => y.InvolvedPosition).Where(z => z.IsInvolved).Select(y => y.Module).Select(y => y.ModuleId).Cast<ModuleId?>().FirstOrDefault(),
                 InvolvedModuleIds = x.ModuleInfos.OrderBy(y => y.InvolvedPosition).Where(z => z.IsInvolved).Select(y => y.Module).Select(y => y.ModuleId).ToArray(),
                 //NexusModsModIds = x.ModuleInfos.Select(y => y.NexusModsMod).Where(y => y != null).Select(y => y!.NexusModsModId).ToArray(),
-                Status = x.ToUsers.Where(y => y.NexusModsUser.NexusModsUserId == user.NexusModsUserId).Select(y => y.Status).FirstOrDefault(),
-                Comment = x.ToUsers.Where(y => y.NexusModsUser.NexusModsUserId == user.NexusModsUserId).Select(y => y.Comment).FirstOrDefault(),
+                Status = x.ToUsers.Where(y => y.NexusModsUserId == user.NexusModsUserId).Select(y => y.Status).FirstOrDefault(),
+                Comment = x.ToUsers.Where(y => y.NexusModsUserId == user.NexusModsUserId).Select(y => y.Comment).FirstOrDefault(),
             })
             .WithFilter(query.Filters ?? [])
             .WithSort(query.Sortings ?? []);
 
         var dbQuery = applicationRole == ApplicationRoles.Administrator || applicationRole == ApplicationRoles.Moderator
             ? DbQueryBase(x => true)
-            : DbQueryBase(x => x.ToUsers.Any(y => y.NexusModsUser.NexusModsUserId == user.NexusModsUserId) ||
+            : DbQueryBase(x => x.ToUsers.Any(y => y.NexusModsUserId == user.NexusModsUserId) ||
 
-                               x.ModuleInfos.Any(y => moduleIds.Contains(y.Module.ModuleId)) ||
+                               x.ModuleInfos.Any(y => moduleIds.Contains(y.ModuleId)) ||
 
                                x.ModuleInfos.Any(y => nexusModsModIds.Contains(y.NexusModsMod!.NexusModsModId)) ||
 

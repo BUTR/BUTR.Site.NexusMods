@@ -89,7 +89,7 @@ public sealed class NexusModsModFileUpdatesProcessorJob : IJob
             var latestFileUpdateDate = DateTimeOffset.FromUnixTimeSeconds(x.LatestFileUpdateTimestamp).ToUniversalTime();
             if (latestFileUpdateDate < dateOneWeekAgo) return false;
 
-            var found = updatesStoredWithinWeek.FirstOrDefault(y => y.NexusModsMod.NexusModsModId == x.Id);
+            var found = updatesStoredWithinWeek.FirstOrDefault(y => y.NexusModsModId == x.Id);
             return found is null || found.LastCheckedDate < latestFileUpdateDate;
         }).ToList();
 
