@@ -306,8 +306,8 @@ public sealed class NexusModsUserController : ApiControllerBase
                 var nexusModsUserToSteamWorkshopMod = new NexusModsUserToSteamWorkshopModEntity
                 {
                     TenantId = tenant,
-                    NexusModsUserId = userId!.Value,
-                    NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(userId.Value),
+                    NexusModsUserId = nexusModsUserId,
+                    NexusModsUser = unitOfWrite.UpsertEntityFactory.GetOrCreateNexusModsUser(nexusModsUserId),
                     SteamWorkshopModId = steamWorkshopItemInfo.ModId,
                     SteamWorkshopMod = unitOfWrite.UpsertEntityFactory.GetOrCreateSteamWorkshopMod(steamWorkshopItemInfo.ModId),
                     LinkType = NexusModsUserToModLinkType.ByAPIConfirmation,
