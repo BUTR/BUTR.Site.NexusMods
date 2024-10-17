@@ -125,12 +125,25 @@ public sealed class SteamAPIClient : ISteamAPIClient
 
     public async Task<List<SteamWorkshopItemInfo>> GetAllOwnedWorkshopItemAsync(SteamUserId steamUserId, uint appId, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"IPublishedFileService/GetUserFiles/v1/?key={_options.APIKey}&steamid={steamUserId}&appid={appId}&return_short_description=true");
+        var list = new List<SteamWorkshopItemInfo>();
+        for (var page = 1;; page++)
+        {
+            var data = await GetAllOwnedWorkshopItemAsync(steamUserId, appId, page, ct);
+            if (data.Count == 0) break;
+            list.AddRange(data);
+        }
+
+        return list;
+    }
+    
+    private async Task<List<SteamWorkshopItemInfo>> GetAllOwnedWorkshopItemAsync(SteamUserId steamUserId, uint appId, int page, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"IPublishedFileService/GetUserFiles/v1/?key={_options.APIKey}&steamid={steamUserId}&appid={appId}&return_short_description=true&numperpage=100&page={page}");
         using var response = await _httpClient.SendAsync(request, ct);
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode) return [];
 
         var data = JsonSerializer.Deserialize<IsOwningWorkshopItemRoot>(await response.Content.ReadAsStreamAsync(ct));
-        if (data is not { Response.WorkshopItems.Count: > 0 }) return null;
+        if (data is not { Response.WorkshopItems.Count: > 0 }) return [];
 
         return data.Response.WorkshopItems.Select(x => new SteamWorkshopItemInfo(x.SteamUserId, x.SteamWorkshopModId, x.Name)).ToList();
     }
