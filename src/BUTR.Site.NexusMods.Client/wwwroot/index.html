@@ -91,11 +91,21 @@
         </script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.1/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js" integrity="sha512-QSkVNOCYLtj73J4hbmVoOV6KVZuMluZlioC+trLpewV8qMjsWqlIQvkn1KGX2StWvPMdWGBqim1xlC8krl1EKQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+       
+        <!-- Since GitHub doesn't provide any way to get simple metrics from Pages, we use Cloudflare Web Analytics -->
+        <!-- Please create an issue on our repo if you have a better alternative! -->
+        <!-- https://github.com/BUTR/BUTR.Site.NexusMods -->
+        <script defer src="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@2.9.1/dist/cookieconsent.min.js" integrity="sha384-Q979APNquWnMfwcI77qZm43RXhRv43xW3iUhlhInJ9mR1f8bsm7wUTvvBZfg85ef" crossorigin="anonymous"></script>
+        <script defer src="js/cookieconsent-init.js"></script>
+        <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "90229f91369c412898f09dd57e648ff2"}' data-cookiecategory="metrics"></script><!-- End Cloudflare Web Analytics -->
+
+        <!-- We previously used Yandex -->
         <!-- Since GitHub doesn't provide any way to get simple metrics from Pages, we use Yandex. -->
         <!-- Metrics are public. You can see if via the link below. Authorization needed. -->
         <!-- https://metrica.yandex.com/dashboard?id=87711623 -->
         <!-- Please create an issue on our repo if you have a better alternative! -->
         <!-- https://github.com/BUTR/BUTR.Site.NexusMods -->
+        <!--
         <script defer src="https://cdn.jsdelivr.net/gh/orestbida/cookieconsent@2.9.1/dist/cookieconsent.min.js" integrity="sha384-Q979APNquWnMfwcI77qZm43RXhRv43xW3iUhlhInJ9mR1f8bsm7wUTvvBZfg85ef" crossorigin="anonymous"></script>
         <script defer src="js/cookieconsent-init.js"></script>
         <script type="text/plain" data-cookiecategory="metrics">
@@ -110,5 +120,6 @@
             })();
             ym(87711623, "init", { clickmap: false, trackLinks: true, accurateTrackBounce: false });
         </script>
+        -->
     </body>
 </html>
