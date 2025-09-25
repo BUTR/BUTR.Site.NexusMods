@@ -326,7 +326,7 @@ public sealed partial class Startup
             opt.OperationFilter<BindIgnoreFilter>();
             opt.OperationFilter<AuthResponsesOperationFilter>();
             opt.OperationFilter<ApiResultOperationFilter>();
-            opt.SchemaFilter<VogenSchemaFilter>();
+            opt.SchemaFilter<VogenSchemaFilterInBUTR_Site_NexusMods_Server_ValueObjects_Vogen>();
             opt.EnableAnnotations();
             opt.UseAllOfToExtendReferenceSchemas();
 
