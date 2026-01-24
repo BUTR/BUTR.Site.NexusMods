@@ -129,7 +129,7 @@ CallStack:
             var steamWorkshopModId = SteamWorkshopModId.DefaultValue;
             steamWorkshopModId = SteamWorkshopModId.TryParseUrl(x.Url, out var steamWorkshopModIdVal) ? steamWorkshopModIdVal : steamWorkshopModId;
             steamWorkshopModId = x.AdditionalMetadata.FirstOrDefault(x => x.Key == "SteamWorkshopModId") is { Value: { } steamWorkshopModIdStr } ? SteamWorkshopModId.From(steamWorkshopModIdStr) : steamWorkshopModId;
-            
+
             return new CrashReportToModuleMetadataEntity
             {
                 TenantId = tenant,

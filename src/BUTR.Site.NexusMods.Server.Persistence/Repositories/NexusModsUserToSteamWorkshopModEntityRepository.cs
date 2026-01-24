@@ -1,8 +1,9 @@
-using System.Threading;
-using System.Threading.Tasks;
 using BUTR.Site.NexusMods.Server.Models;
 using BUTR.Site.NexusMods.Server.Models.API;
 using BUTR.Site.NexusMods.Server.Models.Database;
+
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace BUTR.Site.NexusMods.Server.Repositories;
 

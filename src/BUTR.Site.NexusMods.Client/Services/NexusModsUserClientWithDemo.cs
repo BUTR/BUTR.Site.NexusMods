@@ -191,7 +191,7 @@ public sealed class NexusModsUserClientWithDemo : INexusModsUserClient
 
         return await _implementation.RemoveNexusModsModManualLinkAsync(modId, userId, username, ct);
     }
-    
+
     public async Task<StringApiResultModel> AddSteamWorkshopModManualLinkAsync(string modId, int? userId = null, string? username = null, CancellationToken ct = default)
     {
         return await _implementation.AddSteamWorkshopModManualLinkAsync(modId, userId, username, ct);

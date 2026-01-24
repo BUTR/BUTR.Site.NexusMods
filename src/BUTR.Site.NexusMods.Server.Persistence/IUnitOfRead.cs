@@ -27,7 +27,7 @@ public interface IUnitOfRead : IDisposable, IAsyncDisposable
     INexusModsModToNameEntityRepositoryRead NexusModsModName { get; }
     INexusModsModToModuleInfoHistoryEntityRepositoryRead NexusModsModToModuleInfoHistory { get; }
     INexusModsModToFileUpdateEntityRepositoryRead NexusModsModToFileUpdates { get; }
-    
+
     ISteamWorkshopModToModuleEntityRepositoryRead SteamWorkshopModModules { get; }
     ISteamWorkshopModToNameEntityRepositoryRead SteamWorkshopModName { get; }
 

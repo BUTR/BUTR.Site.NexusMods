@@ -126,7 +126,7 @@ public sealed class SteamAPIClient : ISteamAPIClient
     public async Task<List<SteamWorkshopItemInfo>> GetAllOwnedWorkshopItemAsync(SteamUserId steamUserId, uint appId, CancellationToken ct)
     {
         var list = new List<SteamWorkshopItemInfo>();
-        for (var page = 1;; page++)
+        for (var page = 1; ; page++)
         {
             var data = await GetAllOwnedWorkshopItemAsync(steamUserId, appId, page, ct);
             if (data.Count == 0) break;
@@ -135,7 +135,7 @@ public sealed class SteamAPIClient : ISteamAPIClient
 
         return list;
     }
-    
+
     private async Task<List<SteamWorkshopItemInfo>> GetAllOwnedWorkshopItemAsync(SteamUserId steamUserId, uint appId, int page, CancellationToken ct)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"IPublishedFileService/GetUserFiles/v1/?key={_options.APIKey}&steamid={steamUserId}&appid={appId}&return_short_description=true&numperpage=100&page={page}");
